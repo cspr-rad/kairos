@@ -1,5 +1,12 @@
+[[bin]]
+name = "kairos-cli"
+path = "bin/main.rs"
+version = "0.1.0"
+test = false
+bench = false
+
 [package]
-name = "kairos-node"
+name = "kairos-cli"
 version = "0.1.0"
 edition = "2021"
 

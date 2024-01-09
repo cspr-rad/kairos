@@ -41,7 +41,7 @@
 
           kairosNodeAttrs = {
             src = lib.cleanSourceWith {
-              src = craneLib.path ./kairos-node;
+              src = craneLib.path ./.;
               filter = path: type: craneLib.filterCargoSources path type;
             };
             nativeBuildInputs = with pkgs; [ pkg-config openssl.dev ];
@@ -58,29 +58,29 @@
           };
 
           packages = {
-            kairos-node-deps = craneLib.buildDepsOnly (kairosNodeAttrs // {
-              pname = "kairos-node";
+            kairos-deps = craneLib.buildDepsOnly (kairosNodeAttrs // {
+              pname = "kairos";
             });
 
-            kairos-node = craneLib.buildPackage (kairosNodeAttrs // {
-              cargoArtifacts = self'.packages.kairos-node-deps;
+            kairos = craneLib.buildPackage (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
             });
 
-            default = self'.packages.kairos-node;
+            default = self'.packages.kairos;
 
-            kairos-node-docs = craneLib.cargoDoc (kairosNodeAttrs // {
-              cargoArtifacts = self'.packages.kairos-node-deps;
+            kairos-docs = craneLib.cargoDoc (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
             });
           };
 
           checks = {
             lint = craneLib.cargoClippy (kairosNodeAttrs // {
-              cargoArtifacts = self'.packages.kairos-node-deps;
+              cargoArtifacts = self'.packages.kairos-deps;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });
 
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
-              cargoArtifacts = self'.packages.kairos-node-deps;
+              cargoArtifacts = self'.packages.kairos-deps;
             });
 
             audit = craneLib.cargoAudit {

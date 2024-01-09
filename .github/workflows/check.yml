@@ -23,7 +23,7 @@ jobs:
         run: nix flake check -L --show-trace
 
       - name: kairos-node
-        run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-node
+        run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos
 
       - name: kairos-prover
         run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-prover
