@@ -1,0 +1,29 @@
+name: check
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    name: format & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: System Info
+        run: |
+          uname -a
+          nix --version
+
+      - name: check
+        run: nix flake check -L --show-trace
+
+      - name: kairos-node
+        run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-node
+
+      - name: kairos-prover
+        run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-prover
