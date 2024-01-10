@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "kairos-node"
+name = "kairos-cli"
 version = "0.1.0"
