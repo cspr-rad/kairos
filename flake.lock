@@ -116,11 +116,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1702299681,
-        "narHash": "sha256-6bsB0Qwt6HL4tL1AMgzgnKsfgfPqlbFquh/N81Z2vak=",
+        "lastModified": 1705057078,
+        "narHash": "sha256-IvTD2yh6vYFKgvBATOl793csHbu2Vki3D19MKCHp8sk=",
         "owner": "cspr-rad",
         "repo": "risc0pkgs",
-        "rev": "fcbfbd4581daac7110c84297e46cf501b9ef53f0",
+        "rev": "144c9a42850a245f581db2586208cd18f98ff62b",
         "type": "github"
       },
       "original": {
