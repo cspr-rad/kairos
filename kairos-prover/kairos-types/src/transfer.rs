@@ -1,12 +1,12 @@
 use casper_types::{account::AccountHash, U512};
 use serde::{Deserialize, Serialize};
 extern crate alloc;
-use alloc::{vec::Vec, string::String};
+use alloc::{string::String, vec::Vec};
 
 #[derive(Serialize, Deserialize)]
-pub struct MerkleProof{
+pub struct MerkleProof {
     pub path: Vec<String>,
-    pub lr: Vec<bool> // true: H(left+right), false: H(right+left)
+    pub lr: Vec<bool>, // true: H(left+right), false: H(right+left)
 }
 
 pub enum LayerTwoTransaction {
@@ -25,7 +25,7 @@ pub enum LayerTwoTransaction {
         recipient: AccountHash,
         amount: U512,
         signature: Vec<u8>, // serialized signature -> replace by struct?,
-        merkle_proof: Option<MerkleProof>
+        merkle_proof: Option<MerkleProof>,
     },
 }
 
