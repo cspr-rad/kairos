@@ -61,8 +61,8 @@ pub struct MockLayerTwoState {
 
 
    * What happens Inside Circuit
-       * Proves that Transfer batch leaf’s merkle path is valid for resulting root 
-       * Proves that Balances leaf’s merkle path is valid for resulting root 
+       * Proves that Transfer batch leaf’s merkle path is valid for resulting root
+       * Proves that Balances leaf’s merkle path is valid for resulting root
 
 
        * Private circuit inputs:
