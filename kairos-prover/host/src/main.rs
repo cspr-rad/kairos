@@ -32,6 +32,7 @@ fn main() {
     * Circuit design
         * take a set of transfers as input and generate a batch proof
             * verify all transaction signatures
+            * verify that the merkle proof for every leaf is valid
             * if state transitions are not applied inside the circuit:
                 * append the merkle tree w. said transactions and output the new root hash
             * else:
