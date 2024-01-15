@@ -29,14 +29,15 @@ pub struct LayerTwoAccount {
     pub amount: U512,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MerkleRoot {
     pub hash: Vec<u8>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MockLayerOneState {
-    pub root: MerkleRoot,
+    pub transfers_root: MerkleRoot,
+    pub balances_root: MerkleRoot,
 }
 
 #[derive(Serialize, Deserialize)]

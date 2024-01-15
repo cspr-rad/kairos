@@ -728,6 +728,7 @@ dependencies = [
 name = "host"
 version = "0.1.0"
 dependencies = [
+ "casper-types",
  "env_logger",
  "kairos-types",
  "methods",

@@ -14,7 +14,8 @@ pub fn main() {
         panic!("X != Y");
     }
     let new_root = MockLayerOneState {
-        root: MerkleRoot { hash: Vec::new() },
+        transfers_root: MerkleRoot { hash: Vec::new() },
+        balances_root: MerkleRoot { hash: Vec::new() },
     };
     let output = &serde_json::to_vec(&new_root).unwrap();
     env::commit(output);
