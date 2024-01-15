@@ -52,25 +52,28 @@ pub struct MockLayerTwoState {
 }
 
 /*
-    * What happens Before Circuit
-        * aggregate transactions
-        * create transaction_batch from set of transactions and append merkle tree
-        * update balances state & append balance tree by H(new_balances)
-        -> transaction_batch w. merkle_proof
-        -> new_balances leaf w. merkle_proof
+   * What happens Before Circuit
+       * aggregate transactions
+       * create transaction_batch from set of transactions and append merkle tree
+       * update balances state & append balance tree by H(new_balances)
+       -> transaction_batch w. merkle_proof
+       -> new_balances leaf w. merkle_proof
 
-    * What happens Inside Circuit
-        * Proves that Transfer merkle paths are valid for resulting root hash
-        * Proves that Balances are valid and result from a set of transfers
 
-        * Private circuit inputs:
-            * New balances leaf with merkle_proof
-            * Set of transaction_batch leaf with merkle_proof
-        * Circuit Journal:
-            * New transfers root
-            * New balances root
+   * What happens Inside Circuit
+       * Proves that Transfer batch leaf’s merkle path is valid for resulting root 
+       * Proves that Balances leaf’s merkle path is valid for resulting root 
 
-    * What gets committed to L1
-        * Proof
-        * Journal
+
+       * Private circuit inputs:
+           * New balances leaf with merkle_proof
+           * signed transactions, transaction_batch leaf with merkle_proof
+       * Circuit Journal:
+           * New transfers root
+           * New balances root
+
+
+   * What gets committed to L1
+       * Proof
+       * Journal
 */
