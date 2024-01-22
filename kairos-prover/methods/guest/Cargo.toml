@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 # If you want to try (experimental) std support, add `features = [ "std" ]` to risc0-zkvm
-risc0-zkvm = { version = "0.19.1", default-features = false }
-serde_json = {version="1.0.111", features = ["alloc"], default-features=false}
+risc0-zkvm = {version="0.19.1", default-features=false, features = ["std"]}
+serde_json = {version="1.0.111", features=["alloc"], default-features=false}
 kairos-types = {path="../../kairos-types"}
+merkle-tree = {git="https://github.com/jonas089/thyla-trees", branch="kairos"}

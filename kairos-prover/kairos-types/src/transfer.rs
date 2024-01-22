@@ -1,37 +1,72 @@
-use casper_types::{account::AccountHash, U512};
+use casper_types::{bytesrepr::ToBytes, Key, U512};
 use serde::{Deserialize, Serialize};
 extern crate alloc;
 use alloc::{string::String, vec::Vec};
-
+use merkle_tree::{full::MerkleTree, helpers::hash_bytes};
 #[derive(Serialize, Deserialize)]
 pub struct MerkleProof {
-    pub path: Vec<String>,
-    pub lr: Vec<bool>, // true: H(left+right), false: H(right+left)
+    pub path: Vec<(Vec<u8>, u8)>,
+    pub leaf: LayerTwoTransactionBatch
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct LayerTwoTransactionBatch{
+    pub transactions: Vec<LayerTwoTransaction>
+}
+
+#[derive(Serialize, Deserialize)]
 pub enum LayerTwoTransaction {
     Deposit {
-        deploy_status: bool,
-        account: AccountHash,
+        account: Key,
         amount: U512,
     },
-    Withdraw {
-        deploy_status: bool,
-        account: AccountHash,
+    Withdrawal {
+        account: Key,
         amount: U512,
     },
     Transfer {
-        sender: AccountHash,
-        recipient: AccountHash,
+        sender: Key,
+        recipient: Key,
         amount: U512,
-        signature: Vec<u8>, // serialized signature -> replace by struct?,
-        merkle_proof: Option<MerkleProof>,
+        signature: Vec<u8>,
     },
+}
+
+impl LayerTwoTransaction {
+    pub fn hash(&self) -> Vec<u8> {
+        match self {
+            LayerTwoTransaction::Deposit {
+                account, amount, ..
+            } => {
+                let mut preimage: Vec<u8> = account.to_bytes().unwrap();
+                preimage.append(&mut amount.to_bytes().unwrap());
+                hash_bytes(preimage)
+            }
+            LayerTwoTransaction::Withdrawal {
+                account, amount, ..
+            } => {
+                let mut preimage: Vec<u8> = account.to_bytes().unwrap();
+                preimage.append(&mut amount.to_bytes().unwrap());
+                hash_bytes(preimage)
+            }
+            LayerTwoTransaction::Transfer {
+                sender,
+                recipient,
+                amount,
+                ..
+            } => {
+                let mut preimage: Vec<u8> = sender.to_bytes().unwrap();
+                preimage.append(&mut recipient.to_bytes().unwrap());
+                preimage.append(&mut amount.to_bytes().unwrap());
+                hash_bytes(preimage)
+            }
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct LayerTwoAccount {
-    pub account: AccountHash,
+    pub account: Key,
     pub amount: U512,
 }
 
@@ -48,7 +83,7 @@ pub struct MockLayerOneState {
 
 #[derive(Serialize, Deserialize)]
 pub struct MockLayerTwoState {
-    pub accounts: Vec<LayerTwoAccount>,
+    pub balances: Vec<LayerTwoAccount>,
 }
 
 /*

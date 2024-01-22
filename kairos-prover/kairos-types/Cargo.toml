@@ -9,3 +9,4 @@ edition = "2021"
 serde_json = {version="1.0.111", features = ["alloc"], default-features=false}
 serde = {version="1.0.195", features = ["derive", "alloc"], default-features = false}
 casper-types = {version="4.0.1", default-features=false}
+merkle-tree = {git="https://github.com/jonas089/thyla-trees", branch="kairos"}
