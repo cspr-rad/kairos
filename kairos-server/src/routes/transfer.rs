@@ -1,10 +1,8 @@
-use std::sync::Arc;
-
-use axum::{extract::State, Json};
+use anyhow::anyhow;
+use axum::{extract::State, http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
-use tokio::sync::RwLock;
 
-use crate::{AppErr, BatchState, PublicKey};
+use crate::{state::LockedBatchState, AppErr, PublicKey};
 
 #[derive(Serialize, Deserialize)]
 pub struct Transfer {
@@ -20,8 +18,91 @@ pub struct TransferRequest {
 }
 
 pub async fn transfer(
-    State(pool): State<Arc<RwLock<BatchState>>>,
-    Json(proof_request): Json<TransferRequest>,
+    State(state): State<LockedBatchState>,
+    Json(TransferRequest {
+        transfer,
+        signature: _,
+    }): Json<TransferRequest>,
 ) -> Result<(), AppErr> {
-    todo!()
+    if transfer.amount == 0 {
+        return Err(AppErr::set_status(
+            anyhow!("transfer amount must be greater than 0"),
+            StatusCode::BAD_REQUEST,
+        ));
+    }
+
+    tracing::info!("TODO: verifying transfer signature");
+
+    // We pre-check this read-only to error early without acquiring the write lock.
+    // This prevents a DoS attack exploiting the write lock.
+    tracing::info!("verifying transfer sender has sufficient funds");
+    check_sender_funds(&state, &transfer).await?;
+
+    let mut state = state.write().await;
+    let from_balance = state.balances.get_mut(&transfer.from).ok_or_else(|| {
+        AppErr::set_status(
+            anyhow!(
+                "Sender no longer has an account.
+                The sender just removed all their funds."
+            ),
+            StatusCode::CONFLICT,
+        )
+    })?;
+
+    *from_balance = from_balance.checked_sub(transfer.amount).ok_or_else(|| {
+        AppErr::set_status(
+            anyhow!(
+                "Sender no longer has sufficient funds, balance={}, transfer_amount={}.
+                The sender just moved their funds in a concurrent request",
+                from_balance,
+                transfer.amount
+            ),
+            StatusCode::CONFLICT,
+        )
+    })?;
+
+    let to_balance = state
+        .balances
+        .entry(transfer.to.clone())
+        .or_insert_with(|| {
+            tracing::info!("creating new account for receiver");
+            0
+        });
+
+    *to_balance = to_balance.checked_add(transfer.amount).ok_or_else(|| {
+        AppErr::set_status(anyhow!("Receiver balance overflow"), StatusCode::CONFLICT)
+    })?;
+
+    Ok(())
+}
+
+async fn check_sender_funds(state: &LockedBatchState, transfer: &Transfer) -> Result<(), AppErr> {
+    let state = state.read().await;
+    let from_balance = state.balances.get(&transfer.from).ok_or_else(|| {
+        AppErr::set_status(
+            anyhow!("Sender does not have an account"),
+            StatusCode::BAD_REQUEST,
+        )
+    })?;
+
+    from_balance.checked_sub(transfer.amount).ok_or_else(|| {
+        AppErr::set_status(
+            anyhow!(
+                "Sender does not have sufficient funds, balance={}, transfer_amount={}",
+                from_balance,
+                transfer.amount
+            ),
+            StatusCode::FORBIDDEN,
+        )
+    })?;
+
+    let to_balance = state.balances.get(&transfer.to).unwrap_or(&0);
+    if to_balance.checked_add(transfer.amount).is_none() {
+        return Err(AppErr::set_status(
+            anyhow!("Receiver balance overflow"),
+            StatusCode::CONFLICT,
+        ));
+    }
+
+    Ok(())
 }

@@ -1,5 +1,7 @@
 use std::net::SocketAddr;
 
+use kairos_server::state::BatchState;
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
@@ -11,7 +13,7 @@ async fn main() {
         })
     });
 
-    let app = kairos_server::app_router(kairos_server::BatchState::new());
+    let app = kairos_server::app_router(BatchState::new());
 
     let axum_addr = SocketAddr::from(([127, 0, 0, 1], axum_port));
     tracing::info!("starting http server");

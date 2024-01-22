@@ -8,8 +8,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
-
-
 #[derive(Debug)]
 pub struct AppErr {
     error: anyhow::Error,
