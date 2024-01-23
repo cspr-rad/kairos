@@ -5,8 +5,8 @@ use kairos_server::state::BatchState;
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-    let axum_port: u16 = std::env::var("SERVER_PORT").map_or(8000, |x| {
-        x.parse().unwrap_or_else(|e| {
+    let axum_port: u16 = std::env::var("SERVER_PORT").map_or(8000, |port| {
+        port.parse().unwrap_or_else(|e| {
             format!("Failed to parse SERVER_PORT: {}", e)
                 .parse()
                 .unwrap()
