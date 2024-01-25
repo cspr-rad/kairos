@@ -1,8 +1,13 @@
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
+use axum_extra::routing::TypedPath;
 use serde::{Deserialize, Serialize};
 
 use crate::{state::LockedBatchState, AppErr, PublicKey};
+
+#[derive(TypedPath)]
+#[typed_path("/transfer")]
+pub struct TransferPath;
 
 #[derive(Serialize, Deserialize)]
 pub struct Transfer {
@@ -17,7 +22,8 @@ pub struct TransferRequest {
     signature: String,
 }
 
-pub async fn transfer(
+pub async fn handler(
+    _: TransferPath,
     State(state): State<LockedBatchState>,
     Json(TransferRequest {
         transfer,

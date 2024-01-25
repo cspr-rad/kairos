@@ -11,7 +11,9 @@ name = "kairos-server"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+dotenvy = "0.15"
 axum = { version = "0.7", features = ["tracing"]}
+axum-extra = { version = "0.9", features = ["typed-routing", "typed-header", "json-deserializer"]}
 thiserror = "1.0"
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }

@@ -2,9 +2,14 @@ use std::ops::Deref;
 
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
+use axum_extra::routing::TypedPath;
 use serde::{Deserialize, Serialize};
 
 use crate::{state::LockedBatchState, AppErr, PublicKey};
+
+#[derive(TypedPath)]
+#[typed_path("/deposit")]
+pub struct DepositPath;
 
 #[derive(Serialize, Deserialize)]
 pub struct Deposit {
@@ -12,7 +17,8 @@ pub struct Deposit {
     pub amount: u64,
 }
 
-pub async fn deposit(
+pub async fn handler(
+    _: DepositPath,
     state: State<LockedBatchState>,
     Json(Deposit { public_key, amount }): Json<Deposit>,
 ) -> Result<(), AppErr> {
