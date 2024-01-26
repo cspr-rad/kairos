@@ -12,6 +12,7 @@ use crate::{
 
 pub type LockedBatchState = Arc<RwLock<BatchState>>;
 
+#[derive(Debug)]
 pub struct BatchState {
     pub balances: HashMap<PublicKey, u64>,
     pub batch_epoch: u64,

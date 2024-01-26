@@ -4,21 +4,18 @@ pub mod routes;
 pub mod state;
 
 use axum::Router;
-use axum_extra::routing::{RouterExt, TypedPath};
+use axum_extra::routing::RouterExt;
 use state::LockedBatchState;
 
 pub use errors::AppErr;
 
 type PublicKey = String;
-
-#[derive(TypedPath)]
-#[typed_path("/api/v1")]
-pub struct ApiV1Path;
+type Signature = String;
 
 pub fn app_router(state: LockedBatchState) -> Router {
     Router::new()
-        .typed_post(routes::deposit::handler)
-        .typed_post(routes::withdraw::handler)
-        .typed_post(routes::transfer::handler)
+        .typed_post(routes::deposit_handler)
+        .typed_post(routes::withdraw_handler)
+        .typed_post(routes::transfer_handler)
         .with_state(state)
 }

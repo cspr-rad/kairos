@@ -12,16 +12,20 @@ name = "kairos-server"
 
 [dependencies]
 dotenvy = "0.15"
-axum = { version = "0.7", features = ["tracing"]}
-axum-extra = { version = "0.9", features = ["typed-routing", "typed-header", "json-deserializer"]}
+axum = { version = "0.7", features = ["tracing"] }
+axum-extra = { version = "0.9", features = [
+    "typed-routing",
+    "typed-header",
+    "json-deserializer",
+] }
 thiserror = "1.0"
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.35", features = ["full", "tracing", "macros"] }
 tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 
 [dev-dependencies]
 proptest = "1.4"
-axum-test-helper = "0.3"
+axum-test = "14"

@@ -2,33 +2,27 @@ use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use serde::{Deserialize, Serialize};
+use tracing::instrument;
 
-use crate::{state::LockedBatchState, AppErr, PublicKey};
+use crate::{state::LockedBatchState, AppErr, PublicKey, Signature};
 
 #[derive(TypedPath)]
-#[typed_path("/transfer")]
+#[typed_path("/api/v1/transfer")]
 pub struct TransferPath;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Transfer {
     pub from: PublicKey,
+    pub signature: Signature,
     pub to: PublicKey,
     pub amount: u64,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct TransferRequest {
-    transfer: Transfer,
-    signature: String,
-}
-
-pub async fn handler(
+#[instrument(level = "trace", skip(state), ret)]
+pub async fn transfer_handler(
     _: TransferPath,
     State(state): State<LockedBatchState>,
-    Json(TransferRequest {
-        transfer,
-        signature: _,
-    }): Json<TransferRequest>,
+    Json(transfer): Json<Transfer>,
 ) -> Result<(), AppErr> {
     if transfer.amount == 0 {
         return Err(AppErr::set_status(
