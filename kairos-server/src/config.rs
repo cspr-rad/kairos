@@ -18,7 +18,7 @@ where
     <T as FromStr>::Err: fmt::Display,
 {
     std::env::var(env)
-        .map_err(|e| format!("Failed to parse {}: {}", env, e))
+        .map_err(|e| format!("Failed to fetch environment variable {}: {}", env, e))
         .and_then(|val| {
             val.parse::<T>()
                 .map_err(|e| format!("Failed to parse {}: {}", env, e))
