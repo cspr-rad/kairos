@@ -56,3 +56,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: nix build -L --no-link --show-trace .#checks.x86_64-linux.verify-kairos-host-configuration-test
 
+      - name: kairos-end-to-end-test x86_64-linux
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#checks.x86_64-linux.kairos-end-to-end-test
+

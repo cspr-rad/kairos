@@ -25,6 +25,12 @@ in
               hostConfiguration = mkKairosHostConfig "kairos-host";
               verifyServices = [ "kairos.service" ];
             };
+        kairos-end-to-end-test =
+          pkgs.callPackage
+            ./tests/end-to-end.nix
+            {
+              inherit mkKairosHostConfig;
+            };
       };
     nixosModules = {
       kairos =
