@@ -33,6 +33,7 @@
       imports = [
         treefmt-nix.flakeModule
         ./kairos-prover
+        ./nixos
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
