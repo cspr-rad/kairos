@@ -44,7 +44,13 @@
               src = craneLib.path ./.;
               filter = path: type: craneLib.filterCargoSources path type;
             };
-            nativeBuildInputs = with pkgs; [ pkg-config openssl.dev ];
+            nativeBuildInputs = with pkgs; [ pkg-config ];
+
+            buildInputs = with pkgs; [
+              openssl.dev
+            ] ++ lib.optionals stdenv.isDarwin [
+              libiconv
+            ];
           };
         in
         {
