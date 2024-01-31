@@ -51,6 +51,7 @@
             ] ++ lib.optionals stdenv.isDarwin [
               libiconv
             ];
+            meta.mainProgram = "kairos-server";
           };
         in
         {
