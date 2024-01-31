@@ -29,6 +29,7 @@ nixosTest {
 
     kairos.wait_for_unit("kairos.service")
     kairos.wait_for_unit("nginx.service")
+    kairos.wait_for_open_port(80)
 
     client.wait_for_unit ("multi-user.target")
 
