@@ -26,6 +26,8 @@ impl ClientCommand for Transfer {
     }
 
     fn run(matches: &ArgMatches) -> Result<Output, CliError> {
+        let amount = amount::get(matches)?;
+
         todo!();
     }
 }
