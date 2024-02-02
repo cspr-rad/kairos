@@ -1,5 +1,6 @@
 mod commands;
 mod common;
+mod error;
 
 use clap::Command;
 use commands::{ClientCommand, Deposit, Transfer, Withdraw};
@@ -21,7 +22,7 @@ fn main() {
         process::exit(1);
     });
 
-    match subcommand_name {
+    let result = match subcommand_name {
         Deposit::NAME => Deposit::run(matches),
         Transfer::NAME => Transfer::run(matches),
         Withdraw::NAME => Withdraw::run(matches),
@@ -31,4 +32,14 @@ fn main() {
             process::exit(1);
         }
     };
+
+    match result {
+        Ok(output) => {
+            println!("{}", output)
+        }
+        Err(error) => {
+            println!("{}", error);
+            process::exit(1);
+        }
+    }
 }

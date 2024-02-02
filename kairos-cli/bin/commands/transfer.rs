@@ -1,5 +1,6 @@
-use crate::commands::ClientCommand;
+use crate::commands::{ClientCommand, Output};
 use crate::common::{amount, private_key};
+use crate::error::CliError;
 use clap::{Arg, ArgMatches, Command};
 
 pub struct Transfer;
@@ -24,7 +25,7 @@ impl ClientCommand for Transfer {
             .arg(private_key::arg())
     }
 
-    fn run(matches: &ArgMatches) {
+    fn run(matches: &ArgMatches) -> Result<Output, CliError> {
         todo!();
     }
 }
