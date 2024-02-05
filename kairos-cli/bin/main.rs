@@ -1,5 +1,6 @@
 mod commands;
 mod common;
+mod crypto;
 mod error;
 
 use clap::Command;

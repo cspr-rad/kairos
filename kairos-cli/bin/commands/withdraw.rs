@@ -1,5 +1,6 @@
 use crate::commands::{ClientCommand, Output};
 use crate::common::{amount, private_key};
+use crate::crypto::signer::CasperSigner;
 use crate::error::CliError;
 use clap::{ArgMatches, Command};
 
@@ -18,7 +19,14 @@ impl ClientCommand for Withdraw {
 
     fn run(matches: &ArgMatches) -> Result<Output, CliError> {
         let amount = amount::get(matches)?;
+        let private_key = private_key::get(matches)?;
 
-        todo!();
+        let signer = CasperSigner::from_key(private_key);
+
+        // TODO: Create transaction and sign it with `signer`.
+
+        // TODO: Send transaction to the network, using Rust SDK.
+
+        Ok("ok".to_string())
     }
 }
