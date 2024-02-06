@@ -21,8 +21,21 @@ jobs:
           uname -a
           nix --version
 
-      - name: check
-        run: nix flake check -L --show-trace
+      - name: format
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#checks.x86_64-linux.treefmt
+
+      - name: audit
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#checks.x86_64-linux.audit
+
+      - name: lint
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#checks.x86_64-linux.lint
+
+      - name: coverage
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#checks.x86_64-linux.coverage-report
 
       - name: kairos x86_64-linux
         if: matrix.os == 'ubuntu-latest'
