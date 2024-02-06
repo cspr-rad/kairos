@@ -45,7 +45,12 @@
           kairosNodeAttrs = {
             src = lib.cleanSourceWith {
               src = craneLib.path ./.;
-              filter = path: type: craneLib.filterCargoSources path type;
+              filter = path: type:
+                # Allow static files.
+                (lib.hasInfix "/fixtures/" path) ||
+                # Default filter (from crane) for .rs files.
+                (craneLib.filterCargoSources path type)
+              ;
             };
             nativeBuildInputs = with pkgs; [ pkg-config ];
 
