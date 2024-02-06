@@ -20,7 +20,7 @@ pub mod amount {
         let value = matches
             .get_one::<String>(ARG_NAME)
             .map(String::as_str)
-            .ok_or_else(|| CliError::MissingArgument { context: ARG_NAME })?;
+            .ok_or(CliError::MissingArgument { context: ARG_NAME })?;
 
         let amount = value
             .parse::<u64>()
@@ -51,7 +51,7 @@ pub mod private_key {
         let value = matches
             .get_one::<String>(ARG_NAME)
             .map(String::as_str)
-            .ok_or_else(|| CliError::MissingArgument { context: ARG_NAME })?;
+            .ok_or(CliError::MissingArgument { context: ARG_NAME })?;
 
         let private_key =
             CasperPrivateKey::from_file(value).map_err(|error| CliError::CryptoError { error })?;

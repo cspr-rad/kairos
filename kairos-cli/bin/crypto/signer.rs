@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use super::private_key::CasperPrivateKey;
 use super::public_key::CasperPublicKey;
 use crate::crypto::error::CryptoError;

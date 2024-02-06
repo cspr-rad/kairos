@@ -17,7 +17,7 @@ pub trait ClientCommand {
     const ABOUT: &'static str;
 
     /// Constructs the clap subcommand.
-    fn new() -> Command;
+    fn new_cmd() -> Command;
 
     /// Parses the arg matches and runs the subcommand.
     fn run(matches: &ArgMatches) -> Result<Output, CliError>;

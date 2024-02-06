@@ -10,9 +10,9 @@ use std::process;
 fn cli() -> Command {
     Command::new("Kairos Client")
         .about("CLI for interacting with Kairos")
-        .subcommand(Deposit::new())
-        .subcommand(Transfer::new())
-        .subcommand(Withdraw::new())
+        .subcommand(Deposit::new_cmd())
+        .subcommand(Transfer::new_cmd())
+        .subcommand(Withdraw::new_cmd())
 }
 
 fn main() {

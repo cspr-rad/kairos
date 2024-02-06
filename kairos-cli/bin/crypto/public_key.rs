@@ -19,6 +19,7 @@ impl CasperPublicKey {
         Self(public_key)
     }
 
+    #[allow(unused)]
     fn get(&self) -> Result<Vec<u8>, CryptoError> {
         self.0
             .to_bytes()

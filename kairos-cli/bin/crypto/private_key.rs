@@ -10,7 +10,6 @@ impl CasperPrivateKey {
     pub fn from_file(file_path: &str) -> Result<Self, CryptoError> {
         let secret_key = casper_types::SecretKey::from_file(file_path)
             .map_err(|_e| CryptoError::FailedToParseKey {})?;
-        let private_key = casper_types::SecretKey::from(secret_key);
-        Ok(Self(private_key))
+        Ok(Self(secret_key))
     }
 }

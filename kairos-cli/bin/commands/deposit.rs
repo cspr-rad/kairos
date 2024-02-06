@@ -10,7 +10,7 @@ impl ClientCommand for Deposit {
     const NAME: &'static str = "deposit";
     const ABOUT: &'static str = "Deposits funds into your account";
 
-    fn new() -> Command {
+    fn new_cmd() -> Command {
         Command::new(Self::NAME)
             .about(Self::ABOUT)
             .arg(amount::arg())
@@ -18,10 +18,10 @@ impl ClientCommand for Deposit {
     }
 
     fn run(matches: &ArgMatches) -> Result<Output, CliError> {
-        let amount = amount::get(matches)?;
+        let _amount = amount::get(matches)?;
         let private_key = private_key::get(matches)?;
 
-        let signer = CasperSigner::from_key(private_key);
+        let _signer = CasperSigner::from_key(private_key);
 
         // TODO: Create transaction and sign it with `signer`.
 
