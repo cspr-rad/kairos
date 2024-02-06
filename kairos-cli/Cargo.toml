@@ -13,6 +13,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+assert_cmd = "2.0.13"
 casper-types = { version = "4.0.1", features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
 clap = "4.4.18"
 hex = "0.4.3"
