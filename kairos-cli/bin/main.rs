@@ -39,7 +39,7 @@ fn main() {
             println!("{}", output)
         }
         Err(error) => {
-            println!("{}", error);
+            eprintln!("{}", error);
             process::exit(1);
         }
     }

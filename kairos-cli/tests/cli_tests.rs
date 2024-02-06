@@ -64,7 +64,7 @@ fn deposit_invalid_amount() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stdout("failed to parse 'amount' as u64\n");
+        .stderr("failed to parse 'amount' as u64\n");
 }
 
 #[test]
@@ -79,7 +79,7 @@ fn deposit_invalid_private_key_path() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stdout("cryptography error: failed to parse private key\n");
+        .stderr("cryptography error: failed to parse private key\n");
 }
 
 #[test]
@@ -96,5 +96,5 @@ fn transfer_invalid_recipient() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stdout("cryptography error: failed to serialize signature/key\n");
+        .stderr("cryptography error: failed to serialize signature/key\n");
 }
