@@ -1,4 +1,3 @@
-use crate::commands::{ClientCommand, Output};
 use crate::common::{amount, private_key};
 use crate::crypto::signer::CasperSigner;
 use crate::error::CliError;
@@ -6,18 +5,18 @@ use clap::{ArgMatches, Command};
 
 pub struct Withdraw;
 
-impl ClientCommand for Withdraw {
-    const NAME: &'static str = "withdraw";
-    const ABOUT: &'static str = "Withdraws funds from your account";
+impl Withdraw {
+    pub const NAME: &'static str = "withdraw";
+    pub const ABOUT: &'static str = "Withdraws funds from your account";
 
-    fn new_cmd() -> Command {
+    pub fn new_cmd() -> Command {
         Command::new(Self::NAME)
             .about(Self::ABOUT)
             .arg(amount::arg())
             .arg(private_key::arg())
     }
 
-    fn run(matches: &ArgMatches) -> Result<Output, CliError> {
+    pub fn run(matches: &ArgMatches) -> Result<String, CliError> {
         let _amount = amount::get(matches)?;
         let private_key = private_key::get(matches)?;
 

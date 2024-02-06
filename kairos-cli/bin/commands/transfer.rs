@@ -1,4 +1,3 @@
-use crate::commands::{ClientCommand, Output};
 use crate::common::{amount, private_key};
 use crate::crypto::public_key::CasperPublicKey;
 use crate::crypto::signer::CasperSigner;
@@ -32,11 +31,11 @@ pub mod recipient {
     }
 }
 
-impl ClientCommand for Transfer {
-    const NAME: &'static str = "transfer";
-    const ABOUT: &'static str = "Transfers funds to another account";
+impl Transfer {
+    pub const NAME: &'static str = "transfer";
+    pub const ABOUT: &'static str = "Transfers funds to another account";
 
-    fn new_cmd() -> Command {
+    pub fn new_cmd() -> Command {
         Command::new(Self::NAME)
             .about(Self::ABOUT)
             .arg(recipient::arg())
@@ -44,7 +43,7 @@ impl ClientCommand for Transfer {
             .arg(private_key::arg())
     }
 
-    fn run(matches: &ArgMatches) -> Result<Output, CliError> {
+    pub fn run(matches: &ArgMatches) -> Result<String, CliError> {
         let _recipient = recipient::get(matches)?;
         let _amount = amount::get(matches)?;
         let private_key = private_key::get(matches)?;

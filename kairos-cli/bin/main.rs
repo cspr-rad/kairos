@@ -4,7 +4,7 @@ mod crypto;
 mod error;
 
 use clap::Command;
-use commands::{ClientCommand, Deposit, Transfer, Withdraw};
+use commands::{Deposit, Transfer, Withdraw};
 use std::process;
 
 fn cli() -> Command {
