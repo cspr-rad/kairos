@@ -2,12 +2,10 @@ use assert_cmd::Command;
 use std::path::PathBuf;
 
 // Helper function to get the path to a fixture file
-fn fixture_path(relative_path: &str) -> String {
+fn fixture_path(relative_path: &str) -> PathBuf {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    path.push("tests");
-    path.push("fixtures");
-    path.push(relative_path);
-    path.to_str().unwrap().to_string()
+    path.extend(["tests", "fixtures", relative_path].iter());
+    path
 }
 
 #[test]
