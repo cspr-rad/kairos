@@ -35,6 +35,7 @@
       imports = [
         treefmt-nix.flakeModule
         ./kairos-prover
+        ./nixos
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
@@ -53,6 +54,7 @@
             ] ++ lib.optionals stdenv.isDarwin [
               libiconv
             ];
+            meta.mainProgram = "kairos-server";
           };
         in
         {

@@ -50,3 +50,16 @@ jobs:
       - name: kairos-prover aarch64-darwin
         if: matrix.os == 'macos-14'
         run: nix build -L --no-link --show-trace .#packages.aarch64-darwin.kairos-prover
+
+      - name: kairos-prover x86_64-linux
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-prover
+
+      - name: verify-kairos-host-configuration-test x86_64-linux
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#checks.x86_64-linux.verify-kairos-host-configuration-test
+
+      - name: kairos-end-to-end-test x86_64-linux
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#checks.x86_64-linux.kairos-end-to-end-test
+
