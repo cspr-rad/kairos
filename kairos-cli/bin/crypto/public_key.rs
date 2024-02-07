@@ -20,7 +20,7 @@ impl CasperPublicKey {
     }
 
     #[allow(unused)]
-    fn get(&self) -> Result<Vec<u8>, CryptoError> {
+    fn to_bytes(&self) -> Result<Vec<u8>, CryptoError> {
         self.0
             .to_bytes()
             .map_err(|_e| CryptoError::Serialization {})
