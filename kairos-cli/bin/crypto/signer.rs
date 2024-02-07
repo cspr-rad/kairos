@@ -26,7 +26,7 @@ impl CasperSigner {
         let secret_key =
             SecretKey::from_file(secret_key_path).map_err(|_| CryptoError::FailedToParseKey {})?;
 
-        Ok(Self::from_key(CasperPrivateKey::from_key(secret_key)))
+        Ok(Self::from_key(CasperPrivateKey(secret_key)))
     }
 
     fn get_public_key(&self) -> CasperPublicKey {
