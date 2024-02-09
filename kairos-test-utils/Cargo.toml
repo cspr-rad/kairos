@@ -7,7 +7,13 @@ edition = "2021"
 [lib]
 
 [dependencies]
+
+log = "*"
+tokio = { version = "*", features = [ "full", "macros" ] }
+env_logger = "*"
+tempfile = "*"
 nom = "*"
 
 [dev-dependencies]
+casper-client = "*"
 anyhow = "*"

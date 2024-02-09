@@ -27,6 +27,8 @@
     advisory-db.flake = false;
     risc0pkgs.url = "github:cspr-rad/risc0pkgs";
     risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
+    csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
+    csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
@@ -67,6 +69,9 @@
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
             inputsFrom = [ self'.packages.kairos ];
+            nativeBuildInputs = [
+              inputs'.csprpkgs.packages.cctl
+            ];
           };
 
           packages = {
