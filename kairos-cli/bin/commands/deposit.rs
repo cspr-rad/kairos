@@ -1,31 +1,24 @@
-use crate::common::{amount, private_key};
+use crate::common::args::{AmountArg, PrivateKeyPathArg};
 use crate::crypto::signer::CasperSigner;
 use crate::error::CliError;
-use clap::{ArgMatches, Command};
 
-pub struct Deposit;
+use clap::Parser;
 
-impl Deposit {
-    pub const NAME: &'static str = "deposit";
-    pub const ABOUT: &'static str = "Deposits funds into your account";
+#[derive(Parser, Debug)]
+pub struct Args {
+    #[clap(flatten)]
+    amount: AmountArg,
+    #[clap(flatten)]
+    private_key_path: PrivateKeyPathArg,
+}
 
-    pub fn new_cmd() -> Command {
-        Command::new(Self::NAME)
-            .about(Self::ABOUT)
-            .arg(amount::arg())
-            .arg(private_key::arg())
-    }
+pub fn run(args: Args) -> Result<String, CliError> {
+    let _amount: u64 = args.amount.field;
+    let _signer = CasperSigner::from_key_pathbuf(args.private_key_path.field)?;
 
-    pub fn run(matches: &ArgMatches) -> Result<String, CliError> {
-        let _amount = amount::get(matches)?;
-        let private_key = private_key::get(matches)?;
+    // TODO: Create transaction and sign it with `signer`.
 
-        let _signer = CasperSigner::from_key(private_key);
+    // TODO: Send transaction to the network, using Rust SDK.
 
-        // TODO: Create transaction and sign it with `signer`.
-
-        // TODO: Send transaction to the network, using Rust SDK.
-
-        Ok("ok".to_string())
-    }
+    Ok("ok".to_string())
 }

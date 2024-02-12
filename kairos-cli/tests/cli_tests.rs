@@ -62,7 +62,7 @@ fn deposit_invalid_amount() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stderr("failed to parse 'amount' as u64\n");
+        .stderr(predicates::str::contains("invalid value"));
 }
 
 #[test]
@@ -77,7 +77,22 @@ fn deposit_invalid_private_key_path() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stderr("cryptography error: failed to parse private key\n");
+        .stderr(predicates::str::contains("failed to load key from file"));
+}
+
+#[test]
+fn deposit_invalid_private_key_content() {
+    let secret_key_path = fixture_path("invalid.pem"); // Invalid content
+
+    let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
+    cmd.arg("deposit")
+        .arg("--amount")
+        .arg("123")
+        .arg("--private-key")
+        .arg(secret_key_path);
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("failed to parse private key"));
 }
 
 #[test]
@@ -94,5 +109,5 @@ fn transfer_invalid_recipient() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stderr("cryptography error: failed to serialize signature/key\n");
+        .stderr(predicates::str::contains("failed to parse hex string"));
 }

@@ -1,59 +1,31 @@
-use crate::common::{amount, private_key};
+use crate::common::args::{AmountArg, PrivateKeyPathArg};
 use crate::crypto::public_key::CasperPublicKey;
 use crate::crypto::signer::CasperSigner;
 use crate::error::CliError;
-use clap::{Arg, ArgMatches, Command};
+use crate::utils::parse_hex_string;
 
-pub struct Transfer;
+use clap::Parser;
 
-const ARG_NAME: &str = "recipient";
-const ARG_SHORT: char = 'r';
-const ARG_VALUE_NAME: &str = "PUBLIC_KEY";
+type StdVec<E> = Vec<E>;
 
-pub mod recipient {
-    use super::*;
-
-    pub fn arg() -> Arg {
-        Arg::new(ARG_NAME)
-            .long(ARG_NAME)
-            .short(ARG_SHORT)
-            .required(true)
-            .value_name(ARG_VALUE_NAME)
-    }
-
-    pub fn get(matches: &ArgMatches) -> Result<CasperPublicKey, CliError> {
-        let value = matches
-            .get_one::<String>("recipient")
-            .map(String::as_str)
-            .unwrap();
-
-        CasperPublicKey::from_hex(value).map_err(|error| CliError::CryptoError { error })
-    }
+#[derive(Parser)]
+pub struct Args {
+    #[arg(long, short, value_name = "PUBLIC_KEY", value_parser = parse_hex_string)]
+    recipient: StdVec<u8>,
+    #[clap(flatten)]
+    amount: AmountArg,
+    #[clap(flatten)]
+    private_key_path: PrivateKeyPathArg,
 }
 
-impl Transfer {
-    pub const NAME: &'static str = "transfer";
-    pub const ABOUT: &'static str = "Transfers funds to another account";
+pub fn run(args: Args) -> Result<String, CliError> {
+    let _recipient = CasperPublicKey::from_bytes(args.recipient.as_ref())?;
+    let _amount: u64 = args.amount.field;
+    let _signer = CasperSigner::from_key_pathbuf(args.private_key_path.field)?;
 
-    pub fn new_cmd() -> Command {
-        Command::new(Self::NAME)
-            .about(Self::ABOUT)
-            .arg(recipient::arg())
-            .arg(amount::arg())
-            .arg(private_key::arg())
-    }
+    // TODO: Create transaction and sign it with `signer`.
 
-    pub fn run(matches: &ArgMatches) -> Result<String, CliError> {
-        let _recipient = recipient::get(matches)?;
-        let _amount = amount::get(matches)?;
-        let private_key = private_key::get(matches)?;
+    // TODO: Send transaction to the network, using Rust SDK.
 
-        let _signer = CasperSigner::from_key(private_key);
-
-        // TODO: Create transaction and sign it with `signer`.
-
-        // TODO: Send transaction to the network, using Rust SDK.
-
-        Ok("ok".to_string())
-    }
+    Ok("ok".to_string())
 }

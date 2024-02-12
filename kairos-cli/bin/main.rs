@@ -2,36 +2,27 @@ mod commands;
 mod common;
 mod crypto;
 mod error;
+mod utils;
 
-use clap::Command;
-use commands::{Deposit, Transfer, Withdraw};
 use std::process;
 
-fn cli() -> Command {
-    Command::new("Kairos Client")
-        .about("CLI for interacting with Kairos")
-        .subcommand(Deposit::new_cmd())
-        .subcommand(Transfer::new_cmd())
-        .subcommand(Withdraw::new_cmd())
+use clap::Parser;
+use commands::Command;
+
+#[derive(Parser)]
+#[command(name = "Kairos Client", about = "CLI for interacting with Kairos")]
+struct Cli {
+    #[command(subcommand)]
+    command: Command,
 }
 
 fn main() {
-    let arg_matches = cli().get_matches();
-    let (subcommand_name, matches) = arg_matches.subcommand().unwrap_or_else(|| {
-        // No subcommand provided by user.
-        let _ = cli().print_long_help();
-        process::exit(1);
-    });
+    let cli = Cli::parse();
 
-    let result = match subcommand_name {
-        Deposit::NAME => Deposit::run(matches),
-        Transfer::NAME => Transfer::run(matches),
-        Withdraw::NAME => Withdraw::run(matches),
-        _ => {
-            // This should not happen, unless we missed some subcommand.
-            let _ = cli().print_long_help();
-            process::exit(1);
-        }
+    let result = match cli.command {
+        Command::Deposit(args) => commands::deposit::run(args),
+        Command::Transfer(args) => commands::transfer::run(args),
+        Command::Withdraw(args) => commands::withdraw::run(args),
     };
 
     match result {
