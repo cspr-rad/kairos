@@ -17,7 +17,7 @@ impl CasperSigner {
         let secret_key = CasperPrivateKey::from_file(file_path)?;
 
         // Derive the public key.
-        let public_key = CasperPublicKey::from_key(PublicKey::from(&secret_key.0));
+        let public_key = CasperPublicKey(PublicKey::from(&secret_key.0));
 
         Ok(CasperSigner {
             secret_key,

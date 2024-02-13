@@ -15,10 +15,6 @@ impl CasperPublicKey {
         Ok(Self(public_key))
     }
 
-    pub fn from_key(public_key: casper_types::PublicKey) -> Self {
-        Self(public_key)
-    }
-
     #[allow(unused)]
     fn to_bytes(&self) -> Result<Vec<u8>, CryptoError> {
         self.0.to_bytes().map_err(|_e| CryptoError::Serialization {
