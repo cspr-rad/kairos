@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use super::private_key::{parse_private_key, CasperPrivateKey};
+use super::private_key::CasperPrivateKey;
 use super::public_key::CasperPublicKey;
 use crate::crypto::error::CryptoError;
 use casper_types::{bytesrepr::ToBytes, SecretKey};
@@ -32,7 +32,7 @@ impl CasperSigner {
 
     pub fn from_key_pathbuf(secret_key_path: PathBuf) -> Result<Self, CryptoError> {
         let private_key_path_str: &str = secret_key_path.to_str().ok_or(CryptoError::KeyLoad)?;
-        let private_key = parse_private_key(private_key_path_str)?;
+        let private_key = CasperPrivateKey::from_file(private_key_path_str)?;
 
         Ok(Self::from_key_raw(private_key))
     }

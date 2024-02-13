@@ -12,7 +12,3 @@ impl CasperPrivateKey {
         Ok(Self(secret_key))
     }
 }
-
-pub fn parse_private_key(file_path: &str) -> Result<CasperPrivateKey, CryptoError> {
-    CasperPrivateKey::from_file(file_path)
-}
