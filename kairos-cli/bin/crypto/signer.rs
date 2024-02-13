@@ -8,7 +8,7 @@ use casper_types::{crypto, PublicKey};
 
 pub struct CasperSigner {
     secret_key: CasperPrivateKey,
-    public_key: CasperPublicKey,
+    pub public_key: CasperPublicKey,
 }
 
 #[allow(unused)]
@@ -23,10 +23,6 @@ impl CasperSigner {
             secret_key,
             public_key,
         })
-    }
-
-    pub fn get_public_key(&self) -> CasperPublicKey {
-        self.public_key.clone()
     }
 
     pub fn sign_message(&self, message: &[u8]) -> Result<Vec<u8>, CryptoError> {
