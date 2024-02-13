@@ -77,7 +77,7 @@ fn deposit_invalid_private_key_path() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stderr(predicates::str::contains("failed to load key from file"));
+        .stderr(predicates::str::contains("failed to parse private key"));
 }
 
 #[test]

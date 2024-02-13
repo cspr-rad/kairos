@@ -1,10 +1,10 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use super::private_key::CasperPrivateKey;
 use super::public_key::CasperPublicKey;
 use crate::crypto::error::CryptoError;
 use casper_types::bytesrepr::ToBytes;
-use casper_types::{crypto, PublicKey, SecretKey};
+use casper_types::{crypto, PublicKey};
 
 pub struct CasperSigner {
     secret_key: CasperPrivateKey,
@@ -13,28 +13,16 @@ pub struct CasperSigner {
 
 #[allow(unused)]
 impl CasperSigner {
-    fn from_key_raw(secret_key: CasperPrivateKey) -> Self {
+    pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self, CryptoError> {
+        let secret_key = CasperPrivateKey::from_file(file_path)?;
+
         // Derive the public key.
         let public_key = CasperPublicKey::from_key(PublicKey::from(&secret_key.0));
 
-        CasperSigner {
+        Ok(CasperSigner {
             secret_key,
             public_key,
-        }
-    }
-
-    pub fn from_file(secret_key_path: &str) -> Result<Self, CryptoError> {
-        let secret_key =
-            SecretKey::from_file(secret_key_path).map_err(|_e| CryptoError::FailedToParseKey)?;
-
-        Ok(Self::from_key_raw(CasperPrivateKey(secret_key)))
-    }
-
-    pub fn from_key_pathbuf(secret_key_path: PathBuf) -> Result<Self, CryptoError> {
-        let private_key_path_str: &str = secret_key_path.to_str().ok_or(CryptoError::KeyLoad)?;
-        let private_key = CasperPrivateKey::from_file(private_key_path_str)?;
-
-        Ok(Self::from_key_raw(private_key))
+        })
     }
 
     pub fn get_public_key(&self) -> CasperPublicKey {

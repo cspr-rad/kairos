@@ -14,7 +14,7 @@ pub struct Args {
 
 pub fn run(args: Args) -> Result<String, CliError> {
     let _amount: u64 = args.amount.field;
-    let _signer = CasperSigner::from_key_pathbuf(args.private_key_path.field)?;
+    let _signer = CasperSigner::from_file(args.private_key_path.field)?;
 
     // TODO: Create transaction and sign it with `signer`.
 
