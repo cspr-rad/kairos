@@ -11,7 +11,6 @@ pub enum CliError {
         #[from]
         error: CryptoError,
     },
-    // TODO: Add error for "Failed to parse hex string: {}"
     /// Failed to parse hex string.
     #[error("failed to parse hex string: {error}")]
     ParseError {
