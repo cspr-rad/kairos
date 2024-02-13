@@ -1,6 +1,5 @@
 use crate::crypto::error::CryptoError;
-use casper_types::bytesrepr::FromBytes;
-use casper_types::bytesrepr::ToBytes;
+use casper_types::bytesrepr::{FromBytes, ToBytes};
 
 #[derive(Clone)]
 pub struct CasperPublicKey(pub casper_types::PublicKey);

@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use super::private_key::CasperPrivateKey;
 use super::public_key::CasperPublicKey;
 use crate::crypto::error::CryptoError;
-use casper_types::{bytesrepr::ToBytes, SecretKey};
-use casper_types::{crypto, PublicKey};
+use casper_types::bytesrepr::ToBytes;
+use casper_types::{crypto, PublicKey, SecretKey};
 
 pub struct CasperSigner {
     secret_key: CasperPrivateKey,
