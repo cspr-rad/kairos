@@ -6,12 +6,10 @@ use crate::utils::parse_hex_string;
 
 use clap::Parser;
 
-type StdVec<E> = Vec<E>;
-
 #[derive(Parser)]
 pub struct Args {
     #[arg(long, short, value_name = "PUBLIC_KEY", value_parser = parse_hex_string)]
-    recipient: StdVec<u8>,
+    recipient: ::std::vec::Vec<u8>, // Absolute path is required here - see https://github.com/clap-rs/clap/issues/4626#issue-1528622454.
     #[clap(flatten)]
     amount: AmountArg,
     #[clap(flatten)]
