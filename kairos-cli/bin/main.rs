@@ -1,13 +1,7 @@
-mod commands;
-mod common;
-mod crypto;
-mod error;
-mod utils;
-
 use std::process;
 
 use clap::Parser;
-use commands::Command;
+use kairos_cli::commands::{self, Command};
 
 #[derive(Parser)]
 #[command(name = "Kairos Client", about = "CLI for interacting with Kairos")]
