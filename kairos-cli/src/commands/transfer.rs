@@ -1,4 +1,5 @@
 use crate::common::args::{AmountArg, PrivateKeyPathArg};
+use crate::crypto::error::CryptoError;
 use crate::crypto::public_key::CasperPublicKey;
 use crate::crypto::signer::CasperSigner;
 use crate::error::CliError;
@@ -19,7 +20,8 @@ pub struct Args {
 pub fn run(args: Args) -> Result<String, CliError> {
     let _recipient = CasperPublicKey::from_bytes(args.recipient.as_ref())?;
     let _amount: u64 = args.amount.field;
-    let _signer = CasperSigner::from_file(args.private_key_path.field)?;
+    let _signer =
+        CasperSigner::from_file(args.private_key_path.field).map_err(CryptoError::from)?;
 
     // TODO: Create transaction and sign it with `signer`.
 

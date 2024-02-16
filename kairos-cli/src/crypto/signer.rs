@@ -4,7 +4,7 @@ use super::private_key::CasperPrivateKey;
 use super::public_key::CasperPublicKey;
 use crate::crypto::error::CryptoError;
 use casper_types::bytesrepr::ToBytes;
-use casper_types::{crypto, PublicKey};
+use casper_types::{crypto, ErrorExt, PublicKey};
 
 pub struct CasperSigner {
     secret_key: CasperPrivateKey,
@@ -13,7 +13,7 @@ pub struct CasperSigner {
 
 #[allow(unused)]
 impl CasperSigner {
-    pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self, CryptoError> {
+    pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self, ErrorExt> {
         let secret_key = CasperPrivateKey::from_file(file_path)?;
 
         // Derive the public key.
