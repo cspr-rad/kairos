@@ -377,9 +377,9 @@ dependencies = [
 [[package]]
 name = "casper-contract"
 version = "3.0.0"
-source = "git+https://github.com/casper-network/casper-node?branch=feat-2.0#c52231d862531c6543364fac99741364802d6223"
+source = "git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab#0bcc25f4a203be4e78eed679b54127ab1ed848ab"
 dependencies = [
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
  "hex_fmt",
  "wee_alloc",
 ]
@@ -387,11 +387,11 @@ dependencies = [
 [[package]]
 name = "casper-engine-test-support"
 version = "6.0.0"
-source = "git+https://github.com/casper-network/casper-node?branch=feat-2.0#c52231d862531c6543364fac99741364802d6223"
+source = "git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab#0bcc25f4a203be4e78eed679b54127ab1ed848ab"
 dependencies = [
  "casper-execution-engine",
  "casper-storage",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
  "env_logger",
  "filesize",
  "humantime",
@@ -409,13 +409,13 @@ dependencies = [
 [[package]]
 name = "casper-execution-engine"
 version = "6.0.0"
-source = "git+https://github.com/casper-network/casper-node?branch=feat-2.0#c52231d862531c6543364fac99741364802d6223"
+source = "git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab#0bcc25f4a203be4e78eed679b54127ab1ed848ab"
 dependencies = [
  "anyhow",
  "base16",
  "bincode",
  "casper-storage",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
  "casper-wasm",
  "casper-wasm-utils",
  "casper-wasmi",
@@ -450,22 +450,16 @@ dependencies = [
 [[package]]
 name = "casper-storage"
 version = "1.4.3"
-source = "git+https://github.com/casper-network/casper-node?branch=feat-2.0#c52231d862531c6543364fac99741364802d6223"
+source = "git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab#0bcc25f4a203be4e78eed679b54127ab1ed848ab"
 dependencies = [
  "bincode",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
  "datasize",
  "either",
- "itertools 0.10.5",
- "linked-hash-map",
  "lmdb-rkv",
  "num",
  "num-derive",
- "num-rational",
  "num-traits",
- "once_cell",
- "rand",
- "rand_chacha",
  "serde",
  "tempfile",
  "thiserror",
@@ -477,6 +471,35 @@ dependencies = [
 name = "casper-types"
 version = "3.0.0"
 source = "git+https://github.com/casper-network/casper-node?branch=feat-2.0#c52231d862531c6543364fac99741364802d6223"
+dependencies = [
+ "base16",
+ "base64 0.13.1",
+ "bitflags 1.3.2",
+ "blake2",
+ "derive_more",
+ "ed25519-dalek",
+ "hex",
+ "hex_fmt",
+ "itertools 0.10.5",
+ "k256",
+ "num",
+ "num-derive",
+ "num-integer",
+ "num-rational",
+ "num-traits",
+ "rand",
+ "serde",
+ "serde-map-to-array",
+ "serde_bytes",
+ "serde_json",
+ "tracing",
+ "uint",
+]
+
+[[package]]
+name = "casper-types"
+version = "3.0.0"
+source = "git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab#0bcc25f4a203be4e78eed679b54127ab1ed848ab"
 dependencies = [
  "base16",
  "base64 0.13.1",
@@ -510,43 +533,6 @@ dependencies = [
  "serde_bytes",
  "serde_json",
  "strum",
- "thiserror",
- "tracing",
- "uint",
- "untrusted",
-]
-
-[[package]]
-name = "casper-types"
-version = "3.0.0"
-source = "git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab#0bcc25f4a203be4e78eed679b54127ab1ed848ab"
-dependencies = [
- "base16",
- "base64 0.13.1",
- "bitflags 1.3.2",
- "blake2",
- "derive_more",
- "derp",
- "ed25519-dalek",
- "getrandom",
- "hex",
- "hex_fmt",
- "humantime",
- "itertools 0.10.5",
- "k256",
- "libc",
- "num",
- "num-derive",
- "num-integer",
- "num-rational",
- "num-traits",
- "once_cell",
- "pem",
- "rand",
- "serde",
- "serde-map-to-array",
- "serde_bytes",
- "serde_json",
  "thiserror",
  "tracing",
  "uint",
@@ -692,7 +678,7 @@ name = "contract"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
  "contract-types 0.1.0",
  "serde-json-wasm",
 ]
@@ -701,7 +687,7 @@ dependencies = [
 name = "contract-types"
 version = "0.1.0"
 dependencies = [
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
  "serde",
 ]
 
@@ -846,7 +832,7 @@ name = "deposit-session"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
 ]
 
 [[package]]
@@ -1765,7 +1751,7 @@ name = "malicious-reader"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
 ]
 
 [[package]]
@@ -1773,7 +1759,7 @@ name = "malicious-session"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
 ]
 
 [[package]]
@@ -2906,7 +2892,7 @@ dependencies = [
  "casper-contract",
  "casper-engine-test-support",
  "casper-execution-engine",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
 ]
 
 [[package]]
@@ -3566,7 +3552,7 @@ name = "withdrawal-session"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
- "casper-types 3.0.0 (git+https://github.com/casper-network/casper-node?branch=feat-2.0)",
+ "casper-types 3.0.0 (git+https://github.com/jonas089/casper-node?rev=0bcc25f4a203be4e78eed679b54127ab1ed848ab)",
 ]
 
 [[package]]
