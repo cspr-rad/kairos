@@ -90,11 +90,11 @@ Currently the paths in build-macos-darwin.sh are configured for Macos, nixifying
 
 For now, on Macos:
 
-`./build-macos-darwin.sh`
+`./build-macos-darwin-feat-2.0.sh`
 
 or, on Ubuntu/Debian:
 
-`./build-ubuntu.sh`
+`./build-ubuntu-feat-2.0.sh`
 
 then:
 
