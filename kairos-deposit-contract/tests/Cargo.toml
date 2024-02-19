@@ -1,0 +1,17 @@
+[package]
+name = "tests"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+base64 = { version = "0.21.2", default-features = false, features = ["alloc"] }
+casper-engine-test-support = {git = "https://github.com/casper-network/casper-node", branch="feat-2.0"}
+casper-execution-engine = {git = "https://github.com/casper-network/casper-node", branch="feat-2.0" }
+casper-contract = {git = "https://github.com/casper-network/casper-node", branch = "feat-2.0", default-features=false }
+casper-types = {git = "https://github.com/casper-network/casper-node", branch = "feat-2.0" }
+
+[[test]]
+name = "kairos_contract_tests"
+path = "src/integration_tests.rs"

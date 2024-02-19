@@ -1,0 +1,20 @@
+[package]
+name = "deposit-session"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+casper-contract = {git = "https://github.com/casper-network/casper-node", branch = "feat-2.0" }
+casper-types = {git = "https://github.com/casper-network/casper-node", branch = "feat-2.0" }
+
+[[bin]]
+name = "deposit-session"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false
+
+[profile.release]
+codegen-units = 1
+lto = true
+

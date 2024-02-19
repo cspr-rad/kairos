@@ -1,0 +1,25 @@
+[package]
+name = "contract"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+casper-contract = {git = "https://github.com/casper-network/casper-node", branch = "feat-2.0", default-features=false}
+casper-types = {git = "https://github.com/casper-network/casper-node", branch = "feat-2.0"}
+contract-types = {path = "../contract-types"}
+serde-json-wasm = "1.0.1"
+
+[build]
+target = "wasm32-unknown-unknown"
+
+[[bin]]
+name = "deposit-contract"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false
+
+[profile.release]
+codegen-units = 1
+lto = true
+
