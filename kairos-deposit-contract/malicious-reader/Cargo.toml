@@ -1,0 +1,17 @@
+[package]
+name = "malicious-reader"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+casper-contract = {git = "https://github.com/jonas089/casper-node", rev="0bcc25f4a203be4e78eed679b54127ab1ed848ab"}
+casper-types = {git = "https://github.com/jonas089/casper-node", rev="0bcc25f4a203be4e78eed679b54127ab1ed848ab"}
+
+[[bin]]
+name = "malicious-reader"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false
