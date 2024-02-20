@@ -650,22 +650,13 @@ version = "0.1.0"
 dependencies = [
  "casper-contract",
  "casper-types",
- "contract-types 0.1.0",
+ "contract-types",
  "serde-json-wasm",
 ]
 
 [[package]]
 name = "contract-types"
 version = "0.1.0"
-dependencies = [
- "casper-types",
- "serde",
-]
-
-[[package]]
-name = "contract-types"
-version = "0.1.0"
-source = "git+https://github.com/jonas089/kairos-deposit-contract?branch=last-stable-v2.0#c946973130b4174d91f94ca91fe37affca839d34"
 dependencies = [
  "casper-types",
  "serde",
@@ -1597,7 +1588,7 @@ dependencies = [
  "casper-client",
  "casper-types",
  "clap",
- "contract-types 0.1.0 (git+https://github.com/jonas089/kairos-deposit-contract?branch=last-stable-v2.0)",
+ "contract-types",
  "serde_json",
  "tokio",
 ]

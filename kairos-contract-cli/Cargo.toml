@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 casper-client = {git="https://github.com/jonas089/casper-client-rs", branch="last-stable-feat-track-node-2.0"}
-contract-types = {git="https://github.com/jonas089/kairos-deposit-contract", branch="last-stable-v2.0"}
+contract-types = {path="../kairos-deposit-contract/contract-types"}
 casper-types = {git = "https://github.com/jonas089/casper-node", rev="0bcc25f4a203be4e78eed679b54127ab1ed848ab", features=["std"]}
 serde_json = "1.0.113"
 clap = {version="4.4.18", features=["derive"]}
