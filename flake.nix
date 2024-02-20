@@ -61,10 +61,7 @@
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
-
-            nativeBuildInputs = [
-              rustToolchain
-            ] ++ kairosNodeAttrs.nativeBuildInputs;
+            inputsFrom = [ self'.packages.kairos ];
           };
 
           packages = {
