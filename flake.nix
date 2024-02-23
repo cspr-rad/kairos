@@ -39,8 +39,35 @@
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
-          rustToolchain = inputs'.fenix.packages.stable.toolchain;
+          rustToolchain = with inputs'.fenix.packages; combine [
+            complete.toolchain
+            targets.wasm32-unknown-unknown.latest.rust-std
+          ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
+
+          kairosOnChainAttrs = {
+            src = lib.cleanSourceWith {
+              src = craneLib.path ./kairos-deposit-contract;
+              filter = path: type: craneLib.filterCargoSources path type;
+            };
+            cargoExtraArgs = "--target wasm32-unknown-unknown";
+            nativeBuildInputs = [ pkgs.binaryen ];
+            doCheck = false;
+            # Append "-optimized" to wasm files, to make the tests pass
+            postInstall = ''
+              directory="$out/bin/"
+              for file in "$directory"*.wasm; do
+                if [ -e "$file" ]; then
+                  # Extract the file name without extension
+                  filename=$(basename "$file" .wasm)
+                  # Append "-optimized" to the filename and add back the .wasm extension
+                  new_filename="$directory$filename-optimized.wasm"
+                  wasm-opt --strip-debug --signext-lowering "$file" -o "$new_filename"
+                  #mv "$file" "$new_filename"
+                fi
+              done
+            '';
+          };
 
           kairosNodeAttrs = {
             src = lib.cleanSourceWith {
@@ -48,6 +75,8 @@
               filter = path: type: craneLib.filterCargoSources path type;
             };
             nativeBuildInputs = with pkgs; [ pkg-config ];
+
+            PATH_TO_WASM_BINARIES = "${self'.packages.kairos-deposit-contract}/bin";
 
             buildInputs = with pkgs; [
               openssl.dev
@@ -71,6 +100,14 @@
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+            });
+
+            kairos-deposit-contract-deps = craneLib.buildPackage (kairosOnChainAttrs // {
+              pname = "kairos-deposit-contract";
+            });
+
+            kairos-deposit-contract = craneLib.buildPackage (kairosOnChainAttrs // {
+              cargoArtifacts = self'.packages.kairos-deposit-contract-deps;
             });
 
             default = self'.packages.kairos;
