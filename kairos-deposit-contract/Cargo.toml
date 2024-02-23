@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+
+members = [
+  "malicious-reader",
+  "malicious-session",
+  "withdrawal-session",
+  "deposit-session",
+  "contract-types",
+]
+
+[workspace.package]
+name = "kairos-deposit-contract"
+version = "0.1.0"
+edition = "2021"
