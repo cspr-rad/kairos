@@ -39,8 +39,20 @@
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
-          rustToolchain = inputs'.fenix.packages.stable.toolchain;
+          rustToolchain = with inputs'.fenix.packages; combine [
+            complete.toolchain
+            targets.wasm32-unknown-unknown.latest.rust-std
+          ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
+
+          kairosOnChainAttrs = {
+            src = lib.cleanSourceWith {
+              src = craneLib.path ./kairos-deposit-contract;
+              filter = path: type: craneLib.filterCargoSources path type;
+            };
+            cargoExtraArgs = "--target wasm32-unknown-unknown";
+            doCheck = false;
+          };
 
           kairosNodeAttrs = {
             src = lib.cleanSourceWith {
@@ -71,6 +83,14 @@
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+            });
+
+            kairos-deposit-contract-deps = craneLib.buildPackage (kairosOnChainAttrs // {
+              pname = "kairos-deposit-contract";
+            });
+
+            kairos-deposit-contract = craneLib.buildPackage (kairosOnChainAttrs // {
+              cargoArtifacts = self'.packages.kairos-deposit-contract-deps;
             });
 
             default = self'.packages.kairos;
