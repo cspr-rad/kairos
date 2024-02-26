@@ -1,12 +1,11 @@
 use std::i64;
 
 use crate::deployments::{
-    call_create_purse, call_incr_counter, deploy_handler, get_deposit_event, put_deposit_session,
+    call_create_purse, call_incr_counter, get_counter, get_deposit_event, put_deposit_session,
     put_withdrawal_session,
 };
 use casper_types::{URef, U512};
-use clap::{Command, Parser, Subcommand};
-use kairos_contract_cli::deployments::get_counter;
+use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -15,6 +14,10 @@ struct Cli {
     command: Option<Commands>,
 }
 
+// I want to allow CAPS here,
+// because these enum variants are constant methods.
+#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Subcommand)]
 enum Commands {
     CREATE_PURSE {
@@ -139,7 +142,7 @@ pub async fn commander() {
                 wasm_path,
                 contract_addr,
                 U512::from(*amount),
-                URef::from_formatted_str(&destination).unwrap(),
+                URef::from_formatted_str(destination).unwrap(),
             )
             .await;
             println!("Deploy Hash: {:?}", &withdrawal_hash);
@@ -167,20 +170,19 @@ pub async fn commander() {
             let value = get_counter::get(
                 node_address,
                 rpc_port.to_owned(),
-                URef::from_formatted_str(&counter_uref).unwrap(),
+                URef::from_formatted_str(counter_uref).unwrap(),
             )
             .await;
             println!("Counter value: {:?}", &value);
         }
         None => {
             println!(
+                "
+                Possible commands:
+                
+                create_purse, get_counter, get_deposit, incr_counter, deposit, withdrawal
             "
-                This cli-tool is used in a complex build environment that depends on many branches and is only for development. 
-                \n
-                If you're not sure how to use this tool, then it is currently not for you. Please check back later and follow R&D progress on Kairos L2 development.
-                \n
-                Much love :)
-            ");
+            );
         }
     }
 }

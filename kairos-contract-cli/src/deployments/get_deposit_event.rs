@@ -1,10 +1,6 @@
 use casper_client::{get_dictionary_item, get_state_root_hash, JsonRpcId, Verbosity};
 use casper_types::URef;
 use contract_types::Deposit;
-use serde_json;
-extern crate alloc;
-use alloc::{string::ToString, vec::Vec};
-
 /*
     GET_DEPOSIT {
         node_address: String,

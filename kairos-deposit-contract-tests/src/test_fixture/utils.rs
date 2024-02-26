@@ -6,7 +6,7 @@ use casper_types::{
     account::AccountHash,
     runtime_args,
     system::{handle_payment::ARG_TARGET, mint::ARG_ID},
-    PublicKey, RuntimeArgs, SecretKey,
+    PublicKey, SecretKey,
 };
 
 // Creates a dummy account and transfer funds to it

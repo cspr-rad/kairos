@@ -4,13 +4,8 @@ resolver = "2"
 members = [
   "kairos-cli",
   "kairos-server",
-  "kairos-deposit-contract/contract",
-  "kairos-deposit-contract/malicious-reader",
-  "kairos-deposit-contract/malicious-session",
-  "kairos-deposit-contract/tests",
-  "kairos-deposit-contract/withdrawal-session",
+  "kairos-deposit-contract-tests",
   "kairos-deposit-contract/contract-types",
-  "kairos-deposit-contract/deposit-session",
   "kairos-contract-cli"
 ]
 

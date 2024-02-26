@@ -3,9 +3,10 @@ use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casper_types::{bytesrepr::FromBytes, system::CallStackElement, ApiError, CLTyped, Key, URef};
+use casper_types::{bytesrepr::FromBytes, system::CallStackElement, ApiError, CLTyped, URef};
 use core::convert::TryInto;
 
+#[allow(dead_code)]
 /// Gets [`URef`] under a name.
 pub(crate) fn get_uref(name: &str) -> URef {
     let key = runtime::get_key(name)
@@ -14,6 +15,7 @@ pub(crate) fn get_uref(name: &str) -> URef {
     key.try_into().unwrap_or_revert()
 }
 
+#[allow(dead_code)]
 /// Reads value from a named key.
 pub(crate) fn read_from<T>(name: &str) -> T
 where
@@ -41,6 +43,7 @@ fn call_stack_element_to_address(call_stack_element: CallStackElement) -> Addres
     }
 }
 
+#[allow(clippy::manual_next_back)]
 pub(crate) fn get_immediate_caller_address() -> Result<Address, Error> {
     let call_stack = runtime::get_call_stack();
     let top_of_the_stack = call_stack

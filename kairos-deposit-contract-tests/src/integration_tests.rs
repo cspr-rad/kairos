@@ -2,10 +2,7 @@ mod test_fixture;
 #[cfg(test)]
 mod tests {
     use crate::test_fixture::TestContext;
-    use casper_types::{
-        account::{self, AccountHash},
-        U512,
-    };
+    use casper_types::{account::AccountHash, U512};
 
     #[test]
     fn should_install() {
@@ -14,7 +11,7 @@ mod tests {
     }
 
     fn setup() -> (TestContext, AccountHash) {
-        let mut fixture: TestContext = TestContext::new();
+        let fixture: TestContext = TestContext::new();
         let installer = fixture.account_1;
         return (fixture, installer);
     }

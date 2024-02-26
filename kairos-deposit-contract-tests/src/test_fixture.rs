@@ -3,19 +3,15 @@ use casper_engine_test_support::{
     ExecuteRequestBuilder, LmdbWasmTestBuilder, DEFAULT_ACCOUNT_ADDR,
     PRODUCTION_RUN_GENESIS_REQUEST,
 };
-use casper_execution_engine::Address;
 use casper_types::{
-    account::AccountHash, addressable_entity::NamedKeys, bytesrepr::FromBytes, runtime_args,
-    AddressableEntityHash, Key, RuntimeArgs, URef, U512,
+    account::AccountHash, addressable_entity::NamedKeys, runtime_args, AddressableEntityHash, Key,
+    URef, U512,
 };
 use utils::create_funded_dummy_account;
 
 pub const ACCOUNT_USER_1: [u8; 32] = [1u8; 32];
 pub const ACCOUNT_USER_2: [u8; 32] = [2u8; 32];
 pub const ACCOUNT_USER_3: [u8; 32] = [3u8; 32];
-
-#[derive(Clone, Copy)]
-pub struct Sender(pub AccountHash);
 
 #[cfg(test)]
 pub struct TestContext {
@@ -125,6 +121,7 @@ impl TestContext {
         seed_uref
     }
 
+    #[allow(dead_code)]
     pub fn get_contract_purse_balance(&self, account: AccountHash) -> U512 {
         let seed_uref: URef = *self
             .contract_named_keys("kairos_deposit_contract", "kairos_deposit_purse", account)
@@ -154,8 +151,10 @@ impl TestContext {
         amount: U512,
         account: AccountHash,
     ) {
+        /*
         let contract_hash: AddressableEntityHash =
             self.contract_hash("kairos_deposit_contract", account);
+        */
         let session_args = runtime_args! {
             "amount" => amount,
             "deposit_contract" => self.contract_hash("kairos_deposit_contract", account)
@@ -175,8 +174,6 @@ impl TestContext {
         amount: U512,
         account: AccountHash,
     ) {
-        let contract_hash: AddressableEntityHash =
-            self.contract_hash("kairos_deposit_contract", account);
         let session_args = runtime_args! {
             "amount" => amount,
             "deposit_contract" => self.contract_hash("kairos_deposit_contract", account)
@@ -196,8 +193,6 @@ impl TestContext {
         amount: U512,
         account: AccountHash,
     ) {
-        let contract_hash: AddressableEntityHash =
-            self.contract_hash("kairos_deposit_contract", account);
         let session_args = runtime_args! {
             "amount" => amount,
             "deposit_contract" => self.contract_hash("kairos_deposit_contract", account)
@@ -218,8 +213,6 @@ impl TestContext {
         account: AccountHash,
         deposit_purse_uref: URef,
     ) {
-        let contract_hash: AddressableEntityHash =
-            self.contract_hash("kairos_deposit_contract", account);
         let session_args = runtime_args! {
             "amount" => amount,
             "deposit_contract" => self.contract_hash("kairos_deposit_contract", account),

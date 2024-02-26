@@ -91,7 +91,7 @@ pub extern "C" fn deposit() {
             .unwrap();
     let new_deposit_record: Deposit = Deposit {
         account: Key::from(get_second_caller_address().unwrap_or_revert()),
-        amount: amount,
+        amount,
     };
 
     let kairos_deposit_event_dict_uref = runtime::get_key(KAIROS_DEPOSIT_EVENT_DICT)

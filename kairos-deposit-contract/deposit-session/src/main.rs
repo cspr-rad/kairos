@@ -1,12 +1,7 @@
 #![no_std]
 #![no_main]
-extern crate alloc;
-use alloc::string::String;
-use casper_contract::{
-    contract_api::{account, runtime, storage, system},
-    unwrap_or_revert::UnwrapOrRevert,
-};
-use casper_types::{runtime_args, AddressableEntityHash, ApiError, Key, RuntimeArgs, URef, U512};
+use casper_contract::contract_api::{account, runtime, system};
+use casper_types::{runtime_args, AddressableEntityHash, URef, U512};
 
 #[no_mangle]
 pub extern "C" fn call() {

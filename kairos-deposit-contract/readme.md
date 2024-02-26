@@ -99,6 +99,8 @@ or, on Ubuntu/Debian:
 then:
 
 ```bash
-cd tests
-cargo test
+# navigate to the root 
+cd kairos
+# run the contract-specific tests
+cargo test -p kairos-deposit-contract-tests
 ```

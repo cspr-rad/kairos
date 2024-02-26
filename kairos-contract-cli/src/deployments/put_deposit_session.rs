@@ -38,7 +38,7 @@ pub async fn put(
     let secret_key_bytes = fs::read(secret_key_path).unwrap();
     let secret_key: SecretKey = SecretKey::from_pem(secret_key_bytes.clone()).unwrap();
     let layer_one_deploy_handler = LayerOneDeployHandler {
-        node_address: node_address,
+        node_address,
         rpc_port: JsonRpcId::String(rpc_port),
         secret_key,
     };
@@ -49,6 +49,5 @@ pub async fn put(
         100_000_000_000u64,
     );
     deploy.sign(&SecretKey::from_pem(secret_key_bytes).unwrap());
-    let deploy_result = layer_one_deploy_handler.put_deploy(deploy).await;
-    deploy_result
+    layer_one_deploy_handler.put_deploy(deploy).await
 }

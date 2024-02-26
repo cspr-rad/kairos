@@ -1,10 +1,5 @@
 use casper_client::{get_state_root_hash, query_global_state, JsonRpcId, Verbosity};
 use casper_types::{URef, U512};
-use contract_types::Deposit;
-use serde_json;
-extern crate alloc;
-use alloc::{string::ToString, vec::Vec};
-
 /*
     GET_COUNTER {
         node_address: String,

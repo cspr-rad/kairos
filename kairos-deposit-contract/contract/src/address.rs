@@ -1,11 +1,5 @@
 //! Implementation of an `Address` which refers either an account hash, or a contract hash.
-use alloc::vec::Vec;
-use casper_types::{
-    account::AccountHash,
-    bytesrepr::{self, FromBytes, ToBytes},
-    contracts::ContractPackageHash,
-    AddressableEntity, AddressableEntityHash, CLType, CLTyped, Key, PackageHash,
-};
+use casper_types::{account::AccountHash, CLType, CLTyped, Key, PackageHash};
 
 /// An enum representing an [`AccountHash`] or a [`ContractPackageHash`].
 #[derive(PartialOrd, Ord, PartialEq, Eq, Hash, Clone, Copy, Debug)]
