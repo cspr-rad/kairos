@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 serde = {version="1.0.196", default-features=false}
-casper-types = {git = "https://github.com/jonas089/casper-node", rev="0bcc25f4a203be4e78eed679b54127ab1ed848ab"}
+casper-types = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0"}

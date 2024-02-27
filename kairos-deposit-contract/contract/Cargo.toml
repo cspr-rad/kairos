@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-casper-contract = {git = "https://github.com/jonas089/casper-node", rev="0bcc25f4a203be4e78eed679b54127ab1ed848ab", features=["std"]}
-casper-types = {git = "https://github.com/jonas089/casper-node", rev="0bcc25f4a203be4e78eed679b54127ab1ed848ab", default-features=false}
+casper-contract = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0", features=["std"]}
+casper-types = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0", default-features=false}
 contract-types = {path = "../contract-types"}
 serde-json-wasm = "1.0.1"
 
