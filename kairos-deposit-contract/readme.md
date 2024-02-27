@@ -96,10 +96,10 @@ or, on Ubuntu/Debian:
 
 `./build-ubuntu-feat-2.0.sh`
 
-next export the path to .wasm binaries:
+next, set the environment variable that points to the compiled .wasm binaries (contracts and sessions):
 
 ```bash
-export RUST_WORKSPACE_PATH="..."
+chef@chef:~/Kairos/kairos-cctl-env/kairos$ export PATH_TO_WASM_BINARIES="/home/chef/Kairos/kairos-cctl-env/kairos/kairos-deposit-contract/target/wasm32-unknown-unknown/release"
 ```
 
 then:

@@ -4,8 +4,8 @@ resolver = "2"
 members = [
   "kairos-cli",
   "kairos-server",
-  "kairos-deposit-contract-tests",
   "kairos-deposit-contract/contract-types",
+  "kairos-deposit-contract-tests",
   "kairos-contract-cli"
 ]
 
