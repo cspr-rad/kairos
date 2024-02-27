@@ -96,6 +96,12 @@ or, on Ubuntu/Debian:
 
 `./build-ubuntu-feat-2.0.sh`
 
+next export the path to .wasm binaries:
+
+```bash
+export RUST_WORKSPACE_PATH="..."
+```
+
 then:
 
 ```bash
