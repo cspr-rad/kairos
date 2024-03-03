@@ -3,10 +3,21 @@ use risc0_zkvm::Receipt;
 pub use tornado_tree_rs::{TornadoTree, crypto::hash_bytes};
 use casper_types::{bytesrepr::ToBytes, Key, U512};
 use serde_json;
+use std::collections::HashMap;
+
+// The decision to use "Key" over  more deterministic types is based on the variable design
+// with respect to target node architecture. Everything will be handled in Bytes and Keys.
+
 #[derive(Serialize, Deserialize)]
 pub struct RiscZeroProof{
     pub receipt: Receipt,
     pub program_id: Vec<u32>
+}
+
+// temporary solution, ideally these are not submitted to the L1
+#[derive(Serialize, Deserialize)]
+struct Accounting {
+    balances: HashMap<Key, U512>,
 }
 
 #[derive(Serialize, Deserialize)]
