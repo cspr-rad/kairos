@@ -31,14 +31,9 @@ impl Transaction {
         match self {
             Transaction::Deposit {
                 account, amount, ..
-            } => {
-                let mut preimage: Vec<u8> = account.to_bytes().unwrap();
-                preimage.append(&mut amount.to_bytes().unwrap());
-                hash_bytes(preimage)
-            }
-            Transaction::Withdrawal {
+            } | Transaction::Withdrawal{
                 account, amount, ..
-            } => {
+            }=> {
                 let mut preimage: Vec<u8> = account.to_bytes().unwrap();
                 preimage.append(&mut amount.to_bytes().unwrap());
                 hash_bytes(preimage)
