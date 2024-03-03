@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+
+members = [
+	"kairos-deposit-contract-tests"
+]
+
+[workspace.package]
+name = "kairos-contract"
+version = "0.1.0"
+edition = "2021"

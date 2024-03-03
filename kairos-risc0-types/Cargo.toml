@@ -1,0 +1,9 @@
+[package]
+name = "kairos-risc0-types"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+risc0-zkvm = "0.20.1"
+serde = {version="1.0.197", features=["derive"]}
+tornado-tree-rs = {path="../tornado-tree-rs"}

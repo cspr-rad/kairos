@@ -1,0 +1,11 @@
+[package]
+name = "native-cspr-tx"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+tornado-tree-rs = {path="../../tornado-tree-rs"}
+#kairos-risc0-types = {path="../../kairos-risc0-types"}
+risc0-zkvm = { version = "0.20.1", default-features = false, features = ["std"] }

@@ -1,0 +1,11 @@
+[package]
+name = "tornado-tree-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sha256="1.4.0"
+uint = "0.9.0"
+sha2 = "0.10.0"
+digest = "0.10.0"
+serde = {version="1.0.197", features=["derive"]}
