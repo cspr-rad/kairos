@@ -20,7 +20,7 @@ pub struct RiscZeroProof{
 
 #[derive(Serialize, Deserialize)]
 struct MockLayerTwoStorage {
-    balances: HashMap<Key, U512>,
+    balances: MockAccounting,
     transactions: TransactionHistory
 }
 
@@ -31,15 +31,28 @@ impl HashableStruct for MockLayerTwoStorage{
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct MockAccounting{
+    balances: HashMap<Key, U512>,
+}
+impl HashableStruct for MockAccounting{
+    fn hash(&self) -> Vec<u8>{
+        hash_bytes(serde_json::to_vec(self).unwrap())
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct TransactionHistory{
     pub transactions: Vec<Transaction>
 }
 
+// This will likely not be used, since hashing the Balance state will be sufficient
+// New leaf in the tree <- New Balance state
 impl HashableStruct for TransactionHistory{
     fn hash(&self) -> Vec<u8>{
         hash_bytes(serde_json::to_vec(self).unwrap())
     }
 }
+
 
 #[derive(Serialize, Deserialize)]
 pub enum Transaction {
@@ -96,8 +109,27 @@ impl HashableStruct for Transaction{
 }
 
 
+/* The storage component is simplified on purpose for quick prototyping!
+
+The circuit will execute a bunch of tasks in order:
+
+    1. Deposits
+        - increase the account balance
+    2. Transfers
+        - verify the transaction signature
+        - apply the change in balance for the affected accounts
+    3. Withdrawals
+        todo!
+    
+    Hash the Balance State and insert it as a new leaf to the TornadoTree
+    ! For the client to be able to verify the inclusion of the leaf a merkle proof must be created.
+    ! Public input must be the old Tree
+
+    => The contract must compare the public input Tree to its current Tree and revert if there is a mismatch.
+*/
+
 #[derive(Serialize, Deserialize)]
 pub struct CircuitInput{
     pub tornado: TornadoTree,
-    pub leaf: Vec<u8>
+    pub mock_storage: MockLayerTwoStorage,
 }
