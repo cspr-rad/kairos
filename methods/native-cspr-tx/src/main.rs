@@ -1,5 +1,4 @@
 #![no_main]
-
 use risc0_zkvm::guest::env;
 use tornado_tree_rs::TornadoTree;
 risc0_zkvm::guest::entry!(main);
