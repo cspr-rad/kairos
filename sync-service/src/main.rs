@@ -42,8 +42,6 @@ async fn await_deposits(){
 async fn main(){
     let state: (TornadoTree, MockLayerTwoStorage) = setup_network();
     // await_deposits();
-    
-    
     /* Storage
         implement a simple storage for 'state' - mysql or even just a file-based I/O script
         add new transactions, update the balances and set the 'processed' flag in storage
