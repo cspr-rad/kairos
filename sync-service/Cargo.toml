@@ -1,13 +1,12 @@
 [package]
-name = "kairos-service"
+name = "sync-service"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 kairos-risc0-types = {path="../kairos-risc0-types"}
 kairos-contract-cli = {path="../kairos-contract-cli"}
+mock-storage = {path="../mock-storage"}
 tokio = {version="1.36.0", features=["full"]}
 methods = { path = "../methods" }
 risc0-zkvm = "0.20.1"

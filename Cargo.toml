@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["host", "kairos-service", "methods"]
+members = ["host", "methods", "api-service", "kairos-contract-cli", "kairos-risc0-types", "mock-storage", "sync-service"]
 
 # Always optimize; building and running the guest takes much longer without optimization.
 [profile.dev]
