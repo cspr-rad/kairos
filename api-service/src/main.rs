@@ -3,7 +3,7 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes};
+use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes, constants::{FORMATTED_DEFAULT_ACCOUNT_STR, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE}};
 use kairos_contract_cli::deployments::{get_deposit_event, get_counter};
 use std::collections::HashMap;
 

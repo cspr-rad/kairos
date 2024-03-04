@@ -3,12 +3,13 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes};
+use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes, onstants::{FORMATTED_DEFAULT_ACCOUNT_STR, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE}};
 use kairos_contract_cli::deployments::{get_deposit_event, get_counter};
 use contract_types::Deposit;
 use mock_storage::{MockStorage, MutableState};
 use std::collections::HashMap;
 use std::thread::sleep;
+use core::time::Duration;
 
 /* Current development goal:
     1. Monitor Deposits on L1 and add them to the MockLayerTwoStorage
@@ -24,7 +25,7 @@ use std::thread::sleep;
     7. Implement Transfer signatures (not difficult, but pushed back due to it being a straight-forward process)
 */
 
-async fn await_deposits(storage: MockStorage){
+async fn await_deposits(mock_state: MockStorage){
     // store L2 index in memory for testing
     let deposit_index: u128 = 0;
     loop{
@@ -36,6 +37,7 @@ async fn await_deposits(storage: MockStorage){
                 let deposit: Deposit = get_deposit_event::get(node_address, rpc_port, dict_uref, key).await;
                 // store deposit locally
                 // todo: add Key / identifier / height to Deposit struct
+                // storage and state identifiers are quite confusing, should be more concise in the future.
                 let mut mock_storage = mock_state.1;
                 mock_storage.insert_transaction("0".to_string(), Transaction::Deposit { 
                     account: deposit.account, 
@@ -46,7 +48,7 @@ async fn await_deposits(storage: MockStorage){
             }
         }
         // check every 10 seconds for simple demo
-        thread::sleep(Duration::from_millis(10000));
+        sleep(Duration::from_millis(10000));
         // add some sort of timeout here
     }
 }
@@ -60,7 +62,7 @@ async fn await_deposits(storage: MockStorage){
 #[tokio::main]
 async fn main(){
     let mock_storage = MockStorage{
-        path: "/Users/chef/Desktop/kairos-risc0/host/zk-mock.dat".to_string()
+        path: PATH_TO_MOCK_STATE_FILE.to_string()
     };
     await_deposits(mock_storage);
     /* Storage

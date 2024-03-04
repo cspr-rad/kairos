@@ -3,7 +3,7 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes};
+use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes, constants::{FORMATTED_DEFAULT_ACCOUNT_STR, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE}};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]
@@ -49,14 +49,14 @@ fn test_proof_generation(){
 
     let mut transactions: HashMap<String, Transaction> = HashMap::new();
     transactions.insert("0".to_string(), Transaction::Deposit{
-        account: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+        account: Key::from_formatted_str(FORMATTED_DEFAULT_ACCOUNT_STR).unwrap(),
         amount: U512::from(0u64),
         processed: false,
         id: 0
     });
     transactions.insert("1".to_string(), Transaction::Transfer{
-        sender: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
-        recipient: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+        sender: Key::from_formatted_str(FORMATTED_DEFAULT_ACCOUNT_STR).unwrap(),
+        recipient: Key::from_formatted_str(FORMATTED_DEFAULT_ACCOUNT_STR).unwrap(),
         amount: U512::from(0),
         signature: vec![],
         processed: false,
