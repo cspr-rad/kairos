@@ -42,7 +42,7 @@ pub async fn deposit_handler(
     *balance = updated_balance;
 
     tracing::info!(
-        "Updated account public_key={} balance={}",
+        "Updated account public_key={:?} balance={}",
         public_key,
         updated_balance
     );
