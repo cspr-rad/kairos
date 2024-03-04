@@ -7,3 +7,4 @@ edition.workspace = true
 
 [dependencies]
 rasn = { version = "0.12.5", default-features = false, features = ["macros"] }
+thiserror = "1.0.57"
