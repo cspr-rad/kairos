@@ -45,7 +45,7 @@ impl TornadoTree{
 }
 
 #[test]
-fn test_single_merkle_proof(){
+fn test_tree(){
     // construct merkle tree
     let mut tree: TornadoTree = TornadoTree{
         zero_node: hash_bytes(vec![0;32]),

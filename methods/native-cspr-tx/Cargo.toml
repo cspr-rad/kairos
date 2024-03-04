@@ -6,6 +6,5 @@ edition = "2021"
 [workspace]
 
 [dependencies]
-tornado-tree-rs = {path="../../tornado-tree-rs"}
-#kairos-risc0-types = {path="../../kairos-risc0-types"}
+kairos-risc0-types = {path="../../kairos-risc0-types"}
 risc0-zkvm = { version = "0.20.1", default-features = false, features = ["std"] }

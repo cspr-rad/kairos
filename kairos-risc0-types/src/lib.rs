@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
-use risc0_zkvm::Receipt;
+//use risc0_zkvm::Receipt;
 pub use tornado_tree_rs::{TornadoTree, crypto::hash_bytes};
-use casper_types::{bytesrepr::ToBytes, Key, U512};
+pub use casper_types::{bytesrepr::ToBytes, Key, U512};
 use serde_json;
 use std::collections::HashMap;
 mod tests;
@@ -12,16 +12,16 @@ pub trait HashableStruct{
     fn hash(&self) -> Vec<u8>;
 }
 
-#[derive(Serialize, Deserialize)]
+/*#[derive(Serialize, Deserialize)]
 pub struct RiscZeroProof{
     pub receipt: Receipt,
     pub program_id: Vec<u32>
-}
+}*/
 
-#[derive(Serialize, Deserialize)]
-struct MockLayerTwoStorage {
-    balances: MockAccounting,
-    transactions: TransactionHistory
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct MockLayerTwoStorage {
+    pub balances: MockAccounting,
+    pub transactions: TransactionHistory
 }
 
 impl HashableStruct for MockLayerTwoStorage{
@@ -30,9 +30,9 @@ impl HashableStruct for MockLayerTwoStorage{
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MockAccounting{
-    balances: HashMap<Key, U512>,
+    pub balances: HashMap<Key, U512>,
 }
 impl HashableStruct for MockAccounting{
     fn hash(&self) -> Vec<u8>{
@@ -40,7 +40,7 @@ impl HashableStruct for MockAccounting{
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TransactionHistory{
     pub transactions: Vec<Transaction>
 }
@@ -53,8 +53,7 @@ impl HashableStruct for TransactionHistory{
     }
 }
 
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Transaction {
     Deposit {
         account: Key,
@@ -81,9 +80,9 @@ impl HashableStruct for Transaction{
     fn hash(&self) -> Vec<u8> {
         match self {
             Transaction::Deposit {
-                account, amount, processed, id
+                account, amount, processed: _, id
             } | Transaction::Withdrawal{
-                account, amount, processed, id
+                account, amount, processed: _, id
             } => {
                 let mut preimage: Vec<u8> = account.to_bytes().unwrap();
                 preimage.append(&mut amount.to_bytes().unwrap());
@@ -94,8 +93,8 @@ impl HashableStruct for Transaction{
                 sender,
                 recipient,
                 amount,
-                signature,
-                processed,
+                signature: _,
+                processed: _,
                 nonce
             } => {
                 let mut preimage: Vec<u8> = sender.to_bytes().unwrap();
@@ -108,28 +107,14 @@ impl HashableStruct for Transaction{
     }
 }
 
-
-/* The storage component is simplified on purpose for quick prototyping!
-
-The circuit will execute a bunch of tasks in order:
-
-    1. Deposits
-        - increase the account balance
-    2. Transfers
-        - verify the transaction signature
-        - apply the change in balance for the affected accounts
-    3. Withdrawals
-        todo!
-    
-    Hash the Balance State and insert it as a new leaf to the TornadoTree
-    ! For the client to be able to verify the inclusion of the leaf a merkle proof must be created.
-    ! Public input must be the old Tree
-
-    => The contract must compare the public input Tree to its current Tree and revert if there is a mismatch.
-*/
-
-#[derive(Serialize, Deserialize)]
-pub struct CircuitInput{
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CircuitArgs{
     pub tornado: TornadoTree,
     pub mock_storage: MockLayerTwoStorage,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CircuitJournal{
+    pub input: CircuitArgs,
+    pub output: Option<CircuitArgs>
 }
