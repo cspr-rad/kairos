@@ -18,7 +18,7 @@ pub struct RiscZeroProof{
     pub program_id: Vec<u32>
 }*/
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct MockLayerTwoStorage {
     pub balances: MockAccounting,
     pub transactions: TransactionHistory
@@ -30,7 +30,7 @@ impl HashableStruct for MockLayerTwoStorage{
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct MockAccounting{
     pub balances: HashMap<Key, U512>,
 }
@@ -40,7 +40,7 @@ impl HashableStruct for MockAccounting{
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TransactionHistory{
     pub transactions: Vec<Transaction>
 }
@@ -53,7 +53,7 @@ impl HashableStruct for TransactionHistory{
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum Transaction {
     Deposit {
         account: Key,
@@ -107,13 +107,13 @@ impl HashableStruct for Transaction{
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CircuitArgs{
     pub tornado: TornadoTree,
     pub mock_storage: MockLayerTwoStorage,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CircuitJournal{
     pub input: CircuitArgs,
     pub output: Option<CircuitArgs>

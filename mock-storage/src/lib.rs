@@ -3,12 +3,12 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json;
 
-use std::fs::OpenOptions;
-use std::io::{self, Write};
+use std::fs::{OpenOptions, File};
+use std::io::{self, Read, Write};
 
 use anyhow::Result;
 
-pub fn setup_network(&self) -> (TornadoTree, MockLayerTwoStorage){
+pub fn init_mock_state() -> (TornadoTree, MockLayerTwoStorage){
     let mut tree: TornadoTree = TornadoTree{
         zero_node: hash_bytes(vec![0;32]),
         zero_levels: Vec::new(),
@@ -37,10 +37,10 @@ pub fn setup_network(&self) -> (TornadoTree, MockLayerTwoStorage){
     (tree, mock_storage)
 }
 
-struct MockStorage{
-    path: &str
+struct MockStorage<'a>{
+    path: &'a str
 }
-impl MockStorage{
+impl MockStorage<'_>{
     pub fn init_storage(&self) -> Result<()>{
         let mut file = OpenOptions::new()
             .write(true)
@@ -57,10 +57,11 @@ impl MockStorage{
     }
     
     
-    fn read_serialized_struct_from_file(&self) -> Result<&str>{
+    fn read_serialized_struct_from_file(&self) -> Result<String>{
         let mut file = File::open(self.path)?;
         let mut contents = String::new();
-        Ok(file.read_to_string(&mut contents))
+        let content = file.read_to_string(&mut contents)?;
+        Ok(contents)
     }
 }
 
@@ -72,5 +73,20 @@ impl MockStorage{
 
 #[test]
 fn test_mock_storage(){
+    let mock_state: (TornadoTree, MockLayerTwoStorage) = init_mock_state();
+    let tornado_storage = MockStorage{
+        path: "/Users/chef/Desktop/kairos-risc0/tornado.dat"
+    };
+    tornado_storage.init_storage();
+    let mock_layer_two_storage = MockStorage{
+        path: "/Users/chef/Desktop/kairos-risc0/mock.dat"
+    };
+    mock_layer_two_storage.init_storage();
 
+    tornado_storage.write_struct_to_file(&mock_state.0);
+    mock_layer_two_storage.write_struct_to_file(&mock_state.1);
+    let local_tornado = tornado_storage.read_serialized_struct_from_file().unwrap();
+    assert_eq!(&serde_json::from_str::<TornadoTree>(&local_tornado).unwrap(), &mock_state.0);
+    let local_mock_storage = mock_layer_two_storage.read_serialized_struct_from_file().unwrap();
+    assert_eq!(&serde_json::from_str::<MockLayerTwoStorage>(&local_mock_storage).unwrap(), &mock_state.1);
 }

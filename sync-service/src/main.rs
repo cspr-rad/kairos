@@ -5,7 +5,7 @@ use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes};
 use kairos_contract_cli::deployments::{get_deposit_event, get_counter};
-use mock_storage::setup_network;
+use mock_storage::init_mock_state;
 use std::collections::HashMap;
 
 /* Current development goal:
@@ -40,7 +40,7 @@ async fn await_deposits(){
 
 #[tokio::main]
 async fn main(){
-    let state: (TornadoTree, MockLayerTwoStorage) = setup_network();
+    let state: (TornadoTree, MockLayerTwoStorage) = init_mock_state();
     // await_deposits();
     /* Storage
         implement a simple storage for 'state' - mysql or even just a file-based I/O script
