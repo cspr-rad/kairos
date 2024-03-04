@@ -10,4 +10,8 @@ pub enum TxError {
     /// Errors related to decoding.
     #[error("decode error: {0}")]
     DecodeError(DecodeError),
+
+    /// Constraint violation for a specific field.
+    #[error("constraint violated for '{field}'")]
+    ConstraintViolation { field: &'static str },
 }
