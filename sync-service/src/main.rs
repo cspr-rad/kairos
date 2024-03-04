@@ -25,7 +25,7 @@ use core::time::Duration;
     7. Implement Transfer signatures (not difficult, but pushed back due to it being a straight-forward process)
 */
 
-async fn await_deposits(mock_state: MockStorage){
+async fn await_deposits(mock_storage: MockLayerTwoStorage){
     // store L2 index in memory for testing
     let deposit_index: u128 = 0;
     loop{
@@ -34,11 +34,10 @@ async fn await_deposits(mock_state: MockStorage){
         if on_chain_height > deposit_index.into(){
             for i in deposit_index..on_chain_height.as_u128(){
                 // get the deposit and insert it into local storage / apply the L2 balance changes
-                let deposit: Deposit = get_deposit_event::get(node_address, rpc_port, dict_uref, key).await;
+                let deposit: Deposit = get_deposit_event::get(node_address, rpc_port, dict_uref, "0".to_string()).await;
                 // store deposit locally
                 // todo: add Key / identifier / height to Deposit struct
                 // storage and state identifiers are quite confusing, should be more concise in the future.
-                let mut mock_storage = mock_state.1;
                 mock_storage.insert_transaction("0".to_string(), Transaction::Deposit { 
                     account: deposit.account, 
                     amount: deposit.amount, 
