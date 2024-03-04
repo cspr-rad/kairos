@@ -6,8 +6,9 @@ use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes};
 use kairos_contract_cli::deployments::{get_deposit_event, get_counter};
 use contract_types::Deposit;
-use mock_storage::{init_mock_state, MockStorage, MutableState};
+use mock_storage::{MockStorage, MutableState};
 use std::collections::HashMap;
+use std::thread::sleep;
 
 /* Current development goal:
     1. Monitor Deposits on L1 and add them to the MockLayerTwoStorage
@@ -23,7 +24,7 @@ use std::collections::HashMap;
     7. Implement Transfer signatures (not difficult, but pushed back due to it being a straight-forward process)
 */
 
-async fn await_deposits(){
+async fn await_deposits(storage: MockStorage){
     // store L2 index in memory for testing
     let deposit_index: u128 = 0;
     loop{
@@ -34,9 +35,18 @@ async fn await_deposits(){
                 // get the deposit and insert it into local storage / apply the L2 balance changes
                 let deposit: Deposit = get_deposit_event::get(node_address, rpc_port, dict_uref, key).await;
                 // store deposit locally
-
+                // todo: add Key / identifier / height to Deposit struct
+                let mut mock_storage = mock_state.1;
+                mock_storage.insert_transaction("0".to_string(), Transaction::Deposit { 
+                    account: deposit.account, 
+                    amount: deposit.amount, 
+                    processed: false, 
+                    id: 0 
+                });
             }
         }
+        // check every 10 seconds for simple demo
+        thread::sleep(Duration::from_millis(10000));
         // add some sort of timeout here
     }
 }
@@ -49,8 +59,10 @@ async fn await_deposits(){
 
 #[tokio::main]
 async fn main(){
-    let state: (TornadoTree, MockLayerTwoStorage) = init_mock_state();
-    // await_deposits();
+    let mock_storage = MockStorage{
+        path: "/Users/chef/Desktop/kairos-risc0/host/zk-mock.dat".to_string()
+    };
+    await_deposits(mock_storage);
     /* Storage
         implement a simple storage for 'state' - mysql or even just a file-based I/O script
         add new transactions, update the balances and set the 'processed' flag in storage

@@ -104,3 +104,16 @@ fn test_mock_storage(){
     let local_mock_storage = mock_layer_two_storage.read_serialized_struct_from_file().unwrap();
     assert_eq!(&serde_json::from_str::<MockLayerTwoStorage>(&local_mock_storage).unwrap(), &mock_state.1);
 }
+
+#[test]
+fn test_insert_transaction(){
+    let mock_state: (TornadoTree, MockLayerTwoStorage) = init_mock_state();
+    let mut mock_storage = mock_state.1;
+    mock_storage.insert_transaction("0".to_string(), Transaction::Deposit { 
+        account: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(), 
+        amount: U512::from(0), 
+        processed: false, 
+        id: 0 
+    });
+    println!("Mock storage: {:?}", &mock_storage);
+}
