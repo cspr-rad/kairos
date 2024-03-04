@@ -5,7 +5,8 @@ use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes};
 use kairos_contract_cli::deployments::{get_deposit_event, get_counter};
-use mock_storage::init_mock_state;
+use contract_types::Deposit;
+use mock_storage::{init_mock_state, MockStorage, MutableState};
 use std::collections::HashMap;
 
 /* Current development goal:
@@ -31,12 +32,20 @@ async fn await_deposits(){
         if on_chain_height > deposit_index.into(){
             for i in deposit_index..on_chain_height.as_u128(){
                 // get the deposit and insert it into local storage / apply the L2 balance changes
-                let deposit = get_deposit_event::get(node_address, rpc_port, dict_uref, key).await;
+                let deposit: Deposit = get_deposit_event::get(node_address, rpc_port, dict_uref, key).await;
+                // store deposit locally
+
             }
         }
         // add some sort of timeout here
     }
 }
+
+/*
+    For testing run the service manually alongside the api service
+    Either implement a simple CLI or hardcode the node_address, rpc_port, 
+    dict_uref according to the local nctl network
+*/
 
 #[tokio::main]
 async fn main(){
