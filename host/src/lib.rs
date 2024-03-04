@@ -43,20 +43,31 @@ fn test_proof_generation(){
         depth: 5
     };
     tree.calculate_zero_levels();
+
+    let mut transactions: HashMap<String, Transaction> = HashMap::new();
+    transactions.insert("0".to_string(), Transaction::Deposit{
+        account: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+        amount: U512::from(0u64),
+        processed: false,
+        id: 0
+    });
+    transactions.insert("1".to_string(), Transaction::Transfer{
+        sender: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+        recipient: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+        amount: U512::from(0),
+        signature: vec![],
+        processed: false,
+        nonce: 0
+    });
+    let mut batch = TransactionHistory{
+        transactions
+    };
+    
     let mock_storage: MockLayerTwoStorage = MockLayerTwoStorage{
         balances: MockAccounting{
             balances: HashMap::new()
         },
-        transactions: TransactionHistory{
-            transactions: vec![
-                Transaction::Deposit{
-                    account: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
-                    amount: U512::from(1u64),
-                    processed: false,
-                    id: 0
-                },
-            ]
-        },
+        transactions: batch
     };
     let proof: RiscZeroProof = prove_state_transition(tree, mock_storage);
     let journal: &CircuitJournal = &proof.receipt.journal.decode::<CircuitJournal>().unwrap();

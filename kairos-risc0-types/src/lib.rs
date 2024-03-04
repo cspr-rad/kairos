@@ -42,7 +42,7 @@ impl HashableStruct for MockAccounting{
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TransactionHistory{
-    pub transactions: Vec<Transaction>
+    pub transactions: HashMap<String, Transaction>
 }
 
 // This will likely not be used, since hashing the Balance state will be sufficient

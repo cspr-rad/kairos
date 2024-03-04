@@ -2,22 +2,22 @@
 fn try_hash_batch(){
     use crate::{Transaction, TransactionHistory, HashableStruct};
     use casper_types::{bytesrepr::ToBytes, Key, U512};
-    let transactions = vec![
-        Transaction::Deposit{
-            account: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
-            amount: U512::from(0u64),
-            processed: false,
-            id: 0
-        },
-        Transaction::Transfer{
-            sender: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
-            recipient: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
-            amount: U512::from(0),
-            signature: vec![],
-            processed: false,
-            nonce: 0
-        }
-    ];
+    use std::collections::HashMap;
+    let mut transactions: HashMap<String, Transaction> = HashMap::new();
+    transactions.insert("0".to_string(), Transaction::Deposit{
+        account: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+        amount: U512::from(0u64),
+        processed: false,
+        id: 0
+    });
+    transactions.insert("1".to_string(), Transaction::Transfer{
+        sender: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+        recipient: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+        amount: U512::from(0),
+        signature: vec![],
+        processed: false,
+        nonce: 0
+    });
     let mut batch = TransactionHistory{
         transactions
     };

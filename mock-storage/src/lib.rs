@@ -22,43 +22,44 @@ pub fn init_mock_state() -> (TornadoTree, MockLayerTwoStorage){
             balances: HashMap::new()
         },
         transactions: TransactionHistory{
-            transactions: vec![
-                /*
-                Transaction::Deposit{
-                    account: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
-                    amount: U512::from(1u64),
-                    processed: false,
-                    id: 0
-                },
-                */
-            ]
+            transactions: HashMap::new()
         },
     };
     (tree, mock_storage)
 }
 
-struct MockStorage<'a>{
-    path: &'a str
+trait MutableState{
+    fn insert_transaction(&mut self, key: String, transaction: Transaction){}
 }
-impl MockStorage<'_>{
+
+impl MutableState for MockLayerTwoStorage{
+    fn insert_transaction(&mut self, key: String, transaction: Transaction){
+        self.transactions.transactions.insert(key, transaction);
+    }
+}
+
+pub struct MockStorage{
+    pub path: String
+}
+impl MockStorage{
     pub fn init_storage(&self) -> Result<()>{
         let mut file = OpenOptions::new()
             .write(true)
             .create(true)
-            .open(self.path)?;
+            .open(&self.path)?;
         Ok(())
     }
     
-    fn write_struct_to_file<T: Serialize>(&self, mock_store: &T) -> std::io::Result<()> {
+    pub fn write_struct_to_file<T: Serialize>(&self, mock_store: &T) -> std::io::Result<()> {
         let serialized = serde_json::to_string(&mock_store).unwrap();
-        let mut file = File::create(self.path)?;
+        let mut file = File::create(&self.path)?;
         file.write_all(serialized.as_bytes())?;
         Ok(())
     }
     
     
-    fn read_serialized_struct_from_file(&self) -> Result<String>{
-        let mut file = File::open(self.path)?;
+    pub fn read_serialized_struct_from_file(&self) -> Result<String>{
+        let mut file = File::open(&self.path)?;
         let mut contents = String::new();
         let content = file.read_to_string(&mut contents)?;
         Ok(contents)
@@ -72,14 +73,27 @@ impl MockStorage<'_>{
 // for each batch the pending transactions and affected Balances must fit in memory.
 
 #[test]
-fn test_mock_storage(){
+fn test_init_storage(){
     let mock_state: (TornadoTree, MockLayerTwoStorage) = init_mock_state();
     let tornado_storage = MockStorage{
-        path: "/Users/chef/Desktop/kairos-risc0/tornado.dat"
+        path: "/Users/chef/Desktop/kairos-risc0/host/zk-tornado.dat".to_string()
     };
     tornado_storage.init_storage();
     let mock_layer_two_storage = MockStorage{
-        path: "/Users/chef/Desktop/kairos-risc0/mock.dat"
+        path: "/Users/chef/Desktop/kairos-risc0/host/zk-mock.dat".to_string()
+    };
+    mock_layer_two_storage.init_storage();
+}
+
+#[test]
+fn test_mock_storage(){
+    let mock_state: (TornadoTree, MockLayerTwoStorage) = init_mock_state();
+    let tornado_storage = MockStorage{
+        path: "/Users/chef/Desktop/kairos-risc0/host/zk-tornado.dat".to_string()
+    };
+    tornado_storage.init_storage();
+    let mock_layer_two_storage = MockStorage{
+        path: "/Users/chef/Desktop/kairos-risc0/host/zk-mock.dat".to_string()
     };
     mock_layer_two_storage.init_storage();
 

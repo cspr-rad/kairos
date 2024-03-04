@@ -1,7 +1,7 @@
 #![no_main]
 use risc0_zkvm::guest::env;
 risc0_zkvm::guest::entry!(main);
-use kairos_risc0_types::{CircuitArgs, CircuitJournal, HashableStruct, MockAccounting, MockLayerTwoStorage, TornadoTree, Transaction, TransactionHistory};
+use kairos_risc0_types::{CircuitArgs, CircuitJournal, HashableStruct, MockAccounting, MockLayerTwoStorage, TornadoTree, Transaction, TransactionHistory, U512};
 
 pub fn main() {
     let mut inputs: CircuitArgs = env::read();
@@ -13,44 +13,22 @@ pub fn main() {
     let mut balances: MockAccounting = inputs.clone().mock_storage.balances;
     let mut tree: TornadoTree = inputs.tornado;
 
-    
-    // mutate the state
-    for transaction in transactions.clone().transactions{
-        match transaction{
-            Transaction::Deposit { account, amount, processed, id } => {
-                if balances.balances.contains_key(&account){
-                    balances.balances.insert(account.clone(), balances.balances.get(&account).expect("Expected Balance under Key in Mock Storage!") + amount);
-                }
-                else{
-                    balances.balances.insert(account.clone(), amount);
-                }
+    for (key, transaction) in transactions.transactions.iter() {
+        match transaction {
+            Transaction::Deposit { account, amount, .. } => {
+                *balances.balances.entry(account.clone()).or_insert(U512::from(0)) += *amount;
             },
-            Transaction::Transfer { sender, recipient, amount, signature, processed, nonce } => {
-                // todo: verify signature
-                // !!! IMPORTANT !!!
-                // todo!("Must implement signature Verification!");
-                // sender must exist
-                assert!(balances.balances.contains_key(&sender));                
-                let sender_balance = balances.balances.get(&sender).expect("Sender has no Balance Value!");
-                // sender balance must be at least amount
-                assert!(sender_balance >= &amount);
-
-                // decrease sender balance by amount
-                balances.balances.insert(sender.clone(), balances.balances.get(&sender).expect("Expected Sender Balance under Key in Mock Storage!") - amount);
-                // if recipient exists, increase the balance
-                if balances.balances.contains_key(&recipient){
-                    // increase recipient balance by amount
-                    balances.balances.insert(recipient.clone(), balances.balances.get(&recipient).expect("Expected Sender Balance under Key in Mock Storage!") + amount);
-                }
-                // otherwise create funded recipient account
-                else{
-                    balances.balances.insert(recipient.clone(), amount);
-                }
+            Transaction::Transfer { sender, recipient, amount, .. } => {
+                let sender_balance = balances.balances.entry(sender.clone()).or_insert(U512::from(0));
+                assert!(*sender_balance >= *amount, "Sender balance is insufficient.");
+                *sender_balance -= *amount;
+                
+                let recipient_balance = balances.balances.entry(recipient.clone()).or_insert(U512::from(0));
+                *recipient_balance += *amount;
             },
-            // Withdrawal is yet to be implemented.
-            Transaction::Withdrawal { account, amount, processed, id } => {
+            Transaction::Withdrawal { .. } => {
                 todo!("Implement Withdrawals!");
-            }
+            },
         }
     }
 
