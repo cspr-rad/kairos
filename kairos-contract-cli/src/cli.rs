@@ -156,7 +156,7 @@ pub async fn commander() {
             let deposit = get_deposit_event::get(
                 node_address,
                 rpc_port.to_owned(),
-                dict_uref,
+                URef::from_formatted_str(dict_uref).unwrap(),
                 key.to_owned(),
             )
             .await;

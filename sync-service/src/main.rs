@@ -3,7 +3,8 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes, onstants::{FORMATTED_DEFAULT_ACCOUNT_STR, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE}};
+use kairos_risc0_types::{hash_bytes, constants::{FORMATTED_COUNTER_UREF, FORMATTED_DEFAULT_ACCOUNT_STR, FORMATTED_DICT_UREF, NODE_ADDRESS, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE, RPC_PORT}, CircuitArgs, CircuitJournal, HashableStruct, Key, MockAccounting, MockLayerTwoStorage, ToBytes, TornadoTree, Transaction, TransactionHistory, U512};
+use casper_types::URef;
 use kairos_contract_cli::deployments::{get_deposit_event, get_counter};
 use contract_types::Deposit;
 use mock_storage::{MockStorage, MutableState};
@@ -25,16 +26,16 @@ use core::time::Duration;
     7. Implement Transfer signatures (not difficult, but pushed back due to it being a straight-forward process)
 */
 
-async fn await_deposits(mock_storage: MockLayerTwoStorage){
+async fn await_deposits(mut mock_storage: MockLayerTwoStorage){
     // store L2 index in memory for testing
     let deposit_index: u128 = 0;
     loop{
-        let on_chain_height = get_counter::get(node_address, rpc_port, counter_uref).await;
+        let on_chain_height = get_counter::get(NODE_ADDRESS, RPC_PORT.to_string(), URef::from_formatted_str(FORMATTED_COUNTER_UREF).unwrap()).await;
         // fetch all new L1 deposits
         if on_chain_height > deposit_index.into(){
             for i in deposit_index..on_chain_height.as_u128(){
                 // get the deposit and insert it into local storage / apply the L2 balance changes
-                let deposit: Deposit = get_deposit_event::get(node_address, rpc_port, dict_uref, "0".to_string()).await;
+                let deposit: Deposit = get_deposit_event::get(NODE_ADDRESS, RPC_PORT.to_string(), URef::from_formatted_str(FORMATTED_DICT_UREF).unwrap(), "0".to_string()).await;
                 // store deposit locally
                 // todo: add Key / identifier / height to Deposit struct
                 // storage and state identifiers are quite confusing, should be more concise in the future.
@@ -63,7 +64,7 @@ async fn main(){
     let mock_storage = MockStorage{
         path: PATH_TO_MOCK_STATE_FILE.to_string()
     };
-    await_deposits(mock_storage);
+    await_deposits(serde_json::from_str(&mock_storage.read_serialized_struct_from_file().unwrap()).unwrap()).await;
     /* Storage
         implement a simple storage for 'state' - mysql or even just a file-based I/O script
         add new transactions, update the balances and set the 'processed' flag in storage

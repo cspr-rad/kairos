@@ -10,7 +10,7 @@ use contract_types::Deposit;
     }
 */
 
-pub async fn get(node_address: &str, rpc_port: String, dict_uref: &str, key: String) -> Deposit {
+pub async fn get(node_address: &str, rpc_port: String, dict_uref: URef, key: String) -> Deposit {
     let srh = get_state_root_hash(
         JsonRpcId::String(rpc_port.clone()),
         node_address,
@@ -29,7 +29,7 @@ pub async fn get(node_address: &str, rpc_port: String, dict_uref: &str, key: Str
         Verbosity::Low,
         srh,
         casper_client::rpcs::DictionaryItemIdentifier::URef {
-            seed_uref: URef::from_formatted_str(dict_uref).unwrap(),
+            seed_uref: dict_uref,
             dictionary_item_key: key,
         },
     )
