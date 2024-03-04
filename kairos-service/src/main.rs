@@ -4,6 +4,7 @@ use methods::{
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes};
+use kairos_contract_client::deployments::get_deposit_event;
 use std::collections::HashMap;
 
 fn setup_network() -> (TornadoTree, MockLayerTwoStorage){
@@ -40,7 +41,9 @@ fn setup_network() -> (TornadoTree, MockLayerTwoStorage){
 
     4. Accept Transfers via CLI / Rest (without signatures) - reject if L2 Balance insufficient
     5. Generate proofs for Deposits & Transfers and mutate the L2 state
-    6. Implement Transfer signatures
+    6. Submit proofs to the L1
+
+    7. Implement Transfer signatures (not difficult, but pushed back due to it being a straight-forward process)
 */
 
 fn main(){
