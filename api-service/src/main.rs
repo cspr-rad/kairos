@@ -13,7 +13,12 @@ use std::collections::HashMap;
     Transfer -> inserts a transfer into the local mock storage
 
     Submit -> produces a proof for current batch and submits it to the L1
-
+    How is a proof produced?
+        1. the local storage is read (current tree, current mock state which includes balances and transactions)
+        2. the prove_state_transition function in 'host' is called with the local state as input
+        3. the proof struct is returned that can be submitted to the L1 using the L1 client.
+        The contract being called is the Tree/State contract, not the deposit contract!
+        The Tree/State contract utilizes the on-chain verifier / host function
 */
 
 pub fn main(){

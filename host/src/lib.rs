@@ -13,6 +13,9 @@ pub struct RiscZeroProof{
 }
 
 pub fn prove_state_transition(tree: TornadoTree, mock_storage: MockLayerTwoStorage) -> RiscZeroProof{
+    /*
+        todo: sort transactions in order Deposits->Transers(->Withdrawals)
+    */
     env_logger::init();
     let inputs = CircuitArgs{
         tornado: tree,

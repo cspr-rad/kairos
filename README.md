@@ -1,6 +1,8 @@
 # Minimum Viable Product for Kairos - A native Casper Transaction Zk Rollup System
 This repo contains a complete Kairos demo with a mock L2 state that is used to rollup a limited amount of Transactions for demo purposes.
 
+Kairos-lab is a private research branch maintained by @jonas089 with @Rom3dius as a collaborator. The goal is to quickly demo the Kairos rollup system and test new state implementations, trees, proving backends, contracts and L1 target architecture. 
+
 MVP is a fully functional ZK rollup implementation that utilizes an implementation of Torandocash's Merkle Tree and Risc0 as a proving backend.
 
 In order to accelerate development processes, this version is built in pure Rust and the storage component is effectively a serialized struct.
