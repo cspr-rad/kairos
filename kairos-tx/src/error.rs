@@ -14,4 +14,8 @@ pub enum TxError {
     /// Constraint violation for a specific field.
     #[error("constraint violated for '{field}'")]
     ConstraintViolation { field: &'static str },
+
+    /// Signature verification failure.
+    #[error("signature verification failed")]
+    InvalidSignature,
 }
