@@ -1,5 +1,36 @@
 use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes};
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
+use serde_json;
+
+use std::fs::OpenOptions;
+use std::io::{self, Write};
+
+use anyhow::Result;
+
+pub fn init_storage() -> Result<()>{
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open("/Users/chef/Desktop/kairos-risc0/mock-store.dat")?;
+    Ok(())
+}
+
+
+fn write_struct_to_file(mock_store: MockLayerTwoStorage) -> std::io::Result<()> {
+    let serialized = serde_json::to_string(&mock_store).unwrap();
+    let mut file = File::create("/Users/chef/Desktop/kairos-risc0/mock-store.dat")?;
+    file.write_all(serialized.as_bytes())?;
+    Ok(())
+}
+
+fn read_struct_from_file() -> std::io::Result<MyStruct> {
+    let mut file = File::open("/Users/chef/Desktop/kairos-risc0/mock-store.dat")?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    let my_struct: MyStruct = serde_json::from_str(&contents).unwrap();
+    Ok(my_struct)
+}
 
 pub fn setup_network() -> (TornadoTree, MockLayerTwoStorage){
     let mut tree: TornadoTree = TornadoTree{
@@ -33,3 +64,4 @@ pub fn setup_network() -> (TornadoTree, MockLayerTwoStorage){
 // later the tree will be constructed inside the L1 contract from which it can be queried.
 // finally the transactions are stored in an actual DB and only pending Transactions and affected Balances are submitted to the circuit / batched.
 // for each batch the pending transactions and affected Balances must fit in memory.
+

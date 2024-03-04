@@ -22,7 +22,6 @@ use std::collections::HashMap;
     7. Implement Transfer signatures (not difficult, but pushed back due to it being a straight-forward process)
 */
 
-
 async fn await_deposits(){
     // store L2 index in memory for testing
     let deposit_index: u128 = 0;
@@ -42,6 +41,9 @@ async fn await_deposits(){
 #[tokio::main]
 async fn main(){
     let state: (TornadoTree, MockLayerTwoStorage) = setup_network();
+    // await_deposits();
+    
+    
     /* Storage
         implement a simple storage for 'state' - mysql or even just a file-based I/O script
         add new transactions, update the balances and set the 'processed' flag in storage

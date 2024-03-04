@@ -12,7 +12,7 @@ pub struct RiscZeroProof{
     pub program_id: Vec<u32>
 }
 
-fn prove_state_transition(tree: TornadoTree, mock_storage: MockLayerTwoStorage) -> RiscZeroProof{
+pub fn prove_state_transition(tree: TornadoTree, mock_storage: MockLayerTwoStorage) -> RiscZeroProof{
     env_logger::init();
     let inputs = CircuitArgs{
         tornado: tree,
