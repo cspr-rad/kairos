@@ -1,0 +1,6 @@
+[package]
+name = "kairos-tx"
+version.workspace = true
+edition.workspace = true
+
+[lib]
