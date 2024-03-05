@@ -9,7 +9,7 @@ impl CasperPublicKey {
         let (public_key, _remainder) =
             casper_types::PublicKey::from_bytes(bytes).map_err(|_e| {
                 CryptoError::Serialization {
-                    context: "public key",
+                    context: "public key serialization",
                 }
             })?;
         Ok(Self(public_key))
@@ -18,7 +18,7 @@ impl CasperPublicKey {
     #[allow(unused)]
     fn to_bytes(&self) -> Result<Vec<u8>, CryptoError> {
         self.0.to_bytes().map_err(|_e| CryptoError::Serialization {
-            context: "public key",
+            context: "public key deserialization",
         })
     }
 }
