@@ -1,15 +1,8 @@
 pub mod crypto;
-use std::thread::current;
-
 use crypto::hash_left_right;
-
-use crate::crypto::hash_bytes;
-
 use serde::{Serialize, Deserialize};
 
 pub const ROOT_HISTORY_SIZE: u16 = 30u16;
-
-
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TornadoTree{
     pub zero_node: Vec<u8>,
@@ -64,6 +57,7 @@ impl TornadoTree{
 
 #[test]
 fn test_tree(){
+    use crypto::hash_bytes;
     // construct merkle tree
     let mut tree: TornadoTree = TornadoTree{
         zero_node: hash_bytes(vec![0;32]),
@@ -74,7 +68,7 @@ fn test_tree(){
         depth: 5
     };
     tree.calculate_zero_levels();
-    let mut leaf = vec![242, 69, 81, 38, 252, 95, 197, 129, 177, 105, 42, 137, 129, 73, 125, 148, 130, 204, 83, 82, 126, 104, 106, 71, 156, 96, 55, 233, 132, 103, 128, 11];
+    let leaf = vec![242, 69, 81, 38, 252, 95, 197, 129, 177, 105, 42, 137, 129, 73, 125, 148, 130, 204, 83, 82, 126, 104, 106, 71, 156, 96, 55, 233, 132, 103, 128, 11];
     let _ = tree.add_leaf(leaf.clone());
     let merkle_root = tree.root.clone();
     assert_eq!(tree.merkle_proof(leaf), merkle_root.unwrap());

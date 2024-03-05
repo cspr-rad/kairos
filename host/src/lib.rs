@@ -3,7 +3,7 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{constants::{FORMATTED_DEFAULT_ACCOUNT_STR, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE}, hash_bytes, CircuitArgs, CircuitJournal, Deposit, HashableStruct, Key, ToBytes, TornadoTree, TransactionBatch, Transfer, Withdrawal, U512};
+use kairos_risc0_types::{constants::{FORMATTED_DEFAULT_ACCOUNT_STR}, hash_bytes, CircuitArgs, CircuitJournal, Deposit, HashableStruct, Key, ToBytes, TornadoTree, TransactionBatch, Transfer, Withdrawal, U512};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]

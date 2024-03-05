@@ -1,7 +1,7 @@
 #![no_main]
 use risc0_zkvm::guest::env;
 risc0_zkvm::guest::entry!(main);
-use kairos_risc0_types::{CircuitArgs, CircuitJournal, HashableStruct, TornadoTree, TransactionBatch, U512};
+use kairos_risc0_types::{CircuitArgs, HashableStruct, TornadoTree, TransactionBatch};
 
 pub fn main() {
     let inputs: CircuitArgs = env::read();
@@ -23,6 +23,7 @@ pub fn main() {
 
     }
 */
+
     // hash the batch and add it to the tornado tree
     let new_leaf: Vec<u8> = batch.hash();
     tree.add_leaf(new_leaf);

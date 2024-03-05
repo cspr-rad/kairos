@@ -6,7 +6,6 @@ pub use tornado_tree_rs::{TornadoTree, crypto::hash_bytes};
 
 pub use casper_types::{bytesrepr::ToBytes, Key, U512};
 use serde_json;
-use std::collections::HashMap;
 mod tests;
 pub mod constants;
 // The decision to use "Key" over  more deterministic types is based on the variable design

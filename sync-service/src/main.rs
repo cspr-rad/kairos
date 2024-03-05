@@ -3,7 +3,7 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{hash_bytes, constants::{FORMATTED_COUNTER_UREF, FORMATTED_DEFAULT_ACCOUNT_STR, FORMATTED_DICT_UREF, NODE_ADDRESS, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE, RPC_PORT}, CircuitArgs, CircuitJournal, HashableStruct, Key, ToBytes, TornadoTree, Transfer, Deposit, Withdrawal, U512};
+use kairos_risc0_types::{hash_bytes, constants::{FORMATTED_COUNTER_UREF, FORMATTED_DEFAULT_ACCOUNT_STR, FORMATTED_DICT_UREF, NODE_ADDRESS, RPC_PORT}, CircuitArgs, CircuitJournal, HashableStruct, Key, ToBytes, TornadoTree, Transfer, Deposit, Withdrawal, U512};
 use casper_types::URef;
 use kairos_contract_cli::deployments::{get_deposit_event, get_counter};
 // should be same as deposit.
