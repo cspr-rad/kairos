@@ -43,6 +43,9 @@ impl HashableStruct for MockAccounting{
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TransactionHistory{
+    // for first iteration of tests: String is just index
+    // Will be tested with 1 Deposit, where index is "0"
+    // and one transfer where index is "1"
     pub transactions: HashMap<String, Transaction>
 }
 

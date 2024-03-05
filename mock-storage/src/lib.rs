@@ -11,6 +11,7 @@ pub fn init_mock_state() -> (TornadoTree, MockLayerTwoStorage){
         zero_node: hash_bytes(vec![0;32]),
         zero_levels: Vec::new(),
         filled: vec![vec![], vec![], vec![], vec![], vec![]],
+        root: None,
         index: 0,
         depth: 5
     };
