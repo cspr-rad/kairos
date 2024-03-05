@@ -6,11 +6,10 @@ members = [
   "malicious-session",
   "withdrawal-session",
   "deposit-session",
-  "contract-types",
   "contract"
 ]
 
 [workspace.package]
-name = "kairos-deposit-contract"
+name = "kairos-deposit-contracts"
 version = "0.1.0"
 edition = "2021"

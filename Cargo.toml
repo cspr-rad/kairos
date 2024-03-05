@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 # Currently guest only exists for the workspace configuration not to break
-members = ["host", "methods/native-cspr-tx", "methods/guest", "kairos-contract-cli", "kairos-risc0-types", "mock-storage", "sync-service", "tornado-tree-rs"]
+members = ["host", "methods/native-cspr-tx", "methods/guest", "kairos-contract-cli", "kairos-risc0-types", "sync-service", "tornado-tree-rs"]
 exclude = ["api-service"]
 
 # Always optimize; building and running the guest takes much longer without optimization.

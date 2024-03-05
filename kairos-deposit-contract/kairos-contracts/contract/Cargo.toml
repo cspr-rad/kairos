@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 casper-contract = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0", features=["std"]}
 casper-types = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0", default-features=false}
-contract-types = {path = "../contract-types"}
+kairos-risc0-types = {path = "../../../kairos-risc0-types"}
 serde-json-wasm = "1.0.1"
 
 [build]

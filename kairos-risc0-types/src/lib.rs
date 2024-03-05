@@ -1,6 +1,9 @@
 use serde::{Serialize, Deserialize};
 //use risc0_zkvm::Receipt;
+
+#[cfg(feature = "tornado-tree")]
 pub use tornado_tree_rs::{TornadoTree, crypto::hash_bytes};
+
 pub use casper_types::{bytesrepr::ToBytes, Key, U512};
 use serde_json;
 use std::collections::HashMap;
@@ -19,106 +22,82 @@ pub struct RiscZeroProof{
     pub program_id: Vec<u32>
 }*/
 
+#[cfg(feature = "tornado-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct MockLayerTwoStorage {
-    pub balances: MockAccounting,
-    pub transactions: TransactionHistory
-}
-
-impl HashableStruct for MockLayerTwoStorage{
-    fn hash(&self) -> Vec<u8>{
-        hash_bytes(serde_json::to_vec(self).unwrap())
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct MockAccounting{
-    pub balances: HashMap<Key, U512>,
-}
-impl HashableStruct for MockAccounting{
-    fn hash(&self) -> Vec<u8>{
-        hash_bytes(serde_json::to_vec(self).unwrap())
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct TransactionHistory{
+pub struct TransactionBatch{
     // for first iteration of tests: String is just index
     // Will be tested with 1 Deposit, where index is "0"
     // and one transfer where index is "1"
-    pub transactions: HashMap<String, Transaction>
+    pub deposits: Vec<Deposit>,
+    pub transfers : Vec<Transfer>,
+    pub withdrawals: Vec<Withdrawal>
 }
 
 // This will likely not be used, since hashing the Balance state will be sufficient
 // New leaf in the tree <- New Balance state
-impl HashableStruct for TransactionHistory{
+#[cfg(feature = "tornado-tree")]
+impl HashableStruct for TransactionBatch{
     fn hash(&self) -> Vec<u8>{
         hash_bytes(serde_json::to_vec(self).unwrap())
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum Transaction {
-    Deposit {
-        account: Key,
-        amount: U512,
-        processed: bool,
-        id: u64
-    },
-    Withdrawal {
-        account: Key,
-        amount: U512,
-        processed: bool,
-        id: u64
-    },
-    Transfer {
-        sender: Key,
-        recipient: Key,
-        amount: U512,
-        signature: Vec<u8>,
-        processed: bool,
-        nonce: u64
-    },
+pub struct Deposit {
+        pub account: Key,
+        pub amount: U512,
+        pub timestamp: Option<u32>,
+        pub processed: bool,
 }
-impl HashableStruct for Transaction{
-    fn hash(&self) -> Vec<u8> {
-        match self {
-            Transaction::Deposit {
-                account, amount, processed: _, id
-            } | Transaction::Withdrawal{
-                account, amount, processed: _, id
-            } => {
-                let mut preimage: Vec<u8> = account.to_bytes().unwrap();
-                preimage.append(&mut amount.to_bytes().unwrap());
-                preimage.append(&mut id.to_bytes().unwrap());
-                hash_bytes(preimage)
-            }
-            Transaction::Transfer {
-                sender,
-                recipient,
-                amount,
-                signature: _,
-                processed: _,
-                nonce
-            } => {
-                let mut preimage: Vec<u8> = sender.to_bytes().unwrap();
-                preimage.append(&mut recipient.to_bytes().unwrap());
-                preimage.append(&mut amount.to_bytes().unwrap());
-                preimage.append(&mut nonce.to_bytes().unwrap());
-                hash_bytes(preimage)
-            }
-        }
+#[cfg(feature = "tornado-tree")]
+impl HashableStruct for Deposit{
+    fn hash(&self) -> Vec<u8>{
+        hash_bytes(serde_json::to_vec(self).unwrap())
     }
 }
 
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Withdrawal {
+        pub account: Key,
+        pub amount: U512,
+        pub timestamp: u32,
+       pub  processed: bool,
+}
+#[cfg(feature = "tornado-tree")]
+impl HashableStruct for Withdrawal{
+    fn hash(&self) -> Vec<u8>{
+        hash_bytes(serde_json::to_vec(self).unwrap())
+    }
+}
+
+#[cfg(feature = "tornado-tree")]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Transfer {
+        sender: Key,
+        recipient: Key,
+        amount: U512,
+        timestamp: u32,
+        signature: Vec<u8>,
+        processed: bool,
+        nonce: u64
+}
+#[cfg(feature = "tornado-tree")]
+impl HashableStruct for Transfer{
+    fn hash(&self) -> Vec<u8>{
+        hash_bytes(serde_json::to_vec(self).unwrap())
+    }
+}
+#[cfg(feature = "tornado-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CircuitArgs{
     pub tornado: TornadoTree,
-    pub mock_storage: MockLayerTwoStorage,
+    pub batch: TransactionBatch
 }
 
+#[cfg(feature = "tornado-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CircuitJournal{
     pub input: CircuitArgs,
-    pub output: Option<CircuitArgs>
+    pub output: Option<TornadoTree>
 }

@@ -6,9 +6,7 @@ edition = "2021"
 [dependencies]
 kairos-risc0-types = {path="../kairos-risc0-types"}
 kairos-contract-cli = {path="../kairos-contract-cli"}
-contract-types = {path="../kairos-deposit-contract/kairos-deposit-contract/contract-types"}
 casper-types = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0"}
-mock-storage = {path="../mock-storage"}
 tokio = {version="1.36.0", features=["full"]}
 methods = { path = "../methods" }
 risc0-zkvm = "0.20.1"

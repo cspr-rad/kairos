@@ -25,7 +25,7 @@ use constants::{
     KAIROS_DESTINATION_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER,
     KAIROS_MOST_RECENT_DEPOSIT_COUNTER, KAIROS_NEW_ADMIN, KAIROS_TEMP_PURSE,
 };
-use contract_types::Deposit;
+use kairos_risc0_types::Deposit;
 use detail::{get_immediate_caller_address, get_second_caller_address};
 
 #[no_mangle]
@@ -92,6 +92,8 @@ pub extern "C" fn deposit() {
     let new_deposit_record: Deposit = Deposit {
         account: Key::from(get_second_caller_address().unwrap_or_revert()),
         amount,
+        timestamp: None,
+        processed: false
     };
 
     let kairos_deposit_event_dict_uref = runtime::get_key(KAIROS_DEPOSIT_EVENT_DICT)

@@ -1,6 +1,6 @@
 use casper_client::{get_dictionary_item, get_state_root_hash, JsonRpcId, Verbosity};
 use casper_types::URef;
-use contract_types::Deposit;
+use kairos_risc0_types::Deposit;
 /*
     GET_DEPOSIT {
         node_address: String,

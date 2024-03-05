@@ -3,7 +3,7 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{MockLayerTwoStorage, TornadoTree, HashableStruct, TransactionHistory, Transaction, CircuitArgs, CircuitJournal, MockAccounting, ToBytes, Key, U512, hash_bytes, constants::{FORMATTED_DEFAULT_ACCOUNT_STR, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE}};
+use kairos_risc0_types::{constants::{FORMATTED_DEFAULT_ACCOUNT_STR, PATH_TO_MOCK_STATE_FILE, PATH_TO_MOCK_TREE_FILE}, hash_bytes, CircuitArgs, CircuitJournal, Deposit, HashableStruct, Key, ToBytes, TornadoTree, TransactionBatch, Transfer, Withdrawal, U512};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]
@@ -12,14 +12,14 @@ pub struct RiscZeroProof{
     pub program_id: Vec<u32>
 }
 
-pub fn prove_state_transition(tree: TornadoTree, mock_storage: MockLayerTwoStorage) -> RiscZeroProof{
+pub fn prove_state_transition(tree: TornadoTree, batch: TransactionBatch) -> RiscZeroProof{
     /*
         todo: sort transactions in order Deposits->Transers(->Withdrawals)
     */
     env_logger::init();
     let inputs = CircuitArgs{
         tornado: tree,
-        mock_storage
+        batch: batch
     };
     let env = ExecutorEnv::builder()
     .write(&inputs)
@@ -47,33 +47,16 @@ fn test_proof_generation(){
         depth: 5
     };
     tree.calculate_zero_levels();
-
-    let mut transactions: HashMap<String, Transaction> = HashMap::new();
-    transactions.insert("0".to_string(), Transaction::Deposit{
-        account: Key::from_formatted_str(FORMATTED_DEFAULT_ACCOUNT_STR).unwrap(),
-        amount: U512::from(0u64),
-        processed: false,
-        id: 0
-    });
-    transactions.insert("1".to_string(), Transaction::Transfer{
-        sender: Key::from_formatted_str(FORMATTED_DEFAULT_ACCOUNT_STR).unwrap(),
-        recipient: Key::from_formatted_str(FORMATTED_DEFAULT_ACCOUNT_STR).unwrap(),
-        amount: U512::from(0),
-        signature: vec![],
-        processed: false,
-        nonce: 0
-    });
-    let mut batch = TransactionHistory{
-        transactions
+    let transfers: Vec<Transfer> = vec![];
+    let deposits: Vec<Deposit> = vec![];
+    let withdrawals: Vec<Withdrawal> = vec![];
+    let batch: TransactionBatch = TransactionBatch{
+        transfers,
+        deposits, 
+        withdrawals
     };
     
-    let mock_storage: MockLayerTwoStorage = MockLayerTwoStorage{
-        balances: MockAccounting{
-            balances: HashMap::new()
-        },
-        transactions: batch
-    };
-    let proof: RiscZeroProof = prove_state_transition(tree, mock_storage);
-    let journal: &CircuitJournal = &proof.receipt.journal.decode::<CircuitJournal>().unwrap();
+    let proof: RiscZeroProof = prove_state_transition(tree, batch);
+    let journal: &TornadoTree = &proof.receipt.journal.decode::<TornadoTree>().unwrap();
     println!("Journal: {:?}", &journal);
 }
