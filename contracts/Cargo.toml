@@ -2,7 +2,7 @@
 resolver = "2"
 
 members = [
-	"kairos-deposit-contract-tests"
+	"deposit-contract-tests"
 ]
 
 [workspace.package]
