@@ -1,4 +1,4 @@
-use kairos_risc0_types::{Deposit, Withdrawal, Transfer, Key, U512};
+use kairos_risc0_types::{Deposit, Withdrawal, Transfer};
 use bigdecimal::BigDecimal;
 use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;

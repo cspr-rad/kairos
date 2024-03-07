@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # Setup Rust
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    
+    # - name: Cache Rust compilation
+    #   uses: metalbear-co/sccache-action@v1
+    #   with:
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     # Optional, default is `sccache-`
+    #     cache-from: sccache-${{ runner.os }}-
+    #     # Optional, default is `sccache-latest`
+    #     cache-to: sccache-${{ runner.os }}-${{ github.sha }}
+
+    # Cache dependencies with rust-cache, automatically caching Cargo.lock dependencies
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v1
+
+    # Install cargo-nextest for faster tests, code coverage report and test JUnit report
+    - uses: taiki-e/install-action@cargo-llvm-cov
+    - uses: taiki-e/install-action@nextest
+
+    # Run tests and create test report
+    - name: Test
+      run: cargo nextest --config-file .github/workflows/nextest.toml run --profile ci
+
+    # Create code coverage report
+    - name: Collect coverage data
+      run: cargo llvm-cov nextest
+
+    # Attaches test report to GHA run
+    - name: Publish Test Report
+      uses: mikepenz/action-junit-report@v4
+      if: success() || failure() # always run even if the previous step fails
+      with:
+        report_paths: '**/build/test-results/test/TEST-*.xml'
+
+    # Attaches coverage report to GHA run
+    - uses: romeovs/lcov-reporter-action@v0.2.16
+      if: success() || failure() # always run even if the previous step fails
+      with:
+        lcov-file: lcov.info
+
+  create-release:
+    needs: build-and-test
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
