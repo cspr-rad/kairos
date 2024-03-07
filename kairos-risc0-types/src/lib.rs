@@ -4,8 +4,11 @@ use serde::{Serialize, Deserialize};
 #[cfg(feature = "tornado-tree")]
 pub use tornado_tree_rs::{TornadoTree, crypto::hash_bytes};
 
+use chrono::NaiveDateTime;
+
 pub use casper_types::{bytesrepr::ToBytes, Key, U512};
 use serde_json;
+use std::collections::HashMap;
 mod tests;
 pub mod constants;
 // The decision to use "Key" over  more deterministic types is based on the variable design
@@ -45,7 +48,7 @@ impl HashableStruct for TransactionBatch{
 pub struct Deposit {
         pub account: Key,
         pub amount: U512,
-        pub timestamp: Option<u32>,
+        pub timestamp: Option<NaiveDateTime>,
         pub processed: bool,
 }
 #[cfg(feature = "tornado-tree")]
@@ -60,7 +63,7 @@ impl HashableStruct for Deposit{
 pub struct Withdrawal {
         pub account: Key,
         pub amount: U512,
-        pub timestamp: u32,
+        pub timestamp: NaiveDateTime,
        pub  processed: bool,
 }
 #[cfg(feature = "tornado-tree")]
@@ -73,13 +76,13 @@ impl HashableStruct for Withdrawal{
 #[cfg(feature = "tornado-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Transfer {
-        sender: Key,
-        recipient: Key,
-        amount: U512,
-        timestamp: u32,
-        signature: Vec<u8>,
-        processed: bool,
-        nonce: u64
+        pub sender: Key,
+        pub recipient: Key,
+        pub amount: U512,
+        pub timestamp: NaiveDateTime,
+        pub signature: Vec<u8>,
+        pub processed: bool,
+        pub nonce: u64
 }
 #[cfg(feature = "tornado-tree")]
 impl HashableStruct for Transfer{

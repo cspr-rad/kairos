@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:latest
+    # volumes:
+    #   - ./postgresql-init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_DB: kairos
+      POSTGRES_USER: kairos
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
