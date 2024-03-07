@@ -12,7 +12,6 @@ pub extern "C" fn call() {
     let temp_purse: URef = system::create_purse();
     // fund the temporary purse
     system::transfer_from_purse_to_purse(source, temp_purse, amount, None).unwrap();
-    // call the deposit endpoint
     runtime::call_contract::<()>(
         contract_hash,
         "deposit",
