@@ -41,7 +41,6 @@ impl TornadoTree{
     pub fn merkle_proof(&mut self, leaf: Vec<u8>) -> Vec<u8>{
         let mut current_index = self.index - 1;
         let mut current_hash: Vec<u8> = leaf.clone();
-        let mut temp_stack: Vec<u8> = Vec::new();
         for i in 0..self.depth{
             if current_index % 2 == 0 {
                 current_hash = hash_left_right(current_hash, self.zero_levels[i].clone());
@@ -70,6 +69,12 @@ fn test_tree(){
     tree.calculate_zero_levels();
     let leaf = vec![242, 69, 81, 38, 252, 95, 197, 129, 177, 105, 42, 137, 129, 73, 125, 148, 130, 204, 83, 82, 126, 104, 106, 71, 156, 96, 55, 233, 132, 103, 128, 11];
     let _ = tree.add_leaf(leaf.clone());
+    let merkle_root: Option<Vec<u8>> = tree.root.clone();
+    assert_eq!(tree.merkle_proof(leaf.clone()), merkle_root.clone().unwrap());
+    println!("First root: {:?}", &merkle_root.unwrap());
+
+    let _ = tree.add_leaf(leaf.clone());
     let merkle_root = tree.root.clone();
-    assert_eq!(tree.merkle_proof(leaf), merkle_root.unwrap());
+    assert_eq!(tree.merkle_proof(leaf.clone()), merkle_root.clone().unwrap());
+    println!("Second root: {:?}", &merkle_root.unwrap());
 }
