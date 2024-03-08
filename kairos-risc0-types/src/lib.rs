@@ -1,8 +1,8 @@
 use serde::{Serialize, Deserialize};
 //use risc0_zkvm::Receipt;
 
-#[cfg(feature = "tornado-tree")]
-pub use tornado_tree_rs::{TornadoTree, crypto::hash_bytes};
+#[cfg(feature = "kairos-delta-tree")]
+pub use kairos_delta_tree::{KairosDeltaTree, crypto::hash_bytes};
 
 use chrono::NaiveDateTime;
 
@@ -24,7 +24,7 @@ pub struct RiscZeroProof{
     pub program_id: Vec<u32>
 }*/
 
-#[cfg(feature = "tornado-tree")]
+#[cfg(feature = "kairos-delta-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TransactionBatch{
     // for first iteration of tests: String is just index
@@ -37,7 +37,7 @@ pub struct TransactionBatch{
 
 // This will likely not be used, since hashing the Balance state will be sufficient
 // New leaf in the tree <- New Balance state
-#[cfg(feature = "tornado-tree")]
+#[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for TransactionBatch{
     fn hash(&self) -> Vec<u8>{
         hash_bytes(serde_json::to_vec(self).unwrap())
@@ -51,7 +51,7 @@ pub struct Deposit {
         pub timestamp: Option<NaiveDateTime>,
         pub processed: bool,
 }
-#[cfg(feature = "tornado-tree")]
+#[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for Deposit{
     fn hash(&self) -> Vec<u8>{
         hash_bytes(serde_json::to_vec(self).unwrap())
@@ -66,14 +66,14 @@ pub struct Withdrawal {
         pub timestamp: NaiveDateTime,
        pub  processed: bool,
 }
-#[cfg(feature = "tornado-tree")]
+#[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for Withdrawal{
     fn hash(&self) -> Vec<u8>{
         hash_bytes(serde_json::to_vec(self).unwrap())
     }
 }
 
-#[cfg(feature = "tornado-tree")]
+#[cfg(feature = "kairos-delta-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Transfer {
         pub sender: Key,
@@ -84,22 +84,22 @@ pub struct Transfer {
         pub processed: bool,
         pub nonce: u64
 }
-#[cfg(feature = "tornado-tree")]
+#[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for Transfer{
     fn hash(&self) -> Vec<u8>{
         hash_bytes(serde_json::to_vec(self).unwrap())
     }
 }
-#[cfg(feature = "tornado-tree")]
+#[cfg(feature = "kairos-delta-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CircuitArgs{
-    pub tornado: TornadoTree,
+    pub tree: KairosDeltaTree,
     pub batch: TransactionBatch
 }
 
-#[cfg(feature = "tornado-tree")]
+#[cfg(feature = "kairos-delta-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CircuitJournal{
     pub input: CircuitArgs,
-    pub output: Option<TornadoTree>
+    pub output: Option<KairosDeltaTree>
 }

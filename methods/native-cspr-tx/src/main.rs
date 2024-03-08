@@ -1,12 +1,12 @@
 #![no_main]
 use risc0_zkvm::guest::env;
 risc0_zkvm::guest::entry!(main);
-use kairos_risc0_types::{CircuitArgs, HashableStruct, TornadoTree, TransactionBatch};
+use kairos_risc0_types::{CircuitArgs, HashableStruct, KairosDeltaTree, TransactionBatch};
 
 pub fn main() {
     let inputs: CircuitArgs = env::read();
     let batch: TransactionBatch = inputs.batch;
-    let mut tree: TornadoTree = inputs.tornado;
+    let mut tree: KairosDeltaTree = inputs.tree;
 
 /*
     // balances could be committed to the L1 or stored only in the L2

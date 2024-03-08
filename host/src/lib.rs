@@ -3,7 +3,7 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{constants::{FORMATTED_DEFAULT_ACCOUNT_STR}, hash_bytes, CircuitArgs, CircuitJournal, Deposit, HashableStruct, Key, ToBytes, TornadoTree, TransactionBatch, Transfer, Withdrawal, U512};
+use kairos_risc0_types::{constants::{FORMATTED_DEFAULT_ACCOUNT_STR}, hash_bytes, CircuitArgs, CircuitJournal, Deposit, HashableStruct, Key, ToBytes, KairosDeltaTree, TransactionBatch, Transfer, Withdrawal, U512};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize)]
@@ -12,14 +12,14 @@ pub struct RiscZeroProof{
     pub program_id: Vec<u32>
 }
 
-pub fn prove_state_transition(tree: TornadoTree, batch: TransactionBatch) -> RiscZeroProof{
+pub fn prove_state_transition(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroProof{
     /*
         todo: sort transactions in order Deposits->Transers(->Withdrawals)
     */
     env_logger::init();
     let inputs = CircuitArgs{
-        tornado: tree,
-        batch: batch
+        tree,
+        batch
     };
     let env = ExecutorEnv::builder()
     .write(&inputs)
@@ -38,7 +38,7 @@ pub fn prove_state_transition(tree: TornadoTree, batch: TransactionBatch) -> Ris
 
 #[test]
 fn test_proof_generation(){
-    let mut tree: TornadoTree = TornadoTree{
+    let mut tree: KairosDeltaTree = KairosDeltaTree{
         zero_node: hash_bytes(vec![0;32]),
         zero_levels: Vec::new(),
         filled: vec![vec![], vec![], vec![], vec![], vec![]],
@@ -57,6 +57,6 @@ fn test_proof_generation(){
     };
     
     let proof: RiscZeroProof = prove_state_transition(tree, batch);
-    let journal: &TornadoTree = &proof.receipt.journal.decode::<TornadoTree>().unwrap();
+    let journal: &KairosDeltaTree = &proof.receipt.journal.decode::<KairosDeltaTree>().unwrap();
     println!("Journal: {:?}", &journal);
 }

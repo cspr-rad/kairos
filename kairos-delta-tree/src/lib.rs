@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 
 pub const ROOT_HISTORY_SIZE: u16 = 30u16;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct TornadoTree{
+pub struct KairosDeltaTree{
     pub zero_node: Vec<u8>,
     pub zero_levels: Vec<Vec<u8>>,
     pub filled: Vec<Vec<u8>>,
@@ -13,7 +13,7 @@ pub struct TornadoTree{
     pub depth: usize
 }
 
-impl TornadoTree{
+impl KairosDeltaTree{
     pub fn calculate_zero_levels(&mut self){
         let mut zero_levels: Vec<Vec<u8>> = vec![self.zero_node.clone()];
         for i in 0..self.depth - 1{
@@ -58,7 +58,7 @@ impl TornadoTree{
 fn test_tree(){
     use crypto::hash_bytes;
     // construct merkle tree
-    let mut tree: TornadoTree = TornadoTree{
+    let mut tree: KairosDeltaTree = KairosDeltaTree{
         zero_node: hash_bytes(vec![0;32]),
         zero_levels: Vec::new(),
         filled: vec![vec![], vec![], vec![], vec![], vec![]],
