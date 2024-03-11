@@ -51,7 +51,11 @@
               filter = path: type: craneLib.filterCargoSources path type;
             };
             cargoExtraArgs = "--target wasm32-unknown-unknown";
-            nativeBuildInputs = [ pkgs.binaryen ];
+            nativeBuildInputs = with pkgs; [
+              binaryen
+            ] ++ lib.optionals stdenv.isDarwin [
+              fixDarwinDylibNames
+            ];
             doCheck = false;
             # Append "-optimized" to wasm files, to make the tests pass
             postInstall = ''
