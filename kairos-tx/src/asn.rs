@@ -3,6 +3,7 @@ use crate::error::TxError;
 // Expose types for the public API.
 pub use rasn::types::{Integer, OctetString};
 
+use num_traits::cast::ToPrimitive;
 use rasn::types::AsnType;
 use rasn::{Decode, Encode};
 
@@ -10,13 +11,49 @@ use rasn::{Decode, Encode};
 #[rasn(delegate)]
 pub struct PublicKey(pub(crate) OctetString);
 
+// Converts an ASN.1 decoded public key into raw byte representation.
+impl From<PublicKey> for Vec<u8> {
+    fn from(value: PublicKey) -> Self {
+        value.0.into()
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(delegate)]
 pub struct Amount(pub(crate) Integer);
 
+// Attempts to convert an ASN.1 decoded amount (which is represented as a big integer)
+// into a `u64`. This conversion can fail if the decoded value is outside the `u64` range,
+// thereby enforcing the specified ASN.1 constraints on the value: `INTEGER
+// (0..18446744073709551615)`.
+impl TryFrom<Amount> for u64 {
+    type Error = TxError;
+
+    fn try_from(value: Amount) -> Result<Self, Self::Error> {
+        value
+            .0
+            .to_u64()
+            .ok_or(TxError::ConstraintViolation { field: "amount" })
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(delegate)]
 pub struct Nonce(pub(crate) Integer);
+
+// Similar to `Amount`, attempts to convert an ASN.1 decoded nonce into a `u64`.
+// This is crucial for validating that the nonce adheres to expected constraint:
+// `INTEGER (0..18446744073709551615)`.
+impl TryFrom<Nonce> for u64 {
+    type Error = TxError;
+
+    fn try_from(value: Nonce) -> Result<Self, Self::Error> {
+        value
+            .0
+            .to_u64()
+            .ok_or(TxError::ConstraintViolation { field: "nonce" })
+    }
+}
 
 #[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
