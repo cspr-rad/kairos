@@ -57,6 +57,6 @@ fn test_proof_generation(){
     };
     
     let proof: RiscZeroProof = prove_state_transition(tree, batch);
-    let journal: &KairosDeltaTree = &proof.receipt.journal.decode::<KairosDeltaTree>().unwrap();
+    let journal: &CircuitJournal = &proof.receipt.journal.decode::<CircuitJournal>().unwrap();
     println!("Journal: {:?}", &journal);
 }

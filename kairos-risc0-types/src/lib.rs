@@ -27,16 +27,11 @@ pub struct RiscZeroProof{
 #[cfg(feature = "kairos-delta-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct TransactionBatch{
-    // for first iteration of tests: String is just index
-    // Will be tested with 1 Deposit, where index is "0"
-    // and one transfer where index is "1"
     pub deposits: Vec<Deposit>,
     pub transfers : Vec<Transfer>,
     pub withdrawals: Vec<Withdrawal>
 }
-
-// This will likely not be used, since hashing the Balance state will be sufficient
-// New leaf in the tree <- New Balance state
+// Hash the Batch as a struct
 #[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for TransactionBatch{
     fn hash(&self) -> Vec<u8>{
@@ -100,6 +95,6 @@ pub struct CircuitArgs{
 #[cfg(feature = "kairos-delta-tree")]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CircuitJournal{
-    pub input: CircuitArgs,
+    pub input: KairosDeltaTree,
     pub output: Option<KairosDeltaTree>
 }
