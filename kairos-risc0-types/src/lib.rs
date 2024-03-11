@@ -6,7 +6,7 @@ pub use kairos_delta_tree::{KairosDeltaTree, crypto::hash_bytes};
 
 use chrono::NaiveDateTime;
 
-pub use casper_types::{bytesrepr::ToBytes, Key, U512};
+pub use casper_types::{bytesrepr::ToBytes, Key, U512, URef};
 use serde_json;
 use std::collections::HashMap;
 mod tests;

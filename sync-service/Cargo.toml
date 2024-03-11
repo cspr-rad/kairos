@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 kairos-risc0-types = {path="../kairos-risc0-types"}
-casper-types = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6"}
 tokio = {version="1.36.0", features=["full"]}
 methods = { path = "../methods" }
 risc0-zkvm = "0.20.1"
