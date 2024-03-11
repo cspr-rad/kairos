@@ -2,7 +2,7 @@
 resolver = "2"
 # Currently guest only exists for the workspace configuration not to break
 members = ["api-service", "host", "methods/native-cspr-tx", "methods/guest", "kairos-contract-cli", "kairos-risc0-types", "sync-service", "kairos-delta-tree", "database"]
-exclude = ["contract"]
+exclude = ["contracts"]
 
 # Always optimize; building and running the guest takes much longer without optimization.
 [profile.dev]

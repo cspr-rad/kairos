@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-kairos-risc0-types = {path="../kairos-risc0-types", features=["tornado-tree"]}
+kairos-risc0-types = {path="../kairos-risc0-types", features=["kairos-delta-tree"]}
 database = { path = "../database" }
 methods = { path = "../methods" }
 risc0-zkvm = "0.20.1"
