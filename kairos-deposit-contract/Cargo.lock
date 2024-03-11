@@ -67,7 +67,7 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 [[package]]
 name = "casper-contract"
 version = "3.0.0"
-source = "git+https://github.com/cspr-rad/casper-node?branch=kairos-feat-2.0#e8a928a885f99c84f07ad7adcb6aabb707f4d2ae"
+source = "git+https://github.com/cspr-rad/casper-node?branch=kairos-feat-2.0#8594ef139b8a716ea368e81cf25d6781b879d774"
 dependencies = [
  "casper-types",
  "hex_fmt",
@@ -77,7 +77,7 @@ dependencies = [
 [[package]]
 name = "casper-types"
 version = "3.0.0"
-source = "git+https://github.com/cspr-rad/casper-node?branch=kairos-feat-2.0#e8a928a885f99c84f07ad7adcb6aabb707f4d2ae"
+source = "git+https://github.com/cspr-rad/casper-node?branch=kairos-feat-2.0#8594ef139b8a716ea368e81cf25d6781b879d774"
 dependencies = [
  "base16",
  "base64",
@@ -217,7 +217,7 @@ checksum = "f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.51",
+ "syn 2.0.52",
 ]
 
 [[package]]
@@ -536,9 +536,9 @@ dependencies = [
 
 [[package]]
 name = "opaque-debug"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
+checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 
 [[package]]
 name = "pin-project-lite"
@@ -683,7 +683,7 @@ checksum = "7eb0b34b42edc17f6b7cac84a52a1c5f0e1bb2227e997ca9011ea3dd34e8610b"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.51",
+ "syn 2.0.52",
 ]
 
 [[package]]
@@ -753,9 +753,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.51"
+version = "2.0.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ab617d94515e94ae53b8406c628598680aa0c9587474ecbe58188f7b345d66c"
+checksum = "b699d15b36d1f02c3e7c69f8ffef53de37aefae075d8488d4ba1a7788d574a07"
 dependencies = [
  "proc-macro2",
  "quote",
