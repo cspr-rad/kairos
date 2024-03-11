@@ -7,10 +7,10 @@ edition = "2021"
 
 [dependencies]
 base64 = { version = "0.21.2", default-features = false, features = ["alloc"] }
-casper-engine-test-support = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0", default-features=false}
-casper-execution-engine = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0", default-features=false}
-casper-contract = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0", default-features=false}
-casper-types = {git = "https://github.com/cspr-rad/casper-node", branch="kairos-feat-2.0", default-features=false}
+casper-engine-test-support = {git = "https://github.com/jonas089/casper-node", branch="kairos-feat-2.0", default-features=false}
+casper-execution-engine = {git = "https://github.com/jonas089/casper-node", branch="kairos-feat-2.0", default-features=false}
+casper-contract = {git = "https://github.com/jonas089/casper-node", branch="kairos-feat-2.0", default-features=false}
+casper-types = {git = "https://github.com/jonas089/casper-node", branch="kairos-feat-2.0", default-features=false}
 
 [[test]]
 name = "kairos_contract_tests"
