@@ -5,7 +5,7 @@ use casper_engine_test_support::{
 };
 use casper_types::{
     account::AccountHash, runtime_args, Key,
-    URef, U512, contracts::NamedKeys, ContractHash, RuntimeArgs
+    URef, U512, contracts::NamedKeys, ContractHash, RuntimeArgs, CLValue, CLType, bytesrepr::ToBytes, bytesrepr::FromBytes, bytesrepr::Bytes
 };
 use utils::create_funded_dummy_account;
 use lazy_static::lazy_static;
@@ -13,11 +13,12 @@ extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
 use serde_json;
-use kairos_risc0_types::{KairosDeltaTree, hash_bytes, Transfer, Deposit, Withdrawal, TransactionBatch, RiscZeroProof, CircuitArgs};
+use kairos_risc0_types::{KairosDeltaTree, hash_bytes, Transfer, Deposit, Withdrawal, TransactionBatch, RiscZeroProof, CircuitArgs, CircuitJournal};
 use methods::{
     NATIVE_CSPR_TX_ELF, NATIVE_CSPR_TX_ID
 };
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
+
 
 pub const ACCOUNT_USER_1: [u8; 32] = [1u8; 32];
 pub const ACCOUNT_USER_2: [u8; 32] = [2u8; 32];
@@ -30,6 +31,7 @@ lazy_static! {
         env::var("PATH_TO_WASM_BINARIES").expect("Missing environment variable PATH_TO_WASM_BINARIES")
     };
 }
+//pub const PATH_TO_WASM_BINARIES: &str = "/Users/chef/Desktop/kairos-lab/contracts/verifier-contract/target/wasm32-unknown-unknown/release";
 
 #[cfg(test)]
 pub struct TestContext {
@@ -107,6 +109,9 @@ impl TestContext {
 
     pub fn submit_batch(&mut self, account: AccountHash){
         // prepare a proof
+        /*tracing_subscriber::fmt()
+            .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
+            .init();*/
         let mut tree: KairosDeltaTree = KairosDeltaTree{
             zero_node: hash_bytes(vec![0;32]),
             zero_levels: Vec::new(),
@@ -125,9 +130,14 @@ impl TestContext {
             withdrawals
         };
         let proof: RiscZeroProof = prove_batch(tree, batch);
+        let receipt: Receipt = serde_json::from_slice(&proof.receipt_serialized).expect("Failed to deserialize receipt!");
+        let journal: &CircuitJournal = &receipt.journal.decode::<CircuitJournal>().unwrap();
+        println!("Submitting proof to L1...");
         let contract_hash = self.contract_hash("kairos_verifier_contract", account);
+        let serialized_proof: Vec<u8> = serde_json::to_vec(&proof).expect("Failed to serialize proof!");
+
         let session_args = runtime_args! {
-            "proof" => serde_json::to_vec(&proof).expect("Failed to serialize proof!")
+            "proof" => Bytes::from(serialized_proof)
         };
         let submit_batch_request = ExecuteRequestBuilder::contract_call_by_hash(
             account,

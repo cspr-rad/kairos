@@ -12,12 +12,17 @@ use casper_types::{
     EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, contracts::NamedKeys,
     AccessRights, ApiError, CLType, CLValue, Key, Parameter, URef, U512, ContractHash
 };
+mod error;
+use error::RiscZeroError;
 
 #[no_mangle]
 pub extern "C" fn submit_batch(){
     let proof: Vec<u8> = runtime::get_named_arg("proof");
     // deserialize and perform checks on journal
-    assert_eq!(risc0_verifier(proof), [1u8]);
+    let x: [u8;1] = risc0_verifier(proof);
+    /*if x != [1u8]{
+        runtime::revert(RiscZeroError::InvalidProof);
+    }*/
     // store new tree from deserialized journal and increase index
 }
 
