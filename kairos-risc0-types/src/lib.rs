@@ -3,12 +3,9 @@ use serde::{Serialize, Deserialize};
 
 #[cfg(feature = "kairos-delta-tree")]
 pub use kairos_delta_tree::{KairosDeltaTree, crypto::hash_bytes};
-
-use chrono::NaiveDateTime;
-
-pub use casper_types::{bytesrepr::ToBytes, Key, U512, URef};
-use serde_json;
+use casper_types::{bytesrepr::ToBytes, Key, U512, URef};
 use std::collections::HashMap;
+
 mod tests;
 pub mod constants;
 // The decision to use "Key" over  more deterministic types is based on the variable design
@@ -25,7 +22,7 @@ pub struct RiscZeroProof{
 }*/
 
 #[cfg(feature = "kairos-delta-tree")]
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive( Debug, Clone, PartialEq)]
 pub struct TransactionBatch{
     pub deposits: Vec<Deposit>,
     pub transfers : Vec<Transfer>,
@@ -35,7 +32,7 @@ pub struct TransactionBatch{
 #[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for TransactionBatch{
     fn hash(&self) -> Vec<u8>{
-        hash_bytes(serde_json::to_vec(self).unwrap())
+        hash_bytes(serde_json_wasm::to_vec(self).unwrap())
     }
 }
 
@@ -43,13 +40,13 @@ impl HashableStruct for TransactionBatch{
 pub struct Deposit {
         pub account: Key,
         pub amount: U512,
-        pub timestamp: Option<NaiveDateTime>,
+        pub timestamp: Option<String>,
         pub processed: bool,
 }
 #[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for Deposit{
     fn hash(&self) -> Vec<u8>{
-        hash_bytes(serde_json::to_vec(self).unwrap())
+        hash_bytes(serde_json_wasm::to_vec(self).unwrap())
     }
 }
 
@@ -58,13 +55,13 @@ impl HashableStruct for Deposit{
 pub struct Withdrawal {
         pub account: Key,
         pub amount: U512,
-        pub timestamp: NaiveDateTime,
+        pub timestamp: String,
        pub  processed: bool,
 }
 #[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for Withdrawal{
     fn hash(&self) -> Vec<u8>{
-        hash_bytes(serde_json::to_vec(self).unwrap())
+        hash_bytes(serde_json_wasm::to_vec(self).unwrap())
     }
 }
 
@@ -74,7 +71,7 @@ pub struct Transfer {
         pub sender: Key,
         pub recipient: Key,
         pub amount: U512,
-        pub timestamp: NaiveDateTime,
+        pub timestamp: String,
         pub signature: Vec<u8>,
         pub processed: bool,
         pub nonce: u64
@@ -82,7 +79,7 @@ pub struct Transfer {
 #[cfg(feature = "kairos-delta-tree")]
 impl HashableStruct for Transfer{
     fn hash(&self) -> Vec<u8>{
-        hash_bytes(serde_json::to_vec(self).unwrap())
+        hash_bytes(serde_json_wasm::to_vec(self).unwrap())
     }
 }
 #[cfg(feature = "kairos-delta-tree")]
