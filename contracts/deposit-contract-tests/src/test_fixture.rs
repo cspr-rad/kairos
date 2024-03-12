@@ -8,10 +8,22 @@ use casper_types::{
     URef, U512, contracts::NamedKeys, ContractHash, RuntimeArgs
 };
 use utils::create_funded_dummy_account;
+use lazy_static::lazy_static;
+extern crate dotenv;
+use dotenv::dotenv;
+use std::env;
 
 pub const ACCOUNT_USER_1: [u8; 32] = [1u8; 32];
 pub const ACCOUNT_USER_2: [u8; 32] = [2u8; 32];
 pub const ACCOUNT_USER_3: [u8; 32] = [3u8; 32];
+
+// This defines a static variable for the path to WASM binaries
+lazy_static! {
+    static ref PATH_TO_WASM_BINARIES: String = {
+        dotenv().ok(); // Load the .env file at runtime
+        env::var("PATH_TO_WASM_BINARIES").expect("Missing environment variable PATH_TO_WASM_BINARIES")
+    };
+}
 
 #[cfg(test)]
 pub struct TestContext {
@@ -77,8 +89,10 @@ impl TestContext {
     pub fn install(&mut self, admin: AccountHash) {
         let session_args = runtime_args! {};
         let install_contract_request =
-            ExecuteRequestBuilder::standard(admin, "/Users/chef/Desktop/contracts/deposit-contracts/target/wasm32-unknown-unknown/release/deposit-contract-optimized.wasm", session_args)
-            .build();
+            ExecuteRequestBuilder::standard(
+                admin, 
+                &format!("{}/{}", *PATH_TO_WASM_BINARIES, "deposit-contract-optimized.wasm"), session_args)
+                .build();
         self.builder
             .exec(install_contract_request)
             .expect_success()
@@ -126,7 +140,7 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             *DEFAULT_ACCOUNT_ADDR,
-            "/Users/chef/Desktop/contracts/deposit-contracts/target/wasm32-unknown-unknown/release/deposit-session-optimized.wasm",
+            &format!("{}/{}", *PATH_TO_WASM_BINARIES, "deposit-session-optimized.wasm"),
             session_args,
         )
         .build();
@@ -149,7 +163,7 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
-            "/Users/chef/Desktop/contracts/deposit-contracts/target/wasm32-unknown-unknown/release/malicious-session-optimized.wasm",
+            &format!("{}/{}", *PATH_TO_WASM_BINARIES, "malicious-session-optimized.wasm"),
             session_args,
         )
         .build();
@@ -168,7 +182,7 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
-            "/Users/chef/Desktop/contracts/deposit-contracts/target/wasm32-unknown-unknown/release/withdrawal-session-optimized.wasm",
+            &format!("{}/{}", *PATH_TO_WASM_BINARIES, "withdrawal-session-optimized.wasm"),
             session_args,
         )
         .build();
@@ -187,7 +201,7 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
-            "/Users/chef/Desktop/contracts/deposit-contracts/target/wasm32-unknown-unknown/release/withdrawal-session-optimized.wasm",
+            &format!("{}/{}", *PATH_TO_WASM_BINARIES,"withdrawal-session-optimized.wasm"),
             session_args,
         )
         .build();
@@ -208,7 +222,7 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
-            "/Users/chef/Desktop/contracts/deposit-contracts/target/wasm32-unknown-unknown/release/malicious-reader-optimized.wasm",
+            &format!("{}/{}", *PATH_TO_WASM_BINARIES, "malicious-reader-optimized.wasm"),
             session_args,
         )
         .build();

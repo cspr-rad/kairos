@@ -22,7 +22,7 @@ pub struct RiscZeroProof{
 }*/
 
 #[cfg(feature = "kairos-delta-tree")]
-#[derive( Debug, Clone, PartialEq)]
+#[derive(Serialize,Deserialize, Debug, Clone, PartialEq)]
 pub struct TransactionBatch{
     pub deposits: Vec<Deposit>,
     pub transfers : Vec<Transfer>,
