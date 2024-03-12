@@ -2,7 +2,12 @@
 resolver = "2"
 
 members = [
-	"deposit-contract-tests"
+	"deposit-contract-tests", "verifier-contract-tests"
+]
+
+exclude = [
+	"deposit-contracts",
+	"verifier-contract"
 ]
 
 [workspace.package]
