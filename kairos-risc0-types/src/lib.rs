@@ -1,13 +1,11 @@
 use serde::{Serialize, Deserialize};
-//use risc0_zkvm::Receipt;
+use casper_types::{bytesrepr::ToBytes, Key, U512, URef};
+use std::collections::HashMap;
+mod tests;
+pub mod constants;
 
 #[cfg(feature = "kairos-delta-tree")]
 pub use kairos_delta_tree::{KairosDeltaTree, crypto::hash_bytes};
-use casper_types::{bytesrepr::ToBytes, Key, U512, URef};
-use std::collections::HashMap;
-
-mod tests;
-pub mod constants;
 // The decision to use "Key" over  more deterministic types is based on the variable design
 // with respect to target node architecture. Everything will be handled in Bytes and Keys.
 
@@ -15,11 +13,11 @@ pub trait HashableStruct{
     fn hash(&self) -> Vec<u8>;
 }
 
-/*#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct RiscZeroProof{
-    pub receipt: Receipt,
+    pub receipt_serialized: Vec<u8>,
     pub program_id: Vec<u32>
-}*/
+}
 
 #[cfg(feature = "kairos-delta-tree")]
 #[derive(Serialize,Deserialize, Debug, Clone, PartialEq)]

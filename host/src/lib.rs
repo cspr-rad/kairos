@@ -4,14 +4,9 @@ use methods::{
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 use casper_types::{U512, Key, bytesrepr::ToBytes};
-use kairos_risc0_types::{constants::{FORMATTED_DEFAULT_ACCOUNT_STR}, hash_bytes, CircuitArgs, CircuitJournal, Deposit, HashableStruct, KairosDeltaTree, TransactionBatch, Transfer, Withdrawal};
+use kairos_risc0_types::{constants::{FORMATTED_DEFAULT_ACCOUNT_STR}, hash_bytes, CircuitArgs, CircuitJournal, Deposit, HashableStruct, KairosDeltaTree, TransactionBatch, Transfer, Withdrawal, RiscZeroProof};
 use std::collections::HashMap;
-
-#[derive(Serialize, Deserialize)]
-pub struct RiscZeroProof{
-    pub receipt: Receipt,
-    pub program_id: Vec<u32>
-}
+use serde_json;
 
 pub fn prove_state_transition(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroProof{
     /*
@@ -32,7 +27,7 @@ pub fn prove_state_transition(tree: KairosDeltaTree, batch: TransactionBatch) ->
     let receipt = prover.prove(env, NATIVE_CSPR_TX_ELF).unwrap();
     receipt.verify(NATIVE_CSPR_TX_ID).expect("Failed to verify proof!");
     RiscZeroProof{
-        receipt,
+        receipt_serialized: serde_json::to_vec(&receipt).expect("Failed to serialize receipt!"),
         program_id: NATIVE_CSPR_TX_ID.to_vec()
     }
 }
@@ -58,6 +53,7 @@ fn test_proof_generation(){
     };
     
     let proof: RiscZeroProof = prove_state_transition(tree, batch);
-    let journal: &CircuitJournal = &proof.receipt.journal.decode::<CircuitJournal>().unwrap();
+    let receipt: Receipt = serde_json::from_slice(&proof.receipt_serialized).expect("Failed to deserialize receipt!");
+    let journal: &CircuitJournal = &receipt.journal.decode::<CircuitJournal>().unwrap();
     println!("Journal: {:?}", &journal);
 }
