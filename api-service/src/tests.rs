@@ -2,9 +2,9 @@ use std::io::Read;
 
 use reqwest::blocking::Client;
 use kairos_risc0_types::{Deposit, constants::FORMATTED_DEFAULT_ACCOUNT_STR};
-use casper_types::{Key, U512};
 #[test]
 fn transfer(){
+    use casper_types::{Key, U512};
     let client =  Client::new();
     let deposit = Deposit{
         account: Key::from_formatted_str(FORMATTED_DEFAULT_ACCOUNT_STR).unwrap(),
