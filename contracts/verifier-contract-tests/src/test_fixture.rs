@@ -1,7 +1,7 @@
 mod utils;
 use casper_engine_test_support::{
     ExecuteRequestBuilder, InMemoryWasmTestBuilder, DEFAULT_ACCOUNT_ADDR,
-    PRODUCTION_RUN_GENESIS_REQUEST,
+    PRODUCTION_RUN_GENESIS_REQUEST
 };
 use casper_types::{
     account::AccountHash, runtime_args, Key,
@@ -13,9 +13,11 @@ extern crate dotenv;
 use dotenv::dotenv;
 use std::env;
 use serde_json;
-use host::prove_state_transition;
-use kairos_risc0_types::{KairosDeltaTree, hash_bytes, Transfer, Deposit, Withdrawal, TransactionBatch, RiscZeroProof};
-
+use kairos_risc0_types::{KairosDeltaTree, hash_bytes, Transfer, Deposit, Withdrawal, TransactionBatch, RiscZeroProof, CircuitArgs};
+use methods::{
+    NATIVE_CSPR_TX_ELF, NATIVE_CSPR_TX_ID
+};
+use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 
 pub const ACCOUNT_USER_1: [u8; 32] = [1u8; 32];
 pub const ACCOUNT_USER_2: [u8; 32] = [2u8; 32];
@@ -122,14 +124,12 @@ impl TestContext {
             deposits, 
             withdrawals
         };
-        let proof: RiscZeroProof = prove_state_transition(tree, batch);
-
-        /*let contract_hash = self.contract_hash("kairos_verifier_contract", account);
+        let proof: RiscZeroProof = prove_batch(tree, batch);
+        let contract_hash = self.contract_hash("kairos_verifier_contract", account);
         let session_args = runtime_args! {
             "proof" => serde_json::to_vec(&proof).expect("Failed to serialize proof!")
-        };*/
-        /*
-        let create_contract_purse_request = ExecuteRequestBuilder::contract_call_by_hash(
+        };
+        let submit_batch_request = ExecuteRequestBuilder::contract_call_by_hash(
             account,
             contract_hash,
             "submit_batch",
@@ -137,9 +137,30 @@ impl TestContext {
         )
         .build();
         self.builder
-            .exec(create_contract_purse_request)
+            .exec(submit_batch_request)
             .expect_success()
             .commit();
-        */
+    }
+}
+
+pub fn prove_batch(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroProof{
+    let inputs = CircuitArgs{
+        tree,
+        batch
+    };
+    let env = ExecutorEnv::builder()
+    .write(&inputs)
+    .unwrap()
+    .build()
+    .unwrap();
+
+    let prover = default_prover();
+    println!("Proving...");
+    let receipt = prover.prove(env, NATIVE_CSPR_TX_ELF).unwrap();
+    println!("Verifying...");
+    receipt.verify(NATIVE_CSPR_TX_ID).expect("Failed to verify proof!");
+    RiscZeroProof{
+        receipt_serialized: serde_json::to_vec(&receipt).expect("Failed to serialize receipt!"),
+        program_id: NATIVE_CSPR_TX_ID.to_vec()
     }
 }

@@ -1,7 +1,6 @@
 use methods::{
     NATIVE_CSPR_TX_ELF, NATIVE_CSPR_TX_ID
 };
-use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 use casper_types::{U512, Key, bytesrepr::ToBytes};
 use kairos_risc0_types::{constants::{FORMATTED_DEFAULT_ACCOUNT_STR}, hash_bytes, CircuitArgs, CircuitJournal, Deposit, HashableStruct, KairosDeltaTree, TransactionBatch, Transfer, Withdrawal, RiscZeroProof};
@@ -9,10 +8,6 @@ use std::collections::HashMap;
 use serde_json;
 
 pub fn prove_state_transition(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroProof{
-    /*
-        todo: sort transactions in order Deposits->Transers(->Withdrawals)
-    */
-    env_logger::init();
     let inputs = CircuitArgs{
         tree,
         batch
@@ -24,7 +19,9 @@ pub fn prove_state_transition(tree: KairosDeltaTree, batch: TransactionBatch) ->
     .unwrap();
 
     let prover = default_prover();
+    println!("Proving...");
     let receipt = prover.prove(env, NATIVE_CSPR_TX_ELF).unwrap();
+    println!("Verifying...");
     receipt.verify(NATIVE_CSPR_TX_ID).expect("Failed to verify proof!");
     RiscZeroProof{
         receipt_serialized: serde_json::to_vec(&receipt).expect("Failed to serialize receipt!"),

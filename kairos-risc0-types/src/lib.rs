@@ -13,7 +13,7 @@ pub trait HashableStruct{
     fn hash(&self) -> Vec<u8>;
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct RiscZeroProof{
     pub receipt_serialized: Vec<u8>,
     pub program_id: Vec<u32>

@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 kairos-risc0-types = {path="../../kairos-risc0-types", features=["kairos-delta-tree"]}
-risc0-zkvm = { version = "0.20.1", default-features = false, features = ["std"] }
+risc0-zkvm = { version = "0.21.0", default-features = false, features = ["std"] }
