@@ -19,7 +19,7 @@ pub fn main() {
     tree.add_leaf(new_leaf);
     let journal: CircuitJournal = CircuitJournal{
         input: input_tree_clone,
-        output: Some(tree)
+        output: tree
     };
     env::commit(&journal);
 }

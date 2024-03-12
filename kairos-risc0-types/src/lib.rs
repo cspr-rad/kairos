@@ -91,5 +91,5 @@ pub struct CircuitArgs{
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct CircuitJournal{
     pub input: KairosDeltaTree,
-    pub output: Option<KairosDeltaTree>
+    pub output: KairosDeltaTree
 }
