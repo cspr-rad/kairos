@@ -3,7 +3,7 @@ use methods::{
 };
 use serde::{Serialize, Deserialize};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-use kairos_risc0_types::{hash_bytes, constants::{FORMATTED_COUNTER_UREF, FORMATTED_DEFAULT_ACCOUNT_STR, FORMATTED_DICT_UREF, NODE_ADDRESS, RPC_PORT}, CircuitArgs, CircuitJournal, HashableStruct, KairosDeltaTree, Transfer, Deposit, Withdrawal, URef};
+use kairos_risc0_types::{hash_bytes, constants::{FORMATTED_COUNTER_UREF, FORMATTED_DEFAULT_ACCOUNT_STR, FORMATTED_DICT_UREF, NODE_ADDRESS, RPC_PORT}, CircuitArgs, CircuitJournal, HashableStruct, KairosDeltaTree, Transfer, Deposit, Withdrawal};
 // should be same as deposit.
 use std::collections::HashMap;
 use std::thread::sleep;
