@@ -20,10 +20,9 @@ pub extern "C" fn submit_batch(){
     let proof: Vec<u8> = runtime::get_named_arg("proof");
     // deserialize and perform checks on journal
     let result: [u8;1] = risc0_verifier(proof);
-    /*if x != [1u8]{
+    if result != [1u8]{
         runtime::revert(RiscZeroError::InvalidProof);
-    }*/
-    // store new tree from deserialized journal and increase index
+    }
 }
 
 #[no_mangle]
