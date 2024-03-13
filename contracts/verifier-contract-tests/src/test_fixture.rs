@@ -132,15 +132,13 @@ impl TestContext {
         let proof: RiscZeroProof = prove_batch(tree, batch);
         let receipt: Receipt = bincode::deserialize(&proof.receipt_serialized).expect("Failed to deserialize receipt!");
         let journal: &CircuitJournal = &receipt.journal.decode::<CircuitJournal>().unwrap();
-        let serialized_proof: Vec<u8> = serde_json::to_vec(&proof).expect("Failed to serialize proof!");
         let bincode_serialized_proof: Vec<u8> = bincode::serialize(&proof).expect("Failed to serialize proof!");
         let contract_hash = self.contract_hash("kairos_verifier_contract", account);
-        println!("Proof size: {:?}", &serialized_proof.len());
-        println!("Bincode Proof size: {:?}", &bincode_serialized_proof.len());
-        println!("Receipt size: {:?}", &proof.receipt_serialized.len());
-        println!("Id size: {:?}", serde_json::to_vec(&proof.program_id).unwrap().len());
+        println!("Bincode Proof size: {:?} should be less than 1_500_000", &bincode_serialized_proof.len());
+        let mut cl_proof = Bytes::from(bincode_serialized_proof);
+        let deserialized_proof: RiscZeroProof = bincode::deserialize(&cl_proof.as_slice().as_ref()).unwrap();
         let session_args = runtime_args! {
-            "proof" => Bytes::from(serialized_proof)
+            "proof" => cl_proof
         };
         let submit_batch_request = ExecuteRequestBuilder::contract_call_by_hash(
             account,

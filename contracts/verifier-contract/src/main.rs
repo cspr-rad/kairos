@@ -17,10 +17,9 @@ use error::RiscZeroError;
 
 #[no_mangle]
 pub extern "C" fn submit_batch(){
-    let proof: Bytes = runtime::get_named_arg("proof");
-    // let x: Vec<u8> = proof.to_vec();
+    let proof: Vec<u8> = runtime::get_named_arg("proof");
     // deserialize and perform checks on journal
-    // let x: [u8;1] = risc0_verifier(proof);
+    let result: [u8;1] = risc0_verifier(proof);
     /*if x != [1u8]{
         runtime::revert(RiscZeroError::InvalidProof);
     }*/
