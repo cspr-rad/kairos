@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use casper_types::{bytesrepr::ToBytes, Key, U512, URef};
+use casper_types::{Key, U512, URef};
 use std::collections::HashMap;
 mod tests;
 pub mod constants;

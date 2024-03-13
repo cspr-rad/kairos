@@ -5,7 +5,7 @@ use casper_engine_test_support::{
 };
 use casper_types::{
     account::AccountHash, runtime_args, Key,
-    URef, U512, contracts::NamedKeys, ContractHash, RuntimeArgs, CLValue, CLType, bytesrepr::ToBytes, bytesrepr::FromBytes, bytesrepr::Bytes
+    URef, U512, contracts::NamedKeys, ContractHash, RuntimeArgs, CLValue, CLType, bytesrepr::ToBytes, bytesrepr::FromBytes, bytesrepr::Bytes, bytesrepr
 };
 use utils::create_funded_dummy_account;
 use lazy_static::lazy_static;
@@ -18,7 +18,7 @@ use methods::{
     NATIVE_CSPR_TX_ELF, NATIVE_CSPR_TX_ID
 };
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
-
+use bincode;
 
 pub const ACCOUNT_USER_1: [u8; 32] = [1u8; 32];
 pub const ACCOUNT_USER_2: [u8; 32] = [2u8; 32];
@@ -130,12 +130,15 @@ impl TestContext {
             withdrawals
         };
         let proof: RiscZeroProof = prove_batch(tree, batch);
-        let receipt: Receipt = serde_json::from_slice(&proof.receipt_serialized).expect("Failed to deserialize receipt!");
+        let receipt: Receipt = bincode::deserialize(&proof.receipt_serialized).expect("Failed to deserialize receipt!");
         let journal: &CircuitJournal = &receipt.journal.decode::<CircuitJournal>().unwrap();
-        println!("Submitting proof to L1...");
-        let contract_hash = self.contract_hash("kairos_verifier_contract", account);
         let serialized_proof: Vec<u8> = serde_json::to_vec(&proof).expect("Failed to serialize proof!");
-
+        let bincode_serialized_proof: Vec<u8> = bincode::serialize(&proof).expect("Failed to serialize proof!");
+        let contract_hash = self.contract_hash("kairos_verifier_contract", account);
+        println!("Proof size: {:?}", &serialized_proof.len());
+        println!("Bincode Proof size: {:?}", &bincode_serialized_proof.len());
+        println!("Receipt size: {:?}", &proof.receipt_serialized.len());
+        println!("Id size: {:?}", serde_json::to_vec(&proof.program_id).unwrap().len());
         let session_args = runtime_args! {
             "proof" => Bytes::from(serialized_proof)
         };
@@ -143,7 +146,7 @@ impl TestContext {
             account,
             contract_hash,
             "submit_batch",
-            session_args,
+            session_args.clone(),
         )
         .build();
         self.builder
@@ -165,12 +168,10 @@ pub fn prove_batch(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroPr
     .unwrap();
 
     let prover = default_prover();
-    println!("Proving...");
     let receipt = prover.prove(env, NATIVE_CSPR_TX_ELF).unwrap();
-    println!("Verifying...");
     receipt.verify(NATIVE_CSPR_TX_ID).expect("Failed to verify proof!");
     RiscZeroProof{
-        receipt_serialized: serde_json::to_vec(&receipt).expect("Failed to serialize receipt!"),
+        receipt_serialized: bincode::serialize(&receipt).unwrap(),
         program_id: NATIVE_CSPR_TX_ID.to_vec()
     }
 }

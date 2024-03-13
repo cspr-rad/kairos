@@ -10,16 +10,17 @@ mod constants;
 use constants::{KAIROS_VERIFIER_CONTRACT, KAIROS_VERIFIER_CONTRACT_NAME, KAIROS_VERIFIER_CONTRACT_PACKAGE};
 use casper_types::{
     EntryPoint, EntryPointAccess, EntryPointType, EntryPoints, contracts::NamedKeys,
-    AccessRights, ApiError, CLType, CLValue, Key, Parameter, URef, U512, ContractHash
+    AccessRights, ApiError, CLType, CLValue, Key, Parameter, URef, U512, ContractHash, bytesrepr::ToBytes, bytesrepr::FromBytes, bytesrepr::Bytes
 };
 mod error;
 use error::RiscZeroError;
 
 #[no_mangle]
 pub extern "C" fn submit_batch(){
-    let proof: Vec<u8> = runtime::get_named_arg("proof");
+    let proof: Bytes = runtime::get_named_arg("proof");
+    // let x: Vec<u8> = proof.to_vec();
     // deserialize and perform checks on journal
-    let x: [u8;1] = risc0_verifier(proof);
+    // let x: [u8;1] = risc0_verifier(proof);
     /*if x != [1u8]{
         runtime::revert(RiscZeroError::InvalidProof);
     }*/
