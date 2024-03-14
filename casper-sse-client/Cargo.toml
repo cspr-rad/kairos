@@ -7,3 +7,6 @@ edition.workspace = true
 
 [[bin]]
 name = "casper-sse-client"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
