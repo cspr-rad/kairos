@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
+  "casper-sse-client",
   "kairos-cli",
   "kairos-server",
 ]

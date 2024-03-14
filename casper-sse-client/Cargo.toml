@@ -1,0 +1,6 @@
+[package]
+name = "casper-sse-client"
+version.workspace = true
+edition.workspace = true
+
+[lib]
