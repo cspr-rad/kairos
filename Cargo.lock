@@ -254,6 +254,8 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "reqwest",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
