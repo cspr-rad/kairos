@@ -9,5 +9,5 @@ edition.workspace = true
 name = "casper-sse-client"
 
 [dependencies]
-reqwest = "0.11.26"
+reqwest = { version = "0.11.26", features = ["stream"] }
 tokio = { version = "1", features = ["full"] }
