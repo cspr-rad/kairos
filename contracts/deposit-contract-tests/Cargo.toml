@@ -7,10 +7,10 @@ edition = "2021"
 
 [dev-dependencies]
 base64 = { version = "0.21.2", default-features = false, features = ["alloc"] }
-casper-engine-test-support = {git = "https://github.com/casper-network/casper-node", branch="dev", default-features=false}
-casper-execution-engine = {git = "https://github.com/casper-network/casper-node", branch="dev", default-features=false}
-casper-contract = {git = "https://github.com/casper-network/casper-node", branch="dev", default-features=false}
-casper-types = {git = "https://github.com/casper-network/casper-node", branch="dev", default-features=false}
+casper-engine-test-support = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6-risc0", default-features=false}
+casper-execution-engine = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6-risc0", default-features=false}
+casper-contract = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6-risc0", default-features=false}
+casper-types = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6-risc0", default-features=false}
 dotenv = "0.15.0"
 
 [[test]]

@@ -1,3 +1,4 @@
+rm -rf ./target
 rustup target add wasm32-unknown-unknown
 
 cargo build -p verifier-contract --release --target wasm32-unknown-unknown
