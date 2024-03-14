@@ -1,5 +1,7 @@
 use serde::{Serialize, Deserialize};
 use casper_types::{bytesrepr::ToBytes, Key, U512, URef};
+use bigdecimal::BigDecimal;
+use num_bigint::{BigUint, BigInt};
 use std::collections::HashMap;
 mod tests;
 pub mod constants;
@@ -92,4 +94,27 @@ pub struct CircuitArgs{
 pub struct CircuitJournal{
     pub input: KairosDeltaTree,
     pub output: KairosDeltaTree
+}
+
+pub trait ToBigDecimal {
+    fn to_big_decimal(&self) -> BigDecimal;
+}
+
+impl ToBigDecimal for U512 {
+    fn to_big_decimal(&self) -> BigDecimal {
+        let mut result = BigUint::default(); // Use default() for an initial value of 0.
+        let mut multiplier = BigUint::from(1u64);
+
+        for &part in self.0.iter().rev() {
+            let part_value = BigUint::from(part) * &multiplier;
+            result += &part_value;
+            multiplier <<= 64; // Move to the next 64-bit block
+        }
+
+        // Since BigDecimal::new requires BigInt, convert BigUint to BigInt.
+        let big_int = BigInt::from(result);
+
+        // Create a BigDecimal with scale 0, as it's a whole number.
+        BigDecimal::new(big_int, 0)
+    }
 }
