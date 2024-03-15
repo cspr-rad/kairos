@@ -12,20 +12,20 @@ const DEFAULT_EVENT_CHANNEL: &str = "/events/main";
 
 type BoxedEventStream = BoxStream<'static, Result<Event, EventStreamError<reqwest::Error>>>;
 
-pub struct SseListener {
+pub struct DeployNotifier {
     url: String,
 }
 
-impl Default for SseListener {
+impl Default for DeployNotifier {
     fn default() -> Self {
         let url = format!("{}{}", DEFAULT_SSE_SERVER, DEFAULT_EVENT_CHANNEL);
         Self { url }
     }
 }
 
-impl SseListener {
+impl DeployNotifier {
     pub fn new(url: &str) -> Self {
-        SseListener {
+        DeployNotifier {
             url: url.to_string(),
         }
     }
