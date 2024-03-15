@@ -1,6 +1,5 @@
-use eventsource_stream::Eventsource;
-use futures::stream::TryStreamExt;
-use reqwest::Client;
+use eventsource_stream::{Event, EventStreamError, Eventsource};
+use futures::stream::{BoxStream, TryStreamExt};
 
 use crate::error::SseError;
 use crate::types::{ExecutionResult, SseData};
@@ -10,6 +9,8 @@ mod types;
 
 const DEFAULT_SSE_SERVER: &str = "https://events.mainnet.casperlabs.io";
 const DEFAULT_EVENT_CHANNEL: &str = "/events/main";
+
+type BoxedEventStream = BoxStream<'static, Result<Event, EventStreamError<reqwest::Error>>>;
 
 pub struct SseListener {
     url: String,
@@ -22,18 +23,16 @@ impl SseListener {
         }
     }
 
-    pub async fn listen_to_sse(&self) -> Result<(), SseError> {
+    async fn connect(&self) -> Result<BoxedEventStream, SseError> {
         // Connect to SSE endpoint.
-        let client = Client::new();
-        let mut response = client
-            .get(&self.url)
-            .send()
-            .await?
-            .bytes_stream()
-            .eventsource();
+        let client = reqwest::Client::new();
+        let response = client.get(&self.url).send().await?;
 
-        // Receive handshake with API version.
-        let handshake_event = response
+        let stream = response.bytes_stream();
+        let mut event_stream = stream.eventsource();
+
+        // Handle the handshake with API version.
+        let handshake_event = event_stream
             .try_next()
             .await?
             .ok_or(SseError::StreamExhausted)?;
@@ -43,8 +42,17 @@ impl SseListener {
             _ => Err(SseError::InvalidHandshake),
         }?;
 
-        // Handle incoming events - look for successfuly processed deployments.
-        while let Some(event) = response.try_next().await? {
+        // Wrap stream with box.
+        let boxed_event_stream = Box::pin(event_stream);
+
+        Ok(boxed_event_stream)
+    }
+
+    // Handle incoming events - look for successfuly processed deployments.
+    pub async fn run(&mut self) -> Result<(), SseError> {
+        let mut event_stream = self.connect().await?;
+
+        while let Some(event) = event_stream.try_next().await? {
             let data: SseData = serde_json::from_str(&event.data)?;
             match data {
                 SseData::ApiVersion(_) => Err(SseError::UnexpectedHandshake)?,
