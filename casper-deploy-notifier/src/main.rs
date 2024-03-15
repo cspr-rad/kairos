@@ -1,15 +1,17 @@
 use tokio::sync::mpsc;
 
-use casper_sse_client::DeployNotifier;
+use casper_deploy_notifier::DeployNotifier;
+
+/// Example integration with Casper Deploy Notifier.
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (tx, mut rx) = mpsc::channel(100);
-    let mut listener = DeployNotifier::default();
+    let mut deploy_notifier = DeployNotifier::default();
 
     tokio::spawn(async move {
-        if let Err(e) = listener.run(tx).await {
-            eprintln!("Error listening for events: {:?}", e);
+        if let Err(e) = deploy_notifier.run(tx).await {
+            eprintln!("Error listening for deployment events: {:?}", e);
         }
     });
 

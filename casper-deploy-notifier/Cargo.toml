@@ -1,12 +1,12 @@
 [package]
-name = "casper-sse-client"
+name = "casper-deploy-notifier"
 version.workspace = true
 edition.workspace = true
 
 [lib]
 
 [[bin]]
-name = "casper-sse-client"
+name = "casper-deploy-notifier"
 
 [dependencies]
 futures = "0.3.30"
