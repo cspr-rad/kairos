@@ -13,7 +13,7 @@ const EVENT_CHANNEL: &str = "/events/main";
 
 pub async fn listen_to_sse() -> Result<(), SseError> {
     // Connect to SSE endpoint.
-    let url = String::from(CASPER_SSE_SERVER) + EVENT_CHANNEL;
+    let url = format!("{}{}", CASPER_SSE_SERVER, EVENT_CHANNEL);
     let client = Client::new();
     let mut response = client.get(url).send().await?.bytes_stream().eventsource();
 
