@@ -16,6 +16,13 @@ pub struct SseListener {
     url: String,
 }
 
+impl Default for SseListener {
+    fn default() -> Self {
+        let url = format!("{}{}", DEFAULT_SSE_SERVER, DEFAULT_EVENT_CHANNEL);
+        Self { url }
+    }
+}
+
 impl SseListener {
     pub fn new(url: &str) -> Self {
         SseListener {
@@ -74,12 +81,5 @@ impl SseListener {
 
         // Stream was exhausted.
         Err(SseError::StreamExhausted)?
-    }
-}
-
-impl Default for SseListener {
-    fn default() -> Self {
-        let url = format!("{}{}", DEFAULT_SSE_SERVER, DEFAULT_EVENT_CHANNEL);
-        Self { url }
     }
 }
