@@ -19,11 +19,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Receive handshake with API version.
     let handshake_event = response.try_next().await?.ok_or("Stream exhausted.")?;
     let handshake_data: SseData = serde_json::from_str(&handshake_event.data)?;
-    let api_version = match handshake_data {
+    let _api_version = match handshake_data {
         SseData::ApiVersion(v) => Ok(v),
         _ => Err("Invalid handshake event"),
     }?;
-    println!("API version: {}", api_version);
 
     // Handle incoming events - look for successfuly processed deployments.
     while let Some(event) = response.try_next().await? {
