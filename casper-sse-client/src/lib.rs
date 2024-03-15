@@ -3,10 +3,12 @@ use futures::stream::{BoxStream, TryStreamExt};
 use tokio::sync::mpsc;
 
 use crate::error::SseError;
-use crate::sse_types::{ExecutionResult, SseData};
+use crate::sse_types::SseData;
+use crate::types::Notification;
 
 mod error;
 mod sse_types;
+mod types;
 
 const DEFAULT_SSE_SERVER: &str = "https://events.mainnet.casperlabs.io";
 const DEFAULT_EVENT_CHANNEL: &str = "/events/main";
@@ -57,7 +59,7 @@ impl DeployNotifier {
     }
 
     // Handle incoming events - look for successfuly processed deployments.
-    pub async fn run(&mut self, tx: mpsc::Sender<bool>) -> Result<(), SseError> {
+    pub async fn run(&mut self, tx: mpsc::Sender<Notification>) -> Result<(), SseError> {
         let mut event_stream = self.connect().await?;
 
         while let Some(event) = event_stream.try_next().await? {
@@ -70,15 +72,14 @@ impl DeployNotifier {
                     deploy_hash,
                     account,
                 } => {
-                    if let ExecutionResult::Success(_) = execution_result {
-                        if let Err(_e) = tx.send(true).await {
-                            // Receiver probably dropeed.
-                            break;
-                        }
-                        println!(
-                            "Deployment successful: {} | Public key: {}",
-                            deploy_hash, account
-                        );
+                    let notification = Notification {
+                        deploy_hash,
+                        public_key: account,
+                        success: execution_result.into(),
+                    };
+                    if let Err(_e) = tx.send(notification).await {
+                        // Receiver probably dropeed.
+                        break;
                     }
                 }
             }

@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     while let Some(message) = rx.recv().await {
-        println!("TODO: {:?}", message);
+        println!("{:?}", message);
     }
 
     Ok(())

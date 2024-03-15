@@ -10,6 +10,15 @@ pub enum ExecutionResult {
     Failure(serde_json::Value),
 }
 
+impl From<ExecutionResult> for bool {
+    fn from(val: ExecutionResult) -> Self {
+        match val {
+            ExecutionResult::Success(_) => true,
+            ExecutionResult::Failure(_) => false,
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
 pub enum SseData {
     /// The version of node's API.
