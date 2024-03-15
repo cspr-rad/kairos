@@ -2,10 +2,10 @@ use eventsource_stream::{Event, EventStreamError, Eventsource};
 use futures::stream::{BoxStream, TryStreamExt};
 
 use crate::error::SseError;
-use crate::types::{ExecutionResult, SseData};
+use crate::sse_types::{ExecutionResult, SseData};
 
 mod error;
-mod types;
+mod sse_types;
 
 const DEFAULT_SSE_SERVER: &str = "https://events.mainnet.casperlabs.io";
 const DEFAULT_EVENT_CHANNEL: &str = "/events/main";
