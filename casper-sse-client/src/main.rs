@@ -1,35 +1,13 @@
 use eventsource_stream::Eventsource;
 use futures::stream::TryStreamExt;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+
+use crate::types::{ExecutionResult, SseData};
 
 const CASPER_SSE_SERVER: &str = "https://events.mainnet.casperlabs.io";
 const EVENT_CHANNEL: &str = "/events/main";
 
-///
-/// NOTE: Casper does not expose SSE types directly, so we have to reimplement them.
-///
-
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
-pub enum ExecutionResult {
-    Success(serde_json::Value),
-    Failure(serde_json::Value),
-}
-
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
-pub enum SseData {
-    /// The version of node's API.
-    ApiVersion(String),
-    /// The given deploy has been executed, committed and forms part of the given block.
-    DeployProcessed {
-        deploy_hash: String,
-        account: String,
-        execution_result: ExecutionResult,
-    },
-    /// Other events, that we are not interested in.
-    #[serde(untagged)]
-    Other(serde_json::Value),
-}
+mod types;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
