@@ -1,8 +1,9 @@
-use casper_sse_client::listen_to_sse;
+use casper_sse_client::SseListener;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    listen_to_sse().await?;
+    let listener = SseListener::default();
+    listener.listen_to_sse().await?;
 
     Ok(())
 }
