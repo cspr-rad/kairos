@@ -1,5 +1,6 @@
 use eventsource_stream::{Event, EventStreamError, Eventsource};
 use futures::stream::{BoxStream, TryStreamExt};
+use tokio::sync::mpsc;
 
 use crate::error::SseError;
 use crate::sse_types::{ExecutionResult, SseData};
@@ -56,7 +57,7 @@ impl DeployNotifier {
     }
 
     // Handle incoming events - look for successfuly processed deployments.
-    pub async fn run(&mut self) -> Result<(), SseError> {
+    pub async fn run(&mut self, tx: mpsc::Sender<bool>) -> Result<(), SseError> {
         let mut event_stream = self.connect().await?;
 
         while let Some(event) = event_stream.try_next().await? {
@@ -70,6 +71,10 @@ impl DeployNotifier {
                     account,
                 } => {
                     if let ExecutionResult::Success(_) = execution_result {
+                        if let Err(_e) = tx.send(true).await {
+                            // Receiver probably dropeed.
+                            break;
+                        }
                         println!(
                             "Deployment successful: {} | Public key: {}",
                             deploy_hash, account
