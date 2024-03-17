@@ -143,7 +143,7 @@ impl TestContext {
         let submit_batch_request = ExecuteRequestBuilder::contract_call_by_hash(
             account,
             contract_hash,
-            "submit_batch",
+            "submit_delta_tree_batch",
             session_args.clone(),
         )
         .build();

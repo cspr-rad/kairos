@@ -100,6 +100,7 @@ pub extern "C" fn deposit() {
         &most_recent_deposit_counter_value.to_string(),
         serde_json_wasm::to_vec(&new_deposit_record).unwrap(),
     );
+    // update the counter for last recorded deposit
     most_recent_deposit_counter_value += 1u64;
     storage::write(
         most_recent_deposit_counter_uref,
