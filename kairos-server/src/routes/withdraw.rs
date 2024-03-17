@@ -63,7 +63,7 @@ pub async fn withdraw_handler(
     }
 
     tracing::info!(
-        "Updated account public_key={} balance={}",
+        "Updated account public_key={:?} balance={}",
         withdrawal.public_key,
         updated_balance
     );
