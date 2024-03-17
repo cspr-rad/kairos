@@ -61,6 +61,9 @@
             ] ++ lib.optionals stdenv.isDarwin [
               libiconv
             ];
+            checkInputs = [
+              inputs'.csprpkgs.packages.cctl
+            ];
             meta.mainProgram = "kairos-server";
           };
         in
@@ -69,9 +72,6 @@
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
             inputsFrom = [ self'.packages.kairos ];
-            nativeBuildInputs = [
-              inputs'.csprpkgs.packages.cctl
-            ];
           };
 
           packages = {
