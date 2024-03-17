@@ -4,3 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [lib]
+
+[dependencies]
+thiserror = "1"
