@@ -15,5 +15,5 @@ tempfile = "*"
 nom = "*"
 
 [dev-dependencies]
-casper-client = "*"
+casper-client = "2"
 anyhow = "*"
