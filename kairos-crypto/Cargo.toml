@@ -10,6 +10,7 @@ crypto-casper = ["casper-types"]
 [lib]
 
 [dependencies]
+hex = "0.4"
 thiserror = "1"
 
 # Casper signer implementation.
