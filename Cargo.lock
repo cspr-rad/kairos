@@ -1050,6 +1050,7 @@ dependencies = [
  "casper-types",
  "clap",
  "hex",
+ "kairos-crypto",
  "predicates",
  "thiserror",
 ]
