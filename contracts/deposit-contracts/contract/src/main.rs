@@ -15,10 +15,10 @@ mod constants;
 mod detail;
 mod error;
 use constants::{
-    KAIROS_ADMIN, KAIROS_AMOUNT, KAIROS_DEPOSIT_CONTRACT, KAIROS_DEPOSIT_CONTRACT_NAME,
+    KAIROS_ADMIN, RUNTIME_ARG_AMOUNT, KAIROS_DEPOSIT_CONTRACT, KAIROS_DEPOSIT_CONTRACT_NAME,
     KAIROS_DEPOSIT_CONTRACT_PACKAGE, KAIROS_DEPOSIT_EVENT_DICT, KAIROS_DEPOSIT_PURSE,
-    KAIROS_DESTINATION_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER,
-    KAIROS_MOST_RECENT_DEPOSIT_COUNTER, KAIROS_NEW_ADMIN, KAIROS_TEMP_PURSE,
+    RUNTIME_ARG_DEST_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER,
+    KAIROS_MOST_RECENT_DEPOSIT_COUNTER, RUNTIME_ARG_NEW_ADMIN, RUNTIME_ARG_TEMP_PURSE,
 };
 use kairos_risc0_types::Deposit;
 use detail::get_immediate_caller;
@@ -29,7 +29,7 @@ pub extern "C" fn update_admin() {
     let admin = runtime::get_key(KAIROS_ADMIN).unwrap();
     assert_eq!(caller, admin);
 
-    let new_admin: Key = runtime::get_named_arg(KAIROS_NEW_ADMIN);
+    let new_admin: Key = runtime::get_named_arg(RUNTIME_ARG_NEW_ADMIN);
     runtime::put_key(KAIROS_ADMIN, new_admin);
 }
 
@@ -65,8 +65,8 @@ pub extern "C" fn deposit() {
     /*
         transfer from source purse to contract purse
     */
-    let temp_purse: URef = runtime::get_named_arg(KAIROS_TEMP_PURSE);
-    let amount: U512 = runtime::get_named_arg(KAIROS_AMOUNT);
+    let temp_purse: URef = runtime::get_named_arg(RUNTIME_ARG_TEMP_PURSE);
+    let amount: U512 = runtime::get_named_arg(RUNTIME_ARG_AMOUNT);
     let deposit_purse_uref: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
         .unwrap_or_revert_with(ApiError::MissingKey)
         .into_uref()
@@ -144,8 +144,8 @@ pub extern "C" fn withdrawal() {
     let admin = runtime::get_key(KAIROS_ADMIN).unwrap();
     assert_eq!(caller, admin);
 
-    let destination_purse: URef = runtime::get_named_arg(KAIROS_DESTINATION_PURSE);
-    let amount: U512 = runtime::get_named_arg(KAIROS_AMOUNT);
+    let destination_purse: URef = runtime::get_named_arg(RUNTIME_ARG_DEST_PURSE);
+    let amount: U512 = runtime::get_named_arg(RUNTIME_ARG_AMOUNT);
     let deposit_purse: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
         .unwrap()
         .into_uref()
@@ -167,7 +167,7 @@ pub extern "C" fn call() {
         let mut entry_points = EntryPoints::new();
         let update_admin = EntryPoint::new(
             "update_admin",
-            vec![Parameter::new(KAIROS_NEW_ADMIN, CLType::Key)],
+            vec![Parameter::new(RUNTIME_ARG_NEW_ADMIN, CLType::Key)],
             CLType::Unit,
             EntryPointAccess::Public,
             EntryPointType::Contract,
@@ -189,8 +189,8 @@ pub extern "C" fn call() {
         let deposit = EntryPoint::new(
             "deposit",
             vec![
-                Parameter::new(KAIROS_AMOUNT, CLType::U512),
-                Parameter::new(KAIROS_TEMP_PURSE, CLType::URef),
+                Parameter::new(RUNTIME_ARG_AMOUNT, CLType::U512),
+                Parameter::new(RUNTIME_ARG_TEMP_PURSE, CLType::URef),
             ],
             CLType::Unit,
             EntryPointAccess::Public,
@@ -199,8 +199,8 @@ pub extern "C" fn call() {
         let withdrawal = EntryPoint::new(
             "withdrawal",
             vec![
-                Parameter::new(KAIROS_DESTINATION_PURSE, CLType::URef),
-                Parameter::new(KAIROS_AMOUNT, CLType::U512),
+                Parameter::new(RUNTIME_ARG_DEST_PURSE, CLType::URef),
+                Parameter::new(RUNTIME_ARG_AMOUNT, CLType::U512),
             ],
             CLType::Unit,
             EntryPointAccess::Public,
