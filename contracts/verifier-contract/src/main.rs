@@ -20,6 +20,25 @@ use bincode;
 
 #[no_mangle]
 pub extern "C" fn submit_delta_tree_batch(){
+    /* Delta Tree Initialization
+        Delta tree updates / submissions occur from a genesis tree of form:
+
+            let mut tree: KairosDeltaTree = KairosDeltaTree{
+                zero_node: hash_bytes(vec![0;32]),
+                zero_levels: Vec::new(),
+                filled: vec![vec![], vec![], vec![], vec![], vec![]],
+                root: None,
+                index: 0,
+                depth: 5
+            };
+
+        For the ith tree the verifying client will need to know the proof
+        at i, the new leaf and the tree at i - 1. The leaf is the hash of the Batch inserted at i.
+        For the insertion at index 0 in the contract dict, the default tree will be at
+        i - 1, e.g. at -1.
+    */
+
+
     // This should be the risc0 Receipt for any Risc0 circuit used. 
     // The contract should compare the circuit ID against the expected one.
     let proof: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_PROOF);

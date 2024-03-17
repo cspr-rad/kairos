@@ -2,7 +2,7 @@ pub mod crypto;
 use crypto::hash_left_right;
 use serde::{Serialize, Deserialize};
 
-pub const ROOT_HISTORY_SIZE: u16 = 30u16;
+//pub const ROOT_HISTORY_SIZE: u16 = 30u16;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct KairosDeltaTree{
     pub zero_node: Vec<u8>,
@@ -38,7 +38,7 @@ impl KairosDeltaTree{
         self.root = Some(current_hash);
         self.index += 1;
     }
-    pub fn merkle_proof(&mut self, leaf: Vec<u8>) -> Vec<u8>{
+    pub fn merkle_pseudo_proof(&mut self, leaf: Vec<u8>) -> Vec<u8>{
         let mut current_index = self.index - 1;
         let mut current_hash: Vec<u8> = leaf.clone();
         for i in 0..self.depth{
@@ -67,14 +67,24 @@ fn test_tree(){
         depth: 5
     };
     tree.calculate_zero_levels();
-    let leaf = vec![242, 69, 81, 38, 252, 95, 197, 129, 177, 105, 42, 137, 129, 73, 125, 148, 130, 204, 83, 82, 126, 104, 106, 71, 156, 96, 55, 233, 132, 103, 128, 11];
+    let mut leaf = vec![242, 69, 81, 38, 252, 95, 197, 129, 177, 105, 42, 137, 129, 73, 125, 148, 130, 204, 83, 82, 126, 104, 106, 71, 156, 96, 55, 233, 132, 103, 128, 11];
     let _ = tree.add_leaf(leaf.clone());
     let merkle_root: Option<Vec<u8>> = tree.root.clone();
-    assert_eq!(tree.merkle_proof(leaf.clone()), merkle_root.clone().unwrap());
+    assert_eq!(tree.merkle_pseudo_proof(leaf.clone()), merkle_root.clone().unwrap());
     println!("First root: {:?}", &merkle_root.unwrap());
+
+    println!("Tree: {:?}", &tree);
+
+    leaf = vec![100, 69, 81, 38, 252, 95, 197, 129, 177, 105, 42, 137, 129, 73, 125, 148, 130, 204, 83, 82, 126, 104, 106, 71, 156, 96, 55, 233, 132, 103, 128, 11];
+    let _ = tree.add_leaf(leaf.clone());
+    let merkle_root = tree.root.clone();
+    assert_eq!(tree.merkle_pseudo_proof(leaf.clone()), merkle_root.clone().unwrap());
+    println!("Second root: {:?}", &merkle_root.unwrap());
+    print!("Tree: {:?}", &tree);
 
     let _ = tree.add_leaf(leaf.clone());
     let merkle_root = tree.root.clone();
-    assert_eq!(tree.merkle_proof(leaf.clone()), merkle_root.clone().unwrap());
-    println!("Second root: {:?}", &merkle_root.unwrap());
+    assert_eq!(tree.merkle_pseudo_proof(leaf.clone()), merkle_root.clone().unwrap());
+    println!("Third root: {:?}", &merkle_root.unwrap());
+    println!("Tree: {:?}", &tree);
 }
