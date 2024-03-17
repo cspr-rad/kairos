@@ -1,0 +1,6 @@
+[package]
+name = "kairos-crypto"
+version.workspace = true
+edition.workspace = true
+
+[lib]

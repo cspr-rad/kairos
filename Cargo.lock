@@ -1055,6 +1055,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairos-crypto"
+version = "0.1.0"
+
+[[package]]
 name = "kairos-server"
 version = "0.1.0"
 dependencies = [
