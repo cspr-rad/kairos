@@ -19,7 +19,6 @@ axum-extra = { version = "0.9", features = [
     "typed-header",
     "json-deserializer",
 ] }
-thiserror = "1"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
