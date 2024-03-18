@@ -1,6 +1,6 @@
 use diesel::{ExpressionMethods, Insertable, QueryDsl, Queryable, Selectable, SelectableHelper};
 use diesel::RunQueryDsl;
-use kairos_risc0_types::ToBigDecimal;
+use kairos_risc0_types::{ToBigDecimal, Deposit};
 use chrono::{Utc, NaiveDateTime};
 use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
@@ -9,8 +9,6 @@ use deadpool_diesel::postgres::Pool;
 use crate::database::schema::deposits;
 use crate::database::errors;
 use crate::database::schema;
-
-use kairos_risc0_types::Deposit;
 
 #[derive(Serialize, Queryable, Selectable, Insertable)]
 #[diesel(table_name = schema::deposits)]

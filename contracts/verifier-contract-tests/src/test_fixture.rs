@@ -45,6 +45,8 @@ impl TestContext {
     pub fn new() -> TestContext {
         let mut builder = InMemoryWasmTestBuilder::default();
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
+        //let mut genesis_request = PRODUCTION_RUN_GENESIS_REQUEST;
+        
         let account_1 = create_funded_dummy_account(&mut builder, Some(ACCOUNT_USER_1));
         let account_2 = create_funded_dummy_account(&mut builder, Some(ACCOUNT_USER_2));
         let account_3 = create_funded_dummy_account(&mut builder, Some(ACCOUNT_USER_3));
@@ -121,7 +123,15 @@ impl TestContext {
             depth: 5
         };
         tree.calculate_zero_levels();
-        let transfers: Vec<Transfer> = vec![];
+        let transfers: Vec<Transfer> = vec![/*Transfer{
+            sender: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+            recipient: Key::from_formatted_str("account-hash-32da6919b3a0a9be4bc5b38fa74de98f90dc43924bf17e73f6635992f110f011").unwrap(),
+            amount: U512::zero(),
+            timestamp: "SOME_TIMESTAMP".to_string(),
+            signature: vec![],
+            processed: false,
+            nonce: 0u64
+        }*/];
         let deposits: Vec<Deposit> = vec![];
         let withdrawals: Vec<Withdrawal> = vec![];
         let batch: TransactionBatch = TransactionBatch{
@@ -134,7 +144,7 @@ impl TestContext {
         let journal: &CircuitJournal = &receipt.journal.decode::<CircuitJournal>().unwrap();
         let bincode_serialized_proof: Vec<u8> = bincode::serialize(&proof).expect("Failed to serialize proof!");
         let contract_hash = self.contract_hash("kairos_verifier_contract", account);
-        println!("Bincode Proof size: {:?} should be less than 1_500_000", &bincode_serialized_proof.len());
+        println!("Bincode Proof size: {:?} should be less than 150_000", &bincode_serialized_proof.len());
         let mut cl_proof = Bytes::from(bincode_serialized_proof);
         let deserialized_proof: RiscZeroProof = bincode::deserialize(&cl_proof.as_slice().as_ref()).unwrap();
         let session_args = runtime_args! {
@@ -151,6 +161,12 @@ impl TestContext {
             .exec(submit_batch_request)
             .expect_success()
             .commit();
+    }
+}
+
+impl Default for TestContext {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

@@ -6,3 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+casper-client = {git="https://github.com/jonas089/casper-client-rs", branch="kairos-1.5.6"}
+casper-types = {git="https://github.com/jonas089/casper-node", branch="kairos-1.5.6-risc0"}
+tokio = {version="1.36.0", features=["full"]}
+kairos-risc0-types = {path="../kairos-risc0-types"}

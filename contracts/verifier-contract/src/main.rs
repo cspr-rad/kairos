@@ -68,7 +68,7 @@ pub extern "C" fn submit_delta_tree_batch(){
     let result: [u8;1] = risc0_verifier(&proof);
     if result != [1u8]{
         runtime::revert(RiscZeroError::InvalidProof);
-    }
+    };
     let delta_tree_height_counter_uref: URef = runtime::get_key(DELTA_TREE_HEIGHT_COUNTER)
         .unwrap()
         .into_uref()
