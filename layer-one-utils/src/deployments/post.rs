@@ -70,7 +70,7 @@ async fn test_submit_delta_tree_batch(){
     };
     let proof: RiscZeroProof = prove_batch(tree, batch);
     let bincode_serialized_proof: Vec<u8> = bincode::serialize(&proof).expect("Failed to serialize proof!");
-    let mut cl_proof: Bytes = Bytes::from(bincode_serialized_proof);
+    let cl_proof: Bytes = Bytes::from(bincode_serialized_proof);
     submit_delta_tree_batch(CCTL_DEFAULT_NODE_ADDRESS, CCTL_DEFAULT_NODE_RPC_PORT, SECRET_KEY_PATH, DEFAULT_CHAIN_NAME, VERIFIER_CONTRACT_HASH, cl_proof).await;
 
     pub fn prove_batch(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroProof{
