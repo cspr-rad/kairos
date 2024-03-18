@@ -10,3 +10,4 @@ casper-client = {git="https://github.com/jonas089/casper-client-rs", branch="kai
 casper-types = {git="https://github.com/jonas089/casper-node", branch="kairos-1.5.6-risc0"}
 tokio = {version="1.36.0", features=["full"]}
 kairos-risc0-types = {path="../kairos-risc0-types"}
+serde_json = "1.0.114"
