@@ -144,7 +144,6 @@ impl TestContext {
         let journal: &CircuitJournal = &receipt.journal.decode::<CircuitJournal>().unwrap();
         let bincode_serialized_proof: Vec<u8> = bincode::serialize(&proof).expect("Failed to serialize proof!");
         let contract_hash = self.contract_hash("kairos_verifier_contract", account);
-        println!("Bincode Proof size: {:?} should be less than 150_000", &bincode_serialized_proof.len());
         let mut cl_proof = Bytes::from(bincode_serialized_proof);
         let deserialized_proof: RiscZeroProof = bincode::deserialize(&cl_proof.as_slice().as_ref()).unwrap();
         let session_args = runtime_args! {
