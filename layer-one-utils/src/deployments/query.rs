@@ -1,5 +1,5 @@
 use casper_client::{get_state_root_hash, query_global_state, get_dictionary_item, JsonRpcId, Verbosity, types::StoredValue};
-use casper_types::{bytesrepr::{Bytes, ToBytes}, CLValue, Key, URef, U512};
+use casper_types::{bytesrepr::{Bytes, ToBytes}, CLValue, Key, URef};
 use casper_hashing::Digest;
 use crate::constants::{CCTL_DEFAULT_NODE_ADDRESS, CCTL_DEFAULT_NODE_RPC_PORT, FORMATTED_COUNTER_UREF, FORMATTED_DEPOSIT_EVENT_DICT_UREF};
 use kairos_risc0_types::Deposit;
@@ -22,7 +22,7 @@ pub async fn query_counter(
     node_address: &str,
     rpc_port: &str,
     counter_uref: URef
-) -> U512{
+) -> u64{
     let srh: Digest = query_state_root_hash(node_address, rpc_port).await;
     let stored_value: StoredValue = query_global_state(
         JsonRpcId::String(rpc_port.to_owned()), 
@@ -32,11 +32,11 @@ pub async fn query_counter(
         casper_types::Key::URef(counter_uref), 
         Vec::new()
     ).await.unwrap().result.stored_value;
-    let value: U512 = match stored_value{
+    let value: u64 = match stored_value{
         StoredValue::CLValue(cl_value) => {
             return cl_value.into_t().unwrap()
         },
-        _ => return U512::zero()
+        _ => return 666u64
     };
 }
 
