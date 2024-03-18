@@ -1,4 +1,4 @@
-use casper_client::{rpcs::results::PutDeployResult, JsonRpcId, types::ExecutableDeployItem, types::{Deploy, DeployBuilder}};
+use casper_client::{rpcs::results::PutDeployResult, types::{Deploy, DeployBuilder, ExecutableDeployItem, Timestamp}, JsonRpcId};
 use casper_types::{bytesrepr::{Bytes, ToBytes}, crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs};
 use crate::constants::{CCTL_DEFAULT_NODE_ADDRESS, CCTL_DEFAULT_NODE_RPC_PORT, DEFAULT_CHAIN_NAME, DEFAULT_PAYMENT_AMOUNT, SECRET_KEY_PATH, VERIFIER_CONTRACT_HASH};
 use std::fs;
@@ -24,7 +24,7 @@ pub async fn submit_delta_tree_batch(
     let deploy: Deploy = DeployBuilder::new(
         chain_name,
         session
-    ).with_standard_payment(DEFAULT_PAYMENT_AMOUNT).with_secret_key(&secret_key).build().unwrap();
+    ).with_timestamp(Timestamp::now()).with_standard_payment(DEFAULT_PAYMENT_AMOUNT).with_secret_key(&secret_key).build().unwrap();
 
     let result = casper_client::put_deploy(
         JsonRpcId::String(rpc_port.to_string()), 
