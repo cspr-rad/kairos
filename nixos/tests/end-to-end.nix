@@ -1,5 +1,7 @@
 { nixosTest
 , mkKairosHostConfig
+, kairos
+, testResources ? ../../kairos-cli/tests/fixtures
 }:
 nixosTest {
   name = "kairos e2e test";
@@ -18,7 +20,7 @@ nixosTest {
     };
 
     client = { config, pkgs, nodes, ... }: {
-      environment.systemPackages = [ pkgs.curl ];
+      environment.systemPackages = [ pkgs.curl kairos ];
     };
   };
 
@@ -41,5 +43,15 @@ nixosTest {
 
     withdraw_request = { "public_key": "publickey", "signature": "signature", "amount": 10 }
     client.succeed("curl -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
+
+    cli_output = client.succeed("kairos-cli deposit --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
+    assert "ok\n" in cli_output
+
+    cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
+    assert "ok\n" in cli_output
+
+    cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
+    assert "ok\n" in cli_output
   '';
 }
+
