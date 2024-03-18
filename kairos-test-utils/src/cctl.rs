@@ -42,14 +42,14 @@ impl CCTLNetwork {
             .output()
             .expect("failed to execute setup network config");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
-        log::info!("{}", output);
+        tracing::info!("{}", output);
 
         let output = Command::new("cctl-infra-net-start")
             .env("CCTL_ASSETS", &assets_dir)
             .output()
             .expect("failed to start network");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
-        log::info!("{}", output);
+        tracing::info!("{}", output);
         let (_, nodes) = parsers::parse_cctl_infra_net_start_lines(output).unwrap();
 
         let output = Command::new("cctl-infra-node-view-ports")
@@ -57,7 +57,7 @@ impl CCTLNetwork {
             .output()
             .expect("failed to get node ports");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
-        log::info!("{}", output);
+        tracing::info!("{}", output);
         let (_, node_ports) = parsers::parse_cctl_infra_node_view_port_lines(output).unwrap();
 
         // Match the started nodes with their respective ports
@@ -80,7 +80,7 @@ impl CCTLNetwork {
             })
             .collect();
 
-        log::info!("Waiting for network to start processing blocks");
+        tracing::info!("Waiting for network to start processing blocks");
         std::thread::sleep(std::time::Duration::from_secs(5));
         let output = Command::new("cctl-chain-await-until-block-n")
             .env("CCTL_ASSETS", &assets_dir)
@@ -88,7 +88,7 @@ impl CCTLNetwork {
             .output()
             .expect("Waiting for network to start processing blocks failed");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
-        log::info!("{}", output);
+        tracing::info!("{}", output);
 
         Ok(CCTLNetwork {
             working_dir,

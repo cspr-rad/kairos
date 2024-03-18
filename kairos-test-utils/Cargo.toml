@@ -8,10 +8,9 @@ edition = "2021"
 
 [dependencies]
 
-log = "*"
-tokio = { version = "*", features = [ "full", "macros" ] }
-env_logger = "*"
+tokio = { version = "*", features = [ "full", "tracing", "macros" ] }
 tempfile = "*"
+tracing = "0.1"
 nom = "*"
 
 [dev-dependencies]
