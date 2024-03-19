@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-casper-contract = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6"}
-casper-types = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6"}
+casper-contract = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6-risc0"}
+casper-types = {git = "https://github.com/jonas089/casper-node", branch="kairos-1.5.6-risc0"}
 
 [[bin]]
 name = "malicious-session"
