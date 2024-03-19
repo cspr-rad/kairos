@@ -29,7 +29,7 @@ pub async fn query_state_root_hash(node_address: &str, rpc_port: &str) -> Digest
     srh
 }
 
-pub async fn query_counter(node_address: &str, rpc_port: &str, counter_uref: URef) -> u64 {
+pub async fn query_counter(node_address: &str, rpc_port: &str, counter_uref: &str) -> u64 {
     let srh: Digest = query_state_root_hash(node_address, rpc_port).await;
     let stored_value: StoredValue = query_global_state(
         JsonRpcId::String(rpc_port.to_owned()),
@@ -38,7 +38,7 @@ pub async fn query_counter(node_address: &str, rpc_port: &str, counter_uref: URe
         Some(casper_client::rpcs::GlobalStateIdentifier::StateRootHash(
             srh,
         )),
-        casper_types::Key::URef(counter_uref),
+        casper_types::Key::URef(URef::from_formatted_str(counter_uref).unwrap()),
         Vec::new(),
     )
     .await
@@ -54,7 +54,7 @@ pub async fn query_counter(node_address: &str, rpc_port: &str, counter_uref: URe
 pub async fn query_deposit(
     node_address: &str,
     rpc_port: &str,
-    dict_uref: URef,
+    dict_uref: &str,
     key: String,
 ) -> Deposit {
     let srh = query_state_root_hash(node_address, &rpc_port).await;
@@ -64,7 +64,7 @@ pub async fn query_deposit(
         Verbosity::Low,
         srh,
         casper_client::rpcs::DictionaryItemIdentifier::URef {
-            seed_uref: dict_uref,
+            seed_uref: URef::from_formatted_str(dict_uref).unwrap(),
             dictionary_item_key: key,
         },
     )
@@ -82,7 +82,7 @@ pub async fn query_deposit(
 pub async fn query_proof(
     node_address: &str,
     rpc_port: &str,
-    dict_uref: URef,
+    dict_uref: &str,
     key: String,
 ) -> RiscZeroProof {
     let srh = query_state_root_hash(node_address, &rpc_port).await;
@@ -92,7 +92,7 @@ pub async fn query_proof(
         Verbosity::Low,
         srh,
         casper_client::rpcs::DictionaryItemIdentifier::URef {
-            seed_uref: dict_uref,
+            seed_uref: URef::from_formatted_str(dict_uref).unwrap(),
             dictionary_item_key: key,
         },
     )
@@ -112,7 +112,7 @@ async fn test_query_counter() {
     let response = query_counter(
         CCTL_DEFAULT_NODE_ADDRESS,
         CCTL_DEFAULT_NODE_RPC_PORT,
-        URef::from_formatted_str(FORMATTED_COUNTER_UREF).unwrap(),
+        FORMATTED_COUNTER_UREF,
     )
     .await;
     println!("Response: {:?}", &response);
@@ -124,7 +124,7 @@ async fn test_query_deposit() {
     let response = query_deposit(
         CCTL_DEFAULT_NODE_ADDRESS,
         CCTL_DEFAULT_NODE_RPC_PORT,
-        URef::from_formatted_str(FORMATTED_DEPOSIT_EVENT_DICT_UREF).unwrap(),
+        FORMATTED_DEPOSIT_EVENT_DICT_UREF,
         "0".to_string(),
     )
     .await;
@@ -136,7 +136,7 @@ async fn test_query_proof() {
     let response = query_proof(
         CCTL_DEFAULT_NODE_ADDRESS,
         CCTL_DEFAULT_NODE_RPC_PORT,
-        URef::from_formatted_str(FORMATTED_PROOF_DICT_UREF).unwrap(),
+        FORMATTED_PROOF_DICT_UREF,
         "0".to_string(),
     )
     .await;

@@ -14,12 +14,10 @@ use routes::app_router;
 
 // Logging macro(s) for easy use
 use log::info;
-
 // Load config
 lazy_static! {
     static ref CONFIG: config::Config = config::Config::read_config();
 }
-
 #[derive(Clone)]
 pub struct AppState {
     pool: Pool,
@@ -27,7 +25,6 @@ pub struct AppState {
 
 #[tokio::main]
 async fn main() {
-
     // Setup logging
     fern::Dispatch::new()
         .format(|out, message, record| {
