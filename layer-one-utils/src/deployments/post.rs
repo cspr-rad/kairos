@@ -1,6 +1,7 @@
 use casper_client::{rpcs::results::PutDeployResult, types::{Deploy, DeployBuilder, ExecutableDeployItem, Timestamp}, JsonRpcId};
 use casper_types::{bytesrepr::{Bytes, ToBytes}, crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs};
 use crate::constants::{CCTL_DEFAULT_NODE_ADDRESS, CCTL_DEFAULT_NODE_RPC_PORT, DEFAULT_CHAIN_NAME, DEFAULT_PAYMENT_AMOUNT, SECRET_KEY_PATH, VERIFIER_CONTRACT_HASH};
+use bincode;
 use std::fs;
 
 pub async fn submit_delta_tree_batch(
