@@ -6,9 +6,9 @@ use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 use deadpool_diesel::postgres::Pool;
 
-use crate::database::schema::withdrawals;
+use crate::database::delta_tree_schema::withdrawals;
 use crate::database::errors;
-use crate::database::schema;
+use crate::database::delta_tree_schema as schema;
 
 #[derive(Serialize, Queryable, Selectable, Insertable)]
 #[diesel(table_name = schema::withdrawals)]

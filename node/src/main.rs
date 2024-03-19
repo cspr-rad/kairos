@@ -1,9 +1,10 @@
+mod domain;
 mod config;
 mod errors;
 mod routes;
 mod database;
 mod handlers;
-mod domain;
+mod tasks;
 
 use fern;
 use chrono::Utc;
@@ -53,7 +54,10 @@ async fn main() {
     // TODO - Run pending DB migrations here
 
     // Make application state (atm just a struct containing DB connection pool)
-    let state = AppState { pool };
+    let state = AppState { pool: pool.clone() };
+
+    // Setup tasks here
+    tokio::spawn(tasks::sync_task::sync(pool.clone()));
 
     // Setup Axum JSON API
     let socket_addr = CONFIG.socket_address();

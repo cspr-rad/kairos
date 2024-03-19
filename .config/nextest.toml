@@ -1,0 +1,33 @@
+experimental = ["setup-scripts"]
+
+[store]
+dir = "target/nextest"
+
+[profile.default]
+retries = 0
+test-threads = "num-cpus"
+threads-required = 1
+status-level = "pass"
+final-status-level = "flaky"
+failure-output = "immediate-final"
+success-output = "never"
+fail-fast = true
+slow-timeout = { period = "60s" }
+leak-timeout = "100ms"
+
+[[profile.default.scripts]]
+filter = 'test(/^.*/)'
+setup = ['docker-compose']
+
+[profile.ci]
+failure-output = "immediate-final"
+fail-fast = false
+
+[profile.ci.junit]
+path = "junit.xml"
+report-name = "nextest-run"
+store-success-output = true
+store-failure-output = true
+
+[script.docker-compose]
+command = "./.config/setup.sh"

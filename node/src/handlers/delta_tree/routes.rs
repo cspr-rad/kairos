@@ -8,5 +8,6 @@ use crate::AppState;
 
 pub fn delta_tree_routes() -> Router<AppState> {
     Router::new()
-        .route("/test", get(|_: State<AppState>| async {}))
+        .route("/transfer", get(|_: State<AppState>| async {}))
+        .route("/submit_batch", post(|_: State<AppState>| async {}))
 }

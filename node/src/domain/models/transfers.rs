@@ -6,9 +6,9 @@ use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 use deadpool_diesel::postgres::Pool;
 
-use crate::database::schema::transfers;
+use crate::database::delta_tree_schema::transfers;
 use crate::database::errors;
-use crate::database::schema;
+use crate::database::delta_tree_schema as schema;
 
 // Define struct for schema for transfers
 #[derive(Serialize, Queryable, Selectable, Insertable)]
@@ -32,7 +32,7 @@ impl From<Transfer> for TransferModel {
             amount: transfer.amount.to_big_decimal(),
             timestamp: Utc::now().naive_utc(),
             sig: transfer.signature,
-            processed: transfer.processed,
+            processed: false,
             nonce: transfer.nonce.into(),
         }
     }

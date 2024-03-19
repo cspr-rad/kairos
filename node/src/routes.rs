@@ -21,7 +21,7 @@ pub fn app_router() -> Router<AppState> {
 
     #[cfg(feature="delta-tree")]
     {
-        router = router.merge(delta_tree_routes());
+        router = router.nest("/api/delta",delta_tree_routes());
     }
 
     // add 404 error handler

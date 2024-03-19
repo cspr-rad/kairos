@@ -1,6 +1,15 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    batches (timestamp) {
+        deposits -> Bytea,
+        transfers -> Bytea,
+        withdrawals -> Bytea,
+        timestamp -> Timestamp,
+    }
+}
+
+diesel::table! {
     deposits (timestamp) {
         #[max_length = 32]
         account -> Varchar,
@@ -35,6 +44,7 @@ diesel::table! {
 }
 
 diesel::allow_tables_to_appear_in_same_query!(
+    batches,
     deposits,
     transfers,
     withdrawals,

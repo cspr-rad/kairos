@@ -22,3 +22,13 @@ Will immediately get a performance boost if using timescaledb.
 - Move models into their own domain/models subfolder depending on where they're used
 - Change sync task to subscribe to event stream instead of querying node
 - Add match statements in insert functions so for example Transfer and TransferModel can be passed as arguments
+- Implement clean shutdown, stopping TcpListeners and closing database connections (catch CTRL+C signal)
+- Move diesel.toml into diesel folder, renaming it to be delta-tree specific
+- Rename the tables in diesel/delta-tree/migrations so that they're prefixed with delta_
+- Add license
+
+### Testing
+In order to test, make sure you have [cargo-nextest](https://nexte.st) and [docker-compose](https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin) installed.
+You might also need the [jq](https://jqlang.github.io/jq/) cli tool. It comes preinstalled on most linux distros.
+Executing `cargo nextest run` will automatically spawn a network using CCTL and a postgresql database.
+The environment will stay running after test execution ends until explicitly stopped using the command `docker-compose down` or `docker compose down`. The reasoning behind this is to keep the time waiting on the images to spin up to a minimum while developing and testing the code.

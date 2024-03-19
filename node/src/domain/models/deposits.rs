@@ -6,9 +6,11 @@ use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 use deadpool_diesel::postgres::Pool;
 
-use crate::database::schema::deposits;
+use crate::database::delta_tree_schema::deposits;
 use crate::database::errors;
-use crate::database::schema;
+use crate::database::delta_tree_schema as schema;
+
+use kairos_risc0_types;
 
 #[derive(Serialize, Queryable, Selectable, Insertable)]
 #[diesel(table_name = schema::deposits)]
