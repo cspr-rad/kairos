@@ -54,6 +54,12 @@ pub extern "C" fn submit_delta_tree_batch(){
     // A host-function could be used to deserialize the struct, but storing the serialized proof is an alternative with 
     // both tradeoffs and benefits.
 
+    /* Todo:
+            add a host function that checks that the input merkle tree is the most recent tree on-chain
+            or that the input merkle tree is the default merkle tree if the index is 1
+
+    */
+
     // IGNORE!
     // let receipt: Receipt = bincode::deserialize(&deserialized_proof.receipt_serialized).unwrap();
     // let journal: CircuitJournal = receipt.journal.decode::<CircuitJournal>().unwrap();
