@@ -4,6 +4,12 @@ members = [
     "methods",
 ]
 
+[workspace.package]
+name = "kairos-prover"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
 # Always optimize; building and running the guest takes much longer without optimization.
 [profile.dev]
 opt-level = 3
