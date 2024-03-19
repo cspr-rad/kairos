@@ -10,13 +10,13 @@ pub async fn submit_delta_tree_batch(
     secret_key_path: &str,
     chain_name: &str,
     contract: &str,
-    payload: Bytes,
+    payload: Vec<u8>,
 ){
     let session: ExecutableDeployItem = ExecutableDeployItem::StoredContractByHash { 
         hash: ContractHash::from_formatted_str(contract).unwrap(), 
         entry_point: "submit_delta_tree_batch".to_string(), 
         args: runtime_args!{
-            "proof" => payload
+            "proof" => Bytes::from(payload)
         }
     };
     let secret_key_bytes: Vec<u8> = fs::read(secret_key_path).unwrap();
@@ -71,8 +71,7 @@ async fn test_submit_delta_tree_batch(){
     };
     let proof: RiscZeroProof = prove_batch(tree, batch);
     let bincode_serialized_proof: Vec<u8> = bincode::serialize(&proof).expect("Failed to serialize proof!");
-    let cl_proof: Bytes = Bytes::from(bincode_serialized_proof);
-    submit_delta_tree_batch(CCTL_DEFAULT_NODE_ADDRESS, CCTL_DEFAULT_NODE_RPC_PORT, SECRET_KEY_PATH, DEFAULT_CHAIN_NAME, VERIFIER_CONTRACT_HASH, cl_proof).await;
+    submit_delta_tree_batch(CCTL_DEFAULT_NODE_ADDRESS, CCTL_DEFAULT_NODE_RPC_PORT, SECRET_KEY_PATH, DEFAULT_CHAIN_NAME, VERIFIER_CONTRACT_HASH, bincode_serialized_proof).await;
 
     pub fn prove_batch(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroProof{
         let inputs = CircuitArgs{
