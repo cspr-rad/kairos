@@ -30,6 +30,7 @@ in
             ./tests/end-to-end.nix
             {
               inherit mkKairosHostConfig;
+              inherit (self.packages."x86_64-linux") kairos;
             };
       };
     nixosModules = {
