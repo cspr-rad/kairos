@@ -1,4 +1,7 @@
 pub mod parsers;
+use anyhow::anyhow;
+use backoff::{self, backoff::Constant, future::retry};
+use casper_client::{get_node_status, rpcs::results::ReactorState, Error, JsonRpcId, Verbosity};
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::Command;
@@ -80,15 +83,33 @@ impl CCTLNetwork {
             })
             .collect();
 
-        tracing::info!("Waiting for network to start processing blocks");
-        std::thread::sleep(std::time::Duration::from_secs(5));
-        let output = Command::new("cctl-chain-await-until-block-n")
-            .env("CCTL_ASSETS", &assets_dir)
-            .arg("height=0")
-            .output()
-            .expect("Waiting for network to start processing blocks failed");
-        let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
-        tracing::info!("{}", output);
+        tracing::info!("Waiting for network to pass genesis");
+        retry(
+            Constant::new(std::time::Duration::from_millis(100)),
+            || async {
+                let node_port = nodes.first().unwrap().port.rpc_port;
+                get_node_status(
+                    JsonRpcId::Number(1),
+                    &format!("http://localhost:{}", node_port),
+                    Verbosity::High,
+                )
+                .await
+                .map_err(|err| match &err {
+                    Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
+                        backoff::Error::transient(anyhow!(err))
+                    }
+                    _ => backoff::Error::permanent(anyhow!(err)),
+                })
+                .map(|success| match success.result.reactor_state {
+                    ReactorState::Validate => Ok(()),
+                    _ => Err(backoff::Error::transient(anyhow!(
+                        "Node didn't reach the VALIDATE state yet"
+                    ))),
+                })?
+            },
+        )
+        .await
+        .expect("Waiting for network to pass genesis failed");
 
         Ok(CCTLNetwork {
             working_dir,
@@ -112,18 +133,21 @@ impl Drop for CCTLNetwork {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use casper_client::{get_state_root_hash, JsonRpcId, Verbosity};
+    use casper_client::{get_node_status, rpcs::results::ReactorState, JsonRpcId, Verbosity};
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
         let network = CCTLNetwork::run().await.unwrap();
-        let node_port = network.nodes.first().unwrap().port.rpc_port;
-        get_state_root_hash(
-            JsonRpcId::Number(1),
-            &format!("http://localhost:{}", node_port),
-            Verbosity::High,
-            Option::None,
-        )
-        .await
-        .unwrap();
+        for node in &network.nodes {
+            if node.state == NodeState::Running {
+                let node_status = get_node_status(
+                    JsonRpcId::Number(1),
+                    &format!("http://localhost:{}", node.port.rpc_port),
+                    Verbosity::High,
+                )
+                .await
+                .unwrap();
+                assert_eq!(node_status.result.reactor_state, ReactorState::Validate);
+            }
+        }
     }
 }
