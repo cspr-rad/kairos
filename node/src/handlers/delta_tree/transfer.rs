@@ -9,7 +9,7 @@ use chrono::{Utc, NaiveDateTime};
 use bigdecimal::BigDecimal;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct TransferInput {
+pub struct TransferInput {
     sender: String,
     recipient: String,
     amount: BigDecimal,
@@ -17,7 +17,7 @@ struct TransferInput {
 }
 
 // When a user commits a transfer it is added to local storage with a processed = false flag
-async fn transfer(State(AppState): State<AppState>, Json(TransferInput): Json<TransferInput>) -> impl IntoResponse {
+pub async fn transfer(State(AppState): State<AppState>, Json(TransferInput): Json<TransferInput>) -> impl IntoResponse {
     let state = State(AppState);
     let transfer = transfers::TransferModel {
         sender: TransferInput.sender,
