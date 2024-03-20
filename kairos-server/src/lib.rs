@@ -9,8 +9,8 @@ use state::LockedBatchState;
 
 pub use errors::AppErr;
 
-type PublicKey = String;
-type Signature = String;
+type PublicKey = Vec<u8>;
+type Signature = Vec<u8>;
 
 pub fn app_router(state: LockedBatchState) -> Router {
     Router::new()
