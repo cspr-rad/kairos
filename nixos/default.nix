@@ -40,6 +40,12 @@ in
           imports = [ ./modules/kairos.nix ];
           services.kairos.package = self.packages.${pkgs.system}.kairos;
         };
+      cctl =
+        { pkgs, lib, ... }:
+        {
+          imports = [ ./modules/cctl.nix ];
+          services.cctl.package = self.packages.${pkgs.system}.cctld;
+        };
     };
   };
 }
