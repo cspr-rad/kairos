@@ -121,7 +121,7 @@ impl Config {
                 },
                 log: Log {
                     level: LevelFilter::Info,
-                    file_output: "contradiction.log".to_string(),
+                    file_output: "kairos.log".to_string(),
                     stdout: true,
                 },
                 node: Node {

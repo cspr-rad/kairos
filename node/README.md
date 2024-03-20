@@ -25,6 +25,7 @@ Short term:
 - Move diesel.toml into diesel folder, renaming it to be delta-tree specific
 - Add match statements in insert functions so for example Transfer and TransferModel can be passed as arguments
 - Add license
+- Seperate out database into seperate crate
 
 Long term:
 - As soon as [OnceCell](https://docs.rs/tokio/latest/tokio/sync/struct.OnceCell.html) is a stable feature, replace lazy_static.
