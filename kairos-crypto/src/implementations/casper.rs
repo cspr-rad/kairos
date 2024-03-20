@@ -27,15 +27,13 @@ impl CryptoSigner for Signer {
         })
     }
 
-    fn from_public_key(bytes: &[u8]) -> Result<Self, CryptoError>
+    fn from_public_key<T: AsRef<[u8]>>(bytes: T) -> Result<Self, CryptoError>
     where
         Self: Sized,
     {
-        let (public_key, _remainder) =
-            casper_types::PublicKey::from_bytes(bytes).map_err(|_e| {
-                CryptoError::Deserialization {
-                    context: "public key",
-                }
+        let (public_key, _remainder) = casper_types::PublicKey::from_bytes(bytes.as_ref())
+            .map_err(|_e| CryptoError::Deserialization {
+                context: "public key",
             })?;
 
         Ok(Self {
@@ -44,7 +42,7 @@ impl CryptoSigner for Signer {
         })
     }
 
-    fn sign(&self, data: &[u8]) -> Result<Vec<u8>, CryptoError> {
+    fn sign<T: AsRef<[u8]>>(&self, data: T) -> Result<Vec<u8>, CryptoError> {
         let private_key = self
             .private_key
             .as_ref()
@@ -59,10 +57,16 @@ impl CryptoSigner for Signer {
         Ok(signature_bytes)
     }
 
-    fn verify(&self, data: &[u8], signature_bytes: &[u8]) -> Result<(), CryptoError> {
+    fn verify<T: AsRef<[u8]>, U: AsRef<[u8]>>(
+        &self,
+        data: T,
+        signature_bytes: U,
+    ) -> Result<(), CryptoError> {
         let (signature, _remainder) =
-            Signature::from_bytes(signature_bytes).map_err(|_e| CryptoError::Deserialization {
-                context: "signature",
+            Signature::from_bytes(signature_bytes.as_ref()).map_err(|_e| {
+                CryptoError::Deserialization {
+                    context: "signature",
+                }
             })?;
         crypto::verify(data, &signature, &self.public_key)
             .map_err(|_e| CryptoError::InvalidSignature)?;
@@ -93,7 +97,7 @@ mod tests {
         let bytes =
             hex::decode("01c377281132044bd3278b039925eeb3efdb9d99dd5f46d9ec6a764add34581af7")
                 .unwrap();
-        let result = Signer::from_public_key(&bytes);
+        let result = Signer::from_public_key(bytes);
         assert!(
             result.is_ok(),
             "Ed25519 public key should be parsed correctly"
@@ -106,7 +110,7 @@ mod tests {
         let bytes =
             hex::decode("0202e99759649fa63a72c685b72e696b30c90f1deabb02d0d9b1de45eb371a73e5bb")
                 .unwrap();
-        let result = Signer::from_public_key(&bytes);
+        let result = Signer::from_public_key(bytes);
         assert!(
             result.is_ok(),
             "Secp256k1 public key should be parsed correctly"
@@ -119,7 +123,7 @@ mod tests {
         let bytes =
             hex::decode("99c377281132044bd3278b039925eeb3efdb9d99dd5f46d9ec6a764add34581af7")
                 .unwrap();
-        let result = Signer::from_public_key(&bytes);
+        let result = Signer::from_public_key(bytes);
         assert!(
             result.is_err(),
             "Unrecognized prefix should result in an error"

@@ -19,7 +19,7 @@ pub struct Args {
 }
 
 pub fn run(args: Args) -> Result<String, CliError> {
-    let _recipient = Signer::from_public_key(args.recipient.as_ref())?.to_public_key()?;
+    let _recipient = Signer::from_public_key(args.recipient)?.to_public_key()?;
     let _amount: u64 = args.amount.field;
     let _signer =
         Signer::from_private_key_file(args.private_key_path.field).map_err(CryptoError::from)?;
