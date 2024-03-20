@@ -15,6 +15,8 @@ Nit-picky:
 - Fix imports, messy in most files.
 
 Short term:
+- (Layer error handler)['https://docs.rs/axum/latest/axum/error_handling/index.html']
+- Thiserror custom error types for handlers/delta_tree
 - Once trie is implemented remove delta-tree as default feature.
 - Implement tracing for logging.
 - Move models/types/request structs into seperate crate so CLI and others can use them too

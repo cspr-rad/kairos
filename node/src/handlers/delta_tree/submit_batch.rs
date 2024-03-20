@@ -13,9 +13,9 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SubmitBatch {
-}
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct SubmitBatch {
+// }
 
 #[derive(Serialize)]
 pub struct BatchResponse {
@@ -26,7 +26,7 @@ pub struct BatchResponse {
 // else grab the altest proof and grab output tree
 // then use batch and most recent tree to generate, approve and submit to verifier contract
 // generate proof
-pub async fn submit_batch(State(AppState): State<AppState>, Json(SubmitBatch): Json<SubmitBatch>) -> impl IntoResponse {
+pub async fn submit_batch(State(AppState): State<AppState>) -> impl IntoResponse {
     let state = State(AppState);
     let transfers_filter = transfers::TransfersFilter { processed: Some(false), sender: None, recipient: None };
     let unprocessed_transfers = transfers::get_all(state.pool.clone(), transfers_filter).await.unwrap();
