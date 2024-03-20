@@ -40,14 +40,14 @@ impl CCTLNetwork {
         let output = Command::new("cctl-infra-net-setup")
             .env("CCTL_ASSETS", &assets_dir)
             .output()
-            .expect("failed to execute setup network config");
+            .expect("Failed to setup network configuration");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
         tracing::info!("{}", output);
 
         let output = Command::new("cctl-infra-net-start")
             .env("CCTL_ASSETS", &assets_dir)
             .output()
-            .expect("failed to start network");
+            .expect("Failed to start network");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
         tracing::info!("{}", output);
         let (_, nodes) = parsers::parse_cctl_infra_net_start_lines(output).unwrap();
@@ -55,7 +55,7 @@ impl CCTLNetwork {
         let output = Command::new("cctl-infra-node-view-ports")
             .env("CCTL_ASSETS", &assets_dir)
             .output()
-            .expect("failed to get node ports");
+            .expect("Failed to get the networks node ports");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
         tracing::info!("{}", output);
         let (_, node_ports) = parsers::parse_cctl_infra_node_view_port_lines(output).unwrap();
@@ -103,7 +103,7 @@ impl Drop for CCTLNetwork {
         let output = Command::new("cctl-infra-net-stop")
             .env("CCTL_ASSETS", &self.assets_dir)
             .output()
-            .expect("failed to execute setup network config");
+            .expect("Failed to stop the network");
         io::stdout().write_all(&output.stdout).unwrap();
         io::stderr().write_all(&output.stderr).unwrap();
     }
