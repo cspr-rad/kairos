@@ -12,6 +12,7 @@ Will immediately get a performance boost if using timescaledb.
 ### TO-DO
 Nit-picky:
 - Rename domain, it's a little ambiguous.
+- Fix imports, messy in most files.
 
 Short term:
 - Once trie is implemented remove delta-tree as default feature.
@@ -30,7 +31,7 @@ Long term:
 Done:
 - ~~Seperate router setup to routes.rs files~~
 - ~~Move models from database/entities to domain/models~~
-- Implement clean shutdown, stopping TcpListeners and closing database connections (catch CTRL+C signal)
+- ~~Implement clean shutdown, stopping TcpListeners and closing database connections (catch CTRL+C signal)~~
 
 ### Testing
 In order to test, make sure you have [cargo-nextest](https://nexte.st) and [docker-compose](https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin) installed.

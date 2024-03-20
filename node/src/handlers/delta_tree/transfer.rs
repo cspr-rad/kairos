@@ -1,6 +1,8 @@
 use axum::extract::Json;
 use crate::domain::models::transfers;
+use crate::AppState;
 use serde::{Deserialize, Serialize};
+use axum::extract::State;
 use bigdecimal::BigDecimal;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -12,6 +14,6 @@ struct TransferInput {
 }
 
 // When a user commits a transfer it is added to local storage with a processed = false flag
-async fn transfer(Json(TransferInput): Json<TransferInput>) -> Option<transfers::TransferModel> {
+async fn transfer(State(AppState): State<AppState>, Json(TransferInput): Json<TransferInput>) -> Option<transfers::TransferModel> {
     None
 }

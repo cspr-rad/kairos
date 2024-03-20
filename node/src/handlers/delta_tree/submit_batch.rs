@@ -9,21 +9,31 @@ use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
 use serde::{Deserialize, Serialize};
 use bincode;
 use layer_one_utils::deployments::{post, query};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::response::IntoResponse;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct SubmitBatch {
+pub struct SubmitBatch {
+}
+
+#[derive(Serialize)]
+pub struct BatchResponse {
+    pub status: String
 }
 
 // Checks the height of the tree on-chain and if the height is 0 use default tree
 // else grab the altest proof and grab output tree
 // then use batch and most recent tree to generate, approve and submit to verifier contract
 // generate proof
-async fn submit_batch(state: AppState, Json(SubmitBatch): Json<SubmitBatch>) -> bool {
+pub async fn submit_batch(State(AppState): State<AppState>, Json(SubmitBatch): Json<SubmitBatch>) -> impl IntoResponse {
+    let state = State(AppState);
     let transfers_filter = transfers::TransfersFilter { processed: Some(false), sender: None, recipient: None };
     let unprocessed_transfers = transfers::get_all(state.pool.clone(), transfers_filter).await.unwrap();
     let transfers: Vec<Transfer> = unprocessed_transfers.into_iter().map(|model| model.into()).collect();
 
     let deposits_filter = deposits::DepositFilter { processed: Some(false), account: None };
-    let unprocessed_deposits = deposits::get_all(state.pool, deposits_filter).await.unwrap();
+    let unprocessed_deposits = deposits::get_all(state.pool.clone(), deposits_filter).await.unwrap();
     let deposits: Vec<Deposit> = unprocessed_deposits.into_iter().map(|model| model.into()).collect();
     
     // this counter uref is different!
@@ -59,7 +69,7 @@ async fn submit_batch(state: AppState, Json(SubmitBatch): Json<SubmitBatch>) -> 
     let proof: RiscZeroProof = post::prove_batch(previous_tree, batch);
     // submit the bincode serialized proof to L1
     let payload = bincode::serialize(&proof).unwrap(); // handle error
-    post::submit_delta_tree_batch(&CONFIG.node_address(), &CONFIG.node.port.to_string(), &CONFIG.node.secret_key_path, &CONFIG.node.chain_name, &CONFIG.node.verifier_contract, payload);
+    post::submit_delta_tree_batch(&CONFIG.node_address(), &CONFIG.node.port.to_string(), &CONFIG.node.secret_key_path, &CONFIG.node.chain_name, &CONFIG.node.verifier_contract, payload).await;
 
-    false
+    (StatusCode::OK, "Batch processed successfully").into_response()
 }
