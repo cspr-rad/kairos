@@ -1,3 +1,4 @@
+use std::time::Duration;
 use tokio::sync::mpsc;
 
 use casper_deploy_notifier::DeployNotifier;
@@ -10,8 +11,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut deploy_notifier = DeployNotifier::default();
 
     tokio::spawn(async move {
-        if let Err(e) = deploy_notifier.run(tx).await {
-            eprintln!("Error listening for deployment events: {:?}", e);
+        loop {
+            if let Err(e) = deploy_notifier.run(tx.clone()).await {
+                eprintln!("Error listening for deployment events: {:?}", e);
+
+                // Connection can sometimes be lost, so we retry after a delay.
+                eprintln!("Retrying in 5 seconds...",);
+                tokio::time::sleep(Duration::from_secs(5)).await;
+            }
         }
     });
 
