@@ -19,7 +19,7 @@ struct SubmitBatch {
 // generate proof
 async fn submit_batch(state: AppState, Json(SubmitBatch): Json<SubmitBatch>) -> bool {
     let transfers_filter = transfers::TransfersFilter { processed: Some(false), sender: None, recipient: None };
-    let unprocessed_transfers = transfers::get_all(state.pool, transfers_filter).await.unwrap();
+    let unprocessed_transfers = transfers::get_all(state.pool.clone(), transfers_filter).await.unwrap();
     let transfers: Vec<Transfer> = unprocessed_transfers.into_iter().map(|model| model.into()).collect();
 
     let deposits_filter = deposits::DepositFilter { processed: Some(false), account: None };
@@ -59,7 +59,7 @@ async fn submit_batch(state: AppState, Json(SubmitBatch): Json<SubmitBatch>) -> 
     let proof: RiscZeroProof = post::prove_batch(previous_tree, batch);
     // submit the bincode serialized proof to L1
     let payload = bincode::serialize(&proof).unwrap(); // handle error
-    post::submit_delta_tree_batch(&CONFIG.node_address(), &CONFIG.node.port.to_string(), secret_key_path, chain_name, contract, payload);
+    post::submit_delta_tree_batch(&CONFIG.node_address(), &CONFIG.node.port.to_string(), &CONFIG.node.secret_key_path, &CONFIG.node.chain_name, &CONFIG.node.verifier_contract, payload);
 
     false
 }

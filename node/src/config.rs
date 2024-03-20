@@ -58,6 +58,9 @@ pub struct Node {
     pub port: u16,
     pub counter_uref: String,
     pub dict_uref: String,
+    pub secret_key_path: String,
+    pub chain_name: String,
+    pub verifier_contract: String
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -126,6 +129,9 @@ impl Config {
                     port: 11101,
                     counter_uref: "uref-".to_string(),
                     dict_uref: "uref-".to_string(),
+                    secret_key_path: "/".to_string(),
+                    chain_name: "cspr-dev-cctl".to_string(),
+                    verifier_contract: "contract-".to_string()
                 }
             };
             let toml_string = toml::to_string_pretty(&default_config).unwrap();
