@@ -24,7 +24,7 @@ async fn submit_batch(state: AppState, Json(SubmitBatch): Json<SubmitBatch>) -> 
 
     let deposits_filter = deposits::DepositFilter { processed: Some(false), account: None };
     let unprocessed_deposits = deposits::get_all(state.pool, deposits_filter).await.unwrap();
-    let deposts: Vec<Deposit> = unprocessed_deposits.into_iter().map(|model| model.into()).collect();
+    let deposits: Vec<Deposit> = unprocessed_deposits.into_iter().map(|model| model.into()).collect();
     
     // this counter uref is different!
     let tree_index = query::query_counter(&CONFIG.node_address(), &CONFIG.node.port.to_string(), &CONFIG.node.counter_uref).await;
@@ -48,12 +48,17 @@ async fn submit_batch(state: AppState, Json(SubmitBatch): Json<SubmitBatch>) -> 
     }
 
     // construct a batch
-
+    let batch: TransactionBatch = TransactionBatch{
+        deposits,
+        transfers,
+        // empty withdrawal vec
+        withdrawals: vec![]
+    };
 
     // now that we have the previous tree, we generate the proof -> needs the prove_batch function that can be found in the verifier contract test_fixture!
     let proof: RiscZeroProof = post::prove_batch(previous_tree, batch);
     // submit the bincode serialized proof to L1
-    let payload = bincode::serialize(proof).unwrap(); // handle error
+    let payload = bincode::serialize(&proof).unwrap(); // handle error
     post::submit_delta_tree_batch(&CONFIG.node_address(), &CONFIG.node.port.to_string(), secret_key_path, chain_name, contract, payload);
 
     false

@@ -12,6 +12,6 @@ struct TransferInput {
 }
 
 // When a user commits a transfer it is added to local storage with a processed = false flag
-async fn transfer(Json(TransferInput): Json<TransferInput>) -> transfers::TransferModel {
-    
+async fn transfer(Json(TransferInput): Json<TransferInput>) -> Option<transfers::TransferModel> {
+    None
 }
