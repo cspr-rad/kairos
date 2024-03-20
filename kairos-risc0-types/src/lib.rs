@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use casper_types::{bytesrepr::ToBytes, URef};
-pub use casper_types::{Key, U512};
+pub use casper_types::{Key, U512, account::AccountHash};
 use bigdecimal::BigDecimal;
 use num_bigint::{BigUint, BigInt};
 use std::collections::HashMap;

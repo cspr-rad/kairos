@@ -2,7 +2,7 @@ use diesel::{ExpressionMethods, Insertable, QueryDsl, Queryable, Selectable, Sel
 use diesel::RunQueryDsl;
 use kairos_risc0_types::{ToBigDecimal, Transfer};
 use chrono::{Utc, NaiveDateTime};
-use bigdecimal::BigDecimal;
+use bigdecimal::{BigDecimal, ToPrimitive};
 use serde::{Deserialize, Serialize};
 use deadpool_diesel::postgres::Pool;
 
@@ -38,11 +38,25 @@ impl From<Transfer> for TransferModel {
     }
 }
 
+impl Into<Transfer> for TransferModel {
+    fn into(self) -> Transfer {
+        Transfer {
+            sender: kairos_risc0_types::Key::Account(kairos_risc0_types::AccountHash::from_formatted_str(&self.sender).unwrap()),
+            recipient: kairos_risc0_types::Key::Account(kairos_risc0_types::AccountHash::from_formatted_str(&self.recipient).unwrap()),
+            amount: kairos_risc0_types::U512::from_dec_str(&self.amount.to_string()).unwrap(),
+            timestamp: None,
+            signature: self.sig,
+            processed: self.processed,
+            nonce: self.nonce.to_u64().unwrap(),
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub struct TransfersFilter {
-    sender: Option<String>,
-    recipient: Option<String>,
-    processed: Option<bool>,
+    pub sender: Option<String>,
+    pub recipient: Option<String>,
+    pub processed: Option<bool>,
 }
 
 pub async fn insert(pool: Pool, new_transfer: Transfer) -> Result<TransferModel, errors::DatabaseError> {

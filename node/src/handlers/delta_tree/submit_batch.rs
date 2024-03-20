@@ -2,6 +2,7 @@ use axum::extract::Json;
 use crate::domain::models::transfers;
 use crate::domain::models::deposits;
 use crate::CONFIG;
+use crate::AppState;
 
 use kairos_risc0_types::{KairosDeltaTree, hash_bytes, Transfer, Deposit, Withdrawal, TransactionBatch, RiscZeroProof, CircuitArgs, CircuitJournal};
 use risc0_zkvm::{default_prover, ExecutorEnv, Receipt};
@@ -17,7 +18,13 @@ struct SubmitBatch {
 // then use batch and most recent tree to generate, approve and submit to verifier contract
 // generate proof
 async fn submit_batch(state: AppState, Json(SubmitBatch): Json<SubmitBatch>) -> bool {
-    let unprocessed_transfers = transfers::get_all(pool, )
+    let transfers_filter = transfers::TransfersFilter { processed: Some(false), sender: None, recipient: None };
+    let unprocessed_transfers = transfers::get_all(state.pool, transfers_filter).await.unwrap();
+    let transfers: Vec<Transfer> = unprocessed_transfers.into_iter().map(|model| model.into()).collect();
+
+    let deposits_filter = deposits::DepositFilter { processed: Some(false), account: None };
+    let unprocessed_deposits = deposits::get_all(state.pool, deposits_filter).await.unwrap();
+    let deposts: Vec<Deposit> = unprocessed_deposits.into_iter().map(|model| model.into()).collect();
     
     // this counter uref is different!
     let tree_index = query::query_counter(&CONFIG.node_address(), &CONFIG.node.port.to_string(), &CONFIG.node.counter_uref).await;
@@ -30,20 +37,24 @@ async fn submit_batch(state: AppState, Json(SubmitBatch): Json<SubmitBatch>) -> 
         depth: 5
     };
     // get last snapshot if the index > 0!
-    if tree_index > 0{
-        let last_proof = query::query_proof(node_address, rpc_port, dict_uref, tree_index.to_string()).await;
+    if tree_index > 0 {
+        let last_proof = query::query_proof(&CONFIG.node_address(), &CONFIG.node.port.to_string(), &CONFIG.node.dict_uref, tree_index.to_string()).await;
         let receipt_deserialized: Receipt = bincode::deserialize(&last_proof.receipt_serialized).unwrap();
-        let journal: CircuitJournal = &receipt_deserialized.journal.decode::<CircuitJournal>().unwrap();
+        let journal: CircuitJournal = receipt_deserialized.journal.decode::<CircuitJournal>().unwrap();
         previous_tree = journal.output;
     }
     else{
         previous_tree.calculate_zero_levels();
     }
+
+    // construct a batch
+
+
     // now that we have the previous tree, we generate the proof -> needs the prove_batch function that can be found in the verifier contract test_fixture!
-    let proof: RiscZeroProof = prove_batch(previous_tree, batch)
+    let proof: RiscZeroProof = post::prove_batch(previous_tree, batch);
     // submit the bincode serialized proof to L1
-    let payload = bincode::serialize(proof); // handle error
-    post::submit_delta_tree_batch(node_address, rpc_port, secret_key_path, chain_name, contract, payload);
+    let payload = bincode::serialize(proof).unwrap(); // handle error
+    post::submit_delta_tree_batch(&CONFIG.node_address(), &CONFIG.node.port.to_string(), secret_key_path, chain_name, contract, payload);
 
     false
 }
