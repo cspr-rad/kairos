@@ -1,6 +1,11 @@
 use casper_client::{rpcs::results::PutDeployResult, types::{Deploy, DeployBuilder, ExecutableDeployItem, Timestamp}, JsonRpcId};
 use casper_types::{bytesrepr::{Bytes, ToBytes}, crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs};
 use crate::constants::{CCTL_DEFAULT_NODE_ADDRESS, CCTL_DEFAULT_NODE_RPC_PORT, DEFAULT_CHAIN_NAME, DEFAULT_PAYMENT_AMOUNT, SECRET_KEY_PATH, VERIFIER_CONTRACT_HASH};
+use kairos_risc0_types::{KairosDeltaTree, hash_bytes, TransactionBatch, Deposit, Withdrawal, Transfer, RiscZeroProof, CircuitJournal, CircuitArgs};
+use risc0_zkvm::{default_prover, Receipt, ExecutorEnv};
+use methods::{
+    NATIVE_CSPR_TX_ELF, NATIVE_CSPR_TX_ID
+};
 use bincode;
 use std::fs;
 
@@ -39,11 +44,6 @@ pub async fn submit_delta_tree_batch(
 
 #[tokio::test]
 async fn test_submit_delta_tree_batch(){
-    use kairos_risc0_types::{KairosDeltaTree, hash_bytes, TransactionBatch, Deposit, Withdrawal, Transfer, RiscZeroProof, CircuitJournal, CircuitArgs};
-    use risc0_zkvm::{default_prover, Receipt, ExecutorEnv};
-    use methods::{
-        NATIVE_CSPR_TX_ELF, NATIVE_CSPR_TX_ID
-    };
     let mut tree: KairosDeltaTree = KairosDeltaTree{
         zero_node: hash_bytes(vec![0;32]),
         zero_levels: Vec::new(),
@@ -72,24 +72,24 @@ async fn test_submit_delta_tree_batch(){
     let proof: RiscZeroProof = prove_batch(tree, batch);
     let bincode_serialized_proof: Vec<u8> = bincode::serialize(&proof).expect("Failed to serialize proof!");
     submit_delta_tree_batch(CCTL_DEFAULT_NODE_ADDRESS, CCTL_DEFAULT_NODE_RPC_PORT, SECRET_KEY_PATH, DEFAULT_CHAIN_NAME, VERIFIER_CONTRACT_HASH, bincode_serialized_proof).await;
+}
 
-    pub fn prove_batch(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroProof{
-        let inputs = CircuitArgs{
-            tree,
-            batch
-        };
-        let env = ExecutorEnv::builder()
-        .write(&inputs)
-        .unwrap()
-        .build()
-        .unwrap();
-    
-        let prover = default_prover();
-        let receipt = prover.prove(env, NATIVE_CSPR_TX_ELF).unwrap();
-        receipt.verify(NATIVE_CSPR_TX_ID).expect("Failed to verify proof!");
-        RiscZeroProof{
-            receipt_serialized: bincode::serialize(&receipt).unwrap(),
-            program_id: NATIVE_CSPR_TX_ID.to_vec()
-        }
+pub fn prove_batch(tree: KairosDeltaTree, batch: TransactionBatch) -> RiscZeroProof{
+    let inputs = CircuitArgs{
+        tree,
+        batch
+    };
+    let env = ExecutorEnv::builder()
+    .write(&inputs)
+    .unwrap()
+    .build()
+    .unwrap();
+
+    let prover = default_prover();
+    let receipt = prover.prove(env, NATIVE_CSPR_TX_ELF).unwrap();
+    receipt.verify(NATIVE_CSPR_TX_ID).expect("Failed to verify proof!");
+    RiscZeroProof{
+        receipt_serialized: bincode::serialize(&receipt).unwrap(),
+        program_id: NATIVE_CSPR_TX_ID.to_vec()
     }
 }

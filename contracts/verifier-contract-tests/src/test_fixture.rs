@@ -111,9 +111,6 @@ impl TestContext {
 
     pub fn submit_batch(&mut self, account: AccountHash){
         // prepare a proof
-        /*tracing_subscriber::fmt()
-            .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
-            .init();*/
         let mut tree: KairosDeltaTree = KairosDeltaTree{
             zero_node: hash_bytes(vec![0;32]),
             zero_levels: Vec::new(),
