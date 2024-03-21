@@ -1154,6 +1154,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairos-l1-state-replicator"
+version = "0.1.0"
+
+[[package]]
 name = "kairos-server"
 version = "0.1.0"
 dependencies = [
