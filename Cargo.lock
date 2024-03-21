@@ -1682,6 +1682,7 @@ name = "kairos-l1-state-replicator"
 version = "0.1.0"
 dependencies = [
  "casper-client",
+ "casper-types 3.0.0",
  "tokio",
 ]
 
