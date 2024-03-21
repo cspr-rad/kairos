@@ -11,3 +11,4 @@ name = "kairos-l1-state-replicator"
 
 [dependencies]
 casper-client = "2.0.0"
+tokio = { version = "1", features = ["full"] }
