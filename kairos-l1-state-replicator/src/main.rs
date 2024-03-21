@@ -18,5 +18,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ).await?.result;
     println!("Deploy: {:?}", deploy_result);
 
+    // Fetch latest state root hash.
+    let rpc_id: casper_client::JsonRpcId = 2.into();
+    let node_address: &str = "https://mainnet.casper-node.xyz";
+    let verbosity = casper_client::Verbosity::Low;
+    let state_root_hash_result = casper_client::get_state_root_hash(rpc_id, node_address, verbosity, None).await?.result;
+    let state_root_hash = state_root_hash_result.state_root_hash.unwrap(); // TODO: Handle no value.
+    println!("State root hash: {:?}", state_root_hash);
+
     Ok(())
 }
