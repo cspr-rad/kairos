@@ -48,5 +48,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }?;
     println!("Contract: {:?}", contract);
 
+    // Load contract metadata without schema.
+    let mut events_schema_uref: Option<String> = None;
+    let mut events_uref: Option<String> = None;
+    for named_key in contract.named_keys() {
+        if named_key.name() == "__events_schema" {
+            events_schema_uref = Some(named_key.key().unwrap().to_formatted_string());
+        }
+        if named_key.name() == "__events" {
+            events_uref = Some(named_key.key().unwrap().to_formatted_string());
+        }
+    }
+    let (events_schema_uref, events_uref) = match (events_schema_uref, events_uref) {
+        (Some(events_schema_uref), Some(events_uref)) => {
+            Ok((events_schema_uref, events_uref))
+        },
+        _ => Err("Expected named keys.")
+    }?;
+    println!("Events schema uref: {:?}", events_schema_uref);
+    println!("Events uref: {:?}", events_uref);
+
     Ok(())
 }
