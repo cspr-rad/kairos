@@ -3,11 +3,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello, world!");
 
     // Fetch some deploy:
-    // - https://cspr.live/deploy/394ff2bbec812397d6d55359d55f9e734266f3e61dc92a14ac0f4741a2bbf000
+    // - https://cspr.live/deploy/5fc34e15776a08bd059355acd57937b56ddc48ad0c2f55bd8d0b376170c8a412
     let rpc_id: casper_client::JsonRpcId = 1.into();
     let node_address: &str = "https://mainnet.casper-node.xyz";
     let verbosity = casper_client::Verbosity::Low;
-    let deploy_hash = casper_client::types::DeployHash::new([57, 79, 242, 187, 236, 129, 35, 151, 214, 213, 83, 89, 213, 95, 158, 115, 66, 102, 243, 230, 29, 201, 42, 20, 172, 15, 71, 65, 162, 187, 240, 0].into());
+    let deploy_hash = casper_client::types::DeployHash::new([95, 195, 78, 21, 119, 106, 8, 189, 5, 147, 85, 172, 213, 121, 55, 181, 109, 220, 72, 173, 12, 47, 85, 189, 141, 11, 55, 97, 112, 200, 164, 18].into());
     let finalized_approvals: bool = false;
     let deploy_result = casper_client::get_deploy(
         rpc_id,
@@ -19,10 +19,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Deploy: {:?}", deploy_result);
 
     // Contract correlated with deploy:
-    // - https://cspr.live/contract/d16aa9c6a7dc03d0f422eafeb244dcc782a3b7372bc2b2245c4e04f9c93f3e8f
+    // - https://cspr.live/contract/fe03021407879ce6fc5e035b70ff6a90941afdbea325a9164c7a497827efa7ff
     // TODO: See if this can be obtained automatically.
     // NOTE: ces-go-parser observes array of contract hashes.
-    let contract_hash = casper_types::ContractWasmHash::new([209, 106, 169, 198, 167, 220, 3, 208, 244, 34, 234, 254, 178, 68, 220, 199, 130, 163, 183, 55, 43, 194, 178, 36, 92, 78, 4, 249, 201, 63, 62, 143]);
+    let contract_hash = casper_types::ContractWasmHash::new([254, 3, 2, 20, 7, 135, 156, 230, 252, 94, 3, 91, 112, 255, 106, 144, 148, 26, 253, 190, 163, 37, 169, 22, 76, 122, 73, 120, 39, 239, 167, 255]);
 
     // Fetch latest state root hash.
     let rpc_id: casper_client::JsonRpcId = 2.into();
