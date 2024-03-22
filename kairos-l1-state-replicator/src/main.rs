@@ -22,7 +22,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?
     .result;
-    println!("Deploy: {:?}", deploy_result);
+
+    //println!("Deploy: {:?}", deploy_result);
 
     // Contract correlated with deploy:
     // - https://cspr.live/contract/fe03021407879ce6fc5e035b70ff6a90941afdbea325a9164c7a497827efa7ff
@@ -42,7 +43,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?
             .result;
     let state_root_hash = state_root_hash_result.state_root_hash.unwrap(); // TODO: Handle no value.
-    println!("State root hash: {:?}", state_root_hash);
+
+    //println!("State root hash: {:?}", state_root_hash);
 
     // Fetch contract details.
     let rpc_id: casper_client::JsonRpcId = 2.into();
@@ -66,7 +68,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         casper_client::types::StoredValue::Contract(v) => Ok(v),
         _ => Err("Expected contract."),
     }?;
-    println!("Contract: {:?}", contract);
+
+    //println!("Contract: {:?}", contract);
 
     // Load contract metadata without schema.
     let mut events_schema_uref: Option<String> = None;
@@ -83,8 +86,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         (Some(events_schema_uref), Some(events_uref)) => Ok((events_schema_uref, events_uref)),
         _ => Err("Expected named keys."),
     }?;
-    println!("Events schema uref: {:?}", events_schema_uref);
-    println!("Events uref: {:?}", events_uref);
+
+    //println!("Events schema uref: {:?}", events_schema_uref);
+    //println!("Events uref: {:?}", events_uref);
 
     // Load contract event schemas.
     let rpc_id: casper_client::JsonRpcId = 3.into();
@@ -111,7 +115,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => Err("Expected CLValue."),
     }?;
 
-    println!("Events schema: {:?}", schema_value);
+    //println!("Events schema: {:?}", schema_value);
 
     Ok(())
 }
