@@ -1,7 +1,5 @@
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Hello, world!");
-
     // Fetch some deploy:
     // - https://cspr.live/deploy/5fc34e15776a08bd059355acd57937b56ddc48ad0c2f55bd8d0b376170c8a412
     let rpc_id: casper_client::JsonRpcId = 1.into();
