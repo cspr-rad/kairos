@@ -81,7 +81,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(v)
         },
         _ => Err("Expected CLValue."),
-    };
+    }?;
 
     println!("Events schema: {:?}", schema_value);
 
