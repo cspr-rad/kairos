@@ -13,7 +13,7 @@ pub struct TransferInput {
     sender: String,
     recipient: String,
     amount: BigDecimal,
-    signature: Vec<u8>,
+    signature: String,
 }
 
 // When a user commits a transfer it is added to local storage with a processed = false flag
@@ -24,10 +24,10 @@ pub async fn transfer(State(AppState): State<AppState>, Json(TransferInput): Jso
         recipient: TransferInput.recipient,
         amount: TransferInput.amount,
         timestamp: Utc::now().naive_utc(),
-        sig: TransferInput.signature,
+        sig: TransferInput.signature.into_bytes(),
         processed: false,
         nonce: 0.into(),
     };
-    transfers::insert(state.pool.clone(), transfer.into()).await; // handle errors here
+    transfers::insert(state.pool.clone(), transfer.into()).await.unwrap(); // handle errors here
     (StatusCode::OK, "Transfer submitted successfully!").into_response()
 }

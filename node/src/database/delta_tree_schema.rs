@@ -21,9 +21,7 @@ diesel::table! {
 
 diesel::table! {
     transfers (timestamp) {
-        #[max_length = 32]
         sender -> Varchar,
-        #[max_length = 32]
         recipient -> Varchar,
         amount -> Numeric,
         timestamp -> Timestamp,
@@ -35,7 +33,6 @@ diesel::table! {
 
 diesel::table! {
     withdrawals (timestamp) {
-        #[max_length = 32]
         account -> Varchar,
         amount -> Numeric,
         processed -> Bool,

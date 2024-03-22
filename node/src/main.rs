@@ -6,16 +6,19 @@ mod database;
 mod handlers;
 mod tasks;
 
+use log;
 use fern;
 use chrono::Utc;
 use tokio::signal;
 use lazy_static::lazy_static;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use deadpool_diesel::postgres::{Manager, Pool};
 
 use routes::app_router;
 
-// Logging macro(s) for easy use
-use log::info;
+#[cfg(feature="delta-tree")]
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("diesel/delta-tree/migrations");
+
 // Load config
 lazy_static! {
     static ref CONFIG: config::Config = config::Config::read_config();
@@ -27,6 +30,20 @@ pub struct AppState {
 
 #[tokio::main]
 async fn main() {
+    // Print ASCII art, because I'm a man-child
+    print!(r#"
+
+    :::    :::     :::     ::::::::::: :::::::::   ::::::::   ::::::::  
+    :+:   :+:    :+: :+:       :+:     :+:    :+: :+:    :+: :+:    :+: 
+    +:+  +:+    +:+   +:+      +:+     +:+    +:+ +:+    +:+ +:+        
+    +#++:++    +#++:++#++:     +#+     +#++:++#:  +#+    +:+ +#++:++#++ 
+    +#+  +#+   +#+     +#+     +#+     +#+    +#+ +#+    +#+        +#+ 
+    #+#   #+#  #+#     #+#     #+#     #+#    #+# #+#    #+# #+#    #+# 
+    ###    ### ###     ### ########### ###    ###  ########   ########  
+
+
+    "#);
+
     // Setup logging
     fern::Dispatch::new()
         .format(|out, message, record| {
@@ -46,15 +63,25 @@ async fn main() {
         })
         .chain(fern::log_file(&CONFIG.log.file_output).expect("Error setting up log file, do I have permission to write to that location?."))
         .apply().expect("Error setting up logging. If log file is enabled, check write permissions.");
+    log::info!("Kairos starting up!");
 
     // Create database connection pool
     let manager = Manager::new(CONFIG.db_address(), deadpool_diesel::Runtime::Tokio1);
     let pool = Pool::builder(manager).build().unwrap();
-    info!("Successfully connected to the database!");
+    match pool.get().await {
+        Ok(_conn) => {
+            log::info!("Successfully connected to the database!");
+        },
+        Err(_) => {
+            log::error!("Connection to database at {}:{} failed.", CONFIG.db.address, CONFIG.db.port);
+            return; // Exit the application if the connection fails
+        }
+    }
 
-    // TODO - Run pending DB migrations here
+    // Apply database migrations
+    run_migrations(&pool).await;
 
-    // Make application state (atm just a struct containing DB connection pool)
+    // Setup application state
     let state = AppState { pool: pool.clone() };
 
     // Setup tasks here
@@ -62,7 +89,7 @@ async fn main() {
 
     // Setup Axum JSON API
     let socket_addr = CONFIG.socket_address();
-    info!("Starting API service!");
+    log::info!("Starting API service!");
     let app = app_router().with_state(state);
     let listener = tokio::net::TcpListener::bind(socket_addr).await.unwrap();
     axum::serve(listener, app.into_make_service())
@@ -103,10 +130,10 @@ async fn shutdown_signal() {
 // }
 
 // Function to run database migrations
-// async fn run_migrations(pool: &Pool) {
-//     let conn = pool.get().await.unwrap();
-//     conn.interact(|conn| conn.run_pending_migrations(MIGRATIONS).map(|_| ()))
-//         .await
-//         .unwrap()
-//         .unwrap();
-// }
+async fn run_migrations(pool: &Pool) {
+    let conn = pool.get().await.unwrap();
+    conn.interact(|conn| conn.run_pending_migrations(MIGRATIONS).map(|_| ()))
+        .await
+        .unwrap()
+        .unwrap();
+}

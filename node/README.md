@@ -17,6 +17,7 @@ Nit-picky:
 Short term:
 - (Layer error handler)['https://docs.rs/axum/latest/axum/error_handling/index.html']
 - Thiserror custom error types for handlers/delta_tree
+- Get rid of casper_types in kairos-risc0-types
 - Once trie is implemented remove delta-tree as default feature.
 - Implement tracing for logging.
 - Move models/types/request structs into seperate crate so CLI and others can use them too
@@ -35,6 +36,7 @@ Done:
 - ~~Seperate router setup to routes.rs files~~
 - ~~Move models from database/entities to domain/models~~
 - ~~Implement clean shutdown, stopping TcpListeners and closing database connections (catch CTRL+C signal)~~
+- ~~Applying database migrations~~
 
 ### Testing
 In order to test, make sure you have [cargo-nextest](https://nexte.st) and [docker-compose](https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin) installed.
