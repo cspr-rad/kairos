@@ -13,7 +13,7 @@ services:
       - "5432:5432"
   cctl:
     container_name: kairos-cctl
-    image: cspr-cctl/release-1.5.6
+    image: rom3dius/cctl-node-network:1.5.6-kairos-0.0.1
     ports:
       - 25101:25101
       - 11101:11101
