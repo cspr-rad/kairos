@@ -1,3 +1,8 @@
+use std::collections::BTreeMap;
+
+use casper_event_standard::CLType2;
+use casper_types::bytesrepr::{FromBytes, ToBytes};
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Fetch some deploy:
@@ -48,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Fetch contract details.
     let rpc_id: casper_client::JsonRpcId = 2.into();
-    let node_address: &str = "https://mainnet.casper-node.xyz";
+    let node_address: &str = "https://mainnet.casper-node.xyz"; // TODO FIX TESTNTET
     let verbosity = casper_client::Verbosity::Low;
     let global_state_identifier =
         casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash);
@@ -116,6 +121,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }?;
 
     //println!("Events schema: {:?}", schema_value);
+
+    // We cannot parse CLValue based on the CLType from the Argument raw data, as it may contain an Any type
+    // which we do not know how to parse. Therefore, we should parse the raw bytes, ignore the clType field,
+    // and provide the hardcoded CLType with the cltype.Dynamic type instead of Any
+    let schema_bytes = schema_value
+        .to_bytes()
+        .map_err(|_e| "Unable to get schema bytes.")?;
+    let (parsed, remainder) = casper_types::CLValue::from_bytes(&schema_bytes)
+        .map_err(|_e| "Unable to parse schema bytes.")?;
+    assert!(remainder.len() == 0);
+    let events_schema: BTreeMap<String, Vec<(String, CLType2)>> = parsed.into_t().unwrap();
+    
+    println!("Events schema parsed: {:?}", events_schema);
 
     Ok(())
 }
