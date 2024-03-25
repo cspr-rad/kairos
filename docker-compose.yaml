@@ -2,6 +2,7 @@ version: '3.8'
 services:
   db:
     image: postgres:latest
+    container_name: kairos-db
     # volumes:
     #   - ./postgresql-init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
@@ -10,3 +11,45 @@ services:
       POSTGRES_PASSWORD: changeme
     ports:
       - "5432:5432"
+  cctl:
+    container_name: kairos-cctl
+    image: rom3dius/cctl-node-network:1.5.6-kairos-0.0.1
+    ports:
+      - 25101:25101
+      - 11101:11101
+      - 14101:14101
+      - 18101:18101
+    healthcheck:
+      test: |
+        curl --location 'http://localhost:11101/rpc' \
+          --header 'Content-Type: application/json' \
+          --data '{
+              "id": "383766004",
+              "jsonrpc": "2.0",
+              "method": "info_get_status",
+              "params": []
+          }' | jq '.result.available_block_range.high' | grep -q '^1' && echo "Success" && exit 0 || echo "Error" && exit 1
+      interval: 5s
+      retries: 5
+      start_period: 5s
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+    #volumes:
+    #  - ./.config/prometheus.yml:/etc/prometheus/prometheus.yml
+    # command:
+    #   - '--config.file=/etc/prometheus/prometheus.yml'
+    # ports:
+    #   - "9090:9090"
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: grafana
+  #   ports:
+      # - "3000:3000"
+    #volumes:
+    #  - grafana_data:/var/lib/grafana
+    # environment:
+    #   GF_SECURITY_ADMIN_USER: admin
+    #   GF_SECURITY_ADMIN_PASSWORD: admin
+  #volumes:
+  #  grafana_data:

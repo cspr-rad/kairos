@@ -1,8 +1,7 @@
 [workspace]
 resolver = "2"
 # Currently guest only exists for the workspace configuration not to break
-members = ["contracts/verifier-contract-tests" , "node", "methods/native-cspr-tx", "methods/guest", "kairos-risc0-types", "kairos-delta-tree", "layer-one-utils"]
-
+members = ["methods/native-cspr-tx", "methods/guest", "kairos-risc0-types", "kairos-delta-tree", "node", "layer-one-utils", "kairos-risc0-types", "kairos-delta-tree"]
 exclude = ["contracts"]
 
 # Always optimize; building and running the guest takes much longer without optimization.

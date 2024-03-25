@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize};
-use casper_types::{bytesrepr::ToBytes, Key, U512, URef};
+use casper_types::{bytesrepr::ToBytes, URef};
+pub use casper_types::{Key, U512, account::AccountHash};
 use bigdecimal::BigDecimal;
 use num_bigint::{BigUint, BigInt};
 use std::collections::HashMap;
@@ -71,7 +72,7 @@ pub struct Transfer {
         pub sender: Key,
         pub recipient: Key,
         pub amount: U512,
-        pub timestamp: String,
+        pub timestamp: Option<String>,
         pub signature: Vec<u8>,
         pub processed: bool,
         pub nonce: u64

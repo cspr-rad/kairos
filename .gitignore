@@ -17,3 +17,7 @@ Cargo.lock
 .DS_Store
 methods/guest/Cargo.lock
 .vscode
+
+# ignore log and config
+config.toml
+kairos.log

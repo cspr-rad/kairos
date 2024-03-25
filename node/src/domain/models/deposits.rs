@@ -6,9 +6,11 @@ use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 use deadpool_diesel::postgres::Pool;
 
-use crate::database::schema::deposits;
+use crate::database::delta_tree_schema::deposits;
 use crate::database::errors;
-use crate::database::schema;
+use crate::database::delta_tree_schema as schema;
+
+use kairos_risc0_types;
 
 #[derive(Serialize, Queryable, Selectable, Insertable)]
 #[diesel(table_name = schema::deposits)]
@@ -31,10 +33,21 @@ impl From<Deposit> for DepositModel {
     }
 }
 
+impl Into<Deposit> for DepositModel {
+    fn into(self) -> Deposit {
+        Deposit {
+            account:kairos_risc0_types::Key::Account(kairos_risc0_types::AccountHash::from_formatted_str(&self.account).unwrap()),
+            amount:kairos_risc0_types::U512::from_dec_str(&self.amount.to_string()).unwrap(),
+            timestamp: None,
+            processed: self.processed,
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub struct DepositFilter {
-    account: Option<String>,
-    processed: Option<bool>,
+    pub account: Option<String>,
+    pub processed: Option<bool>,
 }
 
 pub async fn insert(pool: Pool, new_deposit: Deposit) -> Result<DepositModel, errors::DatabaseError> {

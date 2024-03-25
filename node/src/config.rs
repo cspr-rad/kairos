@@ -53,6 +53,18 @@ pub struct DB {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Node {
+    pub address: String,
+    pub port: u16,
+    pub counter_uref: String,
+    pub tree_counter_uref: String,
+    pub dict_uref: String,
+    pub secret_key_path: String,
+    pub chain_name: String,
+    pub verifier_contract: String
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Log {
     #[serde(deserialize_with = "deserialize_level_filter", serialize_with = "serialize_level_filter")]
     pub level: LevelFilter,
@@ -64,6 +76,7 @@ pub struct Log {
 pub struct Config {
     pub api: API,
     pub db: DB,
+    pub node: Node,
     pub log: Log,
 }
 
@@ -72,6 +85,12 @@ impl Config {
         format!("{}:{}", self.api.address, self.api.port)
             .parse()
             .expect("Invalid address")
+    }
+
+    pub fn node_address(&self) -> String {
+        format!("http://{}:{}/rpc", self.node.address, self.node.port)
+            .parse()
+            .expect("Invalid node address")
     }
 
     pub fn db_address(&self) -> String {
@@ -103,9 +122,19 @@ impl Config {
                 },
                 log: Log {
                     level: LevelFilter::Info,
-                    file_output: "contradiction.log".to_string(),
+                    file_output: "kairos.log".to_string(),
                     stdout: true,
                 },
+                node: Node {
+                    address: "127.0.0.1".to_string(),
+                    port: 11101,
+                    counter_uref: "uref-".to_string(),
+                    tree_counter_uref: "uref-".to_string(),
+                    dict_uref: "uref-".to_string(),
+                    secret_key_path: "/".to_string(),
+                    chain_name: "cspr-dev-cctl".to_string(),
+                    verifier_contract: "contract-".to_string()
+                }
             };
             let toml_string = toml::to_string_pretty(&default_config).unwrap();
             std::fs::write(config_file, toml_string).expect("Failed to write config file");

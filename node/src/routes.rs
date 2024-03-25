@@ -1,9 +1,12 @@
 use axum::{
-    routing::{get, post},
+    routing::get,
     http::StatusCode,
-    Json, Router,
+    Router,
 };
 use axum::response::IntoResponse;
+
+#[cfg(feature="metrics")]
+use axum_otel_metrics::HttpMetricsLayerBuilder;
 
 use crate::AppState;
 
@@ -16,16 +19,28 @@ use crate::handlers::delta_tree::routes::delta_tree_routes;
 
 // Router configuring all accessible API endpoints
 pub fn app_router() -> Router<AppState> {
-    let mut router = Router::new()
-        .route("/ping", get(ping));
+    let mut router = Router::new();
+
+    // Add default endpoints
+    router = router.route("/ping", get(ping));
+        
 
     #[cfg(feature="delta-tree")]
     {
-        router = router.merge(delta_tree_routes());
+        router = router.nest("/api/delta",delta_tree_routes());
     }
 
     // add 404 error handler
     router = router.fallback(handler_404);
+
+    // add metrics
+    #[cfg(feature="metrics")]
+    {
+        let metrics = HttpMetricsLayerBuilder::new().build();
+        router = router.merge(metrics.routes::<AppState>());
+        router = router.layer(metrics);
+    }
+
     router
 }
 

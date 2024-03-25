@@ -1,2 +1,2 @@
 #[cfg(feature="delta-tree")]
-mod models;
+pub mod models;
