@@ -41,8 +41,9 @@ async fn main() {
     #+#   #+#  #+#     #+#     #+#     #+#    #+# #+#    #+# #+#    #+# 
     ###    ### ###     ### ########### ###    ###  ########   ########  
 
+    V: ?
 
-    "#);
+"#);
 
     // Setup logging
     fern::Dispatch::new()
@@ -80,6 +81,7 @@ async fn main() {
 
     // Apply database migrations
     run_migrations(&pool).await;
+    log::debug!("Ran database migrations!");
 
     // Setup application state
     let state = AppState { pool: pool.clone() };

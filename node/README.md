@@ -26,17 +26,18 @@ Short term:
 - Move diesel.toml into diesel folder, renaming it to be delta-tree specific
 - Add match statements in insert functions so for example Transfer and TransferModel can be passed as arguments
 - Add license
-- Seperate out database into seperate crate
+- Seperate out database into seperate crate (maybe)
 
 Long term:
 - As soon as [OnceCell](https://docs.rs/tokio/latest/tokio/sync/struct.OnceCell.html) is a stable feature, replace lazy_static.
-- Add metrics, Prometheus compatible if possible
 
 Done:
 - ~~Seperate router setup to routes.rs files~~
 - ~~Move models from database/entities to domain/models~~
 - ~~Implement clean shutdown, stopping TcpListeners and closing database connections (catch CTRL+C signal)~~
 - ~~Applying database migrations~~
+- ~~Add metrics, Prometheus compatible if possible~~
+
 
 ### Testing
 In order to test, make sure you have [cargo-nextest](https://nexte.st) and [docker-compose](https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin) installed.
