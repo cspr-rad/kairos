@@ -4,6 +4,7 @@ resolver = "2"
 members = [
   "kairos-cli",
   "kairos-server",
+  "kairos-tx",
 ]
 
 [workspace.package]

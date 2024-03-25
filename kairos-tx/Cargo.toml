@@ -1,0 +1,11 @@
+[package]
+name = "kairos-tx"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+
+[dependencies]
+num-traits = "0.2.18"
+rasn = { version = "0.12.5", default-features = false, features = ["macros"] }
+thiserror = "1.0.57"
