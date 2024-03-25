@@ -1,14 +1,14 @@
-use diesel::{ExpressionMethods, Insertable, QueryDsl, Queryable, Selectable, SelectableHelper};
-use diesel::RunQueryDsl;
-use kairos_risc0_types::{ToBigDecimal, Transfer};
-use chrono::{Utc, NaiveDateTime};
 use bigdecimal::{BigDecimal, ToPrimitive};
-use serde::{Deserialize, Serialize};
+use chrono::{NaiveDateTime, Utc};
 use deadpool_diesel::postgres::Pool;
+use diesel::RunQueryDsl;
+use diesel::{ExpressionMethods, Insertable, QueryDsl, Queryable, Selectable, SelectableHelper};
+use kairos_risc0_types::{ToBigDecimal, Transfer};
+use serde::{Deserialize, Serialize};
 
+use crate::database::delta_tree_schema as schema;
 use crate::database::delta_tree_schema::transfers;
 use crate::database::errors;
-use crate::database::delta_tree_schema as schema;
 
 // Define struct for schema for transfers
 #[derive(Serialize, Queryable, Selectable, Insertable)]
@@ -27,8 +27,8 @@ pub struct TransferModel {
 impl From<Transfer> for TransferModel {
     fn from(transfer: Transfer) -> Self {
         TransferModel {
-            sender: transfer.sender.to_string(),
-            recipient: transfer.recipient.to_string(),
+            sender: transfer.sender.to_formatted_string(),
+            recipient: transfer.recipient.to_formatted_string(),
             amount: transfer.amount.to_big_decimal(),
             timestamp: Utc::now().naive_utc(),
             sig: transfer.signature,
@@ -41,8 +41,12 @@ impl From<Transfer> for TransferModel {
 impl Into<Transfer> for TransferModel {
     fn into(self) -> Transfer {
         Transfer {
-            sender: kairos_risc0_types::Key::Account(kairos_risc0_types::AccountHash::from_formatted_str(&self.sender).unwrap()),
-            recipient: kairos_risc0_types::Key::Account(kairos_risc0_types::AccountHash::from_formatted_str(&self.recipient).unwrap()),
+            sender: kairos_risc0_types::Key::Account(
+                kairos_risc0_types::AccountHash::from_formatted_str(&self.sender).unwrap(),
+            ),
+            recipient: kairos_risc0_types::Key::Account(
+                kairos_risc0_types::AccountHash::from_formatted_str(&self.recipient).unwrap(),
+            ),
             amount: kairos_risc0_types::U512::from_dec_str(&self.amount.to_string()).unwrap(),
             timestamp: None,
             signature: self.sig,
@@ -59,22 +63,28 @@ pub struct TransfersFilter {
     pub processed: Option<bool>,
 }
 
-pub async fn insert(pool: Pool, new_transfer: Transfer) -> Result<TransferModel, errors::DatabaseError> {
+pub async fn insert(
+    pool: Pool,
+    new_transfer: Transfer,
+) -> Result<TransferModel, errors::DatabaseError> {
     let conn = pool.get().await?;
     let transfer_model = TransferModel::from(new_transfer);
     let res = conn
-            .interact(|conn| {
-                diesel::insert_into(transfers::table)
-                    .values(transfer_model)
-                    .get_result::<TransferModel>(conn)
-            })
+        .interact(|conn| {
+            diesel::insert_into(transfers::table)
+                .values(transfer_model)
+                .get_result::<TransferModel>(conn)
+        })
         .await??;
     Ok(res)
 }
 
 // TODO - add get function which just retrieves transfer by ID
 
-pub async fn get_all(pool: Pool, filter: TransfersFilter) -> Result<Vec<TransferModel>, errors::DatabaseError> {
+pub async fn get_all(
+    pool: Pool,
+    filter: TransfersFilter,
+) -> Result<Vec<TransferModel>, errors::DatabaseError> {
     let conn = pool.get().await?;
     let res = conn
         .interact(move |conn| {
@@ -92,7 +102,9 @@ pub async fn get_all(pool: Pool, filter: TransfersFilter) -> Result<Vec<Transfer
                 query = query.filter(transfers::processed.eq(processed))
             }
 
-            query.select(TransferModel::as_select()).load::<TransferModel>(conn)
+            query
+                .select(TransferModel::as_select())
+                .load::<TransferModel>(conn)
         })
         .await??;
     Ok(res)
