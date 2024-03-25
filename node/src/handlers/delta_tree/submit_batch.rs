@@ -37,7 +37,7 @@ pub async fn submit_batch(State(AppState): State<AppState>) -> impl IntoResponse
     let deposits: Vec<Deposit> = unprocessed_deposits.into_iter().map(|model| model.into()).collect();
     
     // this counter uref is different!
-    let tree_index = query::query_counter(&CONFIG.node_address(), &CONFIG.node.port.to_string(), &CONFIG.node.counter_uref).await;
+    let tree_index = query::query_counter(&CONFIG.node_address(), &CONFIG.node.port.to_string(), &CONFIG.node.tree_counter_uref).await;
     let mut previous_tree: KairosDeltaTree = KairosDeltaTree{
         zero_node: hash_bytes(vec![0;32]),
         zero_levels: Vec::new(),
