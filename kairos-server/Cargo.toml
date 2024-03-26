@@ -27,6 +27,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
+kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
 
 [dev-dependencies]
 proptest = "1"
