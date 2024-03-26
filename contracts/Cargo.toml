@@ -2,17 +2,15 @@
 resolver = "2"
 
 members = [
-  "kairos-cli",
-  "kairos-server",
-  "kairos-tx",
+	"deposit-contract-tests",
+	"contract-types"
 ]
 
 exclude = [
-  "contracts"
+	"deposit-contracts"
 ]
 
 [workspace.package]
-name = "kairos"
+name = "kairos-contract"
 version = "0.1.0"
 edition = "2021"
-license = "MIT OR Apache-2.0"
