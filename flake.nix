@@ -27,6 +27,8 @@
     advisory-db.flake = false;
     risc0pkgs.url = "github:cspr-rad/risc0pkgs";
     risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
+    csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
+    csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
@@ -58,6 +60,11 @@
               openssl.dev
             ] ++ lib.optionals stdenv.isDarwin [
               libiconv
+              darwin.apple_sdk.frameworks.Security
+              darwin.apple_sdk.frameworks.SystemConfiguration
+            ];
+            checkInputs = [
+              inputs'.csprpkgs.packages.cctl
             ];
             meta.mainProgram = "kairos-server";
           };
@@ -93,11 +100,22 @@
 
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+              # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
+              # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
+              cargoTarpaulinExtraArgs = "--skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
+              # For some reason cargoTarpaulin runs the tests in the buildPhase
+              buildInputs = kairosNodeAttrs.buildInputs ++ [
+                inputs'.csprpkgs.packages.cctl
+              ];
             });
 
             audit = craneLib.cargoAudit {
               inherit (kairosNodeAttrs) src;
               advisory-db = inputs.advisory-db;
+              # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
+              # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
+              # FIXME --ignore RUSTSEC-2024-0013 ignores libgit2-sys 0.14.2+1.5.1 vulnerability caused by introducing casper-client 2.0.0
+              cargoAuditExtraArgs = "--ignore yanked --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
             };
           };
 
