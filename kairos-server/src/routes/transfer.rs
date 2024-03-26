@@ -1,25 +1,16 @@
 use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
-use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::routes::PayloadBody;
-use crate::{state::LockedBatchState, AppErr, PublicKey, Signature};
+use crate::{state::LockedBatchState, AppErr, PublicKey};
 
 #[derive(TypedPath)]
 #[typed_path("/api/v1/transfer")]
 pub struct TransferPath;
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct Transfer {
-    pub from: PublicKey,
-    pub signature: Signature,
-    pub to: PublicKey,
-    pub amount: u64,
-}
 
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn transfer_handler(

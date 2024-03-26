@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
-use serde::{Deserialize, Serialize};
 use tracing::*;
 
 use kairos_tx::asn::{SigningPayload, TransactionBody};
@@ -12,13 +11,6 @@ use crate::{state::LockedBatchState, AppErr, PublicKey};
 #[derive(Debug, TypedPath)]
 #[typed_path("/api/v1/withdraw")]
 pub struct WithdrawPath;
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct Withdrawal {
-    pub public_key: PublicKey,
-    pub signature: String,
-    pub amount: u64,
-}
 
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn withdraw_handler(

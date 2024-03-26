@@ -3,23 +3,16 @@ use std::ops::Deref;
 use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
-use serde::{Deserialize, Serialize};
 use tracing::*;
 
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::routes::PayloadBody;
-use crate::{state::LockedBatchState, AppErr, PublicKey};
+use crate::{state::LockedBatchState, AppErr};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
 #[typed_path("/api/v1/deposit")]
 pub struct DepositPath;
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct Deposit {
-    pub public_key: PublicKey,
-    pub amount: u64,
-}
 
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn deposit_handler(
