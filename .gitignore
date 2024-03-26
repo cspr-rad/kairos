@@ -4,3 +4,5 @@ result
 target
 .tmp
 .nixos-test-history
+kairos_config.toml
+kairos.log
