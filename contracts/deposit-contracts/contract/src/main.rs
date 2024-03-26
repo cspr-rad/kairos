@@ -207,8 +207,6 @@ pub extern "C" fn call() {
     // runtime arguments for contract initialization
     let mut init_args = runtime_args! {};
     if let Some(mut admin_list) = admin_list {
-        // for testing: add the caller to the admin list
-        admin_list.push(caller);
         // prepare runtime arguments
         init_args.insert(ADMIN_LIST, admin_list).unwrap_or_revert();
     }
