@@ -118,7 +118,8 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 [[package]]
 name = "casper-contract"
 version = "4.0.0"
-source = "git+https://github.com/casper-network/casper-node?branch=release-1.5.6#9f3995853204a18f17de9c022233d22aa14b9c37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d42901eb5b09bb79e7d7403642e70983ccac0f4812edf1de77d978abea5f3299"
 dependencies = [
  "casper-types",
  "hex_fmt",
@@ -127,7 +128,8 @@ dependencies = [
 [[package]]
 name = "casper-engine-test-support"
 version = "7.0.1"
-source = "git+https://github.com/casper-network/casper-node?branch=release-1.5.6#9f3995853204a18f17de9c022233d22aa14b9c37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7967f1032f17243fbc9df3e4a8591dba169676adb3262b53dab4bb98f37d3c01"
 dependencies = [
  "casper-execution-engine",
  "casper-hashing",
@@ -148,7 +150,8 @@ dependencies = [
 [[package]]
 name = "casper-execution-engine"
 version = "7.0.1"
-source = "git+https://github.com/casper-network/casper-node?branch=release-1.5.6#9f3995853204a18f17de9c022233d22aa14b9c37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e4b48df024b3424cc994c60403472f66ca0961bffb25800f66318bb66c80611"
 dependencies = [
  "anyhow",
  "base16",
@@ -192,7 +195,8 @@ dependencies = [
 [[package]]
 name = "casper-hashing"
 version = "3.0.0"
-source = "git+https://github.com/casper-network/casper-node?branch=release-1.5.6#9f3995853204a18f17de9c022233d22aa14b9c37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c29b63e179d67da0c6b32c1b84bad5480f5f4bfd1b2d7f88390c85f92e87ae0"
 dependencies = [
  "base16",
  "blake2",
@@ -211,7 +215,8 @@ dependencies = [
 [[package]]
 name = "casper-types"
 version = "4.0.1"
-source = "git+https://github.com/casper-network/casper-node?branch=release-1.5.6#9f3995853204a18f17de9c022233d22aa14b9c37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e01525b7bbae90fe9de3f1def6ffe05052a94ed7d14b1c2b38baec81eeec31b"
 dependencies = [
  "base16",
  "base64 0.13.1",

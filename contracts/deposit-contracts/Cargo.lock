@@ -82,19 +82,10 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 [[package]]
 name = "casper-contract"
 version = "4.0.0"
-source = "git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0#441e517fb1ae0640e90a087ff275f9e599828556"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d42901eb5b09bb79e7d7403642e70983ccac0f4812edf1de77d978abea5f3299"
 dependencies = [
- "casper-types 4.0.1 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
- "hex_fmt",
- "wee_alloc",
-]
-
-[[package]]
-name = "casper-contract"
-version = "4.0.0"
-source = "git+https://github.com/casper-network/casper-node?branch=release-1.5.6#9f3995853204a18f17de9c022233d22aa14b9c37"
-dependencies = [
- "casper-types 4.0.1 (git+https://github.com/casper-network/casper-node?branch=release-1.5.6)",
+ "casper-types",
  "hex_fmt",
  "wee_alloc",
 ]
@@ -102,32 +93,8 @@ dependencies = [
 [[package]]
 name = "casper-types"
 version = "4.0.1"
-source = "git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0#441e517fb1ae0640e90a087ff275f9e599828556"
-dependencies = [
- "base16",
- "base64 0.13.1",
- "bitflags",
- "blake2",
- "ed25519-dalek",
- "hex",
- "hex_fmt",
- "k256",
- "num",
- "num-derive",
- "num-integer",
- "num-rational",
- "num-traits",
- "rand",
- "serde",
- "serde_bytes",
- "serde_json",
- "uint",
-]
-
-[[package]]
-name = "casper-types"
-version = "4.0.1"
-source = "git+https://github.com/casper-network/casper-node?branch=release-1.5.6#9f3995853204a18f17de9c022233d22aa14b9c37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e01525b7bbae90fe9de3f1def6ffe05052a94ed7d14b1c2b38baec81eeec31b"
 dependencies = [
  "base16",
  "base64 0.13.1",
@@ -173,8 +140,8 @@ version = "0.1.0"
 dependencies = [
  "base64 0.20.0",
  "bincode",
- "casper-contract 4.0.0 (git+https://github.com/casper-network/casper-node?branch=release-1.5.6)",
- "casper-types 4.0.1 (git+https://github.com/casper-network/casper-node?branch=release-1.5.6)",
+ "casper-contract",
+ "casper-types",
  "contract-types",
 ]
 
@@ -182,7 +149,7 @@ dependencies = [
 name = "contract-types"
 version = "0.1.0"
 dependencies = [
- "casper-types 4.0.1 (git+https://github.com/casper-network/casper-node?branch=release-1.5.6)",
+ "casper-types",
  "serde",
 ]
 
@@ -265,8 +232,8 @@ dependencies = [
 name = "deposit-session"
 version = "0.1.0"
 dependencies = [
- "casper-contract 4.0.0 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
- "casper-types 4.0.1 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
+ "casper-contract",
+ "casper-types",
 ]
 
 [[package]]
@@ -442,16 +409,16 @@ checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 name = "malicious-reader"
 version = "0.1.0"
 dependencies = [
- "casper-contract 4.0.0 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
- "casper-types 4.0.1 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
+ "casper-contract",
+ "casper-types",
 ]
 
 [[package]]
 name = "malicious-session"
 version = "0.1.0"
 dependencies = [
- "casper-contract 4.0.0 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
- "casper-types 4.0.1 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
+ "casper-contract",
+ "casper-types",
 ]
 
 [[package]]
@@ -818,8 +785,8 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 name = "withdrawal-session"
 version = "0.1.0"
 dependencies = [
- "casper-contract 4.0.0 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
- "casper-types 4.0.1 (git+https://github.com/jonas089/casper-node?branch=kairos-1.5.6-risc0)",
+ "casper-contract",
+ "casper-types",
 ]
 
 [[package]]
