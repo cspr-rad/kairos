@@ -1,9 +1,12 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
+use kairos_tx::asn::{SigningPayload, TransactionBody};
+
+use crate::routes::PayloadBody;
 use crate::{state::LockedBatchState, AppErr, PublicKey, Signature};
 
 #[derive(TypedPath)]
@@ -22,13 +25,24 @@ pub struct Transfer {
 pub async fn transfer_handler(
     _: TransferPath,
     State(state): State<LockedBatchState>,
-    Json(Transfer {
-        from,
-        signature,
-        to,
-        amount,
-    }): Json<Transfer>,
+    Json(body): Json<PayloadBody>,
 ) -> Result<(), AppErr> {
+    tracing::info!("parsing transaction data");
+    let signing_payload: SigningPayload =
+        body.payload.as_slice().try_into().context("payload err")?;
+    let transfer = match signing_payload.body {
+        TransactionBody::Transfer(transfer) => transfer,
+        _ => {
+            return Err(AppErr::set_status(
+                anyhow!("invalid transaction type"),
+                StatusCode::BAD_REQUEST,
+            ))
+        }
+    };
+    let amount = u64::try_from(transfer.amount).context("invalid amount")?;
+    let from = body.public_key;
+    let to = PublicKey::from(transfer.recipient);
+
     if amount == 0 {
         return Err(AppErr::set_status(
             anyhow!("transfer amount must be greater than 0"),
