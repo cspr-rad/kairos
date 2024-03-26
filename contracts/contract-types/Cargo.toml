@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = "1.0.197"
+serde = "1"
 casper-types = {version="4.0.0", default-features=false}
