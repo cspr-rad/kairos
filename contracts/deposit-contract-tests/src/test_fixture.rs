@@ -9,8 +9,8 @@ use casper_types::{
 };
 use lazy_static::lazy_static;
 use utils::create_funded_dummy_account;
-extern crate dotenv;
-use dotenv::dotenv;
+extern crate dotenvy;
+use dotenvy::dotenv;
 use std::env;
 
 pub const ACCOUNT_USER_1: [u8; 32] = [1u8; 32];
