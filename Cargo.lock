@@ -1162,6 +1162,7 @@ dependencies = [
  "axum-extra",
  "axum-test",
  "dotenvy",
+ "hex",
  "proptest",
  "serde",
  "serde_json",
