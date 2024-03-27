@@ -224,11 +224,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // println!("Event {:?}: {:?}", event_id, event_value);
 
         let bytes = event_value.inner_bytes();
-        let (_total_length, rem) = u32::from_bytes(bytes).unwrap();
-        let (event_name, _rem2a) = String::from_bytes(rem).unwrap();
+        let (_total_length, event_data) = u32::from_bytes(bytes).unwrap();
+        let (event_name, _rem2a) = String::from_bytes(event_data).unwrap();
+        let event_name = event_name.strip_prefix("event_").unwrap();
         println!("Event name: {:?}", event_name);
 
-        let (mint_event, _rem2b) = cep78_events::Mint::from_bytes(&rem).unwrap();
+        let (mint_event, _rem2b) = cep78_events::Mint::from_bytes(&event_data).unwrap();
         println!("Event data parsed: {:?}", mint_event);
 
         break;
