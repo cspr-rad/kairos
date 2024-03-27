@@ -1,7 +1,10 @@
 use std::collections::BTreeMap;
 
 use casper_event_standard::{CLType2, Schemas};
-use casper_types::{bytesrepr::{FromBytes, ToBytes}, CLValue};
+use casper_types::{
+    bytesrepr::{FromBytes, ToBytes},
+    CLValue,
+};
 
 mod cep78_events;
 
@@ -141,7 +144,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (schema_clvalue, remainder) = casper_types::CLValue::from_bytes(&schema_bytes)
         .map_err(|_e| "Unable to parse schema bytes.")?;
     assert!(remainder.len() == 0);
-    let events_schema: BTreeMap<String, Vec<(String, CLType2)>> = schema_clvalue.clone().into_t().unwrap();
+    let events_schema: BTreeMap<String, Vec<(String, CLType2)>> =
+        schema_clvalue.clone().into_t().unwrap();
 
     println!("Events schema parsed: {:?}", events_schema);
 
@@ -229,12 +233,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let event_name = event_name.strip_prefix("event_").unwrap();
         println!("Event name: {:?}", event_name);
 
-        let (mint_event, _rem2b) = cep78_events::Mint::from_bytes(&event_data).unwrap();
-        println!("Event data parsed: {:?}", mint_event);
-
         // Parse dynamic event data.
         let dynamic_event_schema = events_schema.get(event_name).unwrap().clone();
-        parse_dynamic_event(dynamic_event_schema, &event_data);
+        let dynamic_event = parse_dynamic_event(dynamic_event_schema, &event_data);
+        println!("Event data parsed dynamically: {:?}", dynamic_event);
+
+        match dynamic_event.name.as_str() {
+            "Mint" => {
+                let data = dynamic_event.to_ces_bytes();
+                let (parsed_further, rem) = cep78_events::Mint::from_bytes(&data).unwrap();
+                assert!(rem.len() == 0);
+                println!("Event data parsed statically: {:?}", parsed_further);
+            }
+            other => {
+                println!("Unknown event type: {}", other)
+            }
+        }
 
         break;
     }
@@ -242,8 +256,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn parse_dynamic_event(dynamic_event_schema: Vec<(String, CLType2)>, event_data: &[u8]) {
-    let (_event_name, mut remainder) = String::from_bytes(event_data).unwrap();
+#[derive(Debug)]
+struct EventParsed {
+    pub name: String,
+    pub fields: Vec<(String, CLValue)>,
+}
+
+impl EventParsed {
+    fn to_ces_bytes(&self) -> Vec<u8> {
+        let mut result: Vec<u8> = vec![];
+
+        let prefixed_name = String::from(EVENT_PREFIX) + &self.name;
+        let event_name = String::to_bytes(&prefixed_name).unwrap();
+        result.extend_from_slice(&event_name);
+
+        for (_field_name, field_value) in &self.fields {
+            let field_bytes = field_value.inner_bytes();
+            result.extend_from_slice(field_bytes);
+        }
+
+        result
+    }
+}
+
+const EVENT_PREFIX: &str = "event_";
+
+fn parse_dynamic_event(
+    dynamic_event_schema: Vec<(String, CLType2)>,
+    event_data: &[u8],
+) -> EventParsed {
+    let (event_name, mut remainder) = String::from_bytes(event_data).unwrap();
+    let event_name = event_name.strip_prefix(EVENT_PREFIX).unwrap();
     let mut event_fields = vec![];
     for (field_name, field_type) in dynamic_event_schema {
         let field_value: CLValue = match field_type.downcast() {
@@ -268,7 +311,7 @@ fn parse_dynamic_event(dynamic_event_schema: Vec<(String, CLType2)>, event_data:
                 remainder = new_remainder;
                 let value_bytes = value.to_bytes().unwrap();
                 CLValue::from_components(casper_types::CLType::Key, value_bytes)
-            },
+            }
             casper_types::CLType::URef => todo!(),
             casper_types::CLType::PublicKey => todo!(),
             casper_types::CLType::Option(_) => todo!(),
@@ -283,6 +326,9 @@ fn parse_dynamic_event(dynamic_event_schema: Vec<(String, CLType2)>, event_data:
         };
         event_fields.push((field_name, field_value));
     }
-    
-    println!("Event fields: {:?}", event_fields);
+
+    EventParsed {
+        name: event_name.into(),
+        fields: event_fields,
+    }
 }
