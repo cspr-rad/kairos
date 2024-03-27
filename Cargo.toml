@@ -5,6 +5,8 @@ members = [
   "kairos-cli",
   "kairos-crypto",
   "kairos-server",
+  "kairos-tx",
+  "kairos-test-utils",
 ]
 
 [workspace.package]

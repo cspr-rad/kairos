@@ -19,13 +19,14 @@ axum-extra = { version = "0.9", features = [
     "typed-header",
     "json-deserializer",
 ] }
-thiserror = "1"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full", "tracing", "macros"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
+hex = "0.4"
+kairos-tx = { path = "../kairos-tx" }
 
 [dev-dependencies]
 proptest = "1"

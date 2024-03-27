@@ -1,0 +1,42 @@
+--<Kairos ANS.1 Schema>--
+
+TxSchema DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+  -- Basic types.
+  PublicKey ::= OCTET STRING
+  Amount ::= INTEGER (0..18446744073709551615)
+  Nonce ::= INTEGER (0..18446744073709551615)
+
+  -- Transaction payload for signing.
+  SigningPayload ::= SEQUENCE {
+    nonce Nonce,
+    body TransactionBody,
+    ...
+  }
+
+  -- Generic transaction body.
+  TransactionBody ::= CHOICE {
+    deposit [0] Deposit,
+    transfer [1] Transfer,
+    withdrawal [2] Withdrawal,
+    ...
+  }
+
+  -- Detailed definitions of each transaction type.
+  Deposit ::= SEQUENCE {
+    amount Amount,
+    ...
+  }
+
+  Transfer ::= SEQUENCE {
+    recipient PublicKey,
+    amount Amount,
+    ...
+  }
+
+  Withdrawal ::= SEQUENCE {
+    amount Amount,
+    ...
+  }
+
+END
