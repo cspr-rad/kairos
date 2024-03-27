@@ -145,6 +145,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Events schema parsed: {:?}", events_schema);
 
+    // alternatively:
+    let (events_schema2, rem) = Schemas::from_bytes(&schema_clvalue.inner_bytes()).unwrap();
+    assert!(rem.len() == 0);
+    //println!("Events schema parsed: {:?}", events_schema2);
+    //println!("Incomplete Burn schema (without `burner`): {:?}", events_schema2.0.get("Burn"));
+
     // User locally defined schemas.
     let local_schema = Schemas::new()
         .with::<cep78_events::Mint>()
