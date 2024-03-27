@@ -198,7 +198,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             casper_client::types::StoredValue::CLValue(v) => Ok(v),
             _ => Err("Expected CLValue."),
         }?;
-        println!("Event {:?}: {:?}", event_id, event_value);
+        // println!("Event {:?}: {:?}", event_id, event_value);
+
+        let bytes = event_value.inner_bytes();
+        let (_total_length, rem) = u32::from_bytes(bytes).unwrap();
+        let (event_name, _rem2a) = String::from_bytes(rem).unwrap();
+        println!("Event name: {:?}", event_name);
+
+        let (mint_event, _rem2b) = cep78_events::Mint::from_bytes(&rem).unwrap();
+        println!("Event data parsed: {:?}", mint_event);
 
         break;
     }
