@@ -23,15 +23,7 @@ mod tests {
         fixture.run_deposit_session(U512::from(100000000000u64), installer);
     }
 
-    #[test]
-    fn withdrawal_from_purse() {
-        let (mut fixture, installer) = setup();
-        fixture.install(installer);
-        fixture.run_deposit_session(U512::from(100000000000u64), installer);
-        fixture.run_withdrawal_session(fixture.account_1, U512::from(100000000000u64), installer)
-    }
-
-    // attack vector 1: session code attempts to empty purse
+    // see malicious-session
     #[test]
     fn run_malicious_session() {
         let (mut fixture, installer) = setup();
@@ -40,20 +32,7 @@ mod tests {
         fixture.run_malicious_session(fixture.account_2, U512::from(100000000000u64), installer);
     }
 
-    // attack vector 2: smart contract access control
-    #[test]
-    fn run_malicious_contract() {
-        let (mut fixture, installer) = setup();
-        fixture.install(installer);
-        fixture.run_deposit_session(U512::from(100000000000u64), installer);
-        fixture.run_malicious_withdrawal_session(
-            fixture.account_2,
-            U512::from(100000000000u64),
-            installer,
-        );
-    }
-
-    // attack vector 3: purse URef in contract named keys
+    // see malicious-reader
     #[test]
     fn run_malicious_reader() {
         let (mut fixture, installer) = setup();

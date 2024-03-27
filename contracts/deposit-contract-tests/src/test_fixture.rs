@@ -20,7 +20,7 @@ pub const ACCOUNT_USER_3: [u8; 32] = [3u8; 32];
 // This defines a static variable for the path to WASM binaries
 lazy_static! {
     static ref PATH_TO_WASM_BINARIES: String = {
-        dotenv().ok(); // Load the .env file at runtime
+        dotenv().ok();
         env::var("PATH_TO_WASM_BINARIES").expect("Missing environment variable PATH_TO_WASM_BINARIES")
     };
 }
@@ -148,6 +148,7 @@ impl TestContext {
         self.builder.exec(session_request).expect_success().commit();
     }
 
+    // see malicious-session
     pub fn run_malicious_session(
         &mut self,
         msg_sender: AccountHash,
@@ -170,50 +171,7 @@ impl TestContext {
         self.builder.exec(session_request).expect_failure().commit();
     }
 
-    pub fn run_withdrawal_session(
-        &mut self,
-        msg_sender: AccountHash,
-        amount: U512,
-        account: AccountHash,
-    ) {
-        let session_args = runtime_args! {
-            "amount" => amount,
-            "deposit_contract" => self.contract_hash("kairos_deposit_contract", account)
-        };
-        let session_request = ExecuteRequestBuilder::standard(
-            msg_sender,
-            &format!(
-                "{}/{}",
-                *PATH_TO_WASM_BINARIES, "withdrawal-session-optimized.wasm"
-            ),
-            session_args,
-        )
-        .build();
-        self.builder.exec(session_request).expect_success().commit();
-    }
-
-    pub fn run_malicious_withdrawal_session(
-        &mut self,
-        msg_sender: AccountHash,
-        amount: U512,
-        account: AccountHash,
-    ) {
-        let session_args = runtime_args! {
-            "amount" => amount,
-            "deposit_contract" => self.contract_hash("kairos_deposit_contract", account)
-        };
-        let session_request = ExecuteRequestBuilder::standard(
-            msg_sender,
-            &format!(
-                "{}/{}",
-                *PATH_TO_WASM_BINARIES, "withdrawal-session-optimized.wasm"
-            ),
-            session_args,
-        )
-        .build();
-        self.builder.exec(session_request).expect_failure().commit();
-    }
-
+    // see malicious-reader
     pub fn run_malicious_reader_session(
         &mut self,
         msg_sender: AccountHash,

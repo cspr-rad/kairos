@@ -4,7 +4,6 @@ resolver = "2"
 members = [
   "malicious-reader",
   "malicious-session",
-  "withdrawal-session",
   "deposit-session",
   "contract"
 ]

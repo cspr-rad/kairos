@@ -10,8 +10,5 @@ wasm-opt --strip-debug --signext-lowering ./target/wasm32-unknown-unknown/releas
 cargo build -p malicious-session --release --target wasm32-unknown-unknown
 wasm-opt --strip-debug --signext-lowering ./target/wasm32-unknown-unknown/release/malicious-session.wasm -o ./target/wasm32-unknown-unknown/release/malicious-session-optimized.wasm
 
-cargo build -p withdrawal-session --release --target wasm32-unknown-unknown
-wasm-opt --strip-debug --signext-lowering ./target/wasm32-unknown-unknown/release/withdrawal-session.wasm -o ./target/wasm32-unknown-unknown/release/withdrawal-session-optimized.wasm
-
 cargo build -p malicious-reader --release --target wasm32-unknown-unknown
 wasm-opt --strip-debug --signext-lowering ./target/wasm32-unknown-unknown/release/malicious-reader.wasm -o ./target/wasm32-unknown-unknown/release/malicious-reader-optimized.wasm

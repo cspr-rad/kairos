@@ -16,6 +16,7 @@ use casper_types::{
 };
 use core::convert::TryInto;
 
+/// Wrap the immediate caller as a Key and return it
 fn call_stack_element_to_address(call_stack_element: CallStackElement) -> Key {
     match call_stack_element {
         CallStackElement::Session { account_hash } => Key::from(account_hash),
@@ -31,7 +32,7 @@ fn call_stack_element_to_address(call_stack_element: CallStackElement) -> Key {
     }
 }
 
-/// Traverse the callstack
+/// Traverse the callstack to retrieve the n - 1 th element of the callstack
 pub(crate) fn get_immediate_caller() -> Result<Key, DepositError> {
     let call_stack = runtime::get_call_stack();
     call_stack
@@ -77,7 +78,18 @@ pub fn get_optional_named_arg_with_user_errors<T: FromBytes>(
     }
 }
 
-/// Read optional arg and propagate errors
+/// Read optional arg and propagate errors.
+/// This is required because it should be possible to 
+/// install the deposit contract without passing a list of
+/// admins. In such a case the default admin will be the installing
+/// account.
+/// 
+/// This function checks if the runtime argument size is greater than 0
+/// and if that is the case it gets parsed and returned. Should the parsing
+/// fail or should the user not supply the argument at all, then an error is propagated.
+/// 
+/// To install the contract without an admin list, one still needs to pass an empty admins
+/// list as a runtime argument. Otherwise the missing error will be propagated.
 pub fn get_named_arg_with_user_errors<T: FromBytes>(
     name: &str,
     missing: DepositError,
@@ -105,6 +117,5 @@ pub fn get_named_arg_with_user_errors<T: FromBytes>(
         // Avoids allocation with 0 bytes and a call to get_named_arg
         Vec::new()
     };
-
     bytesrepr::deserialize(arg_bytes).map_err(|_| invalid)
 }

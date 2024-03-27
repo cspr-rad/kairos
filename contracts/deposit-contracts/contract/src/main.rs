@@ -22,21 +22,30 @@ use detail::{get_immediate_caller, get_optional_named_arg_with_user_errors};
 mod error;
 use error::DepositError;
 mod security;
-use security::{sec_check, SecurityBadge};
+use security::{access_control_check, SecurityBadge};
 mod entry_points;
 
 use contract_types::Deposit;
 
+// This entry point is called once when the contract is installed 
+// and sets up the security badges with the installer as an admin or the
+// optional list of admins that was passed to the installation session as a runtime argument.
+// The contract purse will be created in contract context so that it is "owned" by the contract
+// instead of the installing account.
 #[no_mangle]
 pub extern "C" fn init() {
     if runtime::get_key(KAIROS_DEPOSIT_PURSE).is_some() {
         runtime::revert(DepositError::AlreadyInitialized);
     }
     let security_badges_dict = storage::new_dictionary(SECURITY_BADGES).unwrap_or_revert();
+    let installing_entity = runtime::get_caller();
+    // Assign the admin role to the installer, regardless of the list of admins that was 
+    // passed to the installation session. The installer is by default an admin and 
+    // this admin access needs to be revoked after the initialization if it is not wanted.
     storage::dictionary_put(
         security_badges_dict,
         &base64::encode(
-            Key::from(runtime::get_caller())
+            Key::from(installing_entity)
                 .to_bytes()
                 .unwrap_or_revert(),
         ),
@@ -46,9 +55,10 @@ pub extern "C" fn init() {
         get_optional_named_arg_with_user_errors(ADMIN_LIST, DepositError::InvalidAdminList);
     if let Some(admin_list) = admin_list {
         for admin in admin_list {
+            let account_dictionary_key = admin.to_bytes().unwrap_or_revert();
             storage::dictionary_put(
                 security_badges_dict,
-                &base64::encode(admin.to_bytes().unwrap_or_revert()),
+                &base64::encode(account_dictionary_key),
                 SecurityBadge::Admin,
             );
         }
@@ -63,11 +73,16 @@ pub extern "C" fn get_purse() {
         .unwrap_or_revert_with(ApiError::MissingKey)
         .into_uref()
         .unwrap_or_revert();
+    let reference_to_deposit_purse_with_restricted_access = deposit_purse.with_access_rights(AccessRights::ADD);
     runtime::ret(
-        CLValue::from_t(deposit_purse.with_access_rights(AccessRights::ADD)).unwrap_or_revert(),
+        CLValue::from_t(reference_to_deposit_purse_with_restricted_access).unwrap_or_revert(),
     );
 }
 
+// Entry point called by a user through session code to deposit funds.
+// Due to Casper < 2.0 purse management and access control, it is necessary that
+// a temporary purse is funded and passed to the deposit contract since this is
+// the only secure method of making a payment to a contract purse.
 #[no_mangle]
 pub extern "C" fn deposit() {
     let temp_purse: URef = runtime::get_named_arg(RUNTIME_ARG_TEMP_PURSE);
@@ -111,9 +126,12 @@ pub extern "C" fn deposit() {
     );
 }
 
+// The centralized Kairos service, or a sequencer,
+// will update the counter to keep track 
+// of the last processed deposit index on-chain.
 #[no_mangle]
 pub extern "C" fn incr_last_processed_deposit_counter() {
-    sec_check(vec![SecurityBadge::Admin]);
+    access_control_check(vec![SecurityBadge::Admin]);
     let last_processed_deposit_counter_uref =
         runtime::get_key(KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER)
             .unwrap_or_revert_with(ApiError::MissingKey)
@@ -130,23 +148,12 @@ pub extern "C" fn incr_last_processed_deposit_counter() {
     );
 }
 
-#[no_mangle]
-pub extern "C" fn withdrawal() {
-    sec_check(vec![SecurityBadge::Admin]);
-    let destination_purse: URef = runtime::get_named_arg(RUNTIME_ARG_DEST_PURSE);
-    let amount: U512 = runtime::get_named_arg(RUNTIME_ARG_AMOUNT);
-    let deposit_purse: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
-        .unwrap_or_revert_with(ApiError::MissingKey)
-        .into_uref()
-        .unwrap_or_revert()
-        .with_access_rights(AccessRights::READ_ADD_WRITE);
-    system::transfer_from_purse_to_purse(deposit_purse, destination_purse, amount, None)
-        .unwrap_or_revert();
-}
-
+// Update the security badge for one or multiple accounts
+// This entry point is used to assign and revoke rolse such
+// as the "Admin" role.
 #[no_mangle]
 pub extern "C" fn change_security() {
-    sec_check(vec![SecurityBadge::Admin]);
+    access_control_check(vec![SecurityBadge::Admin]);
     let admin_list: Option<Vec<Key>> =
         get_optional_named_arg_with_user_errors(ADMIN_LIST, DepositError::InvalidAdminList);
     // construct a new admin list from runtime arg
@@ -159,7 +166,7 @@ pub extern "C" fn change_security() {
     // remove the caller from the admin list
     let caller = get_immediate_caller().unwrap_or_revert();
     badge_map.remove(&caller);
-    security::change_sec_badge(&badge_map);
+    security::update_security_badges(&badge_map);
 }
 
 #[no_mangle]
@@ -174,7 +181,6 @@ pub extern "C" fn call() {
         entry_points.add_entry_point(entry_points::init());
         entry_points.add_entry_point(entry_points::get_purse());
         entry_points.add_entry_point(entry_points::deposit());
-        entry_points.add_entry_point(entry_points::withdrawal());
         entry_points.add_entry_point(entry_points::incr_last_processed_deposit_counter());
         entry_points.add_entry_point(entry_points::change_security());
         entry_points
@@ -204,10 +210,11 @@ pub extern "C" fn call() {
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_DEPOSIT_CONTRACT_NAME, contract_hash_key);
 
-    // runtime arguments for contract initialization
+    // prepare runtime arguments for contract initialization,
+    // propagating the list of admin accounts that was passed
+    // to the installation session
     let mut init_args = runtime_args! {};
     if let Some(mut admin_list) = admin_list {
-        // prepare runtime arguments
         init_args.insert(ADMIN_LIST, admin_list).unwrap_or_revert();
     }
     runtime::call_contract::<()>(contract_hash, "init", init_args);

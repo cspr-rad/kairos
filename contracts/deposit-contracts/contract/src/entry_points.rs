@@ -35,19 +35,6 @@ pub fn deposit() -> EntryPoint {
     )
 }
 
-pub fn withdrawal() -> EntryPoint {
-    EntryPoint::new(
-        "withdrawal",
-        vec![
-            Parameter::new(RUNTIME_ARG_DEST_PURSE, CLType::URef),
-            Parameter::new(RUNTIME_ARG_AMOUNT, CLType::U512),
-        ],
-        CLType::Unit,
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    )
-}
-
 pub fn incr_last_processed_deposit_counter() -> EntryPoint {
     EntryPoint::new(
         "incr_last_processed_deposit_counter",

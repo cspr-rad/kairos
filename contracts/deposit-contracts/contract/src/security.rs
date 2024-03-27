@@ -54,7 +54,7 @@ impl FromBytes for SecurityBadge {
     }
 }
 
-pub fn sec_check(allowed_badge_list: Vec<SecurityBadge>) {
+pub fn access_control_check(allowed_badge_list: Vec<SecurityBadge>) {
     let caller = get_immediate_caller()
         .unwrap_or_revert()
         .to_bytes()
@@ -68,7 +68,7 @@ pub fn sec_check(allowed_badge_list: Vec<SecurityBadge>) {
     }
 }
 
-pub fn change_sec_badge(badge_map: &BTreeMap<Key, SecurityBadge>) {
+pub fn update_security_badges(badge_map: &BTreeMap<Key, SecurityBadge>) {
     let sec_uref = get_uref(SECURITY_BADGES);
     for (&user, &badge) in badge_map {
         dictionary_put(
