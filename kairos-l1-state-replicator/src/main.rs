@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 use casper_event_standard::CLType2;
 use casper_types::bytesrepr::{FromBytes, ToBytes};
 
+mod cep78_events;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Fetch some deploy:
