@@ -5,10 +5,9 @@ use std::{
 
 use tokio::sync::RwLock;
 
-use crate::{
-    routes::{deposit::Deposit, transfer::Transfer, withdraw::Withdrawal},
-    PublicKey,
-};
+use kairos_tx::asn::{Deposit, Transfer, Withdrawal};
+
+use crate::PublicKey;
 
 pub type LockedBatchState = Arc<RwLock<BatchState>>;
 

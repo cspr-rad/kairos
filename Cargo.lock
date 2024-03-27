@@ -1709,6 +1709,8 @@ dependencies = [
  "axum-extra",
  "axum-test",
  "dotenvy",
+ "hex",
+ "kairos-tx",
  "proptest",
  "serde",
  "serde_json",
