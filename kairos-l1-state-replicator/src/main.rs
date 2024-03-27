@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use casper_event_standard::CLType2;
+use casper_event_standard::{CLType2, Schemas};
 use casper_types::bytesrepr::{FromBytes, ToBytes};
 
 mod cep78_events;
@@ -138,12 +138,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let schema_bytes = schema_value
         .to_bytes()
         .map_err(|_e| "Unable to get schema bytes.")?;
-    let (parsed, remainder) = casper_types::CLValue::from_bytes(&schema_bytes)
+    let (schema_clvalue, remainder) = casper_types::CLValue::from_bytes(&schema_bytes)
         .map_err(|_e| "Unable to parse schema bytes.")?;
     assert!(remainder.len() == 0);
-    let events_schema: BTreeMap<String, Vec<(String, CLType2)>> = parsed.into_t().unwrap();
+    let events_schema: BTreeMap<String, Vec<(String, CLType2)>> = schema_clvalue.clone().into_t().unwrap();
 
     println!("Events schema parsed: {:?}", events_schema);
+
+    // User locally defined schemas.
+    let local_schema = Schemas::new()
+        .with::<cep78_events::Mint>()
+        .with::<cep78_events::Burn>()
+        .with::<cep78_events::Approval>()
+        .with::<cep78_events::ApprovalRevoked>()
+        .with::<cep78_events::ApprovalForAll>()
+        .with::<cep78_events::Transfer>()
+        .with::<cep78_events::MetadataUpdated>()
+        .with::<cep78_events::VariablesSet>()
+        .with::<cep78_events::Migration>();
+    let local_schema_bytes = local_schema.to_bytes().unwrap();
+
+    // Optional - schema validation.
+    //let chain_schema_bytes = schema_clvalue.inner_bytes().clone();
+    //assert_eq!(chain_schema_bytes, local_schema_bytes);
 
     // Load contract events length.
     let rpc_id: casper_client::JsonRpcId = 3.into();
