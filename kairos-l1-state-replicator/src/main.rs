@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use casper_event_standard::{CLType2, Schemas};
-use casper_types::bytesrepr::{FromBytes, ToBytes};
+use casper_types::{bytesrepr::{FromBytes, ToBytes}, CLValue};
 
 mod cep78_events;
 
@@ -232,8 +232,57 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let (mint_event, _rem2b) = cep78_events::Mint::from_bytes(&event_data).unwrap();
         println!("Event data parsed: {:?}", mint_event);
 
+        // Parse dynamic event data.
+        let dynamic_event_schema = events_schema.get(event_name).unwrap().clone();
+        parse_dynamic_event(dynamic_event_schema, &event_data);
+
         break;
     }
 
     Ok(())
+}
+
+fn parse_dynamic_event(dynamic_event_schema: Vec<(String, CLType2)>, event_data: &[u8]) {
+    let (_event_name, mut remainder) = String::from_bytes(event_data).unwrap();
+    let mut event_fields = vec![];
+    for (field_name, field_type) in dynamic_event_schema {
+        let field_value: CLValue = match field_type.downcast() {
+            casper_types::CLType::Bool => todo!(),
+            casper_types::CLType::I32 => todo!(),
+            casper_types::CLType::I64 => todo!(),
+            casper_types::CLType::U8 => todo!(),
+            casper_types::CLType::U32 => todo!(),
+            casper_types::CLType::U64 => todo!(),
+            casper_types::CLType::U128 => todo!(),
+            casper_types::CLType::U256 => todo!(),
+            casper_types::CLType::U512 => todo!(),
+            casper_types::CLType::Unit => todo!(),
+            casper_types::CLType::String => {
+                let (value, new_remainder) = String::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::String, value_bytes)
+            }
+            casper_types::CLType::Key => {
+                let (value, new_remainder) = casper_types::Key::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::Key, value_bytes)
+            },
+            casper_types::CLType::URef => todo!(),
+            casper_types::CLType::PublicKey => todo!(),
+            casper_types::CLType::Option(_) => todo!(),
+            casper_types::CLType::List(_) => todo!(),
+            casper_types::CLType::ByteArray(_) => todo!(),
+            casper_types::CLType::Result { ok, err } => todo!(),
+            casper_types::CLType::Map { key, value } => todo!(),
+            casper_types::CLType::Tuple1(_) => todo!(),
+            casper_types::CLType::Tuple2(_) => todo!(),
+            casper_types::CLType::Tuple3(_) => todo!(),
+            casper_types::CLType::Any => todo!(),
+        };
+        event_fields.push((field_name, field_value));
+    }
+    
+    println!("Event fields: {:?}", event_fields);
 }
