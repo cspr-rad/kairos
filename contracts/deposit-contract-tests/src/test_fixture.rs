@@ -69,7 +69,7 @@ impl TestContext {
             .expect("should have contract")
             .named_keys()
             .get(key_name)
-            .unwrap()
+            .expect("Key not found")
     }
 
     pub fn contract_hash_from_named_keys(
