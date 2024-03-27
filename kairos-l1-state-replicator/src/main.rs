@@ -78,21 +78,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Load contract metadata without schema.
     let mut events_schema_uref: Option<String> = None;
+    let mut events_length_uref: Option<String> = None;
     let mut events_uref: Option<String> = None;
     for named_key in contract.named_keys() {
         if named_key.name() == "__events_schema" {
             events_schema_uref = Some(named_key.key().unwrap().to_formatted_string());
         }
+        if named_key.name() == "__events_length" {
+            events_length_uref = Some(named_key.key().unwrap().to_formatted_string());
+        }
         if named_key.name() == "__events" {
             events_uref = Some(named_key.key().unwrap().to_formatted_string());
         }
     }
-    let (events_schema_uref, events_uref) = match (events_schema_uref, events_uref) {
-        (Some(events_schema_uref), Some(events_uref)) => Ok((events_schema_uref, events_uref)),
+    let (events_schema_uref, events_length_uref, events_uref) = match (events_schema_uref, events_length_uref, events_uref) {
+        (Some(events_schema_uref), Some(events_length_uref), Some(events_uref)) => Ok((events_schema_uref, events_length_uref, events_uref)),
         _ => Err("Expected named keys."),
     }?;
 
     //println!("Events schema uref: {:?}", events_schema_uref);
+    //println!("Events length uref: {:?}", events_length_uref);
     //println!("Events uref: {:?}", events_uref);
 
     // Load contract event schemas.
@@ -134,6 +139,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let events_schema: BTreeMap<String, Vec<(String, CLType2)>> = parsed.into_t().unwrap();
     
     println!("Events schema parsed: {:?}", events_schema);
+
+    // Load contract events length.
+    let rpc_id: casper_client::JsonRpcId = 3.into();
+    let node_address: &str = "https://mainnet.casper-node.xyz";
+    let verbosity = casper_client::Verbosity::Low;
+    let global_state_identifier =
+        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash);
+    let key = casper_types::Key::URef(
+        casper_types::URef::from_formatted_str(&events_length_uref).unwrap(),
+    );
+    let path = vec![];
+    let state_result = casper_client::query_global_state(
+        rpc_id,
+        node_address,
+        verbosity,
+        global_state_identifier,
+        key,
+        path,
+    )
+    .await?
+    .result;
+    let events_length_value = match state_result.stored_value {
+        casper_client::types::StoredValue::CLValue(v) => Ok(v),
+        _ => Err("Expected CLValue."),
+    }?;
+    let events_length: u32 = events_length_value.into_t().unwrap();
+
+    println!("Events length: {:?}", events_length);
 
     Ok(())
 }
