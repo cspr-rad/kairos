@@ -154,10 +154,6 @@ impl TestContext {
         amount: U512,
         account: AccountHash,
     ) {
-        /*
-        let contract_hash: AddressableEntityHash =
-            self.contract_hash("kairos_deposit_contract", account);
-        */
         let session_args = runtime_args! {
             "amount" => amount,
             "deposit_contract" => self.contract_hash("kairos_deposit_contract", account)
