@@ -1,7 +1,8 @@
 [package]
 name = "deposit-session"
-version = "0.1.0"
-edition = "2021"
+workspace.version = true
+workspace.edition = true
+workspace.license = true
 
 [dependencies]
 casper-contract = {version="4.0.0", features=["test-support"]}
