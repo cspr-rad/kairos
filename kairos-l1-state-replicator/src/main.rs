@@ -91,10 +91,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             events_uref = Some(named_key.key().unwrap().to_formatted_string());
         }
     }
-    let (events_schema_uref, events_length_uref, events_uref) = match (events_schema_uref, events_length_uref, events_uref) {
-        (Some(events_schema_uref), Some(events_length_uref), Some(events_uref)) => Ok((events_schema_uref, events_length_uref, events_uref)),
-        _ => Err("Expected named keys."),
-    }?;
+    let (events_schema_uref, events_length_uref, events_uref) =
+        match (events_schema_uref, events_length_uref, events_uref) {
+            (Some(events_schema_uref), Some(events_length_uref), Some(events_uref)) => {
+                Ok((events_schema_uref, events_length_uref, events_uref))
+            }
+            _ => Err("Expected named keys."),
+        }?;
 
     //println!("Events schema uref: {:?}", events_schema_uref);
     //println!("Events length uref: {:?}", events_length_uref);
@@ -137,7 +140,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_err(|_e| "Unable to parse schema bytes.")?;
     assert!(remainder.len() == 0);
     let events_schema: BTreeMap<String, Vec<(String, CLType2)>> = parsed.into_t().unwrap();
-    
+
     println!("Events schema parsed: {:?}", events_schema);
 
     // Load contract events length.
@@ -175,16 +178,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let verbosity = casper_client::Verbosity::Low;
         let seed_uref = casper_types::URef::from_formatted_str(&events_uref).unwrap();
         let dictionary_item_key = event_id.to_string();
-        let dictionary_item_identifier = casper_client::rpcs::DictionaryItemIdentifier::new_from_seed_uref(seed_uref, dictionary_item_key);
-        let item_result = casper_client::get_dictionary_item(rpc_id, node_address, verbosity, state_root_hash, dictionary_item_identifier)
-            .await?
-            .result;
+        let dictionary_item_identifier =
+            casper_client::rpcs::DictionaryItemIdentifier::new_from_seed_uref(
+                seed_uref,
+                dictionary_item_key,
+            );
+        let item_result = casper_client::get_dictionary_item(
+            rpc_id,
+            node_address,
+            verbosity,
+            state_root_hash,
+            dictionary_item_identifier,
+        )
+        .await?
+        .result;
         let event_value = match item_result.stored_value {
             casper_client::types::StoredValue::CLValue(v) => Ok(v),
             _ => Err("Expected CLValue."),
         }?;
         println!("Event {:?}: {:?}", event_id, event_value);
-        
+
         break;
     }
 
