@@ -136,6 +136,53 @@ impl TestContext {
         purse_balance
     }
 
+    // try to update the access control / admin list of the deposit contract
+    pub fn update_security_badges(
+        &mut self,
+        admin_list: Vec<Key>,
+        caller: AccountHash,
+        installer: AccountHash,
+    ) {
+        let session_args = runtime_args! {
+            "admin_list" => admin_list,
+        };
+        let update_security_request = ExecuteRequestBuilder::contract_call_by_hash(
+            caller,
+            self.contract_hash("kairos_deposit_contract", installer),
+            "update_security_badges",
+            session_args,
+        )
+        .build();
+        self.builder
+            .exec(update_security_request)
+            .expect_success()
+            .commit();
+    }
+
+    // an unauthorized attempt of changing the admin badges
+    pub fn unauthorized_update_security_badges(
+        &mut self,
+        admin_list: Vec<Key>,
+        caller: AccountHash,
+        installer: AccountHash,
+    ) {
+        let session_args = runtime_args! {
+            "admin_list" => admin_list,
+        };
+        let update_security_request = ExecuteRequestBuilder::contract_call_by_hash(
+            caller,
+            self.contract_hash("kairos_deposit_contract", installer),
+            "update_security_badges",
+            session_args,
+        )
+        .build();
+        self.builder
+            .exec(update_security_request)
+            .expect_failure()
+            .commit();
+    }
+
+    // see deposit-session
     pub fn run_deposit_session(&mut self, amount: U512, installer: AccountHash, user: AccountHash) {
         let session_args = runtime_args! {
             "amount" => amount,

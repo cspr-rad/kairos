@@ -45,7 +45,7 @@ pub extern "C" fn init() {
     storage::dictionary_put(
         security_badges_dict,
         &base64::encode(Key::from(installing_entity).to_bytes().unwrap_or_revert()),
-        SecurityBadge::Admin,
+        Some(SecurityBadge::Admin),
     );
     let admin_list: Option<Vec<Key>> =
         get_optional_named_arg_with_user_errors(ADMIN_LIST, DepositError::InvalidAdminList);
@@ -55,7 +55,7 @@ pub extern "C" fn init() {
             storage::dictionary_put(
                 security_badges_dict,
                 &base64::encode(account_dictionary_key),
-                SecurityBadge::Admin,
+                Some(SecurityBadge::Admin),
             );
         }
     };
@@ -149,20 +149,20 @@ pub extern "C" fn incr_last_processed_deposit_counter() {
 // This entry point is used to assign and revoke rolse such
 // as the "Admin" role.
 #[no_mangle]
-pub extern "C" fn change_security() {
+pub extern "C" fn update_security_badges() {
     access_control_check(vec![SecurityBadge::Admin]);
     let admin_list: Option<Vec<Key>> =
         get_optional_named_arg_with_user_errors(ADMIN_LIST, DepositError::InvalidAdminList);
     // construct a new admin list from runtime arg
-    let mut badge_map: BTreeMap<Key, SecurityBadge> = BTreeMap::new();
+    let mut badge_map: BTreeMap<Key, Option<SecurityBadge>> = BTreeMap::new();
     if let Some(admin_list) = admin_list {
         for account_key in admin_list {
-            badge_map.insert(account_key, SecurityBadge::Admin);
+            badge_map.insert(account_key, Some(SecurityBadge::Admin));
         }
     }
     // remove the caller from the admin list
     let caller = get_immediate_caller().unwrap_or_revert();
-    badge_map.remove(&caller);
+    badge_map.insert(caller, None);
     security::update_security_badges(&badge_map);
 }
 

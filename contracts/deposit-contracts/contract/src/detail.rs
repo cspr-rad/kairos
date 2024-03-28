@@ -78,8 +78,7 @@ pub fn get_optional_named_arg_with_user_errors<T: FromBytes>(
     }
 }
 
-/// Read optional arg and propagate errors.
-/// This is required because it should be possible to
+/// Reading optional args is required because it should be possible to
 /// install the deposit contract without passing a list of
 /// admins. In such a case the default admin will be the installing
 /// account.

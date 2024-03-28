@@ -47,7 +47,7 @@ pub fn incr_last_processed_deposit_counter() -> EntryPoint {
 
 pub fn change_security() -> EntryPoint {
     EntryPoint::new(
-        "change_security",
+        "update_security_badges",
         vec![],
         CLType::Unit,
         EntryPointAccess::Public,

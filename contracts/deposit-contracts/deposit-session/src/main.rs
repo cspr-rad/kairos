@@ -1,3 +1,11 @@
+/*
+    Transfer native Casper tokens from the caller to the deposit smart contract.
+    Due to the purse access control in Casper 1.5.x, a temporary purse is created and funded
+    by the user first, to then be passed to the deposit contract.
+
+    Finally the temporary purse is emptied / all funds are transferred to the deposit contract's
+    purse.
+*/
 #![no_std]
 #![no_main]
 use casper_contract::contract_api::{account, runtime, system};

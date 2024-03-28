@@ -10,7 +10,7 @@ use casper_contract::{
     contract_api::{
         self,
         runtime::revert,
-        storage::{dictionary_get, dictionary_put},
+        storage::{dictionary_get, dictionary_put, new_dictionary},
     },
     ext_ffi,
     unwrap_or_revert::UnwrapOrRevert,
@@ -60,15 +60,19 @@ pub fn access_control_check(allowed_badge_list: Vec<SecurityBadge>) {
         .to_bytes()
         .unwrap_or_revert();
     if !allowed_badge_list.contains(
-        &dictionary_get::<SecurityBadge>(get_uref(SECURITY_BADGES), &base64::encode(caller))
-            .unwrap_or_revert()
-            .unwrap_or_revert_with(DepositError::InsufficientRights),
+        &dictionary_get::<Option<SecurityBadge>>(
+            get_uref(SECURITY_BADGES),
+            &base64::encode(caller),
+        )
+        .unwrap_or_revert()
+        .unwrap_or_revert()
+        .unwrap_or_revert_with(DepositError::InsufficientRights),
     ) {
         revert(DepositError::InsufficientRights)
     }
 }
 
-pub fn update_security_badges(badge_map: &BTreeMap<Key, SecurityBadge>) {
+pub fn update_security_badges(badge_map: &BTreeMap<Key, Option<SecurityBadge>>) {
     let sec_uref = get_uref(SECURITY_BADGES);
     for (&user, &badge) in badge_map {
         dictionary_put(

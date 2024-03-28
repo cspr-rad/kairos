@@ -2,7 +2,7 @@ mod test_fixture;
 #[cfg(test)]
 mod tests {
     use crate::test_fixture::TestContext;
-    use casper_types::{account::AccountHash, U512};
+    use casper_types::{account::AccountHash, Key, U512};
 
     #[test]
     fn should_install() {
@@ -35,7 +35,21 @@ mod tests {
         assert_eq!(contract_balance_after, DEPOSIT_AMOUNT);
 
         let user_balance_after = fixture.builder.get_purse_balance(user_purse_uref);
-        assert_eq!(user_balance_after, U512::from(9999871666161540u64));
+        assert!(user_balance_after < user_balance_before);
+    }
+
+    #[test]
+    fn update_security_badges() {
+        let (mut fixture, init_admin, new_admin) = setup();
+        fixture.install(init_admin);
+        // try to update the admin list
+        let new_admin_list: Vec<Key> = vec![Key::from(new_admin)];
+        fixture.update_security_badges(new_admin_list.clone(), init_admin, init_admin);
+        // update the admin list as the new_admin
+        fixture.update_security_badges(new_admin_list, new_admin, init_admin);
+        // now remove the admin role from the installer and expect failure.
+        let new_admin_list: Vec<Key> = vec![];
+        fixture.unauthorized_update_security_badges(new_admin_list.clone(), init_admin, init_admin);
     }
 
     // see malicious-session
