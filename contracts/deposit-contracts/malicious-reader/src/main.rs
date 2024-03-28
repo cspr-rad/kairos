@@ -7,7 +7,7 @@
 #![no_std]
 #![no_main]
 use casper_contract::contract_api::{account, runtime, system};
-use casper_types::{RuntimeArgs, URef, U512};
+use casper_types::{URef, U512};
 
 #[no_mangle]
 pub extern "C" fn call() {

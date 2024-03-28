@@ -12,10 +12,10 @@ use casper_types::{
 };
 mod constants;
 use constants::{
-    ADMIN_LIST, KAIROS_DEPOSIT_CONTRACT, KAIROS_DEPOSIT_CONTRACT_NAME,
-    KAIROS_DEPOSIT_CONTRACT_PACKAGE, KAIROS_DEPOSIT_EVENT_DICT, KAIROS_DEPOSIT_PURSE,
-    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, KAIROS_MOST_RECENT_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT,
-    RUNTIME_ARG_DEST_PURSE, RUNTIME_ARG_TEMP_PURSE, SECURITY_BADGES,
+    ADMIN_LIST, KAIROS_DEPOSIT_CONTRACT, KAIROS_DEPOSIT_CONTRACT_NAME, KAIROS_DEPOSIT_EVENT_DICT,
+    KAIROS_DEPOSIT_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER,
+    KAIROS_MOST_RECENT_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
+    SECURITY_BADGES,
 };
 mod detail;
 use detail::{get_immediate_caller, get_optional_named_arg_with_user_errors};
@@ -175,7 +175,8 @@ pub extern "C" fn update_security_badges() {
 
 #[no_mangle]
 pub extern "C" fn call() {
-    let caller = Key::from(runtime::get_caller());
+    // TODO why is this unused?
+    let _caller = Key::from(runtime::get_caller());
 
     let admin_list: Option<Vec<Key>> =
         get_optional_named_arg_with_user_errors(ADMIN_LIST, DepositError::InvalidAdminList);
@@ -220,7 +221,7 @@ pub extern "C" fn call() {
     // propagating the list of admin accounts that was passed
     // to the installation session
     let mut init_args = runtime_args! {};
-    if let Some(mut admin_list) = admin_list {
+    if let Some(admin_list) = admin_list {
         init_args.insert(ADMIN_LIST, admin_list).unwrap_or_revert();
     }
     runtime::call_contract::<()>(contract_hash, "init", init_args);

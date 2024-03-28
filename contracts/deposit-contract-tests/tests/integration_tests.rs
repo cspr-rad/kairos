@@ -14,12 +14,12 @@ mod tests {
         let fixture: TestContext = TestContext::new();
         let installer = fixture.account_1;
         let user = fixture.account_2;
-        return (fixture, installer, user);
+        (fixture, installer, user)
     }
 
     #[test]
     fn deposit_into_purse() {
-        let DEPOSIT_AMOUNT: U512 = U512::from(100000000000u64);
+        let deposit_amount: U512 = U512::from(100000000000u64);
         let (mut fixture, installer, user) = setup();
         fixture.install_deposit_contract(installer);
 
@@ -29,13 +29,13 @@ mod tests {
         let contract_balance_before = fixture.get_contract_purse_balance(installer);
         assert_eq!(contract_balance_before, U512::zero());
 
-        fixture.run_deposit_session(DEPOSIT_AMOUNT, installer, user);
+        fixture.run_deposit_session(deposit_amount, installer, user);
 
         let contract_balance_after = fixture.get_contract_purse_balance(installer);
-        assert_eq!(contract_balance_after, DEPOSIT_AMOUNT);
+        assert_eq!(contract_balance_after, deposit_amount);
 
         let user_balance_after = fixture.builder.get_purse_balance(user_purse_uref);
-        assert!(user_balance_after < user_balance_before);
+        assert!(user_balance_after <= user_balance_before - deposit_amount);
     }
 
     #[test]

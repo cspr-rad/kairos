@@ -14,7 +14,6 @@ use casper_contract::{
 use casper_types::{
     api_error, bytesrepr, bytesrepr::FromBytes, system::CallStackElement, ApiError, Key, URef,
 };
-use core::convert::TryInto;
 
 /// Wrap the immediate caller as a Key and return it
 fn call_stack_element_to_address(call_stack_element: CallStackElement) -> Key {

@@ -13,10 +13,4 @@ casper-execution-engine = {version="7.0.0", default-features=false}
 casper-contract = {version="4.0.0", default-features=false}
 casper-types = {version="4.0.0", default-features=false}
 dotenvy = "0.15.7"
-
-[[test]]
-name = "kairos_contract_tests"
-path = "src/integration_tests.rs"
-
-[dependencies]
 lazy_static = "1.4.0"
