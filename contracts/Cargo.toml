@@ -9,10 +9,6 @@ members = [
   "contract-types",
 ]
 
-exclude = [
-  "deposit-contracts"
-]
-
 [workspace.package]
 name = "contracts"
 version = "0.1.0"
