@@ -3,6 +3,7 @@ use casper_client::{
     types::{Contract, DeployHash},
     JsonRpcId, Verbosity,
 };
+use casper_types::CLValue;
 
 const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
 const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
@@ -135,6 +136,24 @@ impl CasperClient {
         };
 
         contract
+    }
+
+    pub async fn get_stored_clvalue(&self, uref_addr: &str) -> CLValue {
+        // Fetch latest state root hash.
+        let state_root_hash = self.get_state_root_hash().await;
+
+        // Build uref key.
+        let key =
+            casper_types::Key::URef(casper_types::URef::from_formatted_str(&uref_addr).unwrap());
+        let path = vec![];
+
+        let response = self.query_global_state(&state_root_hash, key, path).await;
+        let clvalue = match response.stored_value {
+            casper_client::types::StoredValue::CLValue(v) => v,
+            _ => panic!("Expected CLValue."),
+        };
+
+        clvalue
     }
 
     //     pub async fn get_dictionary_item(
