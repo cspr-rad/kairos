@@ -111,29 +111,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Fetch each event data.
     for event_id in 0..events_length {
-        let rpc_id: casper_client::JsonRpcId = 4.into();
-        let node_address: &str = "https://mainnet.casper-node.xyz";
-        let verbosity = casper_client::Verbosity::Low;
-        let seed_uref = casper_types::URef::from_formatted_str(&events_uref).unwrap();
-        let dictionary_item_key = event_id.to_string();
-        let dictionary_item_identifier =
-            casper_client::rpcs::DictionaryItemIdentifier::new_from_seed_uref(
-                seed_uref,
-                dictionary_item_key,
-            );
-        let item_result = casper_client::get_dictionary_item(
-            rpc_id,
-            node_address,
-            verbosity,
-            state_root_hash.into(),
-            dictionary_item_identifier,
-        )
-        .await?
-        .result;
-        let event_value = match item_result.stored_value {
-            casper_client::types::StoredValue::CLValue(v) => Ok(v),
-            _ => Err("Expected CLValue."),
-        }?;
+        let event_value = client
+            .get_stored_clvalue_from_dict(&events_uref, &event_id.to_string())
+            .await;
         // println!("Event {:?}: {:?}", event_id, event_value);
 
         let bytes = event_value.inner_bytes();

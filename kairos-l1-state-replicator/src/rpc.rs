@@ -156,11 +156,37 @@ impl CasperClient {
         clvalue
     }
 
-    //     pub async fn get_dictionary_item(
-    //         &self,
-    //         state_root_hash: &str,
-    //         dictionary_item_key: &str,
-    //     ) -> Result<DictionaryItem, Error> {
-    //         // Implementation to get a dictionary item by its key.
-    //     }
+    pub async fn get_stored_clvalue_from_dict(
+        &self,
+        dictionary_seed_uref: &str,
+        dictionary_item_key: &str,
+    ) -> CLValue {
+        // Fetch latest state root hash.
+        let state_root_hash = self.get_state_root_hash().await;
+
+        // Build dictionary item identifier.
+        let seed_uref = casper_types::URef::from_formatted_str(&dictionary_seed_uref).unwrap();
+        let dictionary_item_key = dictionary_item_key.to_string();
+        let dictionary_item_identifier =
+            casper_client::rpcs::DictionaryItemIdentifier::new_from_seed_uref(
+                seed_uref,
+                dictionary_item_key,
+            );
+
+        let response = casper_client::get_dictionary_item(
+            self.get_rpc_id(),
+            &self.rpc_endpoint,
+            self.get_verbosity(),
+            state_root_hash.into(),
+            dictionary_item_identifier,
+        )
+        .await
+        .unwrap();
+        let clvalue = match response.result.stored_value {
+            casper_client::types::StoredValue::CLValue(v) => v,
+            _ => panic!("Expected CLValue."),
+        };
+
+        clvalue
+    }
 }
