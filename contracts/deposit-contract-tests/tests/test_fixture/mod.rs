@@ -25,11 +25,11 @@ lazy_static! {
     };
 }
 
-#[cfg(test)]
 pub struct TestContext {
     pub builder: InMemoryWasmTestBuilder,
     pub account_1: AccountHash,
     pub account_2: AccountHash,
+    #[allow(dead_code)]
     pub account_3: AccountHash,
 }
 
