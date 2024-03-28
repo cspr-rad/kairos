@@ -104,29 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //assert_eq!(chain_schema_bytes, local_schema_bytes);
 
     // Load contract events length.
-    let rpc_id: casper_client::JsonRpcId = 3.into();
-    let node_address: &str = "https://mainnet.casper-node.xyz";
-    let verbosity = casper_client::Verbosity::Low;
-    let global_state_identifier =
-        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash.into());
-    let key = casper_types::Key::URef(
-        casper_types::URef::from_formatted_str(&events_length_uref).unwrap(),
-    );
-    let path = vec![];
-    let state_result = casper_client::query_global_state(
-        rpc_id,
-        node_address,
-        verbosity,
-        global_state_identifier,
-        key,
-        path,
-    )
-    .await?
-    .result;
-    let events_length_value = match state_result.stored_value {
-        casper_client::types::StoredValue::CLValue(v) => Ok(v),
-        _ => Err("Expected CLValue."),
-    }?;
+    let events_length_value = client.get_stored_clvalue(&events_length_uref).await;
     let events_length: u32 = events_length_value.into_t().unwrap();
 
     println!("Events length: {:?}", events_length);
