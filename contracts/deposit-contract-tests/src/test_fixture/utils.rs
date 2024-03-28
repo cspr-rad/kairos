@@ -17,18 +17,6 @@ pub fn create_funded_dummy_account(
 ) -> AccountHash {
     let (_, account_public_key) = create_dummy_key_pair(account_string.unwrap_or([7u8; 32]));
     let account = account_public_key.to_account_hash();
-    fund_account(builder, account);
-    account
-}
-
-pub fn create_dummy_key_pair(account_string: [u8; 32]) -> (SecretKey, PublicKey) {
-    let secret_key =
-        SecretKey::ed25519_from_bytes(account_string).expect("failed to create secret key");
-    let public_key = PublicKey::from(&secret_key);
-    (secret_key, public_key)
-}
-
-pub fn fund_account(builder: &mut WasmTestBuilder<InMemoryGlobalState>, account: AccountHash) {
     let transfer = ExecuteRequestBuilder::transfer(
         *DEFAULT_ACCOUNT_ADDR,
         runtime_args! {
@@ -39,4 +27,12 @@ pub fn fund_account(builder: &mut WasmTestBuilder<InMemoryGlobalState>, account:
     )
     .build();
     builder.exec(transfer).expect_success().commit();
+    account
+}
+
+pub fn create_dummy_key_pair(account_string: [u8; 32]) -> (SecretKey, PublicKey) {
+    let secret_key =
+        SecretKey::ed25519_from_bytes(account_string).expect("failed to create secret key");
+    let public_key = PublicKey::from(&secret_key);
+    (secret_key, public_key)
 }

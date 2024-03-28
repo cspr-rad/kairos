@@ -1,10 +1,14 @@
-use crate::constants::{RUNTIME_ARG_AMOUNT, RUNTIME_ARG_DEST_PURSE, RUNTIME_ARG_TEMP_PURSE};
+use crate::constants::{
+    EP_DEPOSIT_NAME, EP_GET_PURSE_NAME, EP_INCR_LAST_PROCESSED_NAME, EP_INIT_NAME,
+    EP_UPDATE_SECURITY_BADGES_NAME, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_DEST_PURSE,
+    RUNTIME_ARG_TEMP_PURSE,
+};
 use alloc::vec;
 use casper_types::{CLType, EntryPoint, EntryPointAccess, EntryPointType, Parameter};
 
 pub fn init() -> EntryPoint {
     EntryPoint::new(
-        "init",
+        EP_INIT_NAME,
         vec![],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -14,7 +18,7 @@ pub fn init() -> EntryPoint {
 
 pub fn get_purse() -> EntryPoint {
     EntryPoint::new(
-        "get_purse",
+        EP_GET_PURSE_NAME,
         vec![],
         CLType::URef,
         EntryPointAccess::Public,
@@ -24,7 +28,7 @@ pub fn get_purse() -> EntryPoint {
 
 pub fn deposit() -> EntryPoint {
     EntryPoint::new(
-        "deposit",
+        EP_DEPOSIT_NAME,
         vec![
             Parameter::new(RUNTIME_ARG_AMOUNT, CLType::U512),
             Parameter::new(RUNTIME_ARG_TEMP_PURSE, CLType::URef),
@@ -37,7 +41,7 @@ pub fn deposit() -> EntryPoint {
 
 pub fn incr_last_processed_deposit_counter() -> EntryPoint {
     EntryPoint::new(
-        "incr_last_processed_deposit_counter",
+        EP_INCR_LAST_PROCESSED_NAME,
         vec![],
         CLType::Unit,
         EntryPointAccess::Public,
@@ -47,7 +51,7 @@ pub fn incr_last_processed_deposit_counter() -> EntryPoint {
 
 pub fn change_security() -> EntryPoint {
     EntryPoint::new(
-        "update_security_badges",
+        EP_UPDATE_SECURITY_BADGES_NAME,
         vec![],
         CLType::Unit,
         EntryPointAccess::Public,

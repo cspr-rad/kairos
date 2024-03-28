@@ -13,3 +13,9 @@ pub const RUNTIME_ARG_AMOUNT: &str = "amount";
 
 pub const SECURITY_BADGES: &str = "security_badges";
 pub const ADMIN_LIST: &str = "admin_list";
+
+pub const EP_INIT_NAME: &str = "init";
+pub const EP_GET_PURSE_NAME: &str = "get_purse";
+pub const EP_DEPOSIT_NAME: &str = "deposit";
+pub const EP_INCR_LAST_PROCESSED_NAME: &str = "incr_last_processed_deposit_counter";
+pub const EP_UPDATE_SECURITY_BADGES_NAME: &str = "update_security_badges";

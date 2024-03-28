@@ -72,8 +72,8 @@ pub fn get_optional_named_arg_with_user_errors<T: FromBytes>(
     name: &str,
     invalid: DepositError,
 ) -> Option<T> {
-    match get_named_arg_with_user_errors::<T>(name, DepositError::MissingOptionalArgument, invalid)
-    {
+    let maybe_named_arg_with_user_errors = get_named_arg_with_user_errors::<T>(name, invalid);
+    match maybe_named_arg_with_user_errors {
         Ok(val) => Some(val),
         Err(_) => None,
     }
@@ -92,10 +92,9 @@ pub fn get_optional_named_arg_with_user_errors<T: FromBytes>(
 /// list as a runtime argument. Otherwise the missing error will be propagated.
 pub fn get_named_arg_with_user_errors<T: FromBytes>(
     name: &str,
-    missing: DepositError,
     invalid: DepositError,
 ) -> Result<T, DepositError> {
-    let arg_size = get_named_arg_size(name).ok_or(missing)?;
+    let arg_size = get_named_arg_size(name).ok_or(DepositError::MissingOptionalArgument)?;
     let arg_bytes = if arg_size > 0 {
         let res = {
             let data_non_null_ptr = contract_api::alloc_bytes(arg_size);
