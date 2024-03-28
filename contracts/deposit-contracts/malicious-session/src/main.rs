@@ -17,5 +17,5 @@ pub extern "C" fn call() {
     let borrowed_contract_purse: URef =
         runtime::call_contract::<URef>(contract_hash, "get_purse", runtime_args! {});
     system::transfer_from_purse_to_purse(borrowed_contract_purse, destination_purse, amount, None)
-        .unwrap();
+        .expect("Failed to transfer from purse to purse");
 }

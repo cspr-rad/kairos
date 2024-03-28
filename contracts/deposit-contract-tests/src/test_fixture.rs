@@ -21,7 +21,8 @@ pub const ACCOUNT_USER_3: [u8; 32] = [3u8; 32];
 lazy_static! {
     static ref PATH_TO_WASM_BINARIES: String = {
         dotenv().ok();
-        env::var("PATH_TO_WASM_BINARIES").expect("Missing environment variable PATH_TO_WASM_BINARIES")
+        env::var("PATH_TO_WASM_BINARIES")
+            .expect("Missing environment variable PATH_TO_WASM_BINARIES")
     };
 }
 
@@ -121,23 +122,27 @@ impl TestContext {
         seed_uref
     }
 
+    pub fn get_account_purse_uref(&self, account: AccountHash) -> URef {
+        self.builder.get_expected_account(account).main_purse()
+    }
+
     #[allow(dead_code)]
     pub fn get_contract_purse_balance(&self, account: AccountHash) -> U512 {
-        let seed_uref: URef = *self
+        let contract_purse_uref: URef = *self
             .contract_named_keys("kairos_deposit_contract", "kairos_deposit_purse", account)
             .as_uref()
             .unwrap();
-        let purse_balance = self.builder.get_purse_balance(seed_uref);
+        let purse_balance = self.builder.get_purse_balance(contract_purse_uref);
         purse_balance
     }
 
-    pub fn run_deposit_session(&mut self, amount: U512, account: AccountHash) {
+    pub fn run_deposit_session(&mut self, amount: U512, installer: AccountHash, user: AccountHash) {
         let session_args = runtime_args! {
             "amount" => amount,
-            "deposit_contract" => self.contract_hash("kairos_deposit_contract", account)
+            "deposit_contract" => self.contract_hash("kairos_deposit_contract", installer)
         };
         let session_request = ExecuteRequestBuilder::standard(
-            *DEFAULT_ACCOUNT_ADDR,
+            user,
             &format!(
                 "{}/{}",
                 *PATH_TO_WASM_BINARIES, "deposit-session-optimized.wasm"

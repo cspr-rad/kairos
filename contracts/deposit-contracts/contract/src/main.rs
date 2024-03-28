@@ -27,7 +27,7 @@ mod entry_points;
 
 use contract_types::Deposit;
 
-// This entry point is called once when the contract is installed 
+// This entry point is called once when the contract is installed
 // and sets up the security badges with the installer as an admin or the
 // optional list of admins that was passed to the installation session as a runtime argument.
 // The contract purse will be created in contract context so that it is "owned" by the contract
@@ -39,16 +39,12 @@ pub extern "C" fn init() {
     }
     let security_badges_dict = storage::new_dictionary(SECURITY_BADGES).unwrap_or_revert();
     let installing_entity = runtime::get_caller();
-    // Assign the admin role to the installer, regardless of the list of admins that was 
-    // passed to the installation session. The installer is by default an admin and 
+    // Assign the admin role to the installer, regardless of the list of admins that was
+    // passed to the installation session. The installer is by default an admin and
     // this admin access needs to be revoked after the initialization if it is not wanted.
     storage::dictionary_put(
         security_badges_dict,
-        &base64::encode(
-            Key::from(installing_entity)
-                .to_bytes()
-                .unwrap_or_revert(),
-        ),
+        &base64::encode(Key::from(installing_entity).to_bytes().unwrap_or_revert()),
         SecurityBadge::Admin,
     );
     let admin_list: Option<Vec<Key>> =
@@ -73,7 +69,8 @@ pub extern "C" fn get_purse() {
         .unwrap_or_revert_with(ApiError::MissingKey)
         .into_uref()
         .unwrap_or_revert();
-    let reference_to_deposit_purse_with_restricted_access = deposit_purse.with_access_rights(AccessRights::ADD);
+    let reference_to_deposit_purse_with_restricted_access =
+        deposit_purse.with_access_rights(AccessRights::ADD);
     runtime::ret(
         CLValue::from_t(reference_to_deposit_purse_with_restricted_access).unwrap_or_revert(),
     );
@@ -127,7 +124,7 @@ pub extern "C" fn deposit() {
 }
 
 // The centralized Kairos service, or a sequencer,
-// will update the counter to keep track 
+// will update the counter to keep track
 // of the last processed deposit index on-chain.
 #[no_mangle]
 pub extern "C" fn incr_last_processed_deposit_counter() {

@@ -79,15 +79,15 @@ pub fn get_optional_named_arg_with_user_errors<T: FromBytes>(
 }
 
 /// Read optional arg and propagate errors.
-/// This is required because it should be possible to 
+/// This is required because it should be possible to
 /// install the deposit contract without passing a list of
 /// admins. In such a case the default admin will be the installing
 /// account.
-/// 
+///
 /// This function checks if the runtime argument size is greater than 0
 /// and if that is the case it gets parsed and returned. Should the parsing
 /// fail or should the user not supply the argument at all, then an error is propagated.
-/// 
+///
 /// To install the contract without an admin list, one still needs to pass an empty admins
 /// list as a runtime argument. Otherwise the missing error will be propagated.
 pub fn get_named_arg_with_user_errors<T: FromBytes>(
