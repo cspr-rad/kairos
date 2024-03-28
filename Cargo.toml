@@ -5,10 +5,8 @@ members = [
   "kairos-cli",
   "kairos-server",
   "kairos-tx",
-]
-
-exclude = [
-  "contracts"
+  "contracts/contract-types",
+  "contracts/deposit-contract-tests",
 ]
 
 [workspace.package]
