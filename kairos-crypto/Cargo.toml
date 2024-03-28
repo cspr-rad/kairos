@@ -1,0 +1,17 @@
+[package]
+name = "kairos-crypto"
+version.workspace = true
+edition.workspace = true
+
+[features]
+default = ["crypto-casper"]
+crypto-casper = ["casper-types"]
+
+[lib]
+
+[dependencies]
+hex = "0.4"
+thiserror = "1"
+
+# Casper signer implementation.
+casper-types = { version = "4", optional = true, features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.

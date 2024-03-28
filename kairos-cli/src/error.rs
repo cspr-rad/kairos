@@ -1,7 +1,7 @@
 use hex::FromHexError;
 use thiserror::Error;
 
-use crate::crypto::error::CryptoError;
+use kairos_crypto::error::CryptoError;
 
 #[derive(Error, Debug)]
 pub enum CliError {

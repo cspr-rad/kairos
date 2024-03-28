@@ -3,13 +3,10 @@ use std::sync::OnceLock;
 use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
 use kairos_server::{
-    routes::{
-        deposit::{Deposit, DepositPath},
-        transfer::{Transfer, TransferPath},
-        withdraw::{WithdrawPath, Withdrawal},
-    },
+    routes::{deposit::DepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody},
     state::BatchState,
 };
+use kairos_tx::helpers::{make_deposit, make_transfer, make_withdrawal};
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
@@ -30,9 +27,12 @@ fn new_test_app() -> TestServer {
 async fn test_deposit_withdraw() {
     let server = new_test_app();
 
-    let deposit = Deposit {
+    let nonce: u64 = 1;
+    let amount: u64 = 100;
+    let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        amount: 100,
+        payload: make_deposit(nonce, amount).unwrap(),
+        signature: vec![],
     };
 
     // no arguments
@@ -55,10 +55,12 @@ async fn test_deposit_withdraw() {
         .await
         .assert_status_failure();
 
-    let withdrawal = Withdrawal {
+    let nonce: u64 = 1;
+    let amount: u64 = 50;
+    let withdrawal = PayloadBody {
         public_key: "alice_key".into(),
-        signature: "TODO".into(),
-        amount: 50,
+        payload: make_withdrawal(nonce, amount).unwrap(),
+        signature: vec![],
     };
 
     // first withdrawal
@@ -68,23 +70,33 @@ async fn test_deposit_withdraw() {
         .await
         .assert_status_success();
 
+    let nonce: u64 = 1;
+    let amount: u64 = 51;
+    let withdrawal = PayloadBody {
+        public_key: "alice_key".into(),
+        payload: make_withdrawal(nonce, amount).unwrap(),
+        signature: vec![],
+    };
+
     // withdrawal with insufficient funds
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&Withdrawal {
-            amount: 51,
-            ..withdrawal.clone()
-        })
+        .json(&withdrawal)
         .await
         .assert_status_failure();
+
+    let nonce: u64 = 1;
+    let amount: u64 = 50;
+    let withdrawal = PayloadBody {
+        public_key: "alice_key".into(),
+        payload: make_withdrawal(nonce, amount).unwrap(),
+        signature: vec![],
+    };
 
     // second withdrawal
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&Withdrawal {
-            amount: 50,
-            ..withdrawal.clone()
-        })
+        .json(&withdrawal)
         .await
         .assert_status_success();
 
@@ -99,22 +111,29 @@ async fn test_deposit_withdraw() {
 async fn test_deposit_transfer_withdraw() {
     let server = new_test_app();
 
-    let deposit = Deposit {
+    let nonce: u64 = 1;
+    let amount: u64 = 100;
+    let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        amount: 100,
+        payload: make_deposit(nonce, amount).unwrap(),
+        signature: vec![],
     };
 
-    let transfer = Transfer {
-        from: "alice_key".into(),
-        signature: "TODO".into(),
-        to: "bob_key".into(),
-        amount: 50,
+    let nonce: u64 = 1;
+    let amount: u64 = 50;
+    let recipient: &[u8] = "bob_key".as_bytes();
+    let transfer = PayloadBody {
+        public_key: "alice_key".into(),
+        payload: make_transfer(nonce, recipient, amount).unwrap(),
+        signature: vec![],
     };
 
-    let withdrawal = Withdrawal {
+    let nonce: u64 = 1;
+    let amount: u64 = 50;
+    let withdrawal = PayloadBody {
         public_key: "bob_key".into(),
-        signature: "TODO".into(),
-        amount: 50,
+        payload: make_withdrawal(nonce, amount).unwrap(),
+        signature: vec![],
     };
 
     // deposit
