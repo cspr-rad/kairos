@@ -14,25 +14,17 @@ mod rpc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Fetch some deploy.
     let client = CasperClient::new_mainnet();
-    let deploy_result = client
-        .get_deploy("5fc34e15776a08bd059355acd57937b56ddc48ad0c2f55bd8d0b376170c8a412")
-        .await;
 
-    //println!("Deploy: {:?}", deploy_result);
+    // Fetch some deploy.
+    // let deploy_result = client
+    //     .get_deploy("5fc34e15776a08bd059355acd57937b56ddc48ad0c2f55bd8d0b376170c8a412")
+    //     .await;
 
     // Fetch contract details (correlated with depoly).
     let contract = client
         .get_contract("fe03021407879ce6fc5e035b70ff6a90941afdbea325a9164c7a497827efa7ff")
         .await;
-
-    //println!("Contract: {:?}", contract);
-
-    // Fetch latest state root hash.
-    let state_root_hash = client.get_state_root_hash().await;
-
-    //println!("State root hash: {:?}", state_root_hash);
 
     // Load contract metadata without schema.
     let mut events_schema_uref: Option<String> = None;
