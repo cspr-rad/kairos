@@ -1,7 +1,6 @@
 mod utils;
 use casper_engine_test_support::{
-    ExecuteRequestBuilder, InMemoryWasmTestBuilder, DEFAULT_ACCOUNT_ADDR,
-    PRODUCTION_RUN_GENESIS_REQUEST,
+    ExecuteRequestBuilder, InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST,
 };
 use casper_types::{
     account::AccountHash, contracts::NamedKeys, runtime_args, ContractHash, Key, RuntimeArgs, URef,
@@ -132,8 +131,7 @@ impl TestContext {
             .contract_named_keys("kairos_deposit_contract", "kairos_deposit_purse", account)
             .as_uref()
             .unwrap();
-        let purse_balance = self.builder.get_purse_balance(contract_purse_uref);
-        purse_balance
+        self.builder.get_purse_balance(contract_purse_uref)
     }
 
     // try to update the access control / admin list of the deposit contract
