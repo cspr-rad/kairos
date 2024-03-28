@@ -210,7 +210,8 @@ pub extern "C" fn call() {
         entry_points,
         Some(named_keys),
         Some(KAIROS_DEPOSIT_CONTRACT.to_string()),
-        Some(KAIROS_DEPOSIT_CONTRACT_PACKAGE.to_string()),
+        // Some(key) if upgradable
+        None,
     );
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_DEPOSIT_CONTRACT_NAME, contract_hash_key);
