@@ -132,6 +132,8 @@
 
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+              # FIXME fix weird issue with rust-nightly and tarpaulin https://github.com/xd009642/tarpaulin/issues/1499
+              RUSTFLAGS = "-Cstrip=none";
             });
 
             audit = craneLib.cargoAudit {
