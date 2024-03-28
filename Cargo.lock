@@ -1737,6 +1737,7 @@ dependencies = [
  "backoff",
  "casper-client",
  "nom",
+ "reqwest",
  "tempfile",
  "tokio",
  "tracing",
