@@ -2,6 +2,7 @@
 name = "kairos-crypto"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 
 [features]
 default = ["crypto-casper"]
