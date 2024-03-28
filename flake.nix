@@ -42,8 +42,6 @@
           rustToolchain = with inputs'.fenix.packages; combine [
             complete.toolchain
             targets.wasm32-unknown-unknown.latest.rust-std
-            targets.aarch64-apple-darwin.complete.rust-std
-            targets.x86_64-apple-darwin.complete.rust-std
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
