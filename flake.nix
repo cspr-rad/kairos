@@ -65,7 +65,6 @@
                   # Append "-optimized" to the filename and add back the .wasm extension
                   new_filename="$directory$filename-optimized.wasm"
                   wasm-opt --strip-debug --signext-lowering "$file" -o "$new_filename"
-                  #mv "$file" "$new_filename"
                 fi
               done
             '';
