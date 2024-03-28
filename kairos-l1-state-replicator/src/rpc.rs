@@ -1,4 +1,8 @@
-use casper_client::{rpcs::results::GetDeployResult, types::DeployHash, JsonRpcId, Verbosity};
+use casper_client::{
+    rpcs::results::{GetDeployResult, GetStateRootHashResult},
+    types::DeployHash,
+    JsonRpcId, Verbosity,
+};
 
 const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
 const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
@@ -67,9 +71,24 @@ impl CasperClient {
         response.result
     }
 
-    //     pub async fn get_state_root_hash(&self) -> Result<String, Error> {
-    //         // Implementation to fetch the latest state root hash.
-    //     }
+    // Fetch latest state root hash.
+    pub async fn get_state_root_hash(&self) -> [u8; 32] {
+        // No block given means the latest available.
+        let block_identifier = None;
+
+        let response = casper_client::get_state_root_hash(
+            self.get_rpc_id(),
+            &self.rpc_endpoint,
+            self.get_verbosity(),
+            block_identifier,
+        )
+        .await
+        .unwrap();
+
+        let state_root_hash = response.result.state_root_hash.unwrap();
+
+        state_root_hash.into()
+    }
 
     //     pub async fn query_global_state(
     //         &self,

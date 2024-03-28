@@ -32,14 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ]);
 
     // Fetch latest state root hash.
-    let rpc_id: casper_client::JsonRpcId = 2.into();
-    let node_address: &str = "https://mainnet.casper-node.xyz";
-    let verbosity = casper_client::Verbosity::Low;
-    let state_root_hash_result =
-        casper_client::get_state_root_hash(rpc_id, node_address, verbosity, None)
-            .await?
-            .result;
-    let state_root_hash = state_root_hash_result.state_root_hash.unwrap(); // TODO: Handle no value.
+    let state_root_hash = client.get_state_root_hash().await;
 
     //println!("State root hash: {:?}", state_root_hash);
 
@@ -47,8 +40,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rpc_id: casper_client::JsonRpcId = 2.into();
     let node_address: &str = "https://mainnet.casper-node.xyz"; // TODO FIX TESTNTET
     let verbosity = casper_client::Verbosity::Low;
-    let global_state_identifier =
-        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash);
+    let global_state_identifier = casper_client::rpcs::GlobalStateIdentifier::StateRootHash(
+        state_root_hash.try_into().unwrap(),
+    );
     let key = casper_types::Key::Hash(contract_hash.value());
     let path = vec![];
     let state_result = casper_client::query_global_state(
@@ -100,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let node_address: &str = "https://mainnet.casper-node.xyz";
     let verbosity = casper_client::Verbosity::Low;
     let global_state_identifier =
-        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash);
+        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash.into());
     let key = casper_types::Key::URef(
         casper_types::URef::from_formatted_str(&events_schema_uref).unwrap(),
     );
@@ -164,7 +158,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let node_address: &str = "https://mainnet.casper-node.xyz";
     let verbosity = casper_client::Verbosity::Low;
     let global_state_identifier =
-        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash);
+        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash.into());
     let key = casper_types::Key::URef(
         casper_types::URef::from_formatted_str(&events_length_uref).unwrap(),
     );
@@ -203,7 +197,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             rpc_id,
             node_address,
             verbosity,
-            state_root_hash,
+            state_root_hash.into(),
             dictionary_item_identifier,
         )
         .await?
