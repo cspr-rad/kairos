@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+permissions:
+  pull-requests: write
+  checks: write
+
 jobs:
   check:
     runs-on: ${{ matrix.os }}
@@ -39,7 +43,14 @@ jobs:
 
       - name: coverage
         if: matrix.os == 'ubuntu-latest'
-        run: nix build -L --no-link --show-trace .#checks.x86_64-linux.coverage-report
+        run: nix build -L --out-link coverage-result --show-trace .#checks.x86_64-linux.coverage-report
+
+      - name: report coverage
+        if: matrix.os == 'ubuntu-latest'
+        uses: 5monkeys/cobertura-action@v13
+        with:
+          path: coverage-result/cobertura.xml
+          minimum_coverage: 60
 
       - name: kairos x86_64-linux
         if: matrix.os == 'ubuntu-latest'
