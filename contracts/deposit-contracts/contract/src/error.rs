@@ -9,9 +9,16 @@ pub enum DepositError {
     InvalidAdminList = 2,
     InvalidNoneList = 3,
     FailedToGetArgBytes = 4,
-    Phantom = 5,
+    MissingOptionalArgument = 5,
     InsufficientRights = 6,
     AlreadyInitialized = 7,
+    MissingKeyDepositPurse = 8,
+    MissingKeyMostRecentDepositCounter = 9,
+    MissingKeyLastProcessedDepositCounter = 10,
+    MissingKeyDepositEventDict = 11,
+    FailedToCreateSecurityBadgesDict = 12,
+    FailedToCreateDepositDict = 13,
+    FailedToReturnContractPurseAsReference = 14,
 }
 
 impl From<DepositError> for ApiError {

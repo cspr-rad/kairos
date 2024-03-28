@@ -5,7 +5,7 @@ mod tests {
     use casper_types::{account::AccountHash, Key, U512};
 
     #[test]
-    fn should_install() {
+    fn should_install_deposit_contract() {
         let mut fixture: TestContext = TestContext::new();
         fixture.install(fixture.account_1);
     }

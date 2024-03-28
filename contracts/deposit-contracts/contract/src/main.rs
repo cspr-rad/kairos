@@ -37,7 +37,8 @@ pub extern "C" fn init() {
     if runtime::get_key(KAIROS_DEPOSIT_PURSE).is_some() {
         runtime::revert(DepositError::AlreadyInitialized);
     }
-    let security_badges_dict = storage::new_dictionary(SECURITY_BADGES).unwrap_or_revert();
+    let security_badges_dict = storage::new_dictionary(SECURITY_BADGES)
+        .unwrap_or_revert_with(DepositError::FailedToCreateSecurityBadgesDict);
     let installing_entity = runtime::get_caller();
     // Assign the admin role to the installer, regardless of the list of admins that was
     // passed to the installation session. The installer is by default an admin and
@@ -66,13 +67,14 @@ pub extern "C" fn init() {
 #[no_mangle]
 pub extern "C" fn get_purse() {
     let deposit_purse: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
-        .unwrap_or_revert_with(ApiError::MissingKey)
+        .unwrap_or_revert_with(DepositError::MissingKeyDepositPurse)
         .into_uref()
         .unwrap_or_revert();
     let reference_to_deposit_purse_with_restricted_access =
         deposit_purse.with_access_rights(AccessRights::ADD);
     runtime::ret(
-        CLValue::from_t(reference_to_deposit_purse_with_restricted_access).unwrap_or_revert(),
+        CLValue::from_t(reference_to_deposit_purse_with_restricted_access)
+            .unwrap_or_revert_with(DepositError::FailedToReturnContractPurseAsReference),
     );
 }
 
@@ -85,14 +87,14 @@ pub extern "C" fn deposit() {
     let temp_purse: URef = runtime::get_named_arg(RUNTIME_ARG_TEMP_PURSE);
     let amount: U512 = runtime::get_named_arg(RUNTIME_ARG_AMOUNT);
     let deposit_purse_uref: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
-        .unwrap_or_revert_with(ApiError::MissingKey)
+        .unwrap_or_revert_with(DepositError::MissingKeyDepositPurse)
         .into_uref()
         .unwrap_or_revert_with(ApiError::UnexpectedKeyVariant);
     system::transfer_from_purse_to_purse(temp_purse, deposit_purse_uref, amount, None)
         .unwrap_or_revert();
 
     let most_recent_deposit_counter_uref = runtime::get_key(KAIROS_MOST_RECENT_DEPOSIT_COUNTER)
-        .unwrap_or_revert_with(ApiError::MissingKey)
+        .unwrap_or_revert_with(DepositError::MissingKeyMostRecentDepositCounter)
         .into_uref()
         .unwrap_or_revert();
     let mut most_recent_deposit_counter_value: u64 =
@@ -106,13 +108,15 @@ pub extern "C" fn deposit() {
         processed: false,
     };
 
+    let deposit_event_dict_key: &str = &most_recent_deposit_counter_value.to_string();
+
     let kairos_deposit_event_dict_uref = runtime::get_key(KAIROS_DEPOSIT_EVENT_DICT)
-        .unwrap_or_revert_with(ApiError::MissingKey)
+        .unwrap_or_revert_with(DepositError::MissingKeyDepositEventDict)
         .into_uref()
         .unwrap_or_revert();
     storage::dictionary_put::<Vec<u8>>(
         kairos_deposit_event_dict_uref,
-        &most_recent_deposit_counter_value.to_string(),
+        deposit_event_dict_key,
         bincode::serialize(&new_deposit_record).unwrap(),
     );
 
@@ -131,7 +135,7 @@ pub extern "C" fn incr_last_processed_deposit_counter() {
     access_control_check(vec![SecurityBadge::Admin]);
     let last_processed_deposit_counter_uref =
         runtime::get_key(KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER)
-            .unwrap_or_revert_with(ApiError::MissingKey)
+            .unwrap_or_revert_with(DepositError::MissingKeyLastProcessedDepositCounter)
             .into_uref()
             .unwrap_or_revert();
     let mut last_processed_deposit_counter_value: u64 =
@@ -160,7 +164,10 @@ pub extern "C" fn update_security_badges() {
             badge_map.insert(account_key, Some(SecurityBadge::Admin));
         }
     }
-    // remove the caller from the admin list
+    // remove the caller from the admin list,
+    // by inserting None as the security badge
+    // accounts with no security badge will not be considered part of a badge group
+    // and therefore loose the ability to call EPs that call `access_control_check(vec![SecurityBadge::Admin]);` o.e.
     let caller = get_immediate_caller().unwrap_or_revert();
     badge_map.insert(caller, None);
     security::update_security_badges(&badge_map);
@@ -183,7 +190,8 @@ pub extern "C" fn call() {
         entry_points
     };
     let mut named_keys = NamedKeys::new();
-    let event_dict = storage::new_dictionary(KAIROS_DEPOSIT_EVENT_DICT).unwrap_or_revert();
+    let event_dict = storage::new_dictionary(KAIROS_DEPOSIT_EVENT_DICT)
+        .unwrap_or_revert_with(DepositError::FailedToCreateDepositDict);
     named_keys.insert(KAIROS_DEPOSIT_EVENT_DICT.to_string(), event_dict.into());
     let last_processed_deposit_counter = storage::new_uref(u64::from(0u8));
 

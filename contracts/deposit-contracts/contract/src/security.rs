@@ -54,6 +54,9 @@ impl FromBytes for SecurityBadge {
     }
 }
 
+// Check if a given account / Key is part of a Group / assigned a specific Badge.
+// If the account doesn't hold the required badge, the runtime will revert and the
+// execution of the contract is terminated.
 pub fn access_control_check(allowed_badge_list: Vec<SecurityBadge>) {
     let caller = get_immediate_caller()
         .unwrap_or_revert()
@@ -72,6 +75,9 @@ pub fn access_control_check(allowed_badge_list: Vec<SecurityBadge>) {
     }
 }
 
+// Insert the new and updated roles into the security badge dictionary.
+// Accounts that are assigned "None" will not be considered members of a group / groupless.
+// Groups (=Badges) are used for access control.
 pub fn update_security_badges(badge_map: &BTreeMap<Key, Option<SecurityBadge>>) {
     let sec_uref = get_uref(SECURITY_BADGES);
     for (&user, &badge) in badge_map {

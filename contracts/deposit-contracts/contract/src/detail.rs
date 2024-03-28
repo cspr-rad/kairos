@@ -72,7 +72,8 @@ pub fn get_optional_named_arg_with_user_errors<T: FromBytes>(
     name: &str,
     invalid: DepositError,
 ) -> Option<T> {
-    match get_named_arg_with_user_errors::<T>(name, DepositError::Phantom, invalid) {
+    match get_named_arg_with_user_errors::<T>(name, DepositError::MissingOptionalArgument, invalid)
+    {
         Ok(val) => Some(val),
         Err(_) => None,
     }
