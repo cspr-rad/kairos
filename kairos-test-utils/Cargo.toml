@@ -4,6 +4,13 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "cctld"
+path = "bin/cctld.rs"
+version.workspace = true
+test = false
+bench = false
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 
@@ -13,6 +20,7 @@ anyhow = "1"
 backoff = { version = "0.4", features = ["tokio", "futures"]}
 casper-client = "2"
 nom = "7"
+sd-notify = "0.4"
 tokio = { version = "1", features = [ "full", "tracing", "macros" ] }
 tempfile = "3"
 tracing = "0.1"
