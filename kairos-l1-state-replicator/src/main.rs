@@ -6,32 +6,19 @@ use casper_types::{
     CLValue,
 };
 
+use crate::rpc::CasperClient;
+
 mod cep78_events;
+
+mod rpc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Fetch some deploy:
-    // - https://cspr.live/deploy/5fc34e15776a08bd059355acd57937b56ddc48ad0c2f55bd8d0b376170c8a412
-    let rpc_id: casper_client::JsonRpcId = 1.into();
-    let node_address: &str = "https://mainnet.casper-node.xyz";
-    let verbosity = casper_client::Verbosity::Low;
-    let deploy_hash = casper_client::types::DeployHash::new(
-        [
-            95, 195, 78, 21, 119, 106, 8, 189, 5, 147, 85, 172, 213, 121, 55, 181, 109, 220, 72,
-            173, 12, 47, 85, 189, 141, 11, 55, 97, 112, 200, 164, 18,
-        ]
-        .into(),
-    );
-    let finalized_approvals: bool = false;
-    let deploy_result = casper_client::get_deploy(
-        rpc_id,
-        node_address,
-        verbosity,
-        deploy_hash,
-        finalized_approvals,
-    )
-    .await?
-    .result;
+    // Fetch some deploy.
+    let client = CasperClient::new_mainnet();
+    let deploy_result = client
+        .get_deploy("5fc34e15776a08bd059355acd57937b56ddc48ad0c2f55bd8d0b376170c8a412")
+        .await;
 
     //println!("Deploy: {:?}", deploy_result);
 
