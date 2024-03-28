@@ -1,6 +1,6 @@
 use casper_client::{
-    rpcs::results::{GetDeployResult, GetStateRootHashResult},
-    types::DeployHash,
+    rpcs::results::{GetDeployResult, GetStateRootHashResult, QueryGlobalStateResult},
+    types::{Contract, DeployHash},
     JsonRpcId, Verbosity,
 };
 
@@ -90,14 +90,52 @@ impl CasperClient {
         state_root_hash.into()
     }
 
-    //     pub async fn query_global_state(
-    //         &self,
-    //         state_root_hash: &str,
-    //         key: &str,
-    //         path: Vec<String>,
-    //     ) -> Result<QueryResult, Error> {
-    //         // Implementation to query the global state.
-    //     }
+    async fn query_global_state(
+        &self,
+        state_root_hash: &[u8; 32],
+        key: casper_types::Key,
+        path: Vec<String>,
+    ) -> QueryGlobalStateResult {
+        // Wrap state root hash.
+        let global_state_identifier = casper_client::rpcs::GlobalStateIdentifier::StateRootHash(
+            state_root_hash.clone().into(),
+        );
+
+        let response = casper_client::query_global_state(
+            self.get_rpc_id(),
+            &self.rpc_endpoint,
+            self.get_verbosity(),
+            global_state_identifier,
+            key,
+            path,
+        )
+        .await
+        .unwrap();
+
+        response.result
+    }
+
+    pub async fn get_contract(&self, contract_hash: &str) -> Contract {
+        // Build contract hash.
+        let contract_hash_bytes = hex::decode(contract_hash).unwrap();
+        let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();
+        let contract_hash = casper_types::ContractWasmHash::new(contract_hash_bytes);
+
+        // Fetch latest state root hash.
+        let state_root_hash = self.get_state_root_hash().await;
+
+        // Contract is stored directly at given hash.
+        let key = casper_types::Key::Hash(contract_hash.value());
+        let path = vec![];
+
+        let response = self.query_global_state(&state_root_hash, key, path).await;
+        let contract = match response.stored_value {
+            casper_client::types::StoredValue::Contract(v) => v,
+            _ => panic!("Expected contract."),
+        };
+
+        contract
+    }
 
     //     pub async fn get_dictionary_item(
     //         &self,

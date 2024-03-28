@@ -22,45 +22,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     //println!("Deploy: {:?}", deploy_result);
 
-    // Contract correlated with deploy:
-    // - https://cspr.live/contract/fe03021407879ce6fc5e035b70ff6a90941afdbea325a9164c7a497827efa7ff
-    // TODO: See if this can be obtained automatically.
-    // NOTE: ces-go-parser observes array of contract hashes.
-    let contract_hash = casper_types::ContractWasmHash::new([
-        254, 3, 2, 20, 7, 135, 156, 230, 252, 94, 3, 91, 112, 255, 106, 144, 148, 26, 253, 190,
-        163, 37, 169, 22, 76, 122, 73, 120, 39, 239, 167, 255,
-    ]);
+    // Fetch contract details (correlated with depoly).
+    let contract = client
+        .get_contract("fe03021407879ce6fc5e035b70ff6a90941afdbea325a9164c7a497827efa7ff")
+        .await;
+
+    //println!("Contract: {:?}", contract);
 
     // Fetch latest state root hash.
     let state_root_hash = client.get_state_root_hash().await;
 
     //println!("State root hash: {:?}", state_root_hash);
-
-    // Fetch contract details.
-    let rpc_id: casper_client::JsonRpcId = 2.into();
-    let node_address: &str = "https://mainnet.casper-node.xyz"; // TODO FIX TESTNTET
-    let verbosity = casper_client::Verbosity::Low;
-    let global_state_identifier = casper_client::rpcs::GlobalStateIdentifier::StateRootHash(
-        state_root_hash.try_into().unwrap(),
-    );
-    let key = casper_types::Key::Hash(contract_hash.value());
-    let path = vec![];
-    let state_result = casper_client::query_global_state(
-        rpc_id,
-        node_address,
-        verbosity,
-        global_state_identifier,
-        key,
-        path,
-    )
-    .await?
-    .result;
-    let contract = match state_result.stored_value {
-        casper_client::types::StoredValue::Contract(v) => Ok(v),
-        _ => Err("Expected contract."),
-    }?;
-
-    //println!("Contract: {:?}", contract);
 
     // Load contract metadata without schema.
     let mut events_schema_uref: Option<String> = None;
