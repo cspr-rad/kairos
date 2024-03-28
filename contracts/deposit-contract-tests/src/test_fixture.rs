@@ -97,7 +97,7 @@ impl TestContext {
             .expect("must get contract hash")
     }
 
-    pub fn install(&mut self, admin: AccountHash) {
+    pub fn install_deposit_contract(&mut self, admin: AccountHash) {
         let session_args = runtime_args! {};
         let install_contract_request = ExecuteRequestBuilder::standard(
             admin,

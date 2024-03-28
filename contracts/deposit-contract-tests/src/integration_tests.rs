@@ -7,7 +7,7 @@ mod tests {
     #[test]
     fn should_install_deposit_contract() {
         let mut fixture: TestContext = TestContext::new();
-        fixture.install(fixture.account_1);
+        fixture.install_deposit_contract(fixture.account_1);
     }
 
     fn setup() -> (TestContext, AccountHash, AccountHash) {
@@ -21,7 +21,7 @@ mod tests {
     fn deposit_into_purse() {
         let DEPOSIT_AMOUNT: U512 = U512::from(100000000000u64);
         let (mut fixture, installer, user) = setup();
-        fixture.install(installer);
+        fixture.install_deposit_contract(installer);
 
         let user_purse_uref = fixture.get_account_purse_uref(user);
         let user_balance_before = fixture.builder.get_purse_balance(user_purse_uref);
@@ -41,7 +41,7 @@ mod tests {
     #[test]
     fn update_security_badges() {
         let (mut fixture, init_admin, new_admin) = setup();
-        fixture.install(init_admin);
+        fixture.install_deposit_contract(init_admin);
         // try to update the admin list
         let new_admin_list: Vec<Key> = vec![Key::from(new_admin)];
         fixture.update_security_badges(new_admin_list.clone(), init_admin, init_admin);
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn run_malicious_session() {
         let (mut fixture, installer, user) = setup();
-        fixture.install(installer);
+        fixture.install_deposit_contract(installer);
         fixture.run_deposit_session(U512::from(100000000000u64), installer, user);
         fixture.run_malicious_session(fixture.account_2, U512::from(100000000000u64), installer);
     }
@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn run_malicious_reader() {
         let (mut fixture, installer, user) = setup();
-        fixture.install(installer);
+        fixture.install_deposit_contract(installer);
         fixture.run_deposit_session(U512::from(100000000000u64), installer, user);
         let deposit_purse_uref = fixture.get_contract_purse_uref(installer);
         fixture.run_malicious_reader_session(
