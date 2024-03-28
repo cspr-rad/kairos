@@ -1716,6 +1716,7 @@ dependencies = [
  "casper-client",
  "casper-event-standard",
  "casper-types 3.0.0",
+ "hex",
  "tokio",
 ]
 
