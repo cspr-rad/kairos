@@ -1,5 +1,5 @@
 use casper_client::{
-    rpcs::results::{GetDeployResult, GetStateRootHashResult, QueryGlobalStateResult},
+    rpcs::results::{GetDeployResult, QueryGlobalStateResult},
     types::{Contract, DeployHash},
     JsonRpcId, Verbosity,
 };
