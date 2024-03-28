@@ -77,6 +77,8 @@
               filter = path: type:
                 # Allow static files.
                 (lib.hasInfix "/fixtures/" path) ||
+                # ignore the contracts directory
+                !(lib.hasInfix "contracts/" path) ||
                 # Default filter (from crane) for .rs files.
                 (craneLib.filterCargoSources path type)
               ;
