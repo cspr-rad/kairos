@@ -139,6 +139,16 @@
               inherit (kairosNodeAttrs) src;
               advisory-db = inputs.advisory-db;
             };
+
+            kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
+              cargoArtifacts = self'.packages.kairos-contracts-deps;
+              cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+            });
+
+            kairos-contracts-audit = craneLib.cargoAudit {
+              inherit (kairosContractsAttrs) src;
+              advisory-db = inputs.advisory-db;
+            };
           };
 
           treefmt = {
