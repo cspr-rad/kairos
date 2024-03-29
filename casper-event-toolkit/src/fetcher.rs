@@ -18,7 +18,7 @@ impl Fetcher {
         let events_length_value = self.client.get_stored_clvalue(&events_length_uref).await?;
         let events_length: u32 = events_length_value
             .into_t()
-            .map_err(|e| ReplicatorError::InvalidCLValueType(e.to_string()))?;
+            .map_err(|e| ReplicatorError::InvalidCLValue(e.to_string()))?;
 
         Ok(events_length)
     }
@@ -28,7 +28,7 @@ impl Fetcher {
         let events_schema_value = self.client.get_stored_clvalue(&events_schema_uref).await?;
         let events_schema: Schemas = events_schema_value
             .into_t()
-            .map_err(|e| ReplicatorError::InvalidCLValueType(e.to_string()))?;
+            .map_err(|e| ReplicatorError::InvalidCLValue(e.to_string()))?;
 
         Ok(events_schema)
     }

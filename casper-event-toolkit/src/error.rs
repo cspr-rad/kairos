@@ -11,7 +11,7 @@ pub enum ReplicatorError {
     InvalidKeyType { context: String },
 
     #[error("clvalue invalid: {0}")]
-    InvalidCLValueType(String),
+    InvalidCLValue(String),
 
     /// Event name not found in loaded schema.
     #[error("event schema missing: {0}")]
