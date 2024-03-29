@@ -1,16 +1,24 @@
 use casper_event_standard::Schemas;
 use casper_types::bytesrepr::{FromBytes, ToBytes};
+use error::ReplicatorError;
 use parser::EventParsed;
 use rpc::CasperClient;
 
+pub mod error;
 pub mod parser;
 pub mod rpc;
+pub mod rpc_utils;
+pub mod utils;
 
 struct CesMetadataRef {
     pub events_schema: String,
     pub events_length: String,
     pub events_data: String,
 }
+
+const EVENTS_SCHEMA_KEY: &str = "__events_schema";
+const EVENTS_LENGTH_KEY: &str = "__events_length";
+const EVENTS_DATA_KEY: &str = "__events";
 
 pub struct CasperStateReplicator {
     // Config state.
@@ -33,38 +41,28 @@ impl CasperStateReplicator {
         }
     }
 
-    pub async fn fetch_metadata(&mut self) {
-        // Fetch contract details.
-        let contract = self.client.get_contract(&self.contract_hash).await;
+    pub async fn fetch_metadata(&mut self) -> Result<(), ReplicatorError> {
+        // Fetch contract named keys.
+        let contract_named_keys = self
+            .client
+            .get_contract_named_keys(&self.contract_hash)
+            .await;
 
         // Extract CES metadata from named keys.
-        let mut events_schema_uref: Option<String> = None;
-        let mut events_length_uref: Option<String> = None;
-        let mut events_uref: Option<String> = None;
-        for named_key in contract.named_keys() {
-            if named_key.name() == "__events_schema" {
-                events_schema_uref = Some(named_key.key().unwrap().to_formatted_string());
-            }
-            if named_key.name() == "__events_length" {
-                events_length_uref = Some(named_key.key().unwrap().to_formatted_string());
-            }
-            if named_key.name() == "__events" {
-                events_uref = Some(named_key.key().unwrap().to_formatted_string());
-            }
-        }
-        let (events_schema_uref, events_length_uref, events_uref) =
-            match (events_schema_uref, events_length_uref, events_uref) {
-                (Some(events_schema_uref), Some(events_length_uref), Some(events_uref)) => {
-                    (events_schema_uref, events_length_uref, events_uref)
-                }
-                _ => panic!("Expected named keys."),
-            };
+        let events_schema_uref =
+            utils::extract_uref_from_named_keys(&contract_named_keys, EVENTS_SCHEMA_KEY)?;
+        let events_length_uref =
+            utils::extract_uref_from_named_keys(&contract_named_keys, EVENTS_LENGTH_KEY)?;
+        let events_data_uref =
+            utils::extract_uref_from_named_keys(&contract_named_keys, EVENTS_DATA_KEY)?;
 
         self.ces_metadata_ref = Some(CesMetadataRef {
-            events_data: events_uref,
-            events_length: events_length_uref,
-            events_schema: events_schema_uref,
-        })
+            events_data: events_data_uref.to_formatted_string(),
+            events_length: events_length_uref.to_formatted_string(),
+            events_schema: events_schema_uref.to_formatted_string(),
+        });
+
+        Ok(())
     }
 
     pub async fn fetch_events_count(&mut self) {

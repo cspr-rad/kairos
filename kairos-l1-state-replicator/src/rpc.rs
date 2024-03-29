@@ -1,6 +1,7 @@
+use crate::rpc_utils;
 use casper_client::{
     rpcs::results::{GetDeployResult, QueryGlobalStateResult},
-    types::{Contract, DeployHash},
+    types::DeployHash,
     JsonRpcId, Verbosity,
 };
 use casper_types::CLValue;
@@ -116,7 +117,10 @@ impl CasperClient {
         response.result
     }
 
-    pub async fn get_contract(&self, contract_hash: &str) -> Contract {
+    pub async fn get_contract_named_keys(
+        &self,
+        contract_hash: &str,
+    ) -> casper_types::contracts::NamedKeys {
         // Build contract hash.
         let contract_hash_bytes = hex::decode(contract_hash).unwrap();
         let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();
@@ -134,6 +138,9 @@ impl CasperClient {
             casper_client::types::StoredValue::Contract(v) => v,
             _ => panic!("Expected contract."),
         };
+
+        // Casper client use different type of named keys, so we have to additionally parse it.
+        let contract = rpc_utils::extract_named_keys(contract);
 
         contract
     }
