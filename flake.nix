@@ -49,7 +49,7 @@
 
           kairosContractsAttrs = {
             src = lib.cleanSourceWith {
-              src = craneLib.path ./contracts;
+              src = craneLib.path ./kairos-contracts;
               filter = path: type: craneLib.filterCargoSources path type;
             };
             cargoExtraArgs = "--target wasm32-unknown-unknown";
@@ -76,8 +76,8 @@
               filter = path: type:
                 # Allow static files.
                 (lib.hasInfix "/fixtures/" path) ||
-                # ignore the contracts directory
-                !(lib.hasInfix "contracts/" path) ||
+                # ignore the kairos-contracts directory
+                !(lib.hasInfix "kairos-contracts/" path) ||
                 # Default filter (from crane) for .rs files.
                 (craneLib.filterCargoSources path type)
               ;
