@@ -8,8 +8,7 @@ pub struct JsonRpcIdGenerator {
 
 impl Default for JsonRpcIdGenerator {
     fn default() -> Self {
-        // Assuming you want to start IDs at 0 by default
-        JsonRpcIdGenerator::new(0)
+        JsonRpcIdGenerator::new(DEFAULT_STARTING_ID)
     }
 }
 
