@@ -91,15 +91,6 @@ impl CasperStateReplicator {
         Ok(())
     }
 
-    pub fn load_schema(&mut self, local_schemas: Schemas) {
-        // Optional - schema validation.
-        //let schema_clvalue = local_schemas.to_bytes().unwrap();
-        //let chain_schema_bytes = schema_clvalue.inner_bytes().clone();
-        //assert_eq!(chain_schema_bytes, local_schema_bytes);
-
-        self.events_schema = Some(local_schemas);
-    }
-
     pub async fn fetch_event(&mut self, id: u64) -> Event {
         let events_data_uref = match &self.ces_metadata_ref {
             Some(v) => &v.events_data,

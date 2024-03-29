@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Alteratively - user locally defined schemas.
     // let schemas = cep78::schemas::get_local_schemas();
 
-    replicator.load_schema(schemas);
+    replicator.events_schema = Some(schemas);
 
     let num_events = fetcher.fetch_events_count().await?;
     println!("Events count: {}", num_events);
