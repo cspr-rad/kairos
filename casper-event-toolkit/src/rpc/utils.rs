@@ -1,5 +1,3 @@
-use crate::error::ReplicatorError;
-
 use casper_client::types::Contract;
 
 /// Transforms a contract's named keys into a proper `NamedKeys` (from `casper_types`).
