@@ -1,11 +1,11 @@
 use casper_event_standard::Schemas;
 use casper_types::bytesrepr::{FromBytes, ToBytes};
 use error::ReplicatorError;
-use parser::EventParsed;
+use event::EventParsed;
 use rpc::client::CasperClient;
 
 pub mod error;
-pub mod parser;
+pub mod event;
 pub mod rpc;
 pub mod utils;
 
@@ -127,7 +127,7 @@ impl CasperStateReplicator {
             Some(schema) => schema.0.get(event_name).unwrap().clone(),
             None => panic!("Schema not loaded."), // TODO: Maybe load it automatically?
         };
-        let dynamic_event = parser::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
+        let dynamic_event = event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
 
         dynamic_event
     }
