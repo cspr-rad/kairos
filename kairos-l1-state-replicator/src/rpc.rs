@@ -4,7 +4,7 @@ use casper_client::{
     types::DeployHash,
     JsonRpcId, Verbosity,
 };
-use casper_types::CLValue;
+use casper_types::{CLValue, URef};
 
 const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
 const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
@@ -145,13 +145,12 @@ impl CasperClient {
         contract
     }
 
-    pub async fn get_stored_clvalue(&self, uref_addr: &str) -> CLValue {
+    pub async fn get_stored_clvalue(&self, uref: &casper_types::URef) -> CLValue {
         // Fetch latest state root hash.
         let state_root_hash = self.get_state_root_hash().await;
 
         // Build uref key.
-        let key =
-            casper_types::Key::URef(casper_types::URef::from_formatted_str(&uref_addr).unwrap());
+        let key = casper_types::Key::URef(*uref);
         let path = vec![];
 
         let response = self.query_global_state(&state_root_hash, key, path).await;
@@ -165,18 +164,17 @@ impl CasperClient {
 
     pub async fn get_stored_clvalue_from_dict(
         &self,
-        dictionary_seed_uref: &str,
+        dictionary_seed_uref: &URef,
         dictionary_item_key: &str,
     ) -> CLValue {
         // Fetch latest state root hash.
         let state_root_hash = self.get_state_root_hash().await;
 
         // Build dictionary item identifier.
-        let seed_uref = casper_types::URef::from_formatted_str(&dictionary_seed_uref).unwrap();
         let dictionary_item_key = dictionary_item_key.to_string();
         let dictionary_item_identifier =
             casper_client::rpcs::DictionaryItemIdentifier::new_from_seed_uref(
-                seed_uref,
+                *dictionary_seed_uref,
                 dictionary_item_key,
             );
 

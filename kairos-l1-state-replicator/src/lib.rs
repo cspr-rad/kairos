@@ -11,9 +11,9 @@ pub mod rpc_utils;
 pub mod utils;
 
 struct CesMetadataRef {
-    pub events_schema: String,
-    pub events_length: String,
-    pub events_data: String,
+    pub events_schema: casper_types::URef,
+    pub events_length: casper_types::URef,
+    pub events_data: casper_types::URef,
 }
 
 const EVENTS_SCHEMA_KEY: &str = "__events_schema";
@@ -57,9 +57,9 @@ impl CasperStateReplicator {
             utils::extract_uref_from_named_keys(&contract_named_keys, EVENTS_DATA_KEY)?;
 
         self.ces_metadata_ref = Some(CesMetadataRef {
-            events_data: events_data_uref.to_formatted_string(),
-            events_length: events_length_uref.to_formatted_string(),
-            events_schema: events_schema_uref.to_formatted_string(),
+            events_data: events_data_uref,
+            events_length: events_length_uref,
+            events_schema: events_schema_uref,
         });
 
         Ok(())
