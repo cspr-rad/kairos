@@ -46,6 +46,28 @@ impl Fetcher {
 
         Ok(events_schema)
     }
+
+    pub async fn fetch_event(&self, id: u64, event_schema: &Schemas) -> Event {
+        let events_data_uref = &self.ces_metadata.events_data;
+        let event_value = self
+            .client
+            .get_stored_clvalue_from_dict(&events_data_uref, &id.to_string())
+            .await;
+
+        let bytes = event_value.inner_bytes();
+        let (_total_length, event_data) = u32::from_bytes(bytes).unwrap();
+        let (event_name, _rem2a) = String::from_bytes(event_data).unwrap();
+        let event_name = event_name.strip_prefix("event_").unwrap();
+
+        // Parse dynamic event data.
+        let dynamic_event_schema = match event_schema.0.get(event_name) {
+            Some(schema) => schema.clone(),
+            None => panic!("Schema not loaded."), // TODO: Maybe load it automatically?
+        };
+        let dynamic_event = event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
+
+        dynamic_event
+    }
 }
 
 pub struct CasperStateReplicator {
@@ -54,7 +76,6 @@ pub struct CasperStateReplicator {
     client: CasperClient,
     // Dynamic state.
     pub ces_metadata_ref: Option<CesMetadataRef>,
-    pub events_schema: Option<Schemas>,
 }
 
 impl CasperStateReplicator {
@@ -63,7 +84,6 @@ impl CasperStateReplicator {
             client,
             contract_hash: contract_hash.to_string(),
             ces_metadata_ref: None,
-            events_schema: None,
         }
     }
 
@@ -89,30 +109,5 @@ impl CasperStateReplicator {
         });
 
         Ok(())
-    }
-
-    pub async fn fetch_event(&mut self, id: u64) -> Event {
-        let events_data_uref = match &self.ces_metadata_ref {
-            Some(v) => &v.events_data,
-            None => panic!("Metadata not loaded."), // TODO: Maybe load it automatically?
-        };
-        let event_value = self
-            .client
-            .get_stored_clvalue_from_dict(&events_data_uref, &id.to_string())
-            .await;
-
-        let bytes = event_value.inner_bytes();
-        let (_total_length, event_data) = u32::from_bytes(bytes).unwrap();
-        let (event_name, _rem2a) = String::from_bytes(event_data).unwrap();
-        let event_name = event_name.strip_prefix("event_").unwrap();
-
-        // Parse dynamic event data.
-        let dynamic_event_schema = match &self.events_schema {
-            Some(schema) => schema.0.get(event_name).unwrap().clone(),
-            None => panic!("Schema not loaded."), // TODO: Maybe load it automatically?
-        };
-        let dynamic_event = event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
-
-        dynamic_event
     }
 }

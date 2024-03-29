@@ -23,14 +23,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Alteratively - user locally defined schemas.
     // let schemas = cep78::schemas::get_local_schemas();
 
-    replicator.events_schema = Some(schemas);
-
     let num_events = fetcher.fetch_events_count().await?;
     println!("Events count: {}", num_events);
 
     // Fetch each event data.
     for event_id in 0..10 {
-        let dynamic_event = replicator.fetch_event(event_id).await;
+        let dynamic_event = fetcher.fetch_event(event_id, &schemas).await;
         println!("Event data parsed dynamically: {:?}", dynamic_event);
 
         match dynamic_event.name.as_str() {
