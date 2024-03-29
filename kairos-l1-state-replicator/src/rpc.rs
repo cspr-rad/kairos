@@ -1,4 +1,4 @@
-use crate::rpc_utils;
+use crate::{rpc_id::JsonRpcIdGenerator, rpc_utils};
 use casper_client::{rpcs::results::QueryGlobalStateResult, JsonRpcId, Verbosity};
 use casper_types::{CLValue, URef};
 
@@ -7,33 +7,23 @@ const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
 
 pub struct CasperClient {
     rpc_endpoint: String,
+    id_generator: JsonRpcIdGenerator,
 }
 
 impl CasperClient {
-    pub fn new_mainnet() -> Self {
-        Self {
-            rpc_endpoint: DEFAULT_MAINNET_RPC.into(),
-        }
-    }
-
-    pub fn new_testnet() -> Self {
-        Self {
-            rpc_endpoint: DEFAULT_TESTNET_RPC.into(),
-        }
-    }
-
-    pub fn from_address(rpc_endpoint: &str) -> Self {
+    pub fn new(rpc_endpoint: &str) -> Self {
         Self {
             rpc_endpoint: rpc_endpoint.to_string(),
+            id_generator: JsonRpcIdGenerator::default(),
         }
     }
 
-    // ID for each RPC request.
-    //
-    // NOTE: We use arbitrary fixed value, because casper_client does NOT use
-    // request batching, so ID is not really important.
-    fn get_rpc_id(&self) -> JsonRpcId {
-        1.into()
+    pub fn default_mainnet() -> Self {
+        Self::new(DEFAULT_MAINNET_RPC)
+    }
+
+    pub fn default_testnet() -> Self {
+        Self::new(DEFAULT_TESTNET_RPC)
     }
 
     // Verbosity for each RPC request.
@@ -49,8 +39,9 @@ impl CasperClient {
         // No block given means the latest available.
         let block_identifier = None;
 
+        let rpc_id = self.id_generator.next_id().into();
         let response = casper_client::get_state_root_hash(
-            self.get_rpc_id(),
+            rpc_id,
             &self.rpc_endpoint,
             self.get_verbosity(),
             block_identifier,
@@ -74,8 +65,9 @@ impl CasperClient {
             state_root_hash.clone().into(),
         );
 
+        let rpc_id = self.id_generator.next_id().into();
         let response = casper_client::query_global_state(
-            self.get_rpc_id(),
+            rpc_id,
             &self.rpc_endpoint,
             self.get_verbosity(),
             global_state_identifier,
@@ -149,8 +141,9 @@ impl CasperClient {
                 dictionary_item_key,
             );
 
+        let rpc_id = self.id_generator.next_id().into();
         let response = casper_client::get_dictionary_item(
-            self.get_rpc_id(),
+            rpc_id,
             &self.rpc_endpoint,
             self.get_verbosity(),
             state_root_hash.into(),

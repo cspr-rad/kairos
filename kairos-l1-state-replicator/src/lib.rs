@@ -7,6 +7,7 @@ use rpc::CasperClient;
 pub mod error;
 pub mod parser;
 pub mod rpc;
+pub mod rpc_id;
 pub mod rpc_utils;
 pub mod utils;
 

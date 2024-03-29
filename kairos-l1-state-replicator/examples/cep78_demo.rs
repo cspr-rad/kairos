@@ -7,7 +7,7 @@ mod cep78;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = CasperClient::new_mainnet();
+    let client = CasperClient::default_mainnet();
     let mut replicator = CasperStateReplicator::from_contract(
         client,
         "fe03021407879ce6fc5e035b70ff6a90941afdbea325a9164c7a497827efa7ff",
