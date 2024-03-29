@@ -1,29 +1,40 @@
 use std::ops::Deref;
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
-use serde::{Deserialize, Serialize};
 use tracing::*;
 
-use crate::{state::LockedBatchState, AppErr, PublicKey};
+use kairos_tx::asn::{SigningPayload, TransactionBody};
+
+use crate::routes::PayloadBody;
+use crate::{state::LockedBatchState, AppErr};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
 #[typed_path("/api/v1/deposit")]
 pub struct DepositPath;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct Deposit {
-    pub public_key: PublicKey,
-    pub amount: u64,
-}
-
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn deposit_handler(
     _: DepositPath,
     state: State<LockedBatchState>,
-    Json(Deposit { public_key, amount }): Json<Deposit>,
+    Json(body): Json<PayloadBody>,
 ) -> Result<(), AppErr> {
+    tracing::info!("parsing transaction data");
+    let signing_payload: SigningPayload =
+        body.payload.as_slice().try_into().context("payload err")?;
+    let deposit = match signing_payload.body {
+        TransactionBody::Deposit(deposit) => deposit,
+        _ => {
+            return Err(AppErr::set_status(
+                anyhow!("invalid transaction type"),
+                StatusCode::BAD_REQUEST,
+            ))
+        }
+    };
+    let amount = u64::try_from(deposit.amount).context("invalid amount")?;
+    let public_key = body.public_key;
+
     tracing::info!("TODO: verifying deposit");
 
     tracing::info!("TODO: adding deposit to batch");
