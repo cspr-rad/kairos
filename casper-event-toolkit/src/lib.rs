@@ -39,18 +39,10 @@ impl Fetcher {
 
     pub async fn fetch_schema(&self) -> Result<Schemas, ReplicatorError> {
         let events_schema_uref = &self.ces_metadata.events_schema;
-        let schema_value = self.client.get_stored_clvalue(&events_schema_uref).await;
-        let schema_bytes = schema_value
-            .to_bytes()
-            .map_err(|_e| "Unable to get schema bytes.")
-            .unwrap();
-        let (schema_clvalue, remainder) = casper_types::CLValue::from_bytes(&schema_bytes)
-            .map_err(|_e| "Unable to parse schema bytes.")
-            .unwrap();
-        assert!(remainder.len() == 0);
-
-        let (events_schema, rem) = Schemas::from_bytes(&schema_clvalue.inner_bytes()).unwrap();
-        assert!(rem.len() == 0);
+        let events_schema_value = self.client.get_stored_clvalue(&events_schema_uref).await;
+        let events_schema: Schemas = events_schema_value
+            .into_t()
+            .map_err(|e| ReplicatorError::InvalidCLValueType(e.to_string()))?;
 
         Ok(events_schema)
     }
