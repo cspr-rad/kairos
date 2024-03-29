@@ -482,6 +482,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "casper-event-toolkit"
+version = "0.1.0"
+dependencies = [
+ "casper-client",
+ "casper-event-standard",
+ "casper-types 3.0.0",
+ "hex",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "casper-hashing"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1707,18 +1719,6 @@ dependencies = [
  "hex",
  "predicates",
  "thiserror",
-]
-
-[[package]]
-name = "kairos-l1-state-replicator"
-version = "0.1.0"
-dependencies = [
- "casper-client",
- "casper-event-standard",
- "casper-types 3.0.0",
- "hex",
- "thiserror",
- "tokio",
 ]
 
 [[package]]

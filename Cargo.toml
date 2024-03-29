@@ -2,8 +2,8 @@
 resolver = "2"
 
 members = [
+  "casper-event-toolkit",
   "kairos-cli",
-  "kairos-l1-state-replicator",
   "kairos-server",
   "kairos-tx",
 ]

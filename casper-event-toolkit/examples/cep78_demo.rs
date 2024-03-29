@@ -1,7 +1,7 @@
 use casper_types::bytesrepr::FromBytes;
 
-use kairos_l1_state_replicator::rpc::client::CasperClient;
-use kairos_l1_state_replicator::CasperStateReplicator;
+use casper_event_toolkit::rpc::client::CasperClient;
+use casper_event_toolkit::CasperStateReplicator;
 
 mod cep78;
 

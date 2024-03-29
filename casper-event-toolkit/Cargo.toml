@@ -1,5 +1,5 @@
 [package]
-name = "kairos-l1-state-replicator"
+name = "casper-event-toolkit"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
