@@ -6,8 +6,8 @@ license.workspace = true
 
 [lib]
 
-[[bin]]
-name = "kairos-l1-state-replicator"
+[[example]]
+name = "cep78_demo"
 
 [dependencies]
 casper-client = "2.0.0"

@@ -1,4 +1,4 @@
-/// CEP-78 events defined with Casper Event Standard.
+/// CEP-78 events are defined with Casper Event Standard.
 /// Source: https://github.com/casper-ecosystem/cep-78-enhanced-nft/blob/7815f090b51b9153dd33a3d7c0ab939b61e5a411/contract/src/events/events_ces.rs
 ///
 use casper_event_standard::Event;

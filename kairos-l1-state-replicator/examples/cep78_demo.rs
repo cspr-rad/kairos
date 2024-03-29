@@ -1,10 +1,9 @@
-use casper_event_standard::Schemas;
 use casper_types::bytesrepr::FromBytes;
 
 use kairos_l1_state_replicator::rpc::CasperClient;
 use kairos_l1_state_replicator::CasperStateReplicator;
 
-mod cep78_events;
+mod cep78;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -17,16 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     replicator.fetch_schema().await;
 
     // Alteratively - user locally defined schemas.
-    let local_schemas = Schemas::new()
-        .with::<cep78_events::Mint>()
-        .with::<cep78_events::Burn>()
-        .with::<cep78_events::Approval>()
-        .with::<cep78_events::ApprovalRevoked>()
-        .with::<cep78_events::ApprovalForAll>()
-        .with::<cep78_events::Transfer>()
-        .with::<cep78_events::MetadataUpdated>()
-        .with::<cep78_events::VariablesSet>()
-        .with::<cep78_events::Migration>();
+    let local_schemas = cep78::schemas::get_local_schemas();
     //replicator.load_schema(local_schemas);
 
     replicator.fetch_events_count().await;
@@ -39,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         match dynamic_event.name.as_str() {
             "Mint" => {
                 let data = dynamic_event.to_ces_bytes();
-                let (parsed_further, rem) = cep78_events::Mint::from_bytes(&data).unwrap();
+                let (parsed_further, rem) = cep78::events::Mint::from_bytes(&data).unwrap();
                 assert!(rem.len() == 0);
                 println!("Event data parsed statically: {:?}", parsed_further);
             }
