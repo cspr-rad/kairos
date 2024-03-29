@@ -26,24 +26,19 @@ impl CasperClient {
         Self::new(DEFAULT_TESTNET_RPC)
     }
 
-    // Verbosity for each RPC request.
-    //
-    // NOTE: We do not want any extra output to be printed, so we use lowest
-    // possible level.
-    fn get_verbosity(&self) -> Verbosity {
-        casper_client::Verbosity::Low
-    }
-
     // Fetch latest state root hash.
     pub async fn get_state_root_hash(&self) -> [u8; 32] {
         // No block given means the latest available.
         let block_identifier = None;
 
+        // Common parameters.
         let rpc_id = self.id_generator.next_id().into();
+        let verbosity = casper_client::Verbosity::Low;
+
         let response = casper_client::get_state_root_hash(
             rpc_id,
             &self.rpc_endpoint,
-            self.get_verbosity(),
+            verbosity,
             block_identifier,
         )
         .await
@@ -65,11 +60,14 @@ impl CasperClient {
             state_root_hash.clone().into(),
         );
 
+        // Common parameters.
         let rpc_id = self.id_generator.next_id().into();
+        let verbosity = casper_client::Verbosity::Low;
+
         let response = casper_client::query_global_state(
             rpc_id,
             &self.rpc_endpoint,
-            self.get_verbosity(),
+            verbosity,
             global_state_identifier,
             key,
             path,
@@ -141,11 +139,14 @@ impl CasperClient {
                 dictionary_item_key,
             );
 
+        // Common parameters.
         let rpc_id = self.id_generator.next_id().into();
+        let verbosity = casper_client::Verbosity::Low;
+
         let response = casper_client::get_dictionary_item(
             rpc_id,
             &self.rpc_endpoint,
-            self.get_verbosity(),
+            verbosity,
             state_root_hash.into(),
             dictionary_item_identifier,
         )
