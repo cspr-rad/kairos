@@ -13,16 +13,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "fe03021407879ce6fc5e035b70ff6a90941afdbea325a9164c7a497827efa7ff",
     );
     replicator.fetch_metadata().await?;
-    replicator.fetch_schema().await;
-
-    // Alteratively - user locally defined schemas.
-    let local_schemas = cep78::schemas::get_local_schemas();
-    //replicator.load_schema(local_schemas);
 
     let fetcher = Fetcher {
         client: CasperClient::default_mainnet(),
         ces_metadata: replicator.ces_metadata_ref.clone().unwrap(),
     };
+
+    let schemas = fetcher.fetch_schema().await?;
+    // Alteratively - user locally defined schemas.
+    // let schemas = cep78::schemas::get_local_schemas();
+
+    replicator.load_schema(schemas);
 
     let num_events = fetcher.fetch_events_count().await?;
     println!("Events count: {}", num_events);

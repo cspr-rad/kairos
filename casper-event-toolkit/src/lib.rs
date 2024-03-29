@@ -36,6 +36,24 @@ impl Fetcher {
 
         Ok(events_length)
     }
+
+    pub async fn fetch_schema(&self) -> Result<Schemas, ReplicatorError> {
+        let events_schema_uref = &self.ces_metadata.events_schema;
+        let schema_value = self.client.get_stored_clvalue(&events_schema_uref).await;
+        let schema_bytes = schema_value
+            .to_bytes()
+            .map_err(|_e| "Unable to get schema bytes.")
+            .unwrap();
+        let (schema_clvalue, remainder) = casper_types::CLValue::from_bytes(&schema_bytes)
+            .map_err(|_e| "Unable to parse schema bytes.")
+            .unwrap();
+        assert!(remainder.len() == 0);
+
+        let (events_schema, rem) = Schemas::from_bytes(&schema_clvalue.inner_bytes()).unwrap();
+        assert!(rem.len() == 0);
+
+        Ok(events_schema)
+    }
 }
 
 pub struct CasperStateReplicator {
@@ -44,7 +62,7 @@ pub struct CasperStateReplicator {
     client: CasperClient,
     // Dynamic state.
     pub ces_metadata_ref: Option<CesMetadataRef>,
-    events_schema: Option<Schemas>,
+    pub events_schema: Option<Schemas>,
 }
 
 impl CasperStateReplicator {
@@ -79,26 +97,6 @@ impl CasperStateReplicator {
         });
 
         Ok(())
-    }
-
-    pub async fn fetch_schema(&mut self) {
-        let events_schema_uref = match &self.ces_metadata_ref {
-            Some(v) => &v.events_schema,
-            None => panic!("Metadata not loaded."), // TODO: Maybe load it automatically?
-        };
-        let schema_value = self.client.get_stored_clvalue(&events_schema_uref).await;
-        let schema_bytes = schema_value
-            .to_bytes()
-            .map_err(|_e| "Unable to get schema bytes.")
-            .unwrap();
-        let (schema_clvalue, remainder) = casper_types::CLValue::from_bytes(&schema_bytes)
-            .map_err(|_e| "Unable to parse schema bytes.")
-            .unwrap();
-        assert!(remainder.len() == 0);
-
-        let (events_schema2, rem) = Schemas::from_bytes(&schema_clvalue.inner_bytes()).unwrap();
-        assert!(rem.len() == 0);
-        self.events_schema = Some(events_schema2)
     }
 
     pub fn load_schema(&mut self, local_schemas: Schemas) {
