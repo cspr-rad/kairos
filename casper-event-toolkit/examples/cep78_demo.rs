@@ -1,8 +1,8 @@
 use casper_types::bytesrepr::FromBytes;
 
+use casper_event_toolkit::fetcher::Fetcher;
 use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
-use casper_event_toolkit::Fetcher;
 
 mod cep78;
 
