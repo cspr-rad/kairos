@@ -65,14 +65,18 @@ impl CasperStateReplicator {
         Ok(())
     }
 
-    pub async fn fetch_events_count(&mut self) {
+    pub async fn fetch_events_count(&mut self) -> Result<(), ReplicatorError> {
         let events_length_uref = match &self.ces_metadata_ref {
             Some(v) => &v.events_length,
             None => panic!("Metadata not loaded."), // TODO: Maybe load it automatically?
         };
         let events_length_value = self.client.get_stored_clvalue(&events_length_uref).await;
-        let events_length: u32 = events_length_value.into_t().unwrap();
+        let events_length: u32 = events_length_value
+            .into_t()
+            .map_err(|e| ReplicatorError::InvalidCLValueType(e.to_string()))?;
         self.events_length = Some(events_length);
+
+        Ok(())
     }
 
     pub async fn fetch_schema(&mut self) {

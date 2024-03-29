@@ -1,3 +1,4 @@
+use casper_types::CLValueError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -9,4 +10,7 @@ pub enum ReplicatorError {
     /// Expected different type of Casper key.
     #[error("key type invalid: '{context}'")]
     InvalidKeyType { context: String },
+
+    #[error("clvalue invalid: {0}")]
+    InvalidCLValueType(String),
 }
