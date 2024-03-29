@@ -2,16 +2,15 @@
 resolver = "2"
 
 members = [
-	"deposit-contract-tests",
-	"contract-types"
-]
-
-exclude = [
-	"deposit-contracts"
+  "deposit-contracts/malicious-reader",
+  "deposit-contracts/malicious-session",
+  "deposit-contracts/deposit-session",
+  "deposit-contracts/contract",
+  "contract-types",
 ]
 
 [workspace.package]
-name = "kairos-contract"
+name = "kairos-contracts"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"

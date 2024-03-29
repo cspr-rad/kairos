@@ -39,8 +39,34 @@
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
-          rustToolchain = inputs'.fenix.packages.stable.toolchain;
+          rustToolchain = with inputs'.fenix.packages; combine [
+            latest.toolchain
+            targets.wasm32-unknown-unknown.latest.rust-std
+          ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
+
+          kairosContractsAttrs = {
+            src = lib.cleanSourceWith {
+              src = craneLib.path ./contracts;
+              filter = path: type: craneLib.filterCargoSources path type;
+            };
+            cargoExtraArgs = "--target wasm32-unknown-unknown";
+            nativeBuildInputs = [ pkgs.binaryen ];
+            doCheck = false;
+            # Append "-optimized" to wasm files, to make the tests pass
+            postInstall = ''
+              directory="$out/bin/"
+              for file in "$directory"*.wasm; do
+                if [ -e "$file" ]; then
+                  # Extract the file name without extension
+                  filename=$(basename "$file" .wasm)
+                  # Append "-optimized" to the filename and add back the .wasm extension
+                  new_filename="$directory$filename-optimized.wasm"
+                  wasm-opt --strip-debug --signext-lowering "$file" -o "$new_filename"
+                fi
+              done
+            '';
+          };
 
           kairosNodeAttrs = {
             src = lib.cleanSourceWith {
@@ -48,6 +74,8 @@
               filter = path: type:
                 # Allow static files.
                 (lib.hasInfix "/fixtures/" path) ||
+                # ignore the contracts directory
+                !(lib.hasInfix "contracts/" path) ||
                 # Default filter (from crane) for .rs files.
                 (craneLib.filterCargoSources path type)
               ;
@@ -59,6 +87,9 @@
             ] ++ lib.optionals stdenv.isDarwin [
               libiconv
             ];
+
+            PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
+
             meta.mainProgram = "kairos-server";
           };
         in
@@ -83,6 +114,14 @@
             kairos-docs = craneLib.cargoDoc (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
             });
+
+            kairos-contracts-deps = craneLib.buildPackage (kairosContractsAttrs // {
+              pname = "kairos-contracts";
+            });
+
+            kairos-contracts = craneLib.buildPackage (kairosContractsAttrs // {
+              cargoArtifacts = self'.packages.kairos-contracts-deps;
+            });
           };
 
           checks = {
@@ -93,10 +132,22 @@
 
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+              # FIXME fix weird issue with rust-nightly and tarpaulin https://github.com/xd009642/tarpaulin/issues/1499
+              RUSTFLAGS = "-Cstrip=none";
             });
 
             audit = craneLib.cargoAudit {
               inherit (kairosNodeAttrs) src;
+              advisory-db = inputs.advisory-db;
+            };
+
+            kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
+              cargoArtifacts = self'.packages.kairos-contracts-deps;
+              cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+            });
+
+            kairos-contracts-audit = craneLib.cargoAudit {
+              inherit (kairosContractsAttrs) src;
               advisory-db = inputs.advisory-db;
             };
           };
