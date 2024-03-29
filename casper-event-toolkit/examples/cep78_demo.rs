@@ -1,7 +1,7 @@
 use casper_types::bytesrepr::FromBytes;
 
 use casper_event_toolkit::rpc::client::CasperClient;
-use casper_event_toolkit::CasperStateReplicator;
+use casper_event_toolkit::{CasperStateReplicator, Fetcher};
 
 mod cep78;
 
@@ -19,7 +19,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let local_schemas = cep78::schemas::get_local_schemas();
     //replicator.load_schema(local_schemas);
 
-    replicator.fetch_events_count().await?;
+    let fetcher = Fetcher {
+        client: CasperClient::default_mainnet(),
+        ces_metadata: replicator.ces_metadata_ref.clone().unwrap(),
+    };
+
+    let num_events = fetcher.fetch_events_count().await?;
+    println!("Events count: {}", num_events);
 
     // Fetch each event data.
     for event_id in 0..10 {

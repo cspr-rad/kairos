@@ -9,7 +9,8 @@ pub mod event;
 pub mod rpc;
 pub mod utils;
 
-struct CesMetadataRef {
+#[derive(Clone)]
+pub struct CesMetadataRef {
     pub events_schema: casper_types::URef,
     pub events_length: casper_types::URef,
     pub events_data: casper_types::URef,
@@ -19,13 +20,30 @@ const EVENTS_SCHEMA_KEY: &str = "__events_schema";
 const EVENTS_LENGTH_KEY: &str = "__events_length";
 const EVENTS_DATA_KEY: &str = "__events";
 
+pub struct Fetcher {
+    pub client: CasperClient,
+    // Metdadata
+    pub ces_metadata: CesMetadataRef,
+}
+
+impl Fetcher {
+    pub async fn fetch_events_count(&self) -> Result<u32, ReplicatorError> {
+        let events_length_uref = &self.ces_metadata.events_length;
+        let events_length_value = self.client.get_stored_clvalue(&events_length_uref).await;
+        let events_length: u32 = events_length_value
+            .into_t()
+            .map_err(|e| ReplicatorError::InvalidCLValueType(e.to_string()))?;
+
+        Ok(events_length)
+    }
+}
+
 pub struct CasperStateReplicator {
     // Config state.
     contract_hash: String,
     client: CasperClient,
     // Dynamic state.
-    ces_metadata_ref: Option<CesMetadataRef>,
-    events_length: Option<u32>,
+    pub ces_metadata_ref: Option<CesMetadataRef>,
     events_schema: Option<Schemas>,
 }
 
@@ -35,7 +53,6 @@ impl CasperStateReplicator {
             client,
             contract_hash: contract_hash.to_string(),
             ces_metadata_ref: None,
-            events_length: None,
             events_schema: None,
         }
     }
@@ -60,20 +77,6 @@ impl CasperStateReplicator {
             events_length: events_length_uref,
             events_schema: events_schema_uref,
         });
-
-        Ok(())
-    }
-
-    pub async fn fetch_events_count(&mut self) -> Result<(), ReplicatorError> {
-        let events_length_uref = match &self.ces_metadata_ref {
-            Some(v) => &v.events_length,
-            None => panic!("Metadata not loaded."), // TODO: Maybe load it automatically?
-        };
-        let events_length_value = self.client.get_stored_clvalue(&events_length_uref).await;
-        let events_length: u32 = events_length_value
-            .into_t()
-            .map_err(|e| ReplicatorError::InvalidCLValueType(e.to_string()))?;
-        self.events_length = Some(events_length);
 
         Ok(())
     }
@@ -131,6 +134,4 @@ impl CasperStateReplicator {
 
         dynamic_event
     }
-
-    //TODO: pub async fn get_events_count()
 }
