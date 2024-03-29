@@ -3,8 +3,10 @@ resolver = "2"
 
 members = [
   "kairos-cli",
+  "kairos-crypto",
   "kairos-server",
   "kairos-tx",
+  "kairos-test-utils",
   "contracts/contract-types",
   "contracts/deposit-contract-tests",
 ]
