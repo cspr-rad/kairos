@@ -33,7 +33,11 @@ impl Fetcher {
         Ok(events_schema)
     }
 
-    pub async fn fetch_event(&self, id: u64, event_schema: &Schemas) -> Event {
+    pub async fn fetch_event(
+        &self,
+        id: u64,
+        event_schema: &Schemas,
+    ) -> Result<Event, ReplicatorError> {
         let events_data_uref = &self.ces_metadata.events_data;
         let event_value = self
             .client
@@ -47,12 +51,12 @@ impl Fetcher {
 
         // Parse dynamic event data.
         let dynamic_event_schema = match event_schema.0.get(event_name) {
-            Some(schema) => schema.clone(),
-            None => panic!("Schema not loaded."), // TODO: Maybe load it automatically?
-        };
+            Some(schema) => Ok(schema.clone()),
+            None => Err(ReplicatorError::MissingEventSchema(event_name.to_string())),
+        }?;
         let dynamic_event =
             crate::event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
 
-        dynamic_event
+        Ok(dynamic_event)
     }
 }

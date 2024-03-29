@@ -12,4 +12,8 @@ pub enum ReplicatorError {
 
     #[error("clvalue invalid: {0}")]
     InvalidCLValueType(String),
+
+    /// Event name not found in loaded schema.
+    #[error("event schema missing: {0}")]
+    MissingEventSchema(String),
 }
