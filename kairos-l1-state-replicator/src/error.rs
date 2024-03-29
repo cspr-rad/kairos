@@ -1,4 +1,3 @@
-use casper_types::CLValueError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

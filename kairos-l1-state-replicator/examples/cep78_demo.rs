@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let local_schemas = cep78::schemas::get_local_schemas();
     //replicator.load_schema(local_schemas);
 
-    replicator.fetch_events_count().await;
+    replicator.fetch_events_count().await?;
 
     // Fetch each event data.
     for event_id in 0..10 {
