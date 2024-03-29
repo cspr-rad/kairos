@@ -1,9 +1,5 @@
 use crate::rpc_utils;
-use casper_client::{
-    rpcs::results::{GetDeployResult, QueryGlobalStateResult},
-    types::DeployHash,
-    JsonRpcId, Verbosity,
-};
+use casper_client::{rpcs::results::QueryGlobalStateResult, JsonRpcId, Verbosity};
 use casper_types::{CLValue, URef};
 
 const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
@@ -46,31 +42,6 @@ impl CasperClient {
     // possible level.
     fn get_verbosity(&self) -> Verbosity {
         casper_client::Verbosity::Low
-    }
-
-    // Fetch deployment by its hash.
-    //
-    // TODO: check if really used.
-    pub async fn get_deploy(&self, deploy_hash: &str) -> GetDeployResult {
-        // Build deploy hash.
-        let deploy_hash_bytes = hex::decode(deploy_hash).unwrap();
-        let deploy_hash_bytes: [u8; 32] = deploy_hash_bytes.try_into().unwrap();
-        let deploy_hash = DeployHash::new(deploy_hash_bytes.into());
-
-        // We are not interested in getting finalization approvals.
-        let finalized_approvals = false;
-
-        let response = casper_client::get_deploy(
-            self.get_rpc_id(),
-            &self.rpc_endpoint,
-            self.get_verbosity(),
-            deploy_hash,
-            finalized_approvals,
-        )
-        .await
-        .unwrap();
-
-        response.result
     }
 
     // Fetch latest state root hash.
