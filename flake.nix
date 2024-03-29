@@ -41,7 +41,7 @@
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
-          rustToolchain = inputs'.fenix.packages.stable.toolchain;
+          rustToolchain = inputs'.fenix.packages.latest.toolchain;
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
           kairosNodeAttrs = {
@@ -83,6 +83,11 @@
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+              cargoTestExtraArgs = "-- -Z unstable-options --format json --report-time | tee test-output.json";
+              postCheck = ''
+                mkdir -p $out
+                cp test-output.json $out
+              '';
             });
 
             default = self'.packages.kairos;
