@@ -1,22 +1,25 @@
 use casper_types::bytesrepr::FromBytes;
 
+use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
-use casper_event_toolkit::{CasperStateReplicator, Fetcher};
+use casper_event_toolkit::Fetcher;
 
 mod cep78;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = CasperClient::default_mainnet();
-    let mut replicator = CasperStateReplicator::from_contract(
-        client,
+
+    let metadata = CesMetadataRef::fetch_metadata(
+        &client,
         "fe03021407879ce6fc5e035b70ff6a90941afdbea325a9164c7a497827efa7ff",
-    );
-    replicator.fetch_metadata().await?;
+    )
+    .await
+    .unwrap();
 
     let fetcher = Fetcher {
         client: CasperClient::default_mainnet(),
-        ces_metadata: replicator.ces_metadata_ref.clone().unwrap(),
+        ces_metadata: metadata,
     };
 
     let schemas = fetcher.fetch_schema().await?;
