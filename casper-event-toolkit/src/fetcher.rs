@@ -15,7 +15,7 @@ pub struct Fetcher {
 impl Fetcher {
     pub async fn fetch_events_count(&self) -> Result<u32, ReplicatorError> {
         let events_length_uref = &self.ces_metadata.events_length;
-        let events_length_value = self.client.get_stored_clvalue(&events_length_uref).await;
+        let events_length_value = self.client.get_stored_clvalue(&events_length_uref).await?;
         let events_length: u32 = events_length_value
             .into_t()
             .map_err(|e| ReplicatorError::InvalidCLValueType(e.to_string()))?;
@@ -25,7 +25,7 @@ impl Fetcher {
 
     pub async fn fetch_schema(&self) -> Result<Schemas, ReplicatorError> {
         let events_schema_uref = &self.ces_metadata.events_schema;
-        let events_schema_value = self.client.get_stored_clvalue(&events_schema_uref).await;
+        let events_schema_value = self.client.get_stored_clvalue(&events_schema_uref).await?;
         let events_schema: Schemas = events_schema_value
             .into_t()
             .map_err(|e| ReplicatorError::InvalidCLValueType(e.to_string()))?;
@@ -42,7 +42,7 @@ impl Fetcher {
         let event_value = self
             .client
             .get_stored_clvalue_from_dict(&events_data_uref, &id.to_string())
-            .await;
+            .await?;
 
         let bytes = event_value.inner_bytes();
         let (_total_length, event_data) = u32::from_bytes(bytes).unwrap();

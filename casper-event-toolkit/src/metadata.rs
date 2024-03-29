@@ -19,7 +19,7 @@ impl CesMetadataRef {
         contract_hash: &str,
     ) -> Result<CesMetadataRef, ReplicatorError> {
         // Fetch contract named keys.
-        let contract_named_keys = client.get_contract_named_keys(contract_hash).await;
+        let contract_named_keys = client.get_contract_named_keys(contract_hash).await?;
 
         // Extract CES metadata from named keys.
         let events_schema_uref =

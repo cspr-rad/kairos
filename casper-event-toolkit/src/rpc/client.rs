@@ -1,7 +1,7 @@
 use casper_client::rpcs::results::QueryGlobalStateResult;
 use casper_types::{CLValue, URef};
 
-use crate::rpc::id::JsonRpcIdGenerator;
+use crate::{error::ReplicatorError, rpc::id::JsonRpcIdGenerator};
 
 const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
 const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
@@ -28,7 +28,7 @@ impl CasperClient {
     }
 
     // Fetch latest state root hash.
-    pub async fn get_state_root_hash(&self) -> [u8; 32] {
+    pub async fn get_state_root_hash(&self) -> Result<[u8; 32], ReplicatorError> {
         // No block given means the latest available.
         let block_identifier = None;
 
@@ -42,12 +42,11 @@ impl CasperClient {
             verbosity,
             block_identifier,
         )
-        .await
-        .unwrap();
+        .await?;
 
         let state_root_hash = response.result.state_root_hash.unwrap();
 
-        state_root_hash.into()
+        Ok(state_root_hash.into())
     }
 
     async fn query_global_state(
@@ -82,14 +81,14 @@ impl CasperClient {
     pub async fn get_contract_named_keys(
         &self,
         contract_hash: &str,
-    ) -> casper_types::contracts::NamedKeys {
+    ) -> Result<casper_types::contracts::NamedKeys, ReplicatorError> {
         // Build contract hash.
         let contract_hash_bytes = hex::decode(contract_hash).unwrap();
         let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();
         let contract_hash = casper_types::ContractWasmHash::new(contract_hash_bytes);
 
         // Fetch latest state root hash.
-        let state_root_hash = self.get_state_root_hash().await;
+        let state_root_hash = self.get_state_root_hash().await?;
 
         // Contract is stored directly at given hash.
         let key = casper_types::Key::Hash(contract_hash.value());
@@ -104,12 +103,15 @@ impl CasperClient {
         // Casper client use different type of named keys, so we have to additionally parse it.
         let contract = crate::rpc::utils::extract_named_keys(contract);
 
-        contract
+        Ok(contract)
     }
 
-    pub async fn get_stored_clvalue(&self, uref: &casper_types::URef) -> CLValue {
+    pub async fn get_stored_clvalue(
+        &self,
+        uref: &casper_types::URef,
+    ) -> Result<CLValue, ReplicatorError> {
         // Fetch latest state root hash.
-        let state_root_hash = self.get_state_root_hash().await;
+        let state_root_hash = self.get_state_root_hash().await?;
 
         // Build uref key.
         let key = casper_types::Key::URef(*uref);
@@ -121,16 +123,16 @@ impl CasperClient {
             _ => panic!("Expected CLValue."),
         };
 
-        clvalue
+        Ok(clvalue)
     }
 
     pub async fn get_stored_clvalue_from_dict(
         &self,
         dictionary_seed_uref: &URef,
         dictionary_item_key: &str,
-    ) -> CLValue {
+    ) -> Result<CLValue, ReplicatorError> {
         // Fetch latest state root hash.
-        let state_root_hash = self.get_state_root_hash().await;
+        let state_root_hash = self.get_state_root_hash().await?;
 
         // Build dictionary item identifier.
         let dictionary_item_key = dictionary_item_key.to_string();
@@ -158,6 +160,6 @@ impl CasperClient {
             _ => panic!("Expected CLValue."),
         };
 
-        clvalue
+        Ok(clvalue)
     }
 }

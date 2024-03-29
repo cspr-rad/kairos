@@ -16,4 +16,11 @@ pub enum ReplicatorError {
     /// Event name not found in loaded schema.
     #[error("event schema missing: {0}")]
     MissingEventSchema(String),
+
+    ///
+    #[error("rpc error: {error}")]
+    RpcError {
+        #[from]
+        error: casper_client::Error,
+    },
 }
