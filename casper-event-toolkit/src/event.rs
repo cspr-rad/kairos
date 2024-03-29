@@ -5,12 +5,12 @@ use casper_types::{
 };
 
 #[derive(Debug)]
-pub struct EventParsed {
+pub struct Event {
     pub name: String,
     pub fields: Vec<(String, CLValue)>,
 }
 
-impl EventParsed {
+impl Event {
     pub fn to_ces_bytes(&self) -> Vec<u8> {
         let mut result: Vec<u8> = vec![];
 
@@ -32,7 +32,7 @@ const EVENT_PREFIX: &str = "event_";
 pub fn parse_dynamic_event(
     dynamic_event_schema: Vec<(String, CLType2)>,
     event_data: &[u8],
-) -> EventParsed {
+) -> Event {
     let (event_name, mut remainder) = String::from_bytes(event_data).unwrap();
     let event_name = event_name.strip_prefix(EVENT_PREFIX).unwrap();
     let mut event_fields = vec![];
@@ -75,7 +75,7 @@ pub fn parse_dynamic_event(
         event_fields.push((field_name, field_value));
     }
 
-    EventParsed {
+    Event {
         name: event_name.into(),
         fields: event_fields,
     }

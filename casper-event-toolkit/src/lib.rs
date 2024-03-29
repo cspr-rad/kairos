@@ -1,7 +1,7 @@
 use casper_event_standard::Schemas;
 use casper_types::bytesrepr::{FromBytes, ToBytes};
 use error::ReplicatorError;
-use event::EventParsed;
+use event::Event;
 use rpc::client::CasperClient;
 
 pub mod error;
@@ -107,7 +107,7 @@ impl CasperStateReplicator {
         self.events_schema = Some(local_schemas);
     }
 
-    pub async fn fetch_event(&mut self, id: u64) -> EventParsed {
+    pub async fn fetch_event(&mut self, id: u64) -> Event {
         let events_data_uref = match &self.ces_metadata_ref {
             Some(v) => &v.events_data,
             None => panic!("Metadata not loaded."), // TODO: Maybe load it automatically?
