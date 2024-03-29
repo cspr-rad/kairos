@@ -1,6 +1,7 @@
-use crate::{rpc_id::JsonRpcIdGenerator, rpc_utils};
-use casper_client::{rpcs::results::QueryGlobalStateResult, JsonRpcId, Verbosity};
+use casper_client::rpcs::results::QueryGlobalStateResult;
 use casper_types::{CLValue, URef};
+
+use crate::rpc::id::JsonRpcIdGenerator;
 
 const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
 const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
@@ -101,7 +102,7 @@ impl CasperClient {
         };
 
         // Casper client use different type of named keys, so we have to additionally parse it.
-        let contract = rpc_utils::extract_named_keys(contract);
+        let contract = crate::rpc::utils::extract_named_keys(contract);
 
         contract
     }

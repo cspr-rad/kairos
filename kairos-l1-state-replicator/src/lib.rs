@@ -2,13 +2,11 @@ use casper_event_standard::Schemas;
 use casper_types::bytesrepr::{FromBytes, ToBytes};
 use error::ReplicatorError;
 use parser::EventParsed;
-use rpc::CasperClient;
+use rpc::client::CasperClient;
 
 pub mod error;
 pub mod parser;
 pub mod rpc;
-pub mod rpc_id;
-pub mod rpc_utils;
 pub mod utils;
 
 struct CesMetadataRef {
