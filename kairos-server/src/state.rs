@@ -5,10 +5,7 @@ use std::{
 
 use tokio::sync::RwLock;
 
-use crate::{
-    PublicKey,
-    config::Settings,
-};
+use crate::{config::Settings, PublicKey};
 use kairos_tx::asn::{Deposit, Transfer, Withdrawal};
 
 pub type LockedBatchState = Arc<RwLock<BatchState>>;
@@ -19,6 +16,7 @@ pub struct AppState {
     pub config: crate::config::Settings,
 }
 
+#[allow(clippy::new_without_default)]
 impl AppState {
     pub fn new() -> AppState {
         AppState {

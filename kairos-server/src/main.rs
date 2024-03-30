@@ -2,7 +2,6 @@ use kairos_server::{config::Settings, state::AppState};
 
 #[tokio::main]
 async fn main() {
-
     let config = Settings::new();
     config.initialize_logger();
 
