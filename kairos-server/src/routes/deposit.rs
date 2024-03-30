@@ -6,7 +6,7 @@ use axum_extra::routing::TypedPath;
 use serde::{Deserialize, Serialize};
 use tracing::*;
 
-use crate::{state::LockedBatchState, AppErr, PublicKey};
+use crate::{state::AppState, AppErr, PublicKey};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
 #[typed_path("/api/v1/deposit")]
@@ -21,15 +21,15 @@ pub struct Deposit {
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn deposit_handler(
     _: DepositPath,
-    state: State<LockedBatchState>,
+    state: State<AppState>,
     Json(Deposit { public_key, amount }): Json<Deposit>,
 ) -> Result<(), AppErr> {
     tracing::info!("TODO: verifying deposit");
 
     tracing::info!("TODO: adding deposit to batch");
 
-    let mut state = state.deref().write().await;
-    let account = state.balances.entry(public_key.clone());
+    let mut batch_state = state.batch_state.deref().write().await;
+    let account = batch_state.balances.entry(public_key.clone());
 
     let balance = account.or_insert(0);
     let updated_balance = balance.checked_add(amount).ok_or_else(|| {

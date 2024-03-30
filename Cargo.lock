@@ -1769,7 +1769,6 @@ dependencies = [
  "axum-test",
  "config",
  "dotenvy",
- "lazy_static",
  "proptest",
  "serde",
  "serde_json",

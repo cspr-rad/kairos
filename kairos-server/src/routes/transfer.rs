@@ -4,7 +4,7 @@ use axum_extra::routing::TypedPath;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 
-use crate::{state::LockedBatchState, AppErr, PublicKey, Signature};
+use crate::{state::AppState, state::LockedBatchState, AppErr, PublicKey, Signature};
 
 #[derive(TypedPath)]
 #[typed_path("/api/v1/transfer")]
@@ -21,7 +21,7 @@ pub struct Transfer {
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn transfer_handler(
     _: TransferPath,
-    State(state): State<LockedBatchState>,
+    State(state): State<AppState>,
     Json(Transfer {
         from,
         signature,
@@ -41,10 +41,10 @@ pub async fn transfer_handler(
     // We pre-check this read-only to error early without acquiring the write lock.
     // This prevents a DoS attack exploiting the write lock.
     tracing::info!("verifying transfer sender has sufficient funds");
-    check_sender_funds(&state, &from, amount, &to).await?;
+    check_sender_funds(&state.batch_state, &from, amount, &to).await?;
 
-    let mut state = state.write().await;
-    let from_balance = state.balances.get_mut(&from).ok_or_else(|| {
+    let mut batch_state = state.batch_state.write().await;
+    let from_balance = batch_state.balances.get_mut(&from).ok_or_else(|| {
         AppErr::set_status(
             anyhow!(
                 "Sender no longer has an account.
@@ -66,7 +66,7 @@ pub async fn transfer_handler(
         )
     })?;
 
-    let to_balance = state.balances.entry(to.clone()).or_insert_with(|| {
+    let to_balance = batch_state.balances.entry(to.clone()).or_insert_with(|| {
         tracing::info!("creating new account for receiver");
         0
     });

@@ -8,11 +8,27 @@ use tokio::sync::RwLock;
 use crate::{
     routes::{deposit::Deposit, transfer::Transfer, withdraw::Withdrawal},
     PublicKey,
+    config::Settings,
 };
 
 pub type LockedBatchState = Arc<RwLock<BatchState>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+pub struct AppState {
+    pub batch_state: Arc<tokio::sync::RwLock<BatchState>>,
+    pub config: crate::config::Settings,
+}
+
+impl AppState {
+    pub fn new() -> AppState {
+        AppState {
+            batch_state: BatchState::new(),
+            config: Settings::new(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct BatchState {
     pub balances: HashMap<PublicKey, u64>,
     pub batch_epoch: u64,

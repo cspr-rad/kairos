@@ -1,7 +1,7 @@
-use config::{Config as Configuration, Environment, File};
+use config::{Config as Configuration, Environment};
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
-use std::{fs::File as FsFile, net::SocketAddr, path::Path};
+use std::{fs::File as FsFile, net::SocketAddr};
 use tracing::{subscriber::set_global_default, Level};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
@@ -64,12 +64,6 @@ impl Settings {
 
         // Start building the configuration
         let mut builder = Configuration::builder();
-
-        // Check if the kairos_config.toml file exists before adding it as a source
-        let config_path = "kairos_config.toml";
-        if Path::new(config_path).exists() {
-            builder = builder.add_source(File::new(config_path, config::FileFormat::Toml));
-        }
 
         // Add environment variables as a source
         builder = builder.add_source(Environment::with_prefix("KAIROS").separator("_"));

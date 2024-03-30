@@ -8,7 +8,7 @@ use kairos_server::{
         transfer::{Transfer, TransferPath},
         withdraw::{WithdrawPath, Withdrawal},
     },
-    state::BatchState,
+    state::AppState,
 };
 use tracing_subscriber::{prelude::*, EnvFilter};
 
@@ -23,7 +23,7 @@ fn new_test_app() -> TestServer {
     });
     let config = TestServerConfig::builder().mock_transport().build();
 
-    TestServer::new_with_config(kairos_server::app_router(BatchState::new()), config).unwrap()
+    TestServer::new_with_config(kairos_server::app_router(AppState::new()), config).unwrap()
 }
 
 #[tokio::test]

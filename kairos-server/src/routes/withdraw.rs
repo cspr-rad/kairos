@@ -4,7 +4,7 @@ use axum_extra::routing::TypedPath;
 use serde::{Deserialize, Serialize};
 use tracing::*;
 
-use crate::{state::LockedBatchState, AppErr, PublicKey};
+use crate::{state::AppState, state::LockedBatchState, AppErr, PublicKey};
 
 #[derive(Debug, TypedPath)]
 #[typed_path("/api/v1/withdraw")]
@@ -20,7 +20,7 @@ pub struct Withdrawal {
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn withdraw_handler(
     _: WithdrawPath,
-    State(state): State<LockedBatchState>,
+    State(state): State<AppState>,
     Json(Withdrawal {
         public_key,
         signature,
@@ -30,12 +30,12 @@ pub async fn withdraw_handler(
     tracing::info!("TODO: verifying withdrawal signature");
 
     tracing::info!("verifying withdrawal sender has sufficient funds");
-    check_sender_funds(&state, &public_key, amount).await?;
+    check_sender_funds(&state.batch_state, &public_key, amount).await?;
 
     tracing::info!("TODO: adding withdrawal to batch");
 
-    let mut state = state.write().await;
-    let from_balance = state.balances.get_mut(&public_key).ok_or_else(|| {
+    let mut batch_state = state.batch_state.write().await;
+    let from_balance = batch_state.balances.get_mut(&public_key).ok_or_else(|| {
         AppErr::set_status(
             anyhow!(
                 "Sender no longer has an account.
@@ -60,7 +60,7 @@ pub async fn withdraw_handler(
     *from_balance = updated_balance;
 
     if updated_balance == 0 {
-        state.balances.remove(&public_key);
+        batch_state.balances.remove(&public_key);
     }
 
     tracing::info!(
