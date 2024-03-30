@@ -23,4 +23,7 @@ pub enum ReplicatorError {
         #[from]
         error: casper_client::Error,
     },
+
+    #[error("parsing error for '{context}'")]
+    ParsingError { context: &'static str },
 }

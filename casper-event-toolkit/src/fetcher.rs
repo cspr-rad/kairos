@@ -45,9 +45,20 @@ impl Fetcher {
             .await?;
 
         let bytes = event_value.inner_bytes();
-        let (_total_length, event_data) = u32::from_bytes(bytes).unwrap();
-        let (event_name, _rem2a) = String::from_bytes(event_data).unwrap();
-        let event_name = event_name.strip_prefix("event_").unwrap();
+        let (_total_length, event_data) =
+            u32::from_bytes(bytes).map_err(|_e| ReplicatorError::ParsingError {
+                context: "event data length",
+            })?;
+        let (event_name, _rem2a) =
+            String::from_bytes(event_data).map_err(|_e| ReplicatorError::ParsingError {
+                context: "event name",
+            })?;
+        let event_name =
+            event_name
+                .strip_prefix("event_")
+                .ok_or_else(|| ReplicatorError::ParsingError {
+                    context: "event prefix",
+                })?;
 
         // Parse dynamic event data.
         let dynamic_event_schema = match event_schema.0.get(event_name) {
