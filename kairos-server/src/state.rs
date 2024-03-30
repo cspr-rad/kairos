@@ -6,10 +6,10 @@ use std::{
 use tokio::sync::RwLock;
 
 use crate::{
-    routes::{deposit::Deposit, transfer::Transfer, withdraw::Withdrawal},
     PublicKey,
     config::Settings,
 };
+use kairos_tx::asn::{Deposit, Transfer, Withdrawal};
 
 pub type LockedBatchState = Arc<RwLock<BatchState>>;
 
@@ -28,7 +28,7 @@ impl AppState {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct BatchState {
     pub balances: HashMap<PublicKey, u64>,
     pub batch_epoch: u64,

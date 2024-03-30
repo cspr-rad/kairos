@@ -3,6 +3,8 @@ pub mod errors;
 pub mod routes;
 pub mod state;
 
+mod utils;
+
 use axum::Router;
 use axum_extra::routing::RouterExt;
 use state::AppState;

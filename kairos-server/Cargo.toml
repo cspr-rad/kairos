@@ -26,6 +26,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 config = "0.14.0"
 dotenvy = "0.15.7"
+hex = "0.4"
+kairos-tx = { path = "../kairos-tx" }
 
 [dev-dependencies]
 proptest = "1"

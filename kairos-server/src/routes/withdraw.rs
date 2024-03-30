@@ -1,32 +1,38 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
-use serde::{Deserialize, Serialize};
 use tracing::*;
 
 use crate::{state::AppState, state::LockedBatchState, AppErr, PublicKey};
+use kairos_tx::asn::{SigningPayload, TransactionBody};
+
+use crate::routes::PayloadBody;
 
 #[derive(Debug, TypedPath)]
 #[typed_path("/api/v1/withdraw")]
 pub struct WithdrawPath;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct Withdrawal {
-    pub public_key: PublicKey,
-    pub signature: String,
-    pub amount: u64,
-}
-
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn withdraw_handler(
     _: WithdrawPath,
     State(state): State<AppState>,
-    Json(Withdrawal {
-        public_key,
-        signature,
-        amount,
-    }): Json<Withdrawal>,
+    Json(body): Json<PayloadBody>,
 ) -> Result<(), AppErr> {
+    tracing::info!("parsing transaction data");
+    let signing_payload: SigningPayload =
+        body.payload.as_slice().try_into().context("payload err")?;
+    let withdrawal = match signing_payload.body {
+        TransactionBody::Withdrawal(withdrawal) => withdrawal,
+        _ => {
+            return Err(AppErr::set_status(
+                anyhow!("invalid transaction type"),
+                StatusCode::BAD_REQUEST,
+            ))
+        }
+    };
+    let amount = u64::try_from(withdrawal.amount).context("invalid amount")?;
+    let public_key = body.public_key;
+
     tracing::info!("TODO: verifying withdrawal signature");
 
     tracing::info!("verifying withdrawal sender has sufficient funds");

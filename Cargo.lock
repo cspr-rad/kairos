@@ -1755,7 +1755,17 @@ dependencies = [
  "casper-types 4.0.1",
  "clap",
  "hex",
+ "kairos-crypto",
  "predicates",
+ "thiserror",
+]
+
+[[package]]
+name = "kairos-crypto"
+version = "0.1.0"
+dependencies = [
+ "casper-types 4.0.1",
+ "hex",
  "thiserror",
 ]
 
@@ -1769,6 +1779,8 @@ dependencies = [
  "axum-test",
  "config",
  "dotenvy",
+ "hex",
+ "kairos-tx",
  "proptest",
  "serde",
  "serde_json",
