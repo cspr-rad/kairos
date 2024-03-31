@@ -17,8 +17,8 @@ use constants::{
     KAIROS_MOST_RECENT_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
     SECURITY_BADGES,
 };
-mod detail;
-use detail::{get_immediate_caller, get_optional_named_arg_with_user_errors};
+mod utils;
+use utils::{get_immediate_caller, get_optional_named_arg_with_user_errors};
 mod error;
 use error::DepositError;
 mod security;

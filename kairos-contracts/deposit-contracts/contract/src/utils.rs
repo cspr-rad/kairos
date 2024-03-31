@@ -74,7 +74,10 @@ pub fn get_optional_named_arg_with_user_errors<T: FromBytes>(
     let maybe_named_arg_with_user_errors = get_named_arg_with_user_errors::<T>(name, invalid);
     match maybe_named_arg_with_user_errors {
         Ok(val) => Some(val),
-        Err(_) => None,
+        Err(err) => match err {
+            DepositError::MissingOptionalArgument => None,
+            _ => runtime::revert(err),
+        },
     }
 }
 

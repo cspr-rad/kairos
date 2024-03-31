@@ -4,4 +4,4 @@ result
 target
 .tmp
 .nixos-test-history
-contracts/deposit-contract-tests/.env
+.env

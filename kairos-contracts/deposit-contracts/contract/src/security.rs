@@ -2,8 +2,8 @@ use alloc::{collections::BTreeMap, vec, vec::Vec};
 
 use crate::{
     constants::SECURITY_BADGES,
-    detail::{get_immediate_caller, get_uref},
     error::DepositError,
+    utils::{get_immediate_caller, get_uref},
 };
 #[allow(unused_imports)]
 use casper_contract::{
