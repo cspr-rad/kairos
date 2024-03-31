@@ -29,9 +29,10 @@ use contract_types::Deposit;
 
 // This entry point is called once when the contract is installed
 // and sets up the security badges with the installer as an admin or the
-// optional list of admins that was passed to the installation session as a runtime argument.
+// optional list of admins.
+// The optional list of admins is passed to the installation session as a runtime argument.
 // The contract purse will be created in contract context so that it is "owned" by the contract
-// instead of the installing account.
+// rather than the installing account.
 #[no_mangle]
 pub extern "C" fn init() {
     if runtime::get_key(KAIROS_DEPOSIT_PURSE).is_some() {
@@ -40,9 +41,11 @@ pub extern "C" fn init() {
     let security_badges_dict = storage::new_dictionary(SECURITY_BADGES)
         .unwrap_or_revert_with(DepositError::FailedToCreateSecurityBadgesDict);
     let installing_entity = runtime::get_caller();
+
     // Assign the admin role to the installer, regardless of the list of admins that was
-    // passed to the installation session. The installer is by default an admin and
-    // this admin access needs to be revoked after the initialization if it is not wanted.
+    // passed to the installation session.
+    // The installer is by default an admin and the installer's admin role
+    // needs to be revoked after the initialization if it is not wanted.
     storage::dictionary_put(
         security_badges_dict,
         &base64::encode(Key::from(installing_entity).to_bytes().unwrap_or_revert()),
@@ -80,7 +83,7 @@ pub extern "C" fn get_purse() {
 
 // Entry point called by a user through session code to deposit funds.
 // Due to Casper < 2.0 purse management and access control, it is necessary that
-// a temporary purse is funded and passed to the deposit contract since this is
+// a temporary purse is funded and passed to the deposit contract, since this is
 // the only secure method of making a payment to a contract purse.
 #[no_mangle]
 pub extern "C" fn deposit() {
@@ -150,7 +153,7 @@ pub extern "C" fn incr_last_processed_deposit_counter() {
 }
 
 // Update the security badge for one or multiple accounts
-// This entry point is used to assign and revoke rolse such
+// This entry point is used to assign and revoke roles such
 // as the "Admin" role.
 #[no_mangle]
 pub extern "C" fn update_security_badges() {
@@ -164,10 +167,11 @@ pub extern "C" fn update_security_badges() {
             badge_map.insert(account_key, Some(SecurityBadge::Admin));
         }
     }
-    // remove the caller from the admin list,
-    // by inserting None as the security badge
-    // accounts with no security badge will not be considered part of a badge group
-    // and therefore loose the ability to call EPs that call `access_control_check(vec![SecurityBadge::Admin]);` o.e.
+    // Remove the caller from the admin list,
+    // by inserting None as the security badge.
+    // Accounts with no security badge will not be considered part of a badge group
+    // and therefore loose the ability to call EPs that contain
+    // `access_control_check(vec![SecurityBadge::Admin]);` o.e.
     let caller = get_immediate_caller().unwrap_or_revert();
     badge_map.insert(caller, None);
     security::update_security_badges(&badge_map);
@@ -175,9 +179,6 @@ pub extern "C" fn update_security_badges() {
 
 #[no_mangle]
 pub extern "C" fn call() {
-    // TODO why is this unused?
-    let _caller = Key::from(runtime::get_caller());
-
     let admin_list: Option<Vec<Key>> =
         get_optional_named_arg_with_user_errors(ADMIN_LIST, DepositError::InvalidAdminList);
 
@@ -217,9 +218,9 @@ pub extern "C" fn call() {
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_DEPOSIT_CONTRACT_NAME, contract_hash_key);
 
-    // prepare runtime arguments for contract initialization,
-    // propagating the list of admin accounts that was passed
-    // to the installation session
+    // Prepare runtime arguments for contract initialization,
+    // passing the list of admin accounts that was passed
+    // to the installation session.
     let mut init_args = runtime_args! {};
     if let Some(admin_list) = admin_list {
         init_args.insert(ADMIN_LIST, admin_list).unwrap_or_revert();
