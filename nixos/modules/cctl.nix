@@ -6,14 +6,13 @@ let
     mkIf
     mkMerge
     mkEnableOption
-    mdDoc
     ;
   cfg = config.services.cctl;
 in
 {
   options.services.cctl = {
 
-    enable = mkEnableOption (mdDoc "cctl");
+    enable = mkEnableOption ("cctl");
 
     package = mkOption {
       type = types.package;
@@ -23,20 +22,14 @@ in
       type = types.port;
       default = 11101;
       example = 60000;
-      description = mdDoc ''
+      description = ''
         Port to listen on.
         TODO make port configurable in cctl
       '';
     };
 
     logLevel = mkOption {
-      type = types.enum [
-        "error"
-        "warn"
-        "info"
-        "debug"
-        "trace"
-      ];
+      type = types.str;
       default = "info";
       description = ''
         The log-level that should be used.
@@ -49,7 +42,7 @@ in
     systemd.services.cctl =
       {
         description = "cctl";
-        documentation = [ "" ];
+        documentation = [ "A collection of bash applications to work with a local casper-node network, turned to a systemd service." ];
         wantedBy = [ "multi-user.target" ];
         after = [ "network-online.target" ];
         requires = [ "network-online.target" ];
