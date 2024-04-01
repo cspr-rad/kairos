@@ -2,6 +2,8 @@
 , mkKairosHostConfig
 , kairos
 , testResources ? ../../kairos-cli/tests/fixtures
+, cctlModule
+, casper-client-rs
 }:
 nixosTest {
   name = "kairos e2e test";
@@ -10,6 +12,7 @@ nixosTest {
     server = { config, pkgs, lib, ... }: {
       imports = [
         (mkKairosHostConfig "kairos")
+        cctlModule
       ];
 
       # modify acme for nixos-test environment
@@ -17,6 +20,8 @@ nixosTest {
         preliminarySelfsigned = true;
         defaults.server = "https://example.com"; # don't spam the acme production server
       };
+      services.cctl.enable = true;
+      environment.systemPackages = [ casper-client-rs ];
     };
 
     client = { config, pkgs, nodes, ... }: {
@@ -29,11 +34,15 @@ nixosTest {
 
     start_all()
 
+    kairos.wait_for_unit("cctl.service")
+
     kairos.wait_for_unit("kairos.service")
     kairos.wait_for_unit("nginx.service")
     kairos.wait_for_open_port(80)
 
     client.wait_for_unit ("multi-user.target")
+
+    kairos.succeed("casper-client get-node-status --node-address http://localhost:11101")
 
     deposit_request = { "public_key": "publickey", "amount": 10 }
     # REST API
