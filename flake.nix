@@ -116,6 +116,17 @@
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
+            cctld = pkgs.runCommand "cctld-wrapped"
+              {
+                buildInputs = [ pkgs.makeWrapper ];
+                meta.mainProgram = "cctld";
+              }
+              ''
+                mkdir -p $out/bin
+                makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
+                  --set PATH ${pkgs.lib.makeBinPath [inputs'.csprpkgs.packages.cctl ]}
+              '';
+
             default = self'.packages.kairos;
 
             kairos-docs = craneLib.cargoDoc (kairosNodeAttrs // {
