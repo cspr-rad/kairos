@@ -6,7 +6,7 @@ use kairos_server::{
     routes::{deposit::DepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody},
     state::BatchState,
 };
-use kairos_tx::helpers::{make_deposit, make_transfer, make_withdrawal};
+use kairos_tx::asn::{Deposit, SigningPayload, Transfer, Withdrawal};
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
@@ -32,7 +32,10 @@ async fn test_deposit_withdraw() {
     let amount: u64 = 100;
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_deposit(nonce, epoch, amount).unwrap(),
+        payload: SigningPayload::new(nonce, epoch, Deposit::new(amount))
+            .try_into()
+            .unwrap(),
+
         signature: vec![],
     };
 
@@ -61,7 +64,9 @@ async fn test_deposit_withdraw() {
     let amount: u64 = 50;
     let withdrawal = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, epoch, amount).unwrap(),
+        payload: SigningPayload::new(nonce, epoch, Withdrawal::new(amount))
+            .try_into()
+            .unwrap(),
         signature: vec![],
     };
 
@@ -77,7 +82,9 @@ async fn test_deposit_withdraw() {
     let amount: u64 = 51;
     let withdrawal = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, epoch, amount).unwrap(),
+        payload: SigningPayload::new(nonce, epoch, Withdrawal::new(amount))
+            .der_encode()
+            .unwrap(),
         signature: vec![],
     };
 
@@ -93,7 +100,9 @@ async fn test_deposit_withdraw() {
     let amount: u64 = 50;
     let withdrawal = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, epoch, amount).unwrap(),
+        payload: SigningPayload::new(nonce, epoch, Withdrawal::new(amount))
+            .try_into()
+            .unwrap(),
         signature: vec![],
     };
 
@@ -120,7 +129,9 @@ async fn test_deposit_transfer_withdraw() {
     let amount: u64 = 100;
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_deposit(nonce, epoch, amount).unwrap(),
+        payload: SigningPayload::new(nonce, epoch, Deposit::new(amount))
+            .try_into()
+            .unwrap(),
         signature: vec![],
     };
 
@@ -130,7 +141,9 @@ async fn test_deposit_transfer_withdraw() {
     let recipient: &[u8] = "bob_key".as_bytes();
     let transfer = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_transfer(nonce, epoch, recipient, amount).unwrap(),
+        payload: SigningPayload::new(nonce, epoch, Transfer::new(recipient, amount))
+            .try_into()
+            .unwrap(),
         signature: vec![],
     };
 
@@ -139,7 +152,9 @@ async fn test_deposit_transfer_withdraw() {
     let amount: u64 = 50;
     let withdrawal = PayloadBody {
         public_key: "bob_key".into(),
-        payload: make_withdrawal(nonce, epoch, amount).unwrap(),
+        payload: SigningPayload::new(nonce, epoch, Withdrawal::new(amount))
+            .try_into()
+            .unwrap(),
         signature: vec![],
     };
 

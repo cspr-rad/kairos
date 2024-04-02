@@ -11,10 +11,22 @@ use rasn::{Decode, Encode};
 #[rasn(delegate)]
 pub struct PublicKey(pub(crate) OctetString);
 
+impl From<&[u8]> for PublicKey {
+    fn from(value: &[u8]) -> Self {
+        PublicKey(OctetString::copy_from_slice(value))
+    }
+}
+
 // Converts an ASN.1 decoded public key into raw byte representation.
 impl From<PublicKey> for Vec<u8> {
     fn from(value: PublicKey) -> Self {
         value.0.into()
+    }
+}
+
+impl<const N: usize> From<[u8; N]> for PublicKey {
+    fn from(value: [u8; N]) -> Self {
+        PublicKey(OctetString::copy_from_slice(&value))
     }
 }
 
@@ -37,6 +49,12 @@ impl TryFrom<Amount> for u64 {
     }
 }
 
+impl From<u64> for Amount {
+    fn from(value: u64) -> Self {
+        Amount(Integer::from(value))
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(delegate)]
 pub struct Nonce(pub(crate) Integer);
@@ -55,6 +73,12 @@ impl TryFrom<Nonce> for u64 {
     }
 }
 
+impl From<u64> for Nonce {
+    fn from(value: u64) -> Self {
+        Nonce(Integer::from(value))
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(delegate)]
 pub struct Epoch(pub(crate) Integer);
@@ -70,12 +94,77 @@ impl TryFrom<Epoch> for u64 {
     }
 }
 
+impl From<u64> for Epoch {
+    fn from(value: u64) -> Self {
+        Epoch(Integer::from(value))
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
 pub struct SigningPayload {
     pub nonce: Nonce,
     pub epoch: Epoch,
     pub body: TransactionBody,
+}
+
+impl SigningPayload {
+    pub fn new(
+        nonce: impl Into<Nonce>,
+        epoch: impl Into<Epoch>,
+        body: impl Into<TransactionBody>,
+    ) -> Self {
+        Self {
+            nonce: nonce.into(),
+            epoch: epoch.into(),
+            body: body.into(),
+        }
+    }
+
+    pub fn new_deposit(
+        nonce: impl Into<Nonce>,
+        epoch: impl Into<Epoch>,
+        amount: impl Into<Amount>,
+    ) -> Self {
+        Self {
+            nonce: nonce.into(),
+            epoch: epoch.into(),
+            body: TransactionBody::Deposit(Deposit::new(amount)),
+        }
+    }
+
+    pub fn new_transfer(
+        nonce: impl Into<Nonce>,
+        epoch: impl Into<Epoch>,
+        recipient: impl Into<PublicKey>,
+        amount: impl Into<Amount>,
+    ) -> Self {
+        Self {
+            nonce: nonce.into(),
+            epoch: epoch.into(),
+            body: TransactionBody::Transfer(Transfer::new(recipient, amount)),
+        }
+    }
+
+    pub fn new_withdrawal(
+        nonce: impl Into<Nonce>,
+        epoch: impl Into<Epoch>,
+        amount: impl Into<Amount>,
+    ) -> Self {
+        Self {
+            nonce: nonce.into(),
+            epoch: epoch.into(),
+            body: TransactionBody::Withdrawal(Withdrawal::new(amount)),
+        }
+    }
+
+    pub fn der_encode(&self) -> Result<Vec<u8>, TxError> {
+        rasn::der::encode(self).map_err(TxError::EncodeError)
+    }
+
+    pub fn der_decode(value: impl AsRef<[u8]>) -> Result<Self, TxError> {
+        rasn::der::decode(value.as_ref()).map_err(TxError::DecodeError)
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
@@ -90,10 +179,36 @@ pub enum TransactionBody {
     Withdrawal(Withdrawal),
 }
 
+impl From<Deposit> for TransactionBody {
+    fn from(value: Deposit) -> Self {
+        TransactionBody::Deposit(value)
+    }
+}
+
+impl From<Transfer> for TransactionBody {
+    fn from(value: Transfer) -> Self {
+        TransactionBody::Transfer(value)
+    }
+}
+
+impl From<Withdrawal> for TransactionBody {
+    fn from(value: Withdrawal) -> Self {
+        TransactionBody::Withdrawal(value)
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
 pub struct Deposit {
     pub amount: Amount,
+}
+
+impl Deposit {
+    pub fn new(amount: impl Into<Amount>) -> Self {
+        Self {
+            amount: amount.into(),
+        }
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
@@ -103,17 +218,34 @@ pub struct Transfer {
     pub amount: Amount,
 }
 
+impl Transfer {
+    pub fn new(recipient: impl Into<PublicKey>, amount: impl Into<Amount>) -> Self {
+        Self {
+            recipient: recipient.into(),
+            amount: amount.into(),
+        }
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
 pub struct Withdrawal {
     pub amount: Amount,
 }
 
+impl Withdrawal {
+    pub fn new(amount: impl Into<Amount>) -> Self {
+        Self {
+            amount: amount.into(),
+        }
+    }
+}
+
 impl TryFrom<&[u8]> for SigningPayload {
     type Error = TxError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        rasn::der::decode(value).map_err(TxError::DecodeError)
+        SigningPayload::der_decode(value)
     }
 }
 
@@ -121,20 +253,22 @@ impl TryFrom<SigningPayload> for Vec<u8> {
     type Error = TxError;
 
     fn try_from(value: SigningPayload) -> Result<Self, Self::Error> {
-        rasn::der::encode(&value).map_err(TxError::EncodeError)
+        value.der_encode()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::{make_deposit, make_transfer, make_withdrawal};
+    use crate::asn::SigningPayload;
 
     #[test]
     fn test_encode_deposit() {
         const NONCE: u64 = 1;
         const EPOCH: u64 = 0;
         const AMOUNT: u64 = 1000;
-        let encoded = make_deposit(EPOCH, NONCE, AMOUNT).unwrap();
+        let encoded = SigningPayload::new_deposit(NONCE, EPOCH, AMOUNT)
+            .der_encode()
+            .unwrap();
 
         assert_eq!(
             encoded,
@@ -143,10 +277,10 @@ mod tests {
                 0b00001100, // L: 0b0 <- short form, 0b0001100 (12) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
                 0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
-                0b00000000, // V: 0b00000000 (0) <- value
+                0b00000001, // V: 0b00000001 (1) <- value
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
                 0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
-                0b00000001, // V: 0b00000001 (1) <- value
+                0b00000000, // V: 0b00000000 (0) <- value
                 0b10100000, // T: 0b10 <- context-specific, 0b1 <- constructed, 0b00000 (0) <- CHOICE index
                 0b00000100, // L: 0b0 <- short form, 0b0000100 (4) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
@@ -163,14 +297,16 @@ mod tests {
         const EPOCH: u64 = 0;
         const RECIPIENT: [u8; 32] = [11; 32];
         const AMOUNT: u64 = 1000;
-        let encoded = make_transfer(EPOCH, NONCE, &RECIPIENT, AMOUNT).unwrap();
+        let encoded = SigningPayload::new_transfer(NONCE, EPOCH, RECIPIENT, AMOUNT)
+            .der_encode()
+            .unwrap();
 
         assert_eq!(
             encoded,
             vec![
                 0x30, 0x2E, // SEQUENCE (43 bytes)
-                0x02, 0x01, 0x00, // INTEGER (1 byte), value = 1
                 0x02, 0x01, 0x01, // INTEGER (1 byte), value = 1
+                0x02, 0x01, 0x00, // INTEGER (1 byte), value = 0
                 0xA1, 0x26, // CHOICE (38 bytes), index = 1 (transfer body)
                 0x04, 0x20, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B,
                 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B,
@@ -186,11 +322,13 @@ mod tests {
         const EPOCH: u64 = 0;
         const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = make_withdrawal(EPOCH, NONCE, AMOUNT).unwrap();
+        let encoded = SigningPayload::new_withdrawal(NONCE, EPOCH, AMOUNT)
+            .der_encode()
+            .unwrap();
 
         assert_eq!(
             encoded,
-            vec![48, 12, 2, 1, 0, 2, 1, 1, 162, 4, 2, 2, 3, 232]
+            vec![48, 12, 2, 1, 1, 2, 1, 0, 162, 4, 2, 2, 3, 232]
         );
     }
 }
