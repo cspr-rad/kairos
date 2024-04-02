@@ -132,14 +132,18 @@ mod tests {
     #[test]
     fn test_encode_deposit() {
         const NONCE: u64 = 1;
+        const EPOCH: u64 = 0;
         const AMOUNT: u64 = 1000;
-        let encoded = make_deposit(NONCE, AMOUNT).unwrap();
+        let encoded = make_deposit(EPOCH, NONCE, AMOUNT).unwrap();
 
         assert_eq!(
             encoded,
             vec![
                 0b00110000, // T: 0b00 <- universal, 0b1 <- constructed, 0b10000 (16) <- SEQUENCE tag
-                0b00001001, // L: 0b0 <- short form, 0b0001001 (9) <- length
+                0b00001100, // L: 0b0 <- short form, 0b0001100 (12) <- length
+                0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
+                0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
+                0b00000000, // V: 0b00000000 (0) <- value
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
                 0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
                 0b00000001, // V: 0b00000001 (1) <- value
@@ -156,14 +160,16 @@ mod tests {
     #[test]
     fn test_encode_transfer() {
         const NONCE: u64 = 1;
+        const EPOCH: u64 = 0;
         const RECIPIENT: [u8; 32] = [11; 32];
         const AMOUNT: u64 = 1000;
-        let encoded = make_transfer(NONCE, &RECIPIENT, AMOUNT).unwrap();
+        let encoded = make_transfer(EPOCH, NONCE, &RECIPIENT, AMOUNT).unwrap();
 
         assert_eq!(
             encoded,
             vec![
-                0x30, 0x2B, // SEQUENCE (43 bytes)
+                0x30, 0x2E, // SEQUENCE (43 bytes)
+                0x02, 0x01, 0x00, // INTEGER (1 byte), value = 1
                 0x02, 0x01, 0x01, // INTEGER (1 byte), value = 1
                 0xA1, 0x26, // CHOICE (38 bytes), index = 1 (transfer body)
                 0x04, 0x20, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B,
@@ -177,10 +183,14 @@ mod tests {
 
     #[test]
     fn test_encode_withdrawal() {
+        const EPOCH: u64 = 0;
         const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = make_withdrawal(NONCE, AMOUNT).unwrap();
+        let encoded = make_withdrawal(EPOCH, NONCE, AMOUNT).unwrap();
 
-        assert_eq!(encoded, vec![48, 9, 2, 1, 1, 162, 4, 2, 2, 3, 232]);
+        assert_eq!(
+            encoded,
+            vec![48, 12, 2, 1, 0, 2, 1, 1, 162, 4, 2, 2, 3, 232]
+        );
     }
 }

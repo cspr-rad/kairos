@@ -28,10 +28,11 @@ async fn test_deposit_withdraw() {
     let server = new_test_app();
 
     let nonce: u64 = 1;
+    let epoch: u64 = 0;
     let amount: u64 = 100;
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_deposit(nonce, amount).unwrap(),
+        payload: make_deposit(nonce, epoch, amount).unwrap(),
         signature: vec![],
     };
 
@@ -56,10 +57,11 @@ async fn test_deposit_withdraw() {
         .assert_status_failure();
 
     let nonce: u64 = 1;
+    let epoch: u64 = 0;
     let amount: u64 = 50;
     let withdrawal = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, amount).unwrap(),
+        payload: make_withdrawal(nonce, epoch, amount).unwrap(),
         signature: vec![],
     };
 
@@ -71,10 +73,11 @@ async fn test_deposit_withdraw() {
         .assert_status_success();
 
     let nonce: u64 = 1;
+    let epoch: u64 = 0;
     let amount: u64 = 51;
     let withdrawal = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, amount).unwrap(),
+        payload: make_withdrawal(nonce, epoch, amount).unwrap(),
         signature: vec![],
     };
 
@@ -86,10 +89,11 @@ async fn test_deposit_withdraw() {
         .assert_status_failure();
 
     let nonce: u64 = 1;
+    let epoch: u64 = 0;
     let amount: u64 = 50;
     let withdrawal = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, amount).unwrap(),
+        payload: make_withdrawal(nonce, epoch, amount).unwrap(),
         signature: vec![],
     };
 
@@ -112,27 +116,30 @@ async fn test_deposit_transfer_withdraw() {
     let server = new_test_app();
 
     let nonce: u64 = 1;
+    let epoch: u64 = 0;
     let amount: u64 = 100;
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_deposit(nonce, amount).unwrap(),
+        payload: make_deposit(nonce, epoch, amount).unwrap(),
         signature: vec![],
     };
 
     let nonce: u64 = 1;
+    let epoch: u64 = 0;
     let amount: u64 = 50;
     let recipient: &[u8] = "bob_key".as_bytes();
     let transfer = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_transfer(nonce, recipient, amount).unwrap(),
+        payload: make_transfer(nonce, epoch, recipient, amount).unwrap(),
         signature: vec![],
     };
 
     let nonce: u64 = 1;
+    let epoch: u64 = 0;
     let amount: u64 = 50;
     let withdrawal = PayloadBody {
         public_key: "bob_key".into(),
-        payload: make_withdrawal(nonce, amount).unwrap(),
+        payload: make_withdrawal(nonce, epoch, amount).unwrap(),
         signature: vec![],
     };
 
