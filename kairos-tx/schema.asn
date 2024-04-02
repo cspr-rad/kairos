@@ -6,6 +6,7 @@ TxSchema DEFINITIONS AUTOMATIC TAGS ::= BEGIN
   PublicKey ::= OCTET STRING
   Amount ::= INTEGER (0..18446744073709551615)
   Nonce ::= INTEGER (0..18446744073709551615)
+  Epoch ::= INTEGER (0..18446744073709551615)
 
   -- Transaction payload for signing.
   SigningPayload ::= SEQUENCE {

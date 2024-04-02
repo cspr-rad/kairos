@@ -1,5 +1,5 @@
 use crate::asn::{
-    Amount, Deposit, Nonce, PublicKey, SigningPayload, TransactionBody, Transfer, Withdrawal,
+    Amount, Deposit, Epoch, Nonce, PublicKey, SigningPayload, TransactionBody, Transfer, Withdrawal,
 };
 use crate::asn::{Integer, OctetString};
 use crate::error::TxError;
@@ -36,6 +36,7 @@ pub fn make_withdrawal(nonce: u64, amount: u64) -> Result<Vec<u8>, TxError> {
 fn create_payload(nonce: u64, body: TransactionBody) -> Result<Vec<u8>, TxError> {
     let payload = SigningPayload {
         nonce: Nonce(Integer::from(nonce)),
+        epoch: Epoch(Integer::from(0)),
         body,
     };
 

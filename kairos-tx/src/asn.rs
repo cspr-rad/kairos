@@ -56,9 +56,25 @@ impl TryFrom<Nonce> for u64 {
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
+#[rasn(delegate)]
+pub struct Epoch(pub(crate) Integer);
+
+impl TryFrom<Epoch> for u64 {
+    type Error = TxError;
+
+    fn try_from(value: Epoch) -> Result<Self, Self::Error> {
+        value
+            .0
+            .to_u64()
+            .ok_or(TxError::ConstraintViolation { field: "epoch" })
+    }
+}
+
+#[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
 pub struct SigningPayload {
     pub nonce: Nonce,
+    pub epoch: Epoch,
     pub body: TransactionBody,
 }
 
