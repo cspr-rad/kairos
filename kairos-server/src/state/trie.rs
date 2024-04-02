@@ -1,11 +1,19 @@
-use std::{collections::HashSet, sync::Arc};
+use std::{
+    collections::HashSet,
+    sync::Arc,
+    thread::{self, JoinHandle},
+};
 
 use anyhow::anyhow;
 use sha2::{digest::FixedOutputReset, Digest, Sha256};
+use tokio::sync::{mpsc, oneshot};
 
 use kairos_trie::{
-    stored::{memory_db::MemoryDb, merkle::SnapshotBuilder},
-    KeyHash, NodeHash, PortableHash, PortableUpdate, TrieRoot,
+    stored::{
+        memory_db::MemoryDb,
+        merkle::{Snapshot, SnapshotBuilder},
+    },
+    DigestHasher, KeyHash, NodeHash, PortableHash, PortableUpdate, TrieRoot,
 };
 
 use crate::{AppErr, PublicKey};
@@ -14,7 +22,60 @@ use super::transactions::{Deposit, Signed, Transaction, Transfer, Withdraw};
 
 pub type Database = MemoryDb<Account>;
 
+pub enum TrieStateThreadMsg {
+    Transaction(Signed<Transaction>),
+    Commit(oneshot::Sender<Result<BatchOutput, AppErr>>),
+}
+
+pub fn spawn_state_thread(
+    mut queue: mpsc::Receiver<TrieStateThreadMsg>,
+    db: Database,
+    batch_epoch: u64,
+    batch_root: TrieRoot<NodeHash>,
+) -> JoinHandle<()> {
+    thread::spawn(move || {
+        let mut state = TrieState::new(db, batch_epoch, batch_root);
+
+        while let Some(txn) = queue.blocking_recv() {
+            match txn {
+                TrieStateThreadMsg::Transaction(Signed {
+                    public_key,
+                    epoch,
+                    nonce,
+                    transaction,
+                }) => {
+                    let result = match transaction {
+                        Transaction::Transfer(transfer) => state.transfer(&public_key, transfer),
+                        Transaction::Deposit(deposit) => state.deposit(&public_key, deposit),
+                        Transaction::Withdraw(withdraw) => state.withdraw(&public_key, withdraw),
+                    };
+
+                    if let Err(err) = result {
+                        tracing::error!("transaction failed: {:?}", err);
+                    }
+                }
+                TrieStateThreadMsg::Commit(sender) => {
+                    let result = state.commit_and_start_new_txn();
+                    if let Err(err) = sender.send(result) {
+                        tracing::error!("failed to send commit result: {:?}", err);
+                    }
+                }
+            }
+        }
+    })
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BatchOutput {
+    pub batch_epoch: u64,
+    pub new_root: TrieRoot<NodeHash>,
+    pub old_root: TrieRoot<NodeHash>,
+    pub snapshot: Snapshot<Account>,
+    pub batched_txns: BatchedTxns,
+}
+
 pub struct TrieState {
+    db: Database,
     batch_epoch: u64,
     batch_root: TrieRoot<NodeHash>,
     batched_txns: BatchedTxns,
@@ -23,6 +84,40 @@ pub struct TrieState {
 }
 
 impl TrieState {
+    pub fn new(db: Database, batch_epoch: u64, batch_root: TrieRoot<NodeHash>) -> Self {
+        let trie_txn = kairos_trie::Transaction::from_snapshot_builder(
+            SnapshotBuilder::<_, Account>::empty(db.clone()).with_trie_root_hash(batch_root),
+        );
+
+        Self {
+            db,
+            batch_epoch,
+            batch_root,
+            batched_txns: BatchedTxns::new(),
+            trie_txn,
+        }
+    }
+
+    pub fn commit_and_start_new_txn(&mut self) -> Result<BatchOutput, AppErr> {
+        let new_root = self
+            .trie_txn
+            .commit(&mut DigestHasher::<Sha256>::default())?;
+
+        let snapshot = self.trie_txn.build_initial_snapshot();
+
+        self.trie_txn = kairos_trie::Transaction::from_snapshot_builder(
+            SnapshotBuilder::<_, Account>::empty(self.db.clone()).with_trie_root_hash(new_root),
+        );
+
+        Ok(BatchOutput {
+            batch_epoch: self.batch_epoch,
+            new_root,
+            old_root: self.batch_root,
+            snapshot,
+            batched_txns: std::mem::take(&mut self.batched_txns),
+        })
+    }
+
     /// Avoid calling this method with a transfer that will fail.
     /// This method's prechecks may cause the Snapshot to bloat with unnecessary data if the transfer fails.
     fn transfer(&mut self, sender: &PublicKey, transfer: Signed<Transfer>) -> Result<(), AppErr> {
@@ -52,11 +147,19 @@ impl TrieState {
             .get(&sender_hash)?
             .ok_or_else(|| anyhow!("Sender does not have an account"))?;
 
+        if sender_account.pubkey != *sender {
+            return Err(anyhow!("hash collision detected on sender account").into());
+        }
+
         if sender_account.balance < transfer.transaction.amount {
             return Err(anyhow!("sender has insufficient funds").into());
         }
 
         if let Some(recipient_account) = self.trie_txn.get(&recipient_hash)? {
+            if recipient_account.pubkey != transfer.transaction.recipient {
+                return Err(anyhow!("hash collision detected on recipient account").into());
+            }
+
             if recipient_account
                 .balance
                 .checked_add(transfer.transaction.amount)
@@ -119,6 +222,10 @@ impl TrieState {
             Account::new(recipient.clone(), 0)
         });
 
+        if recipient_account.pubkey != *recipient {
+            return Err(anyhow!("hash collision detected on recipient account").into());
+        }
+
         recipient_account.balance = recipient_account
             .balance
             .checked_add(deposit.transaction.amount)
@@ -159,6 +266,10 @@ impl TrieState {
             .get(&sender_hash)?
             .ok_or_else(|| anyhow!("Sender does not have an account"))?;
 
+        if sender_account.pubkey != *withdrawer {
+            return Err(anyhow!("hash collision detected on sender account").into());
+        }
+
         if sender_account.balance < withdraw.transaction.amount {
             return Err(anyhow!("sender has insufficient funds").into());
         }
@@ -178,7 +289,7 @@ impl TrieState {
 }
 
 // We could use a self-referential struct here to avoid Arc, but it's not worth the complexity
-#[derive(Debug, Default)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub struct BatchedTxns {
     set: HashSet<Arc<Transaction>>,
     ord: Vec<Arc<Transaction>>,

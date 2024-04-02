@@ -20,7 +20,7 @@ fn new_test_app() -> TestServer {
     });
     let config = TestServerConfig::builder().mock_transport().build();
 
-    TestServer::new_with_config(kairos_server::app_router(BatchState::new()), config).unwrap()
+    TestServer::new_with_config(kairos_server::app_router(BatchState::new_empty()), config).unwrap()
 }
 
 #[tokio::test]
