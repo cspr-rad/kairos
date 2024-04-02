@@ -8,6 +8,8 @@ use tracing::*;
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::routes::PayloadBody;
+use crate::state::transactions::{Deposit, Signed, Transaction};
+use crate::state::TrieStateThreadMsg;
 use crate::{state::LockedBatchState, AppErr};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
@@ -32,8 +34,23 @@ pub async fn deposit_handler(
             ))
         }
     };
-    let amount = u64::try_from(deposit.amount).context("invalid amount")?;
-    let public_key = body.public_key;
+    let signed = Signed {
+        public_key: body.public_key,
+        epoch: signing_payload.epoch.try_into().context("decoding epoch")?,
+        nonce: signing_payload.nonce.try_into().context("decoding nonce")?,
+        transaction: Deposit::try_from(deposit).context("decoding deposit")?,
+    };
+    let amount = signed.transaction.amount;
+    let public_key = &signed.public_key;
+
+    if amount == 0 {
+        return Err(AppErr::set_status(
+            anyhow!("deposit amount must be greater than 0"),
+            StatusCode::BAD_REQUEST,
+        ));
+    }
+
+    // TODO are deposits connected to a specific epoch?
 
     tracing::info!("TODO: verifying deposit");
 
@@ -57,6 +74,27 @@ pub async fn deposit_handler(
         public_key,
         updated_balance
     );
+    tracing::info!("queuing deposit transaction");
+
+    let queued_txn = state.queued_transactions.clone();
+    // Relase the write lock before queuing the transaction
+    drop(state);
+
+    let Signed {
+        public_key,
+        epoch,
+        nonce,
+        transaction: deposit,
+    } = signed;
+    queued_txn
+        .send(TrieStateThreadMsg::Transaction(Signed {
+            public_key,
+            epoch,
+            nonce,
+            transaction: Transaction::Deposit(deposit),
+        }))
+        .await
+        .context("sending transaction to trie thread")?;
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-mod transactions;
+pub mod transactions;
 mod trie;
 
 use std::{collections::HashMap, sync::Arc, thread::JoinHandle};
@@ -8,7 +8,7 @@ use tokio::sync::{mpsc, RwLock};
 
 use crate::PublicKey;
 
-use self::trie::TrieStateThreadMsg;
+pub use self::trie::TrieStateThreadMsg;
 
 pub type LockedBatchState = Arc<RwLock<BatchState>>;
 

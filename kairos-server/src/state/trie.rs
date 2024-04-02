@@ -36,22 +36,12 @@ pub fn spawn_state_thread(
     thread::spawn(move || {
         let mut state = TrieState::new(db, batch_epoch, batch_root);
 
-        while let Some(txn) = queue.blocking_recv() {
-            match txn {
-                TrieStateThreadMsg::Transaction(Signed {
-                    public_key,
-                    epoch,
-                    nonce,
-                    transaction,
-                }) => {
-                    let result = match transaction {
-                        Transaction::Transfer(transfer) => state.transfer(&public_key, transfer),
-                        Transaction::Deposit(deposit) => state.deposit(&public_key, deposit),
-                        Transaction::Withdraw(withdraw) => state.withdraw(&public_key, withdraw),
-                    };
-
-                    if let Err(err) = result {
-                        tracing::error!("transaction failed: {:?}", err);
+        while let Some(msg) = queue.blocking_recv() {
+            match msg {
+                TrieStateThreadMsg::Transaction(txn) => {
+                    if let Err(err) = state.transaction(txn) {
+                        // Transactions should be validated before being added to queue
+                        tracing::error!("THIS IS A BUG transaction failed: {:?}", err);
                     }
                 }
                 TrieStateThreadMsg::Commit(sender) => {
@@ -118,29 +108,48 @@ impl TrieState {
         })
     }
 
+    fn transaction(&mut self, txn: Signed<Transaction>) -> Result<(), AppErr> {
+        let Signed {
+            public_key,
+            epoch,
+            nonce: _,
+            transaction,
+        } = txn;
+
+        if epoch != self.batch_epoch {
+            return Err(anyhow!("transaction epoch does not match batch epoch").into());
+        }
+
+        if !self.batched_txns.contains(&transaction) {
+            return Err(anyhow!("transaction already in batch").into());
+        }
+
+        let amount = match &transaction {
+            Transaction::Transfer(transfer) => transfer.amount,
+            Transaction::Deposit(deposit) => deposit.amount,
+            Transaction::Withdraw(withdraw) => withdraw.amount,
+        };
+
+        if amount == 0 {
+            return Err(anyhow!("transaction amount must be greater than 0").into());
+        }
+
+        match transaction {
+            Transaction::Transfer(ref transfer) => self.transfer(&public_key, transfer),
+            Transaction::Deposit(ref deposit) => self.deposit(&public_key, deposit),
+            Transaction::Withdraw(ref withdraw) => self.withdraw(&public_key, withdraw),
+        }?;
+
+        self.batched_txns.insert(transaction);
+
+        Ok(())
+    }
+
     /// Avoid calling this method with a transfer that will fail.
     /// This method's prechecks may cause the Snapshot to bloat with unnecessary data if the transfer fails.
-    fn transfer(&mut self, sender: &PublicKey, transfer: Signed<Transfer>) -> Result<(), AppErr> {
-        tracing::info!("verifying the transfer can be applied");
-        if transfer.epoch != self.batch_epoch {
-            return Err(anyhow!("transfer epoch does not match batch epoch").into());
-        }
-
-        if transfer.transaction.amount == 0 {
-            return Err(anyhow!("transfer amount must be greater than 0").into());
-        }
-
-        // Check if the transfer is already in the batch
-        let new_txn = self
-            .batched_txns
-            .contains(&Transaction::Transfer(transfer.clone()));
-
-        if !new_txn {
-            return Err(anyhow!("transfer already in batch").into());
-        }
-
+    fn transfer(&mut self, sender: &PublicKey, transfer: &Transfer) -> Result<(), AppErr> {
         let [sender_hash, recipient_hash] =
-            hash_buffers([sender.as_slice(), transfer.transaction.recipient.as_slice()]);
+            hash_buffers([sender.as_slice(), transfer.recipient.as_slice()]);
 
         let sender_account = self
             .trie_txn
@@ -151,18 +160,18 @@ impl TrieState {
             return Err(anyhow!("hash collision detected on sender account").into());
         }
 
-        if sender_account.balance < transfer.transaction.amount {
+        if sender_account.balance < transfer.amount {
             return Err(anyhow!("sender has insufficient funds").into());
         }
 
         if let Some(recipient_account) = self.trie_txn.get(&recipient_hash)? {
-            if recipient_account.pubkey != transfer.transaction.recipient {
+            if recipient_account.pubkey != transfer.recipient {
                 return Err(anyhow!("hash collision detected on recipient account").into());
             }
 
             if recipient_account
                 .balance
-                .checked_add(transfer.transaction.amount)
+                .checked_add(transfer.amount)
                 .is_none()
             {
                 return Err(anyhow!("recipient balance overflow").into());
@@ -177,43 +186,25 @@ impl TrieState {
         // Remove the amount from the sender's account
         sender_account.balance = sender_account
             .balance
-            .checked_sub(transfer.transaction.amount)
+            .checked_sub(transfer.amount)
             .expect("Sender balance underflow");
 
         let recipient_account = self.trie_txn.entry(&recipient_hash)?.or_insert_with(|| {
             tracing::info!("creating new account for recipient");
-            Account::new(transfer.transaction.recipient.clone(), 0)
+            Account::new(transfer.recipient.clone(), 0)
         });
 
         // Add the amount to the recipient's account
         recipient_account.balance = recipient_account
             .balance
-            .checked_add(transfer.transaction.amount)
+            .checked_add(transfer.amount)
             .expect("recipient balance overflow");
-
-        self.batched_txns.insert(Transaction::Transfer(transfer));
 
         Ok(())
     }
 
-    fn deposit(&mut self, recipient: &PublicKey, deposit: Signed<Deposit>) -> Result<(), AppErr> {
+    fn deposit(&mut self, recipient: &PublicKey, deposit: &Deposit) -> Result<(), AppErr> {
         tracing::info!("verifying the deposit can be applied");
-        if deposit.epoch != self.batch_epoch {
-            return Err(anyhow!("deposit epoch does not match batch epoch").into());
-        }
-
-        if deposit.transaction.amount == 0 {
-            return Err(anyhow!("deposit amount must be greater than 0").into());
-        }
-
-        // Check if the deposit is already in the batch
-        let new_txn = self
-            .batched_txns
-            .contains(&Transaction::Deposit(deposit.clone()));
-
-        if !new_txn {
-            return Err(anyhow!("deposit already in batch").into());
-        }
 
         let [recipient_hash] = hash_buffers([recipient.as_slice()]);
 
@@ -228,36 +219,14 @@ impl TrieState {
 
         recipient_account.balance = recipient_account
             .balance
-            .checked_add(deposit.transaction.amount)
+            .checked_add(deposit.amount)
             .ok_or_else(|| anyhow!("recipient balance overflow"))?;
-
-        self.batched_txns.insert(Transaction::Deposit(deposit));
 
         Ok(())
     }
 
-    fn withdraw(
-        &mut self,
-        withdrawer: &PublicKey,
-        withdraw: Signed<Withdraw>,
-    ) -> Result<(), AppErr> {
+    fn withdraw(&mut self, withdrawer: &PublicKey, withdraw: &Withdraw) -> Result<(), AppErr> {
         tracing::info!("verifying the withdrawal can be applied");
-        if withdraw.epoch != self.batch_epoch {
-            return Err(anyhow!("withdrawal epoch does not match batch epoch").into());
-        }
-
-        if withdraw.transaction.amount == 0 {
-            return Err(anyhow!("withdrawal amount must be greater than 0").into());
-        }
-
-        // Check if the withdrawal is already in the batch
-        let new_txn = self
-            .batched_txns
-            .contains(&Transaction::Withdraw(withdraw.clone()));
-
-        if !new_txn {
-            return Err(anyhow!("withdrawal already in batch").into());
-        }
 
         let [sender_hash] = hash_buffers([withdrawer.as_slice()]);
 
@@ -270,7 +239,7 @@ impl TrieState {
             return Err(anyhow!("hash collision detected on sender account").into());
         }
 
-        if sender_account.balance < withdraw.transaction.amount {
+        if sender_account.balance < withdraw.amount {
             return Err(anyhow!("sender has insufficient funds").into());
         }
 
@@ -279,10 +248,8 @@ impl TrieState {
         });
         sender_account.balance = sender_account
             .balance
-            .checked_sub(withdraw.transaction.amount)
+            .checked_sub(withdraw.amount)
             .expect("sender balance underflow");
-
-        self.batched_txns.insert(Transaction::Withdraw(withdraw));
 
         Ok(())
     }
@@ -317,6 +284,7 @@ impl BatchedTxns {
         self.set.contains(txn)
     }
 
+    #[allow(dead_code)]
     fn get(&self, op_idx: usize) -> Option<&Arc<Transaction>> {
         self.ord.get(op_idx)
     }

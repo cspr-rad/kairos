@@ -1,10 +1,14 @@
-use crate::{PublicKey, Signature};
+use kairos_tx::{asn, error::TxError};
+
+use crate::PublicKey;
+
+// These need to be broken out for use in the zkvm
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Transaction {
-    Transfer(Signed<Transfer>),
-    Deposit(Signed<Deposit>),
-    Withdraw(Signed<Withdraw>),
+    Transfer(Transfer),
+    Deposit(Deposit),
+    Withdraw(Withdraw),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -31,4 +35,30 @@ pub struct Withdraw {
     pub amount: u64,
 }
 
-// TODO convert from asn1 types.
+impl TryFrom<asn::Transfer> for Transfer {
+    type Error = TxError;
+    fn try_from(transfer: asn::Transfer) -> Result<Self, Self::Error> {
+        Ok(Transfer {
+            recipient: transfer.recipient.into(),
+            amount: transfer.amount.try_into()?,
+        })
+    }
+}
+
+impl TryFrom<asn::Deposit> for Deposit {
+    type Error = TxError;
+    fn try_from(deposit: asn::Deposit) -> Result<Self, Self::Error> {
+        Ok(Deposit {
+            amount: deposit.amount.try_into()?,
+        })
+    }
+}
+
+impl TryFrom<asn::Withdrawal> for Withdraw {
+    type Error = TxError;
+    fn try_from(withdrawal: asn::Withdrawal) -> Result<Self, Self::Error> {
+        Ok(Withdraw {
+            amount: withdrawal.amount.try_into()?,
+        })
+    }
+}
