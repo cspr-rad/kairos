@@ -22,6 +22,8 @@ nixosTest {
       };
       services.cctl.enable = true;
       environment.systemPackages = [ casper-client-rs ];
+      # allow HTTP for nixos-test environment
+      services.nginx.virtualHosts.${config.networking.hostName}.forceSSL = lib.mkForce false;
     };
 
     client = { config, pkgs, nodes, ... }: {
