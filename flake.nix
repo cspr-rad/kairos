@@ -48,6 +48,7 @@
             src = lib.cleanSourceWith {
               src = craneLib.path ./.;
               filter = path: type:
+                !(builtins.elem (builtins.baseNameOf path) [ "kairos-contracts" "nixos" "kairos-prover" ]) &&
                 # Allow static files.
                 (lib.hasInfix "/fixtures/" path) ||
                 # Default filter (from crane) for .rs files.
