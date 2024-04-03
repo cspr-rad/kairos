@@ -1,7 +1,7 @@
-use config::{Config as Configuration, Environment};
+use config::{Config as Configuration, Environment, File};
 use dotenvy::dotenv;
 use serde::{Deserialize, Serialize};
-use std::{fs::File as FsFile, net::SocketAddr};
+use std::{env, fs::File as FsFile, net::SocketAddr, path::Path};
 use tracing::{subscriber::set_global_default, Level};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
@@ -62,10 +62,19 @@ impl Settings {
     pub fn new() -> Self {
         dotenv().ok();
 
-        // Start building the configuration
         let mut builder = Configuration::builder();
 
-        // Add environment variables as a source
+        let args: Vec<String> = env::args().collect();
+        let config_path = if args.len() > 1 {
+            &args[1]
+        } else {
+            "kairos-config.toml"
+        };
+
+        if Path::new(config_path).exists() {
+            builder = builder.add_source(File::new(config_path, config::FileFormat::Toml));
+        }
+
         builder = builder.add_source(Environment::with_prefix("KAIROS").separator("_"));
         match builder.build() {
             Ok(config) => match config.try_deserialize::<Self>() {
