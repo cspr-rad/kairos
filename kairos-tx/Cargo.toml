@@ -10,3 +10,7 @@ license.workspace = true
 num-traits = "0.2"
 rasn = { version = "0.12", default-features = false, features = ["macros"] }
 thiserror = "1"
+
+[features]
+default = ["std"]
+std = []
