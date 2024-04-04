@@ -1749,7 +1749,6 @@ version = "0.1.0"
 dependencies = [
  "num-traits",
  "rasn",
- "thiserror",
 ]
 
 [[package]]
