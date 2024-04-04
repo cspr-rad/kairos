@@ -862,14 +862,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6051f239ecec86fde3410901ab7860d458d160371533842974fc61f96d15879b"
 
 [[package]]
-name = "contract-types"
-version = "0.1.0"
-dependencies = [
- "casper-types 4.0.1",
- "serde",
-]
-
-[[package]]
 name = "cookie"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

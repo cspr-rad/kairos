@@ -44,12 +44,35 @@ mod tests {
         fixture.install_deposit_contract(init_admin);
         // try to update the admin list
         let new_admin_list: Vec<Key> = vec![Key::from(new_admin)];
-        fixture.update_security_badges(new_admin_list.clone(), init_admin, init_admin);
+        fixture.update_security_badges_as_admin(new_admin_list.clone(), init_admin, init_admin);
         // update the admin list as the new_admin
-        fixture.update_security_badges(new_admin_list, new_admin, init_admin);
+        fixture.update_security_badges_as_admin(new_admin_list, new_admin, init_admin);
         // now remove the admin role from the installer and expect failure.
         let new_admin_list: Vec<Key> = vec![];
         fixture.unauthorized_update_security_badges(new_admin_list.clone(), init_admin, init_admin);
+    }
+
+    #[test]
+    fn admin_should_increase_last_processed_counter() {
+        let (mut fixture, installer, user) = setup();
+        fixture.install_deposit_contract(installer);
+
+        let value_before: u64 =
+            fixture.read_counter_value(installer, "last_processed_deposit_counter");
+        assert_eq!(value_before, 0u64);
+
+        fixture.admin_increase_last_processed_counter(installer, installer);
+        let value_after: u64 =
+            fixture.read_counter_value(installer, "last_processed_deposit_counter");
+        assert_eq!(value_after, 1u64);
+    }
+
+    #[test]
+    fn unauthorized_should_not_increase_last_processed_counter() {
+        let (mut fixture, installer, unauthorized_user) = setup();
+        fixture.install_deposit_contract(installer);
+
+        fixture.unauthorized_increase_last_processed_counter(unauthorized_user, installer);
     }
 
     // see malicious-session

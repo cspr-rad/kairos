@@ -12,10 +12,9 @@ use casper_types::{
 };
 mod constants;
 use constants::{
-    ADMIN_LIST, KAIROS_DEPOSIT_CONTRACT, KAIROS_DEPOSIT_CONTRACT_NAME, KAIROS_DEPOSIT_EVENT_DICT,
-    KAIROS_DEPOSIT_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER,
-    KAIROS_MOST_RECENT_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
-    SECURITY_BADGES,
+    ADMIN_LIST, KAIROS_DEPOSIT_CONTRACT, KAIROS_DEPOSIT_CONTRACT_NAME,
+    KAIROS_DEPOSIT_CONTRACT_PACKAGE, KAIROS_DEPOSIT_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER,
+    RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE, SECURITY_BADGES,
 };
 mod utils;
 use utils::{get_immediate_caller, get_optional_named_arg_with_user_errors};
@@ -24,8 +23,10 @@ use error::DepositError;
 mod security;
 use security::{access_control_check, SecurityBadge};
 mod entry_points;
-
-use contract_types::Deposit;
+mod events;
+use casper_event_standard;
+use casper_event_standard::Schemas;
+use events::Deposit;
 
 // This entry point is called once when the contract is installed
 // and sets up the security badges with the installer as an admin or the
@@ -41,6 +42,10 @@ pub extern "C" fn init() {
     let security_badges_dict = storage::new_dictionary(SECURITY_BADGES)
         .unwrap_or_revert_with(DepositError::FailedToCreateSecurityBadgesDict);
     let installing_entity = runtime::get_caller();
+
+    // initialize event schema
+    let schemas = Schemas::new().with::<Deposit>();
+    casper_event_standard::init(schemas);
 
     // Assign the admin role to the installer, regardless of the list of admins that was
     // passed to the installation session.
@@ -96,38 +101,12 @@ pub extern "C" fn deposit() {
     system::transfer_from_purse_to_purse(temp_purse, deposit_purse_uref, amount, None)
         .unwrap_or_revert();
 
-    let most_recent_deposit_counter_uref = runtime::get_key(KAIROS_MOST_RECENT_DEPOSIT_COUNTER)
-        .unwrap_or_revert_with(DepositError::MissingKeyMostRecentDepositCounter)
-        .into_uref()
-        .unwrap_or_revert();
-    let mut most_recent_deposit_counter_value: u64 =
-        storage::read(most_recent_deposit_counter_uref)
-            .unwrap_or_revert()
-            .unwrap_or_revert();
     let new_deposit_record: Deposit = Deposit {
         account: get_immediate_caller().unwrap_or_revert(),
-        amount,
+        amount: amount,
         timestamp: None,
-        processed: false,
     };
-
-    let deposit_event_dict_key: &str = &most_recent_deposit_counter_value.to_string();
-
-    let kairos_deposit_event_dict_uref = runtime::get_key(KAIROS_DEPOSIT_EVENT_DICT)
-        .unwrap_or_revert_with(DepositError::MissingKeyDepositEventDict)
-        .into_uref()
-        .unwrap_or_revert();
-    storage::dictionary_put::<Vec<u8>>(
-        kairos_deposit_event_dict_uref,
-        deposit_event_dict_key,
-        bincode::serialize(&new_deposit_record).unwrap(),
-    );
-
-    most_recent_deposit_counter_value += 1u64;
-    storage::write(
-        most_recent_deposit_counter_uref,
-        most_recent_deposit_counter_value,
-    );
+    casper_event_standard::emit(new_deposit_record);
 }
 
 // The centralized Kairos service, or a sequencer,
@@ -192,9 +171,6 @@ pub extern "C" fn call() {
         entry_points
     };
     let mut named_keys = NamedKeys::new();
-    let event_dict = storage::new_dictionary(KAIROS_DEPOSIT_EVENT_DICT)
-        .unwrap_or_revert_with(DepositError::FailedToCreateDepositDict);
-    named_keys.insert(KAIROS_DEPOSIT_EVENT_DICT.to_string(), event_dict.into());
     let last_processed_deposit_counter = storage::new_uref(u64::from(0u8));
 
     named_keys.insert(
@@ -202,18 +178,11 @@ pub extern "C" fn call() {
         last_processed_deposit_counter.into(),
     );
 
-    let most_recent_deposit_counter = storage::new_uref(u64::from(0u8));
-    named_keys.insert(
-        KAIROS_MOST_RECENT_DEPOSIT_COUNTER.to_string(),
-        most_recent_deposit_counter.into(),
-    );
-
-    let (contract_hash, _) = storage::new_contract(
+    let (contract_hash, _) = storage::new_locked_contract(
         entry_points,
         Some(named_keys),
         Some(KAIROS_DEPOSIT_CONTRACT.to_string()),
-        // Some(key) if upgradable
-        None,
+        Some(KAIROS_DEPOSIT_CONTRACT_PACKAGE.to_string()),
     );
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_DEPOSIT_CONTRACT_NAME, contract_hash_key);
