@@ -7,7 +7,6 @@ members = [
   "kairos-server",
   "kairos-tx",
   "kairos-test-utils",
-  "kairos-contracts/contract-types",
   "kairos-contracts/deposit-contract-tests",
 ]
 

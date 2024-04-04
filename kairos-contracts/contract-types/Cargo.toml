@@ -1,9 +1,0 @@
-[package]
-name = "contract-types"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
-
-[dependencies]
-serde = "1"
-casper-types = {version="4.0.0", default-features=false}
