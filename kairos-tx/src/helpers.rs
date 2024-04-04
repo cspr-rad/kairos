@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 use crate::asn::{
     Amount, Deposit, Nonce, PublicKey, SigningPayload, TransactionBody, Transfer, Withdrawal,
 };
