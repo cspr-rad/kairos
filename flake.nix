@@ -48,6 +48,7 @@
             src = lib.cleanSourceWith {
               src = craneLib.path ./.;
               filter = path: type:
+                !(builtins.elem (builtins.baseNameOf path) [ "kairos-contracts" "nixos" "kairos-prover" ]) &&
                 # Allow static files.
                 (lib.hasInfix "/fixtures/" path) ||
                 # Default filter (from crane) for .rs files.
@@ -84,6 +85,17 @@
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
             });
+
+            cctld = pkgs.runCommand "cctld-wrapped"
+              {
+                buildInputs = [ pkgs.makeWrapper ];
+                meta.mainProgram = "cctld";
+              }
+              ''
+                mkdir -p $out/bin
+                makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
+                  --set PATH ${pkgs.lib.makeBinPath [inputs'.csprpkgs.packages.cctl ]}
+              '';
 
             default = self'.packages.kairos;
 

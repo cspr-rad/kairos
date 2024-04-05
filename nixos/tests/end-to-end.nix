@@ -2,6 +2,8 @@
 , mkKairosHostConfig
 , kairos
 , testResources ? ../../kairos-cli/tests/fixtures
+, cctlModule
+, casper-client-rs
 }:
 nixosTest {
   name = "kairos e2e test";
@@ -10,6 +12,7 @@ nixosTest {
     server = { config, pkgs, lib, ... }: {
       imports = [
         (mkKairosHostConfig "kairos")
+        cctlModule
       ];
 
       # modify acme for nixos-test environment
@@ -17,6 +20,10 @@ nixosTest {
         preliminarySelfsigned = true;
         defaults.server = "https://example.com"; # don't spam the acme production server
       };
+      services.cctl.enable = true;
+      environment.systemPackages = [ casper-client-rs ];
+      # allow HTTP for nixos-test environment
+      services.nginx.virtualHosts.${config.networking.hostName}.forceSSL = lib.mkForce false;
     };
 
     client = { config, pkgs, nodes, ... }: {
@@ -29,21 +36,44 @@ nixosTest {
 
     start_all()
 
+    kairos.wait_for_unit("cctl.service")
+
     kairos.wait_for_unit("kairos.service")
     kairos.wait_for_unit("nginx.service")
     kairos.wait_for_open_port(80)
 
     client.wait_for_unit ("multi-user.target")
 
-    deposit_request = { "public_key": "publickey", "amount": 10 }
+    kairos.succeed("casper-client get-node-status --node-address http://localhost:11101")
+
+    # Tx Payload
+    #   nonce = 1
+    #   deposit:
+    #     amount = 1000
+    #
+    deposit_payload = "3009020101a004020203e8"
+    deposit_request = { "public_key": "deadbeef", "payload": deposit_payload, "signature": "cafebabe" }
     # REST API
-    client.succeed("curl -X POST http://kairos/api/v1/deposit -H 'Content-Type: application/json' -d '{}'".format(json.dumps(deposit_request)))
+    client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/deposit -H 'Content-Type: application/json' -d '{}'".format(json.dumps(deposit_request)))
 
-    transfer_request = { "from": "publickey", "signature": "signature", "to": "publickey", "amount": 10 }
-    client.succeed("curl -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
+    # Tx Payload
+    #   nonce = 2
+    #   transfer:
+    #     recipient = DEADBEEF
+    #     amount = 1000
+    #
+    transfer_payload = "300f020102a10a0404deadbeef020203e8"
+    transfer_request = { "public_key": "deadbeef", "payload": transfer_payload, "signature": "cafebabe" }
+    client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
 
-    withdraw_request = { "public_key": "publickey", "signature": "signature", "amount": 10 }
-    client.succeed("curl -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
+    # Tx Payload
+    #   nonce = 3
+    #   withdrawal:
+    #     amount = 1000
+    #
+    withdraw_payload = "3009020103a204020203e8"
+    withdraw_request = { "public_key": "deadbeef", "payload": withdraw_payload, "signature": "cafebabe" }
+    client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
 
     # CLI with ed25519
     cli_output = client.succeed("kairos-cli deposit --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
