@@ -1,6 +1,6 @@
 use casper_event_standard::Event;
 extern crate alloc;
-use alloc::{string::String, vec::Vec};
+use alloc::string::String;
 use casper_types::{Key, U512};
 
 #[derive(Event)]
