@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn admin_should_increase_last_processed_counter() {
-        let (mut fixture, installer, user) = setup();
+        let (mut fixture, installer, _user) = setup();
         fixture.install_deposit_contract(installer);
 
         let value_before: u64 =

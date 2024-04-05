@@ -1,21 +1,48 @@
-use rasn::error::{DecodeError, EncodeError};
-use thiserror::Error;
+use core::fmt;
 
-#[derive(Error, Debug)]
+use rasn::error::{DecodeError, EncodeError};
+
+#[derive(Debug)]
 pub enum TxError {
     /// Errors related to encoding.
-    #[error("encode error: {0}")]
     EncodeError(EncodeError),
 
     /// Errors related to decoding.
-    #[error("decode error: {0}")]
     DecodeError(DecodeError),
 
     /// Constraint violation for a specific field.
-    #[error("constraint violated for '{field}'")]
     ConstraintViolation { field: &'static str },
 
     /// Signature verification failure.
-    #[error("signature verification failed")]
     InvalidSignature,
 }
+
+impl fmt::Display for TxError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TxError::EncodeError(e) => write!(f, "encode error: {e}"),
+            TxError::DecodeError(e) => write!(f, "decode error: {e}"),
+            TxError::ConstraintViolation { field } => {
+                write!(f, "constraint violated for '{field}'")
+            }
+            TxError::InvalidSignature => write!(f, "signature verification failed"),
+        }
+    }
+}
+
+#[cfg(not(feature = "std"))]
+mod error {
+    use super::*;
+    use core::fmt::{Debug, Display};
+
+    pub trait Error: Debug + Display {
+        fn source(&self) -> Option<&(dyn Error + 'static)> {
+            None
+        }
+    }
+
+    impl Error for TxError {}
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for TxError {}

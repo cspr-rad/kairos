@@ -24,7 +24,6 @@ mod security;
 use security::{access_control_check, SecurityBadge};
 mod entry_points;
 mod events;
-use casper_event_standard;
 use casper_event_standard::Schemas;
 use events::Deposit;
 
@@ -103,7 +102,7 @@ pub extern "C" fn deposit() {
 
     let new_deposit_record: Deposit = Deposit {
         account: get_immediate_caller().unwrap_or_revert(),
-        amount: amount,
+        amount,
         timestamp: None,
     };
     casper_event_standard::emit(new_deposit_record);
