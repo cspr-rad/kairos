@@ -75,3 +75,18 @@ impl From<kairos_trie::TrieError> for AppErr {
         }
     }
 }
+
+/// Replace with `!` when stabilized
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Never;
+impl fmt::Display for Never {
+    fn fmt(&self, _: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Ok(())
+    }
+}
+
+impl From<Never> for AppErr {
+    fn from(_: Never) -> Self {
+        unreachable!("Never was constructed")
+    }
+}

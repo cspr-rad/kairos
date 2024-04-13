@@ -86,7 +86,7 @@ pub async fn withdraw_handler(
     tracing::info!("queuing withdrawal transaction");
 
     let queued_txn = state.queued_transactions.clone();
-    // Relase the write lock before queuing the transaction
+    // Release the write lock before queuing the transaction
     drop(state);
 
     queued_txn

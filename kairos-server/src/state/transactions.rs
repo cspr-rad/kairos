@@ -1,3 +1,6 @@
+pub mod batch_state;
+pub mod entry_api_trait;
+
 use kairos_tx::{asn, error::TxError};
 
 use crate::PublicKey;
