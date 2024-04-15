@@ -149,23 +149,38 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1713013257,
+        "narHash": "sha256-ZEfGB3YCBVggvk0BQIqVY7J8XF/9jxQ68fCca6nib+8=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "90055d5e616bd943795d38808c94dbf0dd35abe8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-23.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "risc0pkgs": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
+        "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1705057078,
-        "narHash": "sha256-IvTD2yh6vYFKgvBATOl793csHbu2Vki3D19MKCHp8sk=",
+        "lastModified": 1707207642,
+        "narHash": "sha256-EjzGyFHs+hpSuvOjNnVBx48V5h5whRIyAjIUgSOzqLk=",
         "owner": "cspr-rad",
         "repo": "risc0pkgs",
-        "rev": "144c9a42850a245f581db2586208cd18f98ff62b",
+        "rev": "7acff27ce7116777cc7f5a162efa9b599808ed97",
         "type": "github"
       },
       "original": {
         "owner": "cspr-rad",
         "repo": "risc0pkgs",
+        "rev": "7acff27ce7116777cc7f5a162efa9b599808ed97",
         "type": "github"
       }
     },

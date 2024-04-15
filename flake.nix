@@ -25,8 +25,10 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    risc0pkgs.url = "github:cspr-rad/risc0pkgs";
-    risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
+    # Pin to a revision with working risc0 build
+    risc0pkgs.url = "github:cspr-rad/risc0pkgs/7acff27ce7116777cc7f5a162efa9b599808ed97";
+    # FIXME once we are able to build with upstream rustc we should uncomment this
+    #risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
     csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
     csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };
