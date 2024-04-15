@@ -41,7 +41,7 @@
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
-          rustToolchain = inputs'.fenix.packages.complete.toolchain;
+          rustToolchain = inputs'.fenix.packages.stable.toolchain;
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
           kairosNodeAttrs = {
