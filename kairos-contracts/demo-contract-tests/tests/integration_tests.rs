@@ -7,7 +7,7 @@ mod tests {
     #[test]
     fn should_install_deposit_contract() {
         let mut fixture: TestContext = TestContext::new();
-        fixture.install_deposit_contract(fixture.account_1);
+        fixture.install_demo_contract(fixture.account_1);
     }
 
     fn setup() -> (TestContext, AccountHash, AccountHash) {
@@ -21,7 +21,7 @@ mod tests {
     fn deposit_into_purse() {
         let deposit_amount: U512 = U512::from(100000000000u64);
         let (mut fixture, installer, user) = setup();
-        fixture.install_deposit_contract(installer);
+        fixture.install_demo_contract(installer);
 
         let user_purse_uref = fixture.get_account_purse_uref(user);
         let user_balance_before = fixture.builder.get_purse_balance(user_purse_uref);
@@ -38,48 +38,11 @@ mod tests {
         assert!(user_balance_after <= user_balance_before - deposit_amount);
     }
 
-    #[test]
-    fn update_security_badges() {
-        let (mut fixture, init_admin, new_admin) = setup();
-        fixture.install_deposit_contract(init_admin);
-        // try to update the admin list
-        let new_admin_list: Vec<Key> = vec![Key::from(new_admin)];
-        fixture.update_security_badges_as_admin(new_admin_list.clone(), init_admin, init_admin);
-        // update the admin list as the new_admin
-        fixture.update_security_badges_as_admin(new_admin_list, new_admin, init_admin);
-        // now remove the admin role from the installer and expect failure.
-        let new_admin_list: Vec<Key> = vec![];
-        fixture.unauthorized_update_security_badges(new_admin_list.clone(), init_admin, init_admin);
-    }
-
-    #[test]
-    fn admin_should_increase_last_processed_counter() {
-        let (mut fixture, installer, _user) = setup();
-        fixture.install_deposit_contract(installer);
-
-        let value_before: u64 =
-            fixture.read_counter_value(installer, "last_processed_deposit_counter");
-        assert_eq!(value_before, 0u64);
-
-        fixture.admin_increase_last_processed_counter(installer, installer);
-        let value_after: u64 =
-            fixture.read_counter_value(installer, "last_processed_deposit_counter");
-        assert_eq!(value_after, 1u64);
-    }
-
-    #[test]
-    fn unauthorized_should_not_increase_last_processed_counter() {
-        let (mut fixture, installer, unauthorized_user) = setup();
-        fixture.install_deposit_contract(installer);
-
-        fixture.unauthorized_increase_last_processed_counter(unauthorized_user, installer);
-    }
-
     // see malicious-session
     #[test]
     fn run_malicious_session() {
         let (mut fixture, installer, user) = setup();
-        fixture.install_deposit_contract(installer);
+        fixture.install_demo_contract(installer);
         fixture.run_deposit_session(U512::from(100000000000u64), installer, user);
         fixture.run_malicious_session(fixture.account_2, U512::from(100000000000u64), installer);
     }
@@ -88,7 +51,7 @@ mod tests {
     #[test]
     fn run_malicious_reader() {
         let (mut fixture, installer, user) = setup();
-        fixture.install_deposit_contract(installer);
+        fixture.install_demo_contract(installer);
         fixture.run_deposit_session(U512::from(100000000000u64), installer, user);
         let deposit_purse_uref = fixture.get_contract_purse_uref(installer);
         fixture.run_malicious_reader_session(

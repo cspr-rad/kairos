@@ -96,13 +96,13 @@ impl TestContext {
             .expect("must get contract hash")
     }
 
-    pub fn install_deposit_contract(&mut self, admin: AccountHash) {
+    pub fn install_demo_contract(&mut self, admin: AccountHash) {
         let session_args = runtime_args! {};
         let install_contract_request = ExecuteRequestBuilder::standard(
             admin,
             &format!(
                 "{}/{}",
-                *PATH_TO_WASM_BINARIES, "deposit-contract-optimized.wasm"
+                *PATH_TO_WASM_BINARIES, "demo-contract-optimized.wasm"
             ),
             session_args,
         )
@@ -115,7 +115,7 @@ impl TestContext {
 
     pub fn get_contract_purse_uref(&self, account: AccountHash) -> URef {
         let seed_uref: URef = *self
-            .get_contract_named_key("kairos_deposit_contract", "kairos_deposit_purse", account)
+            .get_contract_named_key("kairos_demo_contract", "kairos_deposit_purse", account)
             .as_uref()
             .unwrap();
         seed_uref
@@ -128,109 +128,23 @@ impl TestContext {
     #[allow(dead_code)]
     pub fn get_contract_purse_balance(&self, account: AccountHash) -> U512 {
         let contract_purse_uref: URef = *self
-            .get_contract_named_key("kairos_deposit_contract", "kairos_deposit_purse", account)
+            .get_contract_named_key("kairos_demo_contract", "kairos_deposit_purse", account)
             .as_uref()
             .unwrap();
         self.builder.get_purse_balance(contract_purse_uref)
     }
 
-    // read a u64 counter from the contract named keys e.g. "last_processed_deposit_counter"
+    /*// read a u64 counter from the contract named keys e.g. "last_processed_deposit_counter"
     pub fn read_counter_value(&mut self, account: AccountHash, name: &str) -> u64 {
-        let contract_hash = self.contract_hash("kairos_deposit_contract", account);
+        let contract_hash = self.contract_hash("kairos_demo_contract", account);
         self.builder.get_value(contract_hash, name)
-    }
-
-    // call the contract as admin to increase the last processed deposit counter value by 1
-    pub fn admin_increase_last_processed_counter(
-        &mut self,
-        caller: AccountHash,
-        installer: AccountHash,
-    ) {
-        let session_args = runtime_args! {};
-        let update_counter_request = ExecuteRequestBuilder::contract_call_by_hash(
-            caller,
-            self.contract_hash("kairos_deposit_contract", installer),
-            "incr_last_processed_deposit_counter",
-            session_args,
-        )
-        .build();
-        self.builder
-            .exec(update_counter_request)
-            .expect_success()
-            .commit();
-    }
-
-    // an unauthorized attempt of changing the last processed counter
-    pub fn unauthorized_increase_last_processed_counter(
-        &mut self,
-        caller: AccountHash,
-        installer: AccountHash,
-    ) {
-        let session_args = runtime_args! {};
-        let update_counter_request = ExecuteRequestBuilder::contract_call_by_hash(
-            caller,
-            self.contract_hash("kairos_deposit_contract", installer),
-            "incr_last_processed_deposit_counter",
-            session_args,
-        )
-        .build();
-        self.builder
-            .exec(update_counter_request)
-            .expect_failure()
-            .commit();
-    }
-
-    // try to update the access control / admin list of the deposit contract
-    pub fn update_security_badges_as_admin(
-        &mut self,
-        admin_list: Vec<Key>,
-        caller: AccountHash,
-        installer: AccountHash,
-    ) {
-        let session_args = runtime_args! {
-            "admin_list" => admin_list,
-        };
-        let update_security_request = ExecuteRequestBuilder::contract_call_by_hash(
-            caller,
-            self.contract_hash("kairos_deposit_contract", installer),
-            "update_security_badges",
-            session_args,
-        )
-        .build();
-        self.builder
-            .exec(update_security_request)
-            .expect_success()
-            .commit();
-    }
-
-    // an unauthorized attempt of changing the admin badges
-    pub fn unauthorized_update_security_badges(
-        &mut self,
-        admin_list: Vec<Key>,
-        caller: AccountHash,
-        installer: AccountHash,
-    ) {
-        let session_args = runtime_args! {
-            "admin_list" => admin_list,
-        };
-        let update_security_request = ExecuteRequestBuilder::contract_call_by_hash(
-            caller,
-            self.contract_hash("kairos_deposit_contract", installer),
-            "update_security_badges",
-            session_args,
-        )
-        .build();
-        self.builder
-            .exec(update_security_request)
-            .expect_failure()
-            .commit();
-    }
+    }*/
 
     // see deposit-session
     pub fn run_deposit_session(&mut self, amount: U512, installer: AccountHash, user: AccountHash) {
         let session_args = runtime_args! {
             "amount" => amount,
-            "deposit_contract" => self.contract_hash("kairos_deposit_contract", installer)
+            "demo_contract" => self.contract_hash("kairos_demo_contract", installer)
         };
         let session_request = ExecuteRequestBuilder::standard(
             user,
@@ -253,7 +167,7 @@ impl TestContext {
     ) {
         let session_args = runtime_args! {
             "amount" => amount,
-            "deposit_contract" => self.contract_hash("kairos_deposit_contract", account)
+            "demo_contract" => self.contract_hash("kairos_demo_contract", account)
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
@@ -277,7 +191,7 @@ impl TestContext {
     ) {
         let session_args = runtime_args! {
             "amount" => amount,
-            "deposit_contract" => self.contract_hash("kairos_deposit_contract", account),
+            "demo_contract" => self.contract_hash("kairos_demo_contract", account),
             "purse_uref" => deposit_purse_uref
         };
         let session_request = ExecuteRequestBuilder::standard(

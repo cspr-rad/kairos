@@ -77,8 +77,6 @@
                 !(builtins.elem (builtins.baseNameOf path) [ "kairos-contracts" "nixos" "kairos-prover" ]) &&
                 # Allow static files.
                 (lib.hasInfix "/fixtures/" path) ||
-                # ignore the kairos-contracts directory
-                !(lib.hasInfix "kairos-contracts/" path) ||
                 # Default filter (from crane) for .rs files.
                 (craneLib.filterCargoSources path type)
               ;

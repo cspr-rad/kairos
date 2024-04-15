@@ -16,7 +16,7 @@ bincode = "1.3.3"
 target = "wasm32-unknown-unknown"
 
 [[bin]]
-name = "deposit-contract"
+name = "demo-contract"
 path = "src/main.rs"
 bench = false
 doctest = false
