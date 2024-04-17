@@ -26,4 +26,8 @@ pub enum SseError {
     /// Unable to parse SSE data.
     #[error("Deserialization error: {0}")]
     DeserializizationError(#[from] serde_json::Error),
+
+    /// Connection must be stopped, as received shutdown event.
+    #[error("Node shutdown")]
+    NodeShutdown,
 }

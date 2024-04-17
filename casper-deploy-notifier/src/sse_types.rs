@@ -14,6 +14,8 @@ pub enum SseData {
         account: Box<casper_types::PublicKey>,
         execution_result: Box<casper_types::ExecutionResult>,
     },
+    /// The node is about to shut down.
+    Shutdown,
     /// Other events, that we are not interested in.
     #[serde(untagged)]
     Other(serde_json::Value),

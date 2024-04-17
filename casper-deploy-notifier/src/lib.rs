@@ -87,6 +87,7 @@ impl DeployNotifier {
                         break;
                     }
                 }
+                SseData::Shutdown => Err(SseError::NodeShutdown)?,
             }
         }
 
