@@ -4,7 +4,7 @@ use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
 use kairos_server::{
     routes::{deposit::DepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody},
-    state::BatchState,
+    state::BatchStateManager,
 };
 use kairos_tx::asn::{Deposit, SigningPayload, Transfer, Withdrawal};
 use tracing_subscriber::{prelude::*, EnvFilter};
@@ -20,7 +20,11 @@ fn new_test_app() -> TestServer {
     });
     let config = TestServerConfig::builder().mock_transport().build();
 
-    TestServer::new_with_config(kairos_server::app_router(BatchState::new_empty()), config).unwrap()
+    TestServer::new_with_config(
+        kairos_server::app_router(BatchStateManager::new_empty()),
+        config,
+    )
+    .unwrap()
 }
 
 #[tokio::test]
