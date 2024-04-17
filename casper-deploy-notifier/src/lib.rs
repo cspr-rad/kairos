@@ -73,10 +73,14 @@ impl DeployNotifier {
                     deploy_hash,
                     account,
                 } => {
+                    let success = match *execution_result {
+                        casper_types::ExecutionResult::Failure { .. } => false,
+                        casper_types::ExecutionResult::Success { .. } => true,
+                    };
                     let notification = Notification {
                         deploy_hash: base16::encode_lower(deploy_hash.as_bytes()),
                         public_key: account.to_hex(),
-                        success: execution_result.into(),
+                        success,
                     };
                     if let Err(_e) = tx.send(notification).await {
                         // Receiver probably dropeed.
