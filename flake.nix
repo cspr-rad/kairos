@@ -25,8 +25,10 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    risc0pkgs.url = "github:cspr-rad/risc0pkgs";
-    risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
+    # Pin to a revision with working risc0 build
+    risc0pkgs.url = "github:cspr-rad/risc0pkgs/7acff27ce7116777cc7f5a162efa9b599808ed97";
+    # FIXME once we are able to build with upstream rustc we should uncomment this
+    #risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
     csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
     csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -150,14 +152,11 @@
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
 
-              # FIXME fix weird issue with rust-nightly and tarpaulin https://github.com/xd009642/tarpaulin/issues/1499
-              RUSTFLAGS = "-Cstrip=none";
-
               # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
               # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
               cargoTarpaulinExtraArgs = "--skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
-              # For some reason cargoTarpaulin runs the tests in the buildPhase
 
+              # For some reason cargoTarpaulin runs the tests in the buildPhase
               buildInputs = kairosNodeAttrs.buildInputs ++ [
                 inputs'.csprpkgs.packages.cctl
               ];

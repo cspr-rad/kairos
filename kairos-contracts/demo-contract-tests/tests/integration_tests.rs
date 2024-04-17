@@ -2,7 +2,7 @@ mod test_fixture;
 #[cfg(test)]
 mod tests {
     use crate::test_fixture::TestContext;
-    use casper_types::{account::AccountHash, Key, U512};
+    use casper_types::{account::AccountHash, U512};
 
     #[test]
     fn should_install_deposit_contract() {
