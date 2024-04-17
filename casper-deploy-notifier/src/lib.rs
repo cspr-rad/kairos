@@ -74,7 +74,7 @@ impl DeployNotifier {
                     account,
                 } => {
                     let notification = Notification {
-                        deploy_hash,
+                        deploy_hash: base16::encode_lower(deploy_hash.as_bytes()),
                         public_key: account.to_hex(),
                         success: execution_result.into(),
                     };

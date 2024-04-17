@@ -25,7 +25,7 @@ pub enum SseData {
     ApiVersion(casper_types::ProtocolVersion),
     /// The given deploy has been executed, committed and forms part of the given block.
     DeployProcessed {
-        deploy_hash: String,
+        deploy_hash: Box<casper_types::DeployHash>,
         account: Box<casper_types::PublicKey>,
         execution_result: ExecutionResult,
     },
