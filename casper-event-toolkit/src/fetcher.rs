@@ -57,4 +57,55 @@ impl Fetcher {
 
         Ok(dynamic_event)
     }
+
+    pub async fn fetch_events_from_deploy(
+        &self,
+        deploy_hash: &str,
+        event_schema: &Schemas,
+    ) -> Result<Vec<Event>, ReplicatorError> {
+        let execution_result = self.client.get_deploy_result(deploy_hash).await?;
+        let effects = match execution_result {
+            casper_types::ExecutionResult::Failure { .. } => Err(ReplicatorError::DeployError {
+                context: "failed execution",
+            }),
+            casper_types::ExecutionResult::Success { effect, .. } => Ok(effect),
+        }?;
+
+        let mut events = vec![];
+
+        for entry in effects.transforms {
+            // Look for data writes into the global state.
+            let casper_types::Transform::WriteCLValue(clvalue) = entry.transform else {
+                continue;
+            };
+
+            // Look specifically for dictionaries writes.
+            const DICTIONARY_PREFIX: &str = "dictionary-";
+            if entry.key.starts_with(DICTIONARY_PREFIX) == false {
+                continue;
+            }
+
+            // Try parsing CES value, but ignore errors - we don't really know if this is CES dictionary,
+            // because write address is based on key (event ID).
+            let Ok((_total_length, event_value_bytes)) = u32::from_bytes(clvalue.inner_bytes())
+            else {
+                continue;
+            };
+            let Ok((event_name, event_data)) = parse_event_name_and_data(event_value_bytes) else {
+                continue;
+            };
+
+            // Parse dynamic event data.
+            let dynamic_event_schema = match event_schema.0.get(&event_name) {
+                Some(schema) => Ok(schema.clone()),
+                None => Err(ReplicatorError::MissingEventSchema(event_name.to_string())),
+            }?;
+            let dynamic_event =
+                crate::event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
+
+            events.push(dynamic_event);
+        }
+
+        Ok(events)
+    }
 }

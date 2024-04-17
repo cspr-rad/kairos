@@ -26,4 +26,7 @@ pub enum ReplicatorError {
 
     #[error("parsing error for '{context}'")]
     ParsingError { context: &'static str },
+
+    #[error("deploy error: '{context}'")]
+    DeployError { context: &'static str },
 }
