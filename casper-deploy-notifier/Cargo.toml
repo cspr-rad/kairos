@@ -6,8 +6,8 @@ license.workspace = true
 
 [lib]
 
-[[bin]]
-name = "casper-deploy-notifier"
+[[example]]
+name = "echo_demo"
 
 [dependencies]
 futures = "0.3.30"
