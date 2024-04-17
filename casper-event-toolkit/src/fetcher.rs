@@ -1,5 +1,5 @@
 use casper_event_standard::Schemas;
-use casper_types::bytesrepr::{FromBytes, ToBytes};
+use casper_types::bytesrepr::FromBytes;
 
 use crate::error::ReplicatorError;
 use crate::event::Event;
