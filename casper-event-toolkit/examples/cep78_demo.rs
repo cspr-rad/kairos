@@ -29,7 +29,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let num_events = fetcher.fetch_events_count().await?;
     println!("Events count: {}", num_events);
 
-    // Fetch each event data.
+    // Fetch events from particular deploy.
+    // let events = fetcher
+    //     .fetch_events_from_deploy(
+    //         "657ff0cd295bf398988c12f913d3da62946039aab592da0eb5e577627e9bcaf5",
+    //         &schemas,
+    //     )
+    //     .await?;
+
+    // Fetch each event data from storage.
     for event_id in 0..10 {
         let dynamic_event = fetcher.fetch_event(event_id, &schemas).await?;
         println!("Event data parsed dynamically: {:?}", dynamic_event);
