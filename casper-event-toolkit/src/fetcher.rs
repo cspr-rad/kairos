@@ -4,6 +4,7 @@ use casper_types::bytesrepr::FromBytes;
 use crate::error::ReplicatorError;
 use crate::event::Event;
 use crate::metadata::CesMetadataRef;
+use crate::parser::parse_event_name_and_data;
 use crate::rpc::client::CasperClient;
 
 pub struct Fetcher {
@@ -43,25 +44,11 @@ impl Fetcher {
             .client
             .get_stored_clvalue_from_dict(&events_data_uref, &id.to_string())
             .await?;
-
-        let bytes = event_value.inner_bytes();
-        let (_total_length, event_data) =
-            u32::from_bytes(bytes).map_err(|_e| ReplicatorError::ParsingError {
-                context: "event data length",
-            })?;
-        let (event_name, _rem2a) =
-            String::from_bytes(event_data).map_err(|_e| ReplicatorError::ParsingError {
-                context: "event name",
-            })?;
-        let event_name =
-            event_name
-                .strip_prefix("event_")
-                .ok_or_else(|| ReplicatorError::ParsingError {
-                    context: "event prefix",
-                })?;
+        let event_value_bytes = event_value.inner_bytes();
+        let (event_name, event_data) = parse_event_name_and_data(event_value_bytes)?;
 
         // Parse dynamic event data.
-        let dynamic_event_schema = match event_schema.0.get(event_name) {
+        let dynamic_event_schema = match event_schema.0.get(&event_name) {
             Some(schema) => Ok(schema.clone()),
             None => Err(ReplicatorError::MissingEventSchema(event_name.to_string())),
         }?;
