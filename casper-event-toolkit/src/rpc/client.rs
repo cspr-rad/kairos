@@ -162,4 +162,36 @@ impl CasperClient {
 
         Ok(clvalue)
     }
+
+    pub async fn get_deploy_result(
+        &self,
+        deploy_hash: &str,
+    ) -> Result<casper_types::ExecutionResult, ReplicatorError> {
+        // Build deploy hash.
+        let contract_hash_bytes = hex::decode(deploy_hash).unwrap();
+        let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();
+        let deploy_hash = casper_client::types::DeployHash::new(contract_hash_bytes.into());
+
+        // Approvals originally received by the node are okay.
+        let finalized_approvals = false;
+
+        // Common parameters.
+        let rpc_id = self.id_generator.next_id().into();
+        let verbosity = casper_client::Verbosity::Low;
+
+        let response = casper_client::get_deploy(
+            rpc_id,
+            &self.rpc_endpoint,
+            verbosity,
+            deploy_hash,
+            finalized_approvals,
+        )
+        .await
+        .unwrap();
+        let mut execution_results = response.result.execution_results;
+        assert_eq!(execution_results.len(), 1); // TODO: Is it always the case?
+        let execution_result = execution_results.remove(0);
+
+        Ok(execution_result.result)
+    }
 }
