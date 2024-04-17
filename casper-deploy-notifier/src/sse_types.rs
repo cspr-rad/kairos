@@ -22,7 +22,7 @@ impl From<ExecutionResult> for bool {
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
 pub enum SseData {
     /// The version of node's API.
-    ApiVersion(String),
+    ApiVersion(casper_types::ProtocolVersion),
     /// The given deploy has been executed, committed and forms part of the given block.
     DeployProcessed {
         deploy_hash: String,
