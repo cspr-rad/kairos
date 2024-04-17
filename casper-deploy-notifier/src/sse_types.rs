@@ -26,7 +26,7 @@ pub enum SseData {
     /// The given deploy has been executed, committed and forms part of the given block.
     DeployProcessed {
         deploy_hash: String,
-        account: String,
+        account: Box<casper_types::PublicKey>,
         execution_result: ExecutionResult,
     },
     /// Other events, that we are not interested in.

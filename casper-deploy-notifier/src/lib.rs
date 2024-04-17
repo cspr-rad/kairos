@@ -1,3 +1,4 @@
+use casper_types::AsymmetricType;
 use eventsource_stream::{Event, EventStreamError, Eventsource};
 use futures::stream::{BoxStream, TryStreamExt};
 use tokio::sync::mpsc;
@@ -74,7 +75,7 @@ impl DeployNotifier {
                 } => {
                     let notification = Notification {
                         deploy_hash,
-                        public_key: account,
+                        public_key: account.to_hex(),
                         success: execution_result.into(),
                     };
                     if let Err(_e) = tx.send(notification).await {
