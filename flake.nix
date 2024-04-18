@@ -27,8 +27,8 @@
     advisory-db.flake = false;
     risc0pkgs.url = "github:cspr-rad/risc0pkgs";
     risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
-    csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
-    csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
+    cctl.url = "github:casper-network/cctl";
+    csprpkgs.follows = "cctl/csprpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
@@ -74,7 +74,7 @@
               darwin.apple_sdk.frameworks.SystemConfiguration
             ];
             checkInputs = [
-              inputs'.csprpkgs.packages.cctl
+              inputs'.cctl.packages.cctl
             ];
             meta.mainProgram = "kairos-server";
           };
@@ -108,7 +108,7 @@
               ''
                 mkdir -p $out/bin
                 makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
-                  --set PATH ${pkgs.lib.makeBinPath [inputs'.csprpkgs.packages.cctl ]}
+                  --set PATH ${pkgs.lib.makeBinPath [inputs'.cctl.packages.cctl ]}
               '';
 
             default = self'.packages.kairos;
@@ -131,7 +131,7 @@
               cargoTarpaulinExtraArgs = "--skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
               # For some reason cargoTarpaulin runs the tests in the buildPhase
               buildInputs = kairosNodeAttrs.buildInputs ++ [
-                inputs'.csprpkgs.packages.cctl
+                inputs'.cctl.packages.cctl
               ];
             });
 
