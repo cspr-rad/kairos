@@ -95,6 +95,11 @@
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
+            kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
+              cargoExtraArgs = "-p kairos-tx --no-default-features";
+            });
+
             cctld = pkgs.runCommand "cctld-wrapped"
               {
                 buildInputs = [ pkgs.makeWrapper ];
