@@ -11,7 +11,7 @@ pub mod events;
 use errors::DepositError;
 
 /// Wrap the immediate caller as a Key and return it
-fn call_stack_element_to_address(call_stack_element: CallStackElement) -> Key {
+fn call_stack_element_to_key(call_stack_element: CallStackElement) -> Key {
     match call_stack_element {
         CallStackElement::Session { account_hash } => Key::from(account_hash),
         CallStackElement::StoredSession { account_hash, .. } => {
@@ -33,6 +33,6 @@ pub(crate) fn get_immediate_caller() -> Result<Key, DepositError> {
         .into_iter()
         .rev()
         .nth(1)
-        .map(call_stack_element_to_address)
+        .map(call_stack_element_to_key)
         .ok_or(DepositError::InvalidContext)
 }
