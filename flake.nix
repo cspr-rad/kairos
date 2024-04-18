@@ -48,11 +48,20 @@
             src = lib.cleanSourceWith {
               src = craneLib.path ./.;
               filter = path: type:
-                !(builtins.elem (builtins.baseNameOf path) [ "kairos-contracts" "nixos" "kairos-prover" ]) &&
-                # Allow static files.
-                (lib.hasInfix "/fixtures/" path) ||
-                # Default filter (from crane) for .rs files.
-                (craneLib.filterCargoSources path type)
+                (builtins.any (includePath: lib.hasInfix includePath path) [
+                  "/kairos-cli"
+                  "/kairos-crypto"
+                  "/kairos-server"
+                  "/kairos-test-utils"
+                  "/kairos-tx"
+                  "/Cargo.toml"
+                  "/Cargo.lock"
+                ]) && (
+                  # Allow static files.
+                  (lib.hasInfix "/tests/fixtures/" path) ||
+                  # Default filter (from crane) for .rs files.
+                  (craneLib.filterCargoSources path type)
+                )
               ;
             };
             nativeBuildInputs = with pkgs; [ pkg-config ];
