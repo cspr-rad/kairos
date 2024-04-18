@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 extern crate alloc;
-use alloc::string::ToString;
+use alloc::{string::ToString, vec::Vec};
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
@@ -57,6 +57,24 @@ pub extern "C" fn get_purse() {
     );
 }
 
+// Batch submission with host verifier: Unimplemented
+// This entry point will verify a batch proof and update the trie root
+// TODO: Store the trie root under a URef in this deposit contract
+// QUESTION: What is the initial root and state of the trie?
+#[no_mangle]
+pub extern "C" fn submit_batch() {
+    // receive some serialized proof
+    // the proof will include a public journal with the updated trie root
+    let _serialized_proof: Vec<u8> = runtime::get_named_arg("serialized_proof");
+
+    // TODO: VERIFY proof and UPDATE the trie root
+    // TODO: UPDATE last_processed_deposit_counter by `n`, where `n` is the amount of deposits processed in this batch.
+
+    // OPEN QUESTIONS
+    // How are L1 deposits verified when proving?
+    // Are deposits and transfers private or public inputs to the circuit / guest?
+}
+
 // Entry point called by a user through session code to deposit funds.
 // Due to Casper < 2.0 purse management and access control, it is necessary that
 // a temporary purse is funded and passed to the deposit contract, since this is
@@ -107,12 +125,6 @@ pub extern "C" fn call() {
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_DEPOSIT_CONTRACT_NAME, contract_hash_key);
 
-    /*
-        Initialize the contract, this will create the deposit purse.
-        Open questions:
-            - should this be revokable?
-            - should there be any governance at all?
-    */
     let init_args = runtime_args! {};
     runtime::call_contract::<()>(contract_hash, "init", init_args);
 }
