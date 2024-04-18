@@ -1,6 +1,6 @@
 pub mod parsers;
 use anyhow::anyhow;
-use backoff::{self, backoff::Constant, future::retry};
+use backoff::{backoff::Constant, future::retry};
 use casper_client::{get_node_status, rpcs::results::ReactorState, Error, JsonRpcId, Verbosity};
 use std::io::{self, Write};
 use std::path::PathBuf;
@@ -133,7 +133,6 @@ impl Drop for CCTLNetwork {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use casper_client::{get_node_status, rpcs::results::ReactorState, JsonRpcId, Verbosity};
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
         let network = CCTLNetwork::run().await.unwrap();
