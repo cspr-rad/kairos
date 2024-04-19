@@ -162,13 +162,8 @@ impl CasperClient {
 
     pub async fn get_deploy_result(
         &self,
-        deploy_hash: &str,
+        deploy_hash: casper_client::types::DeployHash,
     ) -> Result<casper_types::ExecutionResult, ToolkitError> {
-        // Build deploy hash.
-        let contract_hash_bytes = hex::decode(deploy_hash).unwrap();
-        let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();
-        let deploy_hash = casper_client::types::DeployHash::new(contract_hash_bytes.into());
-
         // Approvals originally received by the node are okay.
         let finalized_approvals = false;
 

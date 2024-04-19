@@ -63,6 +63,11 @@ impl Fetcher {
         deploy_hash: &str,
         event_schema: &Schemas,
     ) -> Result<Vec<Event>, ToolkitError> {
+        // Build deploy hash.
+        let contract_hash_bytes = hex::decode(deploy_hash).unwrap();
+        let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();
+        let deploy_hash = casper_client::types::DeployHash::new(contract_hash_bytes.into());
+
         let execution_result = self.client.get_deploy_result(deploy_hash).await?;
         let effects = match execution_result {
             casper_types::ExecutionResult::Failure { .. } => Err(ToolkitError::DeployError {
