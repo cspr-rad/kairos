@@ -5,8 +5,8 @@ use casper_types::{CLValue, HashAddr, URef};
 use crate::error::ToolkitError;
 use crate::rpc::id_generator::JsonRpcIdGenerator;
 
-const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
-const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
+pub const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
+pub const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
 
 pub struct CasperClient {
     rpc_endpoint: String,
