@@ -1,4 +1,5 @@
 use casper_client::rpcs::results::QueryGlobalStateResult;
+use casper_hashing::Digest;
 use casper_types::{CLValue, URef};
 
 use crate::{error::ReplicatorError, rpc::id::JsonRpcIdGenerator};
@@ -28,7 +29,7 @@ impl CasperClient {
     }
 
     // Fetch latest state root hash.
-    pub async fn get_state_root_hash(&self) -> Result<[u8; 32], ReplicatorError> {
+    pub async fn get_state_root_hash(&self) -> Result<Digest, ReplicatorError> {
         // No block given means the latest available.
         let block_identifier = None;
 
@@ -46,18 +47,18 @@ impl CasperClient {
 
         let state_root_hash = response.result.state_root_hash.unwrap();
 
-        Ok(state_root_hash.into())
+        Ok(state_root_hash)
     }
 
     async fn query_global_state(
         &self,
-        state_root_hash: &[u8; 32],
+        state_root_hash: &Digest,
         key: casper_types::Key,
         path: Vec<String>,
     ) -> QueryGlobalStateResult {
         // Wrap state root hash.
         let global_state_identifier = casper_client::rpcs::GlobalStateIdentifier::StateRootHash(
-            state_root_hash.clone().into(),
+            state_root_hash.to_owned()
         );
 
         // Common parameters.
