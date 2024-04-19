@@ -5,8 +5,8 @@ use casper_types::{CLValue, HashAddr, URef};
 use crate::error::ToolkitError;
 use crate::rpc::id_generator::JsonRpcIdGenerator;
 
-pub const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
-pub const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
+pub const DEFAULT_MAINNET_RPC_ENDPOINT: &str = "https://mainnet.casper-node.xyz/rpc";
+pub const DEFAULT_TESTNET_RPC_ENDPOINT: &str = "https://testnet.casper-node.xyz/rpc";
 
 pub struct CasperClient {
     rpc_endpoint: String,
@@ -22,11 +22,11 @@ impl CasperClient {
     }
 
     pub fn default_mainnet() -> Self {
-        Self::new(DEFAULT_MAINNET_RPC)
+        Self::new(DEFAULT_MAINNET_RPC_ENDPOINT)
     }
 
     pub fn default_testnet() -> Self {
-        Self::new(DEFAULT_TESTNET_RPC)
+        Self::new(DEFAULT_TESTNET_RPC_ENDPOINT)
     }
 
     // Fetch latest state root hash.
