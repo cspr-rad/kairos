@@ -1,6 +1,6 @@
 use casper_client::types::StoredValue;
 use casper_hashing::Digest;
-use casper_types::{CLValue, ContractWasmHash, HashAddr, URef};
+use casper_types::{CLValue, HashAddr, URef};
 
 use crate::error::ToolkitError;
 use crate::rpc::id::JsonRpcIdGenerator;
