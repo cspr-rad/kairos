@@ -1,4 +1,5 @@
-use casper_types::{contracts::NamedKeys, Key, URef};
+use casper_types::contracts::NamedKeys;
+use casper_types::{Key, URef};
 
 use crate::error::ToolkitError;
 
