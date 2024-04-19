@@ -1,6 +1,6 @@
 use casper_client::types::StoredValue;
 use casper_hashing::Digest;
-use casper_types::{CLValue, URef};
+use casper_types::{CLValue, ContractWasmHash, HashAddr, URef};
 
 use crate::error::ToolkitError;
 use crate::rpc::id::JsonRpcIdGenerator;
@@ -82,18 +82,13 @@ impl CasperClient {
 
     pub async fn get_contract_named_keys(
         &self,
-        contract_hash: &str,
+        contract_hash: HashAddr,
     ) -> Result<casper_types::contracts::NamedKeys, ToolkitError> {
-        // Build contract hash.
-        let contract_hash_bytes = hex::decode(contract_hash).unwrap();
-        let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();
-        let contract_hash = casper_types::ContractWasmHash::new(contract_hash_bytes);
-
         // Fetch latest state root hash.
         let state_root_hash = self.get_state_root_hash().await?;
 
         // Contract is stored directly at given hash.
-        let key = casper_types::Key::Hash(contract_hash.value());
+        let key = casper_types::Key::Hash(contract_hash);
         let path = vec![];
 
         let stored_value = self.query_global_state(state_root_hash, key, path).await;

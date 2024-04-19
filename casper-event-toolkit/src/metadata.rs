@@ -18,6 +18,10 @@ impl CesMetadataRef {
         client: &CasperClient,
         contract_hash: &str,
     ) -> Result<CesMetadataRef, ToolkitError> {
+        // Build contract hash.
+        let contract_hash_bytes = hex::decode(contract_hash).unwrap();
+        let contract_hash = casper_types::HashAddr::try_from(contract_hash_bytes.as_ref()).unwrap();
+
         // Fetch contract named keys.
         let contract_named_keys = client.get_contract_named_keys(contract_hash).await?;
 
