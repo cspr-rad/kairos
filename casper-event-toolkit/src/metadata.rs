@@ -1,3 +1,5 @@
+pub use casper_types::URef;
+
 use crate::error::ToolkitError;
 use crate::rpc::client::CasperClient;
 use crate::utils;
@@ -8,9 +10,9 @@ const EVENTS_DATA_KEY: &str = "__events";
 
 #[derive(Clone)]
 pub struct CesMetadataRef {
-    pub events_schema: casper_types::URef,
-    pub events_length: casper_types::URef,
-    pub events_data: casper_types::URef,
+    pub events_schema: URef,
+    pub events_length: URef,
+    pub events_data: URef,
 }
 
 impl CesMetadataRef {
