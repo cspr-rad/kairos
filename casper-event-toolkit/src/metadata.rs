@@ -1,4 +1,4 @@
-use crate::error::ReplicatorError;
+use crate::error::ToolkitError;
 use crate::rpc::client::CasperClient;
 use crate::utils;
 
@@ -17,7 +17,7 @@ impl CesMetadataRef {
     pub async fn fetch_metadata(
         client: &CasperClient,
         contract_hash: &str,
-    ) -> Result<CesMetadataRef, ReplicatorError> {
+    ) -> Result<CesMetadataRef, ToolkitError> {
         // Fetch contract named keys.
         let contract_named_keys = client.get_contract_named_keys(contract_hash).await?;
 

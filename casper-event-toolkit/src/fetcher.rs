@@ -1,7 +1,7 @@
 use casper_event_standard::Schemas;
 use casper_types::bytesrepr::FromBytes;
 
-use crate::error::ReplicatorError;
+use crate::error::ToolkitError;
 use crate::event::Event;
 use crate::metadata::CesMetadataRef;
 use crate::parser::parse_event_name_and_data;
@@ -14,22 +14,22 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
-    pub async fn fetch_events_count(&self) -> Result<u32, ReplicatorError> {
+    pub async fn fetch_events_count(&self) -> Result<u32, ToolkitError> {
         let events_length_uref = &self.ces_metadata.events_length;
         let events_length_value = self.client.get_stored_clvalue(&events_length_uref).await?;
         let events_length: u32 = events_length_value
             .into_t()
-            .map_err(|e| ReplicatorError::InvalidCLValue(e.to_string()))?;
+            .map_err(|e| ToolkitError::InvalidCLValue(e.to_string()))?;
 
         Ok(events_length)
     }
 
-    pub async fn fetch_schema(&self) -> Result<Schemas, ReplicatorError> {
+    pub async fn fetch_schema(&self) -> Result<Schemas, ToolkitError> {
         let events_schema_uref = &self.ces_metadata.events_schema;
         let events_schema_value = self.client.get_stored_clvalue(&events_schema_uref).await?;
         let events_schema: Schemas = events_schema_value
             .into_t()
-            .map_err(|e| ReplicatorError::InvalidCLValue(e.to_string()))?;
+            .map_err(|e| ToolkitError::InvalidCLValue(e.to_string()))?;
 
         Ok(events_schema)
     }
@@ -38,7 +38,7 @@ impl Fetcher {
         &self,
         id: u64,
         event_schema: &Schemas,
-    ) -> Result<Event, ReplicatorError> {
+    ) -> Result<Event, ToolkitError> {
         let events_data_uref = &self.ces_metadata.events_data;
         let event_value = self
             .client
@@ -50,7 +50,7 @@ impl Fetcher {
         // Parse dynamic event data.
         let dynamic_event_schema = match event_schema.0.get(&event_name) {
             Some(schema) => Ok(schema.clone()),
-            None => Err(ReplicatorError::MissingEventSchema(event_name.to_string())),
+            None => Err(ToolkitError::MissingEventSchema(event_name.to_string())),
         }?;
         let dynamic_event =
             crate::event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
@@ -62,10 +62,10 @@ impl Fetcher {
         &self,
         deploy_hash: &str,
         event_schema: &Schemas,
-    ) -> Result<Vec<Event>, ReplicatorError> {
+    ) -> Result<Vec<Event>, ToolkitError> {
         let execution_result = self.client.get_deploy_result(deploy_hash).await?;
         let effects = match execution_result {
-            casper_types::ExecutionResult::Failure { .. } => Err(ReplicatorError::DeployError {
+            casper_types::ExecutionResult::Failure { .. } => Err(ToolkitError::DeployError {
                 context: "failed execution",
             }),
             casper_types::ExecutionResult::Success { effect, .. } => Ok(effect),
@@ -98,7 +98,7 @@ impl Fetcher {
             // Parse dynamic event data.
             let dynamic_event_schema = match event_schema.0.get(&event_name) {
                 Some(schema) => Ok(schema.clone()),
-                None => Err(ReplicatorError::MissingEventSchema(event_name.to_string())),
+                None => Err(ToolkitError::MissingEventSchema(event_name.to_string())),
             }?;
             let dynamic_event =
                 crate::event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);

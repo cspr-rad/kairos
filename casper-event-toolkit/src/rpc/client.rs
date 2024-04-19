@@ -2,7 +2,7 @@ use casper_client::rpcs::results::QueryGlobalStateResult;
 use casper_hashing::Digest;
 use casper_types::{CLValue, URef};
 
-use crate::error::ReplicatorError;
+use crate::error::ToolkitError;
 use crate::rpc::id::JsonRpcIdGenerator;
 
 const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
@@ -30,7 +30,7 @@ impl CasperClient {
     }
 
     // Fetch latest state root hash.
-    pub(crate) async fn get_state_root_hash(&self) -> Result<Digest, ReplicatorError> {
+    pub(crate) async fn get_state_root_hash(&self) -> Result<Digest, ToolkitError> {
         // No block given means the latest available.
         let block_identifier = None;
 
@@ -83,7 +83,7 @@ impl CasperClient {
     pub async fn get_contract_named_keys(
         &self,
         contract_hash: &str,
-    ) -> Result<casper_types::contracts::NamedKeys, ReplicatorError> {
+    ) -> Result<casper_types::contracts::NamedKeys, ToolkitError> {
         // Build contract hash.
         let contract_hash_bytes = hex::decode(contract_hash).unwrap();
         let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();
@@ -111,7 +111,7 @@ impl CasperClient {
     pub async fn get_stored_clvalue(
         &self,
         uref: &casper_types::URef,
-    ) -> Result<CLValue, ReplicatorError> {
+    ) -> Result<CLValue, ToolkitError> {
         // Fetch latest state root hash.
         let state_root_hash = self.get_state_root_hash().await?;
 
@@ -132,7 +132,7 @@ impl CasperClient {
         &self,
         dictionary_seed_uref: &URef,
         dictionary_item_key: &str,
-    ) -> Result<CLValue, ReplicatorError> {
+    ) -> Result<CLValue, ToolkitError> {
         // Fetch latest state root hash.
         let state_root_hash = self.get_state_root_hash().await?;
 
@@ -168,7 +168,7 @@ impl CasperClient {
     pub async fn get_deploy_result(
         &self,
         deploy_hash: &str,
-    ) -> Result<casper_types::ExecutionResult, ReplicatorError> {
+    ) -> Result<casper_types::ExecutionResult, ToolkitError> {
         // Build deploy hash.
         let contract_hash_bytes = hex::decode(deploy_hash).unwrap();
         let contract_hash_bytes: [u8; 32] = contract_hash_bytes.try_into().unwrap();

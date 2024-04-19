@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ReplicatorError {
+pub enum ToolkitError {
     /// CES metadata not found in named keys.
     #[error("metadata key missing: '{context}'")]
     MissingMetadataKey { context: String },
