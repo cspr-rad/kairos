@@ -53,13 +53,13 @@ impl CasperClient {
 
     async fn query_global_state(
         &self,
-        state_root_hash: &Digest,
+        state_root_hash: Digest,
         key: casper_types::Key,
         path: Vec<String>,
     ) -> StoredValue {
         // Wrap state root hash.
         let global_state_identifier = casper_client::rpcs::GlobalStateIdentifier::StateRootHash(
-            state_root_hash.to_owned()
+            state_root_hash
         );
 
         // Common parameters.
@@ -96,7 +96,7 @@ impl CasperClient {
         let key = casper_types::Key::Hash(contract_hash.value());
         let path = vec![];
 
-        let stored_value = self.query_global_state(&state_root_hash, key, path).await;
+        let stored_value = self.query_global_state(state_root_hash, key, path).await;
         let contract = match stored_value {
             casper_client::types::StoredValue::Contract(v) => v,
             _ => panic!("Expected contract."),
@@ -119,7 +119,7 @@ impl CasperClient {
         let key = casper_types::Key::URef(*uref);
         let path = vec![];
 
-        let stored_value = self.query_global_state(&state_root_hash, key, path).await;
+        let stored_value = self.query_global_state(state_root_hash, key, path).await;
         let clvalue = match stored_value {
             casper_client::types::StoredValue::CLValue(v) => v,
             _ => panic!("Expected CLValue."),
