@@ -79,7 +79,7 @@ impl CasperClient {
         response.result.stored_value
     }
 
-    pub async fn get_contract_named_keys(
+    pub(crate) async fn get_contract_named_keys(
         &self,
         contract_hash: HashAddr,
     ) -> Result<casper_types::contracts::NamedKeys, ToolkitError> {
@@ -102,7 +102,7 @@ impl CasperClient {
         Ok(contract)
     }
 
-    pub async fn get_stored_clvalue(
+    pub(crate) async fn get_stored_clvalue(
         &self,
         uref: &casper_types::URef,
     ) -> Result<CLValue, ToolkitError> {
@@ -122,7 +122,7 @@ impl CasperClient {
         Ok(clvalue)
     }
 
-    pub async fn get_stored_clvalue_from_dict(
+    pub(crate) async fn get_stored_clvalue_from_dict(
         &self,
         dictionary_seed_uref: &URef,
         dictionary_item_key: &str,
@@ -159,7 +159,7 @@ impl CasperClient {
         Ok(clvalue)
     }
 
-    pub async fn get_deploy_result(
+    pub(crate) async fn get_deploy_result(
         &self,
         deploy_hash: casper_client::types::DeployHash,
     ) -> Result<casper_types::ExecutionResult, ToolkitError> {
