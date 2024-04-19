@@ -12,6 +12,7 @@ name = "cep78_demo"
 [dependencies]
 casper-client = "2.0.0"
 casper-event-standard = "0.4.1"
+casper-hashing = "2.0.0"
 casper-types = "3.0.0"
 hex = "0.4"
 thiserror = "1.0"

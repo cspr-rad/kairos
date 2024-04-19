@@ -487,6 +487,7 @@ version = "0.1.0"
 dependencies = [
  "casper-client",
  "casper-event-standard",
+ "casper-hashing",
  "casper-types 3.0.0",
  "hex",
  "thiserror",
