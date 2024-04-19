@@ -8,7 +8,7 @@ const EVENTS_SCHEMA_KEY: &str = "__events_schema";
 const EVENTS_LENGTH_KEY: &str = "__events_length";
 const EVENTS_DATA_KEY: &str = "__events";
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct CesMetadataRef {
     pub events_schema: URef,
     pub events_length: URef,
