@@ -29,7 +29,7 @@ impl CasperClient {
     }
 
     // Fetch latest state root hash.
-    pub async fn get_state_root_hash(&self) -> Result<Digest, ReplicatorError> {
+    pub(crate) async fn get_state_root_hash(&self) -> Result<Digest, ReplicatorError> {
         // No block given means the latest available.
         let block_identifier = None;
 
