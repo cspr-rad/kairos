@@ -1,3 +1,3 @@
 pub mod client;
-pub mod id;
-pub mod utils;
+pub(crate) mod id;
+pub(crate) mod utils;
