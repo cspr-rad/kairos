@@ -2,7 +2,8 @@ use casper_client::rpcs::results::QueryGlobalStateResult;
 use casper_hashing::Digest;
 use casper_types::{CLValue, URef};
 
-use crate::{error::ReplicatorError, rpc::id::JsonRpcIdGenerator};
+use crate::error::ReplicatorError;
+use crate::rpc::id::JsonRpcIdGenerator;
 
 const DEFAULT_MAINNET_RPC: &str = "https://mainnet.casper-node.xyz/rpc";
 const DEFAULT_TESTNET_RPC: &str = "https://testnet.casper-node.xyz/rpc";
