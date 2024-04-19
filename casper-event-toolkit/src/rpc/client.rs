@@ -1,4 +1,4 @@
-use casper_client::rpcs::results::QueryGlobalStateResult;
+use casper_client::types::StoredValue;
 use casper_hashing::Digest;
 use casper_types::{CLValue, URef};
 
@@ -56,7 +56,7 @@ impl CasperClient {
         state_root_hash: &Digest,
         key: casper_types::Key,
         path: Vec<String>,
-    ) -> QueryGlobalStateResult {
+    ) -> StoredValue {
         // Wrap state root hash.
         let global_state_identifier = casper_client::rpcs::GlobalStateIdentifier::StateRootHash(
             state_root_hash.to_owned()
@@ -77,7 +77,7 @@ impl CasperClient {
         .await
         .unwrap();
 
-        response.result
+        response.result.stored_value
     }
 
     pub async fn get_contract_named_keys(
@@ -96,8 +96,8 @@ impl CasperClient {
         let key = casper_types::Key::Hash(contract_hash.value());
         let path = vec![];
 
-        let response = self.query_global_state(&state_root_hash, key, path).await;
-        let contract = match response.stored_value {
+        let stored_value = self.query_global_state(&state_root_hash, key, path).await;
+        let contract = match stored_value {
             casper_client::types::StoredValue::Contract(v) => v,
             _ => panic!("Expected contract."),
         };
@@ -119,8 +119,8 @@ impl CasperClient {
         let key = casper_types::Key::URef(*uref);
         let path = vec![];
 
-        let response = self.query_global_state(&state_root_hash, key, path).await;
-        let clvalue = match response.stored_value {
+        let stored_value = self.query_global_state(&state_root_hash, key, path).await;
+        let clvalue = match stored_value {
             casper_client::types::StoredValue::CLValue(v) => v,
             _ => panic!("Expected CLValue."),
         };
