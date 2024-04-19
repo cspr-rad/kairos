@@ -58,9 +58,8 @@ impl CasperClient {
         path: Vec<String>,
     ) -> StoredValue {
         // Wrap state root hash.
-        let global_state_identifier = casper_client::rpcs::GlobalStateIdentifier::StateRootHash(
-            state_root_hash
-        );
+        let global_state_identifier =
+            casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash);
 
         // Common parameters.
         let rpc_id = self.id_generator.next_id().into();
