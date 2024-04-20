@@ -155,7 +155,11 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
             value_bytes.extend(t3_parsed.inner_bytes());
             (CLValue::from_components(casper_types::CLType::Tuple3([t1.clone(), t2.clone(), t3.clone()]), value_bytes), new_remainder)
         },
-        casper_types::CLType::Any => todo!(),
+        casper_types::CLType::Any => {
+            // Consume all the remaining bytes and put it in `Any` type.
+            let (new_remainder, value_bytes) = bytes.split_at(0);
+            (CLValue::from_components(casper_types::CLType::Any, value_bytes.to_vec()), new_remainder)
+        },
     };
     
     Ok(result)
