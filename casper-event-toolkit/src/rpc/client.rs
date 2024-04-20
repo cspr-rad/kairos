@@ -160,6 +160,7 @@ impl CasperClient {
         )
         .await?;
         let stored_value = response.result.stored_value;
+
         let clvalue = match stored_value {
             casper_client::types::StoredValue::CLValue(v) => Ok(v),
             _ => Err(ToolkitError::UnexpectedStoredValueType {
