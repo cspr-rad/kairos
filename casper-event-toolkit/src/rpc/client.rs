@@ -155,9 +155,12 @@ impl CasperClient {
             state_root_hash.into(),
             dictionary_item_identifier,
         )
-        .await
-        .unwrap();
-        let clvalue = match response.result.stored_value {
+        .await;
+        let stored_value = match response {
+            Ok(v) => Ok(v.result.stored_value),
+            Err(e) => Err(ToolkitError::from(e)),
+        }?;
+        let clvalue = match stored_value {
             casper_client::types::StoredValue::CLValue(v) => Ok(v),
             _ => Err(ToolkitError::UnexpectedStoredValueType { expected_type: "clvalue" })
         }?;
@@ -183,9 +186,11 @@ impl CasperClient {
             deploy_hash,
             finalized_approvals,
         )
-        .await
-        .unwrap();
-        let mut execution_results = response.result.execution_results;
+        .await;
+        let mut execution_results = match response {
+            Ok(v) => Ok(v.result.execution_results),
+            Err(e) => Err(ToolkitError::from(e)),
+        }?;
         assert_eq!(execution_results.len(), 1); // TODO: Is it always the case?
         let execution_result = execution_results.remove(0);
 
