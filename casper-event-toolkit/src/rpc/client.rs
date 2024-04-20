@@ -155,7 +155,7 @@ impl CasperClient {
             rpc_id,
             &self.rpc_endpoint,
             verbosity,
-            state_root_hash.into(),
+            state_root_hash,
             dictionary_item_identifier,
         )
         .await?;

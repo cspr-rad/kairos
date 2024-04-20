@@ -20,5 +20,5 @@ pub fn extract_uref_from_named_keys(
         }),
     }?;
 
-    Ok(uref.clone())
+    Ok(*uref)
 }

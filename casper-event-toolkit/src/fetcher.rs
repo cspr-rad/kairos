@@ -16,7 +16,7 @@ pub struct Fetcher {
 impl Fetcher {
     pub async fn fetch_events_count(&self) -> Result<u32, ToolkitError> {
         let events_length_uref = &self.ces_metadata.events_length;
-        let events_length_value = self.client.get_stored_clvalue(&events_length_uref).await?;
+        let events_length_value = self.client.get_stored_clvalue(events_length_uref).await?;
         let events_length: u32 = events_length_value
             .into_t()
             .map_err(|e| ToolkitError::InvalidCLValue(e.to_string()))?;
@@ -26,7 +26,7 @@ impl Fetcher {
 
     pub async fn fetch_schema(&self) -> Result<Schemas, ToolkitError> {
         let events_schema_uref = &self.ces_metadata.events_schema;
-        let events_schema_value = self.client.get_stored_clvalue(&events_schema_uref).await?;
+        let events_schema_value = self.client.get_stored_clvalue(events_schema_uref).await?;
         let events_schema: Schemas = events_schema_value
             .into_t()
             .map_err(|e| ToolkitError::InvalidCLValue(e.to_string()))?;
@@ -42,7 +42,7 @@ impl Fetcher {
         let events_data_uref = &self.ces_metadata.events_data;
         let event_value = self
             .client
-            .get_stored_clvalue_from_dict(&events_data_uref, &id.to_string())
+            .get_stored_clvalue_from_dict(events_data_uref, &id.to_string())
             .await?;
         let event_value_bytes = event_value.inner_bytes();
         let (event_name, event_data) = parse_raw_event_name_and_data(event_value_bytes)?;
@@ -79,7 +79,7 @@ impl Fetcher {
 
             // Look specifically for dictionaries writes.
             const DICTIONARY_PREFIX: &str = "dictionary-";
-            if entry.key.starts_with(DICTIONARY_PREFIX) == false {
+            if !entry.key.starts_with(DICTIONARY_PREFIX) {
                 continue;
             }
 
