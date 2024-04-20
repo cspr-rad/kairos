@@ -48,7 +48,9 @@ impl CasperClient {
 
         let state_root_hash = match response.result.state_root_hash {
             Some(v) => Ok(v),
-            None => Err(ToolkitError::UnexpectedError { context: "empty state root hash".into() }),
+            None => Err(ToolkitError::UnexpectedError {
+                context: "empty state root hash".into(),
+            }),
         }?;
 
         Ok(state_root_hash)
@@ -96,7 +98,9 @@ impl CasperClient {
         let stored_value = self.query_global_state(state_root_hash, key, path).await?;
         let contract = match stored_value {
             casper_client::types::StoredValue::Contract(v) => Ok(v),
-            _ => Err(ToolkitError::UnexpectedStoredValueType { expected_type: "contract" }),
+            _ => Err(ToolkitError::UnexpectedStoredValueType {
+                expected_type: "contract",
+            }),
         }?;
 
         // Casper client use different type of named keys, so we have to additionally parse it.
@@ -119,7 +123,9 @@ impl CasperClient {
         let stored_value = self.query_global_state(state_root_hash, key, path).await?;
         let clvalue = match stored_value {
             casper_client::types::StoredValue::CLValue(v) => Ok(v),
-            _ => Err(ToolkitError::UnexpectedStoredValueType { expected_type: "clvalue" })
+            _ => Err(ToolkitError::UnexpectedStoredValueType {
+                expected_type: "clvalue",
+            }),
         }?;
 
         Ok(clvalue)
@@ -156,7 +162,9 @@ impl CasperClient {
         let stored_value = response.result.stored_value;
         let clvalue = match stored_value {
             casper_client::types::StoredValue::CLValue(v) => Ok(v),
-            _ => Err(ToolkitError::UnexpectedStoredValueType { expected_type: "clvalue" })
+            _ => Err(ToolkitError::UnexpectedStoredValueType {
+                expected_type: "clvalue",
+            }),
         }?;
 
         Ok(clvalue)
