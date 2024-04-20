@@ -1,6 +1,6 @@
 use casper_event_standard::Schema;
 use casper_types::{
-    bytesrepr::{FromBytes, ToBytes}, CLType, CLValue
+    bytesrepr::{FromBytes, ToBytes, OPTION_NONE_TAG, OPTION_SOME_TAG}, CLType, CLValue
 };
 
 use crate::error::ToolkitError;
@@ -126,7 +126,23 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
             (CLValue::from_components(casper_types::CLType::PublicKey, value_bytes), new_remainder)
         },
         // More complex types.
-        casper_types::CLType::Option(_) => todo!(),
+        casper_types::CLType::Option(t) => {
+            let (tag, remainder) = u8::from_bytes(bytes).unwrap();
+            match tag {
+                OPTION_NONE_TAG => {
+                    let value_bytes = vec![tag];
+                    let new_remainder = remainder;
+                    (CLValue::from_components(casper_types::CLType::Option(t.clone()), value_bytes), new_remainder)
+                }
+                OPTION_SOME_TAG => {
+                    let (t_parsed, new_remainder) = parse_dynamic_clvalue(t, remainder).unwrap();
+                    let mut value_bytes = vec![tag];
+                    value_bytes.extend(t_parsed.inner_bytes());
+                    (CLValue::from_components(casper_types::CLType::Option(t.clone()), value_bytes), new_remainder)
+                }
+                _ => panic!("Err(Error::Formatting)"),
+            }
+        },
         casper_types::CLType::List(_) => todo!(),
         casper_types::CLType::ByteArray(_) => todo!(),
         casper_types::CLType::Result { ok, err } => todo!(),
@@ -199,6 +215,15 @@ mod tests {
         let pub_key = casper_types::PublicKey::system();
 
         roundtrip_assert(pub_key);
+    }
+
+    #[test]
+    fn test_option_roundtrip() {
+        let num: u64 = 20;
+        let option = Some(num);
+
+        roundtrip_assert(option);
+        roundtrip_assert(None::<u64>);
     }
 
     #[test]
