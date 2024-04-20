@@ -44,16 +44,66 @@ pub fn parse_dynamic_event_data(
     let schema_fields = dynamic_event_schema.to_vec();
     for (field_name, field_type) in schema_fields {
         let field_value: CLValue = match field_type.downcast() {
-            casper_types::CLType::Bool => todo!(),
-            casper_types::CLType::I32 => todo!(),
-            casper_types::CLType::I64 => todo!(),
-            casper_types::CLType::U8 => todo!(),
-            casper_types::CLType::U32 => todo!(),
-            casper_types::CLType::U64 => todo!(),
-            casper_types::CLType::U128 => todo!(),
-            casper_types::CLType::U256 => todo!(),
-            casper_types::CLType::U512 => todo!(),
-            casper_types::CLType::Unit => todo!(),
+            casper_types::CLType::Bool => {
+                let (value, new_remainder) = bool::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::Bool, value_bytes)
+            },
+            casper_types::CLType::I32 => {
+                let (value, new_remainder) = i32::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::I32, value_bytes)
+            },
+            casper_types::CLType::I64 => {
+                let (value, new_remainder) = i64::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::I64, value_bytes)
+            },
+            casper_types::CLType::U8 => {
+                let (value, new_remainder) = u8::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::U8, value_bytes)
+            },
+            casper_types::CLType::U32 => {
+                let (value, new_remainder) = u32::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::U32, value_bytes)
+            },
+            casper_types::CLType::U64 => {
+                let (value, new_remainder) = u64::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::U64, value_bytes)
+            },
+            casper_types::CLType::U128 => {
+                let (value, new_remainder) = casper_types::U128::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::U128, value_bytes)
+            },
+            casper_types::CLType::U256 => {
+                let (value, new_remainder) = casper_types::U256::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::U256, value_bytes)
+            },
+            casper_types::CLType::U512 => {
+                let (value, new_remainder) = casper_types::U512::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::U512, value_bytes)
+            },
+            casper_types::CLType::Unit => {
+                let (value, new_remainder) = <()>::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::Unit, value_bytes)
+            },
             casper_types::CLType::String => {
                 let (value, new_remainder) = String::from_bytes(remainder).unwrap();
                 remainder = new_remainder;
