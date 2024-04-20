@@ -36,24 +36,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     )
     //     .await?;
 
-    // Fetch each event data from storage.
-    for event_id in 0..10 {
-        let dynamic_event = fetcher.fetch_event(event_id, &schemas).await?;
-        println!("Event data parsed dynamically: {:?}", dynamic_event);
+    // Fetch some event from storage.
+    let event_id = 3;
+    let dynamic_event = fetcher.fetch_event(event_id, &schemas).await?;
+    println!("Event data parsed dynamically: {:?}", dynamic_event);
 
-        match dynamic_event.name.as_str() {
-            "Mint" => {
-                let data = dynamic_event.to_ces_bytes()?;
-                let (parsed_further, rem) = cep78::events::Mint::from_bytes(&data).unwrap();
-                assert!(rem.len() == 0);
-                println!("Event data parsed statically: {:?}", parsed_further);
-            }
-            other => {
-                println!("Unknown event type: {}", other)
-            }
+    match dynamic_event.name.as_str() {
+        "Mint" => {
+            let data = dynamic_event.to_ces_bytes()?;
+            let (parsed_further, rem) = cep78::events::Mint::from_bytes(&data).unwrap(); // TODO
+            assert!(rem.len() == 0);
+            println!("Event data parsed statically: {:?}", parsed_further);
         }
-
-        break;
+        other => {
+            println!("Unknown event type: {}", other)
+        }
     }
 
     Ok(())
