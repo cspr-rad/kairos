@@ -190,8 +190,13 @@ impl CasperClient {
         )
         .await?;
         let mut execution_results = response.result.execution_results;
-        assert_eq!(execution_results.len(), 1); // TODO: Is it always the case?
-        let execution_result = execution_results.remove(0);
+
+        let execution_result = match execution_results.len() {
+            1 => Ok(execution_results.remove(0)),
+            _ => Err(ToolkitError::UnexpectedError {
+                context: "execution results count different than 1".into(),
+            }),
+        }?;
 
         Ok(execution_result.result)
     }
