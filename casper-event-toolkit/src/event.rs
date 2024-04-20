@@ -53,6 +53,15 @@ pub fn parse_dynamic_event_data(
     event_fields
 }
 
+// Deserializes bytes into CLValue, based on runtime CLType.
+//
+// CAUTION: There is no recursion limit.
+//
+// NOTE: Implementation is a dirty combination of:
+// - type resolution - similar to `depth_limited_from_bytes()`,
+// - deserializing data - based on `from_bytes()`,
+// - serializing data - based on `to_bytes()`.
+//
 pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CLValue, &'a [u8]), ToolkitError> {
     let result = match cltype {
         casper_types::CLType::Bool => {
