@@ -24,7 +24,11 @@ pub fn parse_raw_event_name_and_data(bytes: &[u8]) -> Result<(String, Vec<u8>), 
 }
 
 // Parse dynamic event data according to schema.
-pub fn parse_event(event_name: String, event_data: &[u8], schemas: &Schemas) -> Result<Event, ToolkitError>{
+pub fn parse_event(
+    event_name: String,
+    event_data: &[u8],
+    schemas: &Schemas,
+) -> Result<Event, ToolkitError> {
     let dynamic_event_schema = match schemas.0.get(&event_name) {
         Some(schema) => Ok(schema.clone()),
         None => Err(ToolkitError::MissingEventSchema(event_name.to_string())),

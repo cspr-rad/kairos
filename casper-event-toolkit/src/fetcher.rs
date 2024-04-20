@@ -89,7 +89,8 @@ impl Fetcher {
             else {
                 continue;
             };
-            let Ok((event_name, event_data)) = parse_raw_event_name_and_data(event_value_bytes) else {
+            let Ok((event_name, event_data)) = parse_raw_event_name_and_data(event_value_bytes)
+            else {
                 continue;
             };
 
