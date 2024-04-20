@@ -152,7 +152,17 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
                 _ => panic!("Err(Error::Formatting)"),
             }
         },
-        casper_types::CLType::List(_) => todo!(),
+        casper_types::CLType::List(t) => {
+            let (count, mut remainder) = u32::from_bytes(bytes).unwrap();
+            let mut value_bytes = vec![];
+            value_bytes.extend(count.to_bytes().unwrap());
+            for _ in 0..count {
+                let (t1_parsed, next_remainder) = parse_dynamic_clvalue(t, remainder).unwrap();
+                remainder = next_remainder;
+                value_bytes.extend(t1_parsed.inner_bytes());
+            }
+            (CLValue::from_components(casper_types::CLType::List(t.clone()), value_bytes), remainder)
+        },
         casper_types::CLType::ByteArray(_) => todo!(),
         casper_types::CLType::Result { ok, err } => todo!(),
         casper_types::CLType::Map { key, value } => todo!(),
@@ -233,6 +243,13 @@ mod tests {
 
         roundtrip_assert(option);
         roundtrip_assert(None::<u64>);
+    }
+
+    #[test]
+    fn test_list_roundtrip() {
+        let list: Vec<u64> = vec![1, 6, 3, 3];
+
+        roundtrip_assert(list);
     }
 
     #[test]
