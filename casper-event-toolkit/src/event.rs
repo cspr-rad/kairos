@@ -125,13 +125,21 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
             let value_bytes = value.to_bytes().unwrap();
             (CLValue::from_components(casper_types::CLType::PublicKey, value_bytes), new_remainder)
         },
+        // More complex types.
         casper_types::CLType::Option(_) => todo!(),
         casper_types::CLType::List(_) => todo!(),
         casper_types::CLType::ByteArray(_) => todo!(),
         casper_types::CLType::Result { ok, err } => todo!(),
         casper_types::CLType::Map { key, value } => todo!(),
         casper_types::CLType::Tuple1(_) => todo!(),
-        casper_types::CLType::Tuple2(_) => todo!(),
+        casper_types::CLType::Tuple2([t1, t2]) => {
+            let (t1_parsed, remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
+            let (t2_parsed, new_remainder) = parse_dynamic_clvalue(t2, remainder).unwrap();
+            let mut value_bytes = vec![];
+            value_bytes.extend(t1_parsed.inner_bytes());
+            value_bytes.extend(t2_parsed.inner_bytes());
+            (CLValue::from_components(casper_types::CLType::Tuple2([t1.clone(), t2.clone()]), value_bytes), new_remainder)
+        },
         casper_types::CLType::Tuple3(_) => todo!(),
         casper_types::CLType::Any => todo!(),
     };
@@ -173,5 +181,14 @@ mod tests {
         let pub_key = casper_types::PublicKey::system();
 
         roundtrip_assert(pub_key);
+    }
+
+    #[test]
+    fn test_tuple2_roundtrip() {
+        let num: u64 = 42;
+        let pub_key = casper_types::PublicKey::system();
+        let tuple = (num, pub_key);
+
+        roundtrip_assert(tuple);
     }
 }
