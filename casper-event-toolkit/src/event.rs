@@ -162,6 +162,13 @@ mod tests {
     }
 
     #[test]
+    fn test_string_roundtrip() {
+        let string = String::from("hello");
+
+        roundtrip_assert(string);
+    }
+
+    #[test]
     fn test_publickey_roundtrip() {
         let pub_key = casper_types::PublicKey::system();
 
