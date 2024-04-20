@@ -188,7 +188,19 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
                 _ => panic!("Err(Error::Formatting)"),
             }
         },
-        casper_types::CLType::Map { key, value } => todo!(),
+        casper_types::CLType::Map { key: t_key, value: t_value } => {
+            let (num_keys, mut remainder) = u32::from_bytes(bytes).unwrap();
+            let mut value_bytes = vec![];
+            value_bytes.extend(num_keys.to_bytes().unwrap());
+            for _ in 0..num_keys {
+                let (key_parsed, next_remainder) = parse_dynamic_clvalue(t_key, remainder).unwrap();
+                let (value_parsed, next_remainder) = parse_dynamic_clvalue(t_value, next_remainder).unwrap();
+                remainder = next_remainder;
+                value_bytes.extend(key_parsed.inner_bytes());
+                value_bytes.extend(value_parsed.inner_bytes());
+            }
+            (CLValue::from_components(casper_types::CLType::Map { key: t_key.clone(), value: t_value.clone() }, value_bytes), remainder)
+        },
         casper_types::CLType::Tuple1([t1]) => {
             let (t1_parsed, new_remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
             let mut value_bytes = vec![];
@@ -225,6 +237,8 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use casper_types::{AsymmetricType, CLTyped};
 
     use super::*;
@@ -291,6 +305,16 @@ mod tests {
 
         roundtrip_assert(res1);
         roundtrip_assert(res2);
+    }
+
+    #[test]
+    fn test_map_roundtrip() {
+        let mut map: BTreeMap<u64, bool> = BTreeMap::new();
+        map.insert(30, true);
+        map.insert(40, false);
+        map.insert(50, true);
+
+        roundtrip_assert(map);
     }
 
     #[test]
