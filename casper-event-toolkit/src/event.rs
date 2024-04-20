@@ -138,3 +138,33 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
     
     Ok(result)
 }
+
+#[cfg(test)]
+mod tests {
+    use casper_types::{AsymmetricType, CLTyped};
+
+    use super::*;
+
+    fn roundtrip_assert<T: CLTyped + ToBytes>(value: T) {
+        // Serialize with Casper format.
+        let clvalue = CLValue::from_t(value).unwrap();
+
+        // Extract serialization components.
+        let cltype = clvalue.cl_type();
+        let bytes = clvalue.inner_bytes();
+
+        // Dynamically parse data back.
+        let (parsed_clvalue, remainder) = parse_dynamic_clvalue(cltype, bytes).unwrap();
+
+        // Asserts.
+        assert_eq!(parsed_clvalue, clvalue, "Roundtrip should give the same CLValue.");
+        assert!(remainder.is_empty(), "All bytes should have been consumed.");
+    }
+
+    #[test]
+    fn test_publickey_roundtrip() {
+        let pub_key = casper_types::PublicKey::system();
+
+        roundtrip_assert(pub_key);
+    }
+}
