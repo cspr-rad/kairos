@@ -27,6 +27,10 @@ pub enum ToolkitError {
     #[error("parsing error for '{context}'")]
     ParsingError { context: &'static str },
 
+    /// Unable to serialize data into Casper format.
+    #[error("serialization error for '{context}'")]
+    SerializationError { context: &'static str },
+
     /// Expected a successful deploy.
     #[error("failed deploy")]
     FailedDeployError,

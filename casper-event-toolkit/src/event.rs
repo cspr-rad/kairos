@@ -4,6 +4,8 @@ use casper_types::{
     CLValue,
 };
 
+use crate::error::ToolkitError;
+
 #[derive(Debug)]
 pub struct Event {
     pub name: String,
@@ -11,11 +13,14 @@ pub struct Event {
 }
 
 impl Event {
-    pub fn to_ces_bytes(&self) -> Vec<u8> {
+    pub fn to_ces_bytes(&self) -> Result<Vec<u8>, ToolkitError> {
         let mut result: Vec<u8> = vec![];
 
         let prefixed_name = String::from(EVENT_PREFIX) + &self.name;
-        let event_name = String::to_bytes(&prefixed_name).unwrap();
+        let event_name =
+            String::to_bytes(&prefixed_name).map_err(|_e| ToolkitError::SerializationError {
+                context: "event_name",
+            })?;
         result.extend_from_slice(&event_name);
 
         for (_field_name, field_value) in &self.fields {
@@ -23,7 +28,7 @@ impl Event {
             result.extend_from_slice(field_bytes);
         }
 
-        result
+        Ok(result)
     }
 }
 
