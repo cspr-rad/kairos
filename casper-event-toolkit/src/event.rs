@@ -1,4 +1,4 @@
-use casper_event_standard::CLType2;
+use casper_event_standard::Schema;
 use casper_types::{
     bytesrepr::{FromBytes, ToBytes},
     CLValue,
@@ -30,13 +30,14 @@ impl Event {
 const EVENT_PREFIX: &str = "event_";
 
 pub fn parse_dynamic_event_data(
-    dynamic_event_schema: Vec<(String, CLType2)>,
+    dynamic_event_schema: Schema,
     event_data: &[u8],
 ) -> Vec<(String, CLValue)> {
     let mut event_fields = vec![];
 
     let mut remainder = event_data;
-    for (field_name, field_type) in dynamic_event_schema {
+    let schema_fields = dynamic_event_schema.to_vec();
+    for (field_name, field_type) in schema_fields {
         let field_value: CLValue = match field_type.downcast() {
             casper_types::CLType::Bool => todo!(),
             casper_types::CLType::I32 => todo!(),
