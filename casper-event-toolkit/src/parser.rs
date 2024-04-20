@@ -6,11 +6,11 @@ use crate::event::Event;
 
 pub fn parse_raw_event_name_and_data(bytes: &[u8]) -> Result<(String, Vec<u8>), ToolkitError> {
     let (_total_length, event_data_with_name) =
-        u32::from_bytes(bytes).map_err(|_e| ToolkitError::ParsingError {
+        u32::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
             context: "event data length",
         })?;
     let (event_name, event_data) =
-        String::from_bytes(event_data_with_name).map_err(|_e| ToolkitError::ParsingError {
+        String::from_bytes(event_data_with_name).map_err(|_e| ToolkitError::DeserializationError {
             context: "event name",
         })?;
     let event_name =

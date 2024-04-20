@@ -24,8 +24,9 @@ pub enum ToolkitError {
         error: casper_client::Error,
     },
 
-    #[error("parsing error for '{context}'")]
-    ParsingError { context: &'static str },
+    /// Unable to deserialize data.
+    #[error("deserialization error for '{context}'")]
+    DeserializationError { context: &'static str },
 
     /// Unable to serialize data into Casper format.
     #[error("serialization error for '{context}'")]
