@@ -23,8 +23,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let schemas = fetcher.fetch_schema().await?;
-    // Alteratively - user locally defined schemas.
-    // let schemas = cep78::schemas::get_local_schemas();
+    // Alternatively - user locally defined schemas.
+    //let schemas = cep78::schemas::get_local_schemas();
 
     let num_events = fetcher.fetch_events_count().await?;
     println!("Events count: {}", num_events);
