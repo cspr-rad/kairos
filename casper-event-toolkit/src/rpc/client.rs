@@ -46,7 +46,10 @@ impl CasperClient {
         )
         .await?;
 
-        let state_root_hash = response.result.state_root_hash.unwrap();
+        let state_root_hash = match response.result.state_root_hash {
+            Some(v) => Ok(v),
+            None => Err(ToolkitError::UnexpectedError { context: "empty state root hash".into() }),
+        }?;
 
         Ok(state_root_hash)
     }

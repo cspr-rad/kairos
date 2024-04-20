@@ -30,4 +30,8 @@ pub enum ToolkitError {
     /// Event name not found in loaded schema.
     #[error("event '{0}' not found in schema")]
     MissingEventSchema(String),
+
+    /// Unexpected error - should NEVER happen.
+    #[error("unexpected error: {context}")]
+    UnexpectedError { context: String },
 }
