@@ -131,7 +131,12 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
         casper_types::CLType::ByteArray(_) => todo!(),
         casper_types::CLType::Result { ok, err } => todo!(),
         casper_types::CLType::Map { key, value } => todo!(),
-        casper_types::CLType::Tuple1(_) => todo!(),
+        casper_types::CLType::Tuple1([t1]) => {
+            let (t1_parsed, new_remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
+            let mut value_bytes = vec![];
+            value_bytes.extend(t1_parsed.inner_bytes());
+            (CLValue::from_components(casper_types::CLType::Tuple1([t1.clone()]), value_bytes), new_remainder)
+        },
         casper_types::CLType::Tuple2([t1, t2]) => {
             let (t1_parsed, remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
             let (t2_parsed, new_remainder) = parse_dynamic_clvalue(t2, remainder).unwrap();
@@ -140,7 +145,16 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
             value_bytes.extend(t2_parsed.inner_bytes());
             (CLValue::from_components(casper_types::CLType::Tuple2([t1.clone(), t2.clone()]), value_bytes), new_remainder)
         },
-        casper_types::CLType::Tuple3(_) => todo!(),
+        casper_types::CLType::Tuple3([t1, t2, t3]) => {
+            let (t1_parsed, remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
+            let (t2_parsed, remainder) = parse_dynamic_clvalue(t2, remainder).unwrap();
+            let (t3_parsed, new_remainder) = parse_dynamic_clvalue(t3, remainder).unwrap();
+            let mut value_bytes = vec![];
+            value_bytes.extend(t1_parsed.inner_bytes());
+            value_bytes.extend(t2_parsed.inner_bytes());
+            value_bytes.extend(t3_parsed.inner_bytes());
+            (CLValue::from_components(casper_types::CLType::Tuple3([t1.clone(), t2.clone(), t3.clone()]), value_bytes), new_remainder)
+        },
         casper_types::CLType::Any => todo!(),
     };
     
