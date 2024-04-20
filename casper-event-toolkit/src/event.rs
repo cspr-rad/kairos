@@ -116,8 +116,18 @@ pub fn parse_dynamic_event_data(
                 let value_bytes = value.to_bytes().unwrap();
                 CLValue::from_components(casper_types::CLType::Key, value_bytes)
             }
-            casper_types::CLType::URef => todo!(),
-            casper_types::CLType::PublicKey => todo!(),
+            casper_types::CLType::URef => {
+                let (value, new_remainder) = casper_types::URef::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::URef, value_bytes)
+            },
+            casper_types::CLType::PublicKey => {
+                let (value, new_remainder) = casper_types::PublicKey::from_bytes(remainder).unwrap();
+                remainder = new_remainder;
+                let value_bytes = value.to_bytes().unwrap();
+                CLValue::from_components(casper_types::CLType::PublicKey, value_bytes)
+            },
             casper_types::CLType::Option(_) => todo!(),
             casper_types::CLType::List(_) => todo!(),
             casper_types::CLType::ByteArray(_) => todo!(),
