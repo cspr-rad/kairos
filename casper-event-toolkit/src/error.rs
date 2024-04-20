@@ -39,6 +39,10 @@ pub enum ToolkitError {
     #[error("event '{0}' not found in schema")]
     MissingEventSchema(String),
 
+    /// Event name without required prefix.
+    #[error("event prefix not found")]
+    MissingEventPrefix,
+
     /// Unexpected error - should NEVER happen.
     #[error("unexpected error: {context}")]
     UnexpectedError { context: String },
