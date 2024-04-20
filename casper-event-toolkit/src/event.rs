@@ -62,7 +62,7 @@ pub fn parse_dynamic_event_data(
 // - deserializing data - based on `from_bytes()`,
 // - serializing data - based on `to_bytes()`.
 //
-pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CLValue, &'a [u8]), ToolkitError> {
+fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CLValue, &'a [u8]), ToolkitError> {
     let result = match cltype {
         casper_types::CLType::Bool => {
             let (value, new_remainder) = bool::from_bytes(bytes).unwrap();
