@@ -29,13 +29,13 @@ impl Event {
 
 const EVENT_PREFIX: &str = "event_";
 
-pub fn parse_dynamic_event(
+pub fn parse_dynamic_event_data(
     dynamic_event_schema: Vec<(String, CLType2)>,
     event_data: &[u8],
-) -> Event {
-    let (event_name, mut remainder) = String::from_bytes(event_data).unwrap();
-    let event_name = event_name.strip_prefix(EVENT_PREFIX).unwrap();
+) -> Vec<(String, CLValue)> {
     let mut event_fields = vec![];
+
+    let mut remainder = event_data;
     for (field_name, field_type) in dynamic_event_schema {
         let field_value: CLValue = match field_type.downcast() {
             casper_types::CLType::Bool => todo!(),
@@ -75,8 +75,5 @@ pub fn parse_dynamic_event(
         event_fields.push((field_name, field_value));
     }
 
-    Event {
-        name: event_name.into(),
-        fields: event_fields,
-    }
+    event_fields
 }

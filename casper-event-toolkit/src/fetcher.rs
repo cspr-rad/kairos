@@ -52,8 +52,12 @@ impl Fetcher {
             Some(schema) => Ok(schema.clone()),
             None => Err(ToolkitError::MissingEventSchema(event_name.to_string())),
         }?;
-        let dynamic_event =
-            crate::event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
+        let dynamic_event_data =
+            crate::event::parse_dynamic_event_data(dynamic_event_schema.to_vec(), &event_data);
+        let dynamic_event = Event {
+            name: event_name,
+            fields: dynamic_event_data,
+        };
 
         Ok(dynamic_event)
     }
@@ -105,8 +109,12 @@ impl Fetcher {
                 Some(schema) => Ok(schema.clone()),
                 None => Err(ToolkitError::MissingEventSchema(event_name.to_string())),
             }?;
-            let dynamic_event =
-                crate::event::parse_dynamic_event(dynamic_event_schema.to_vec(), &event_data);
+            let dynamic_event_data =
+                crate::event::parse_dynamic_event_data(dynamic_event_schema.to_vec(), &event_data);
+            let dynamic_event = Event {
+                name: event_name,
+                fields: dynamic_event_data,
+            };
 
             events.push(dynamic_event);
         }
