@@ -13,10 +13,6 @@ pub enum ToolkitError {
     #[error("clvalue invalid: {0}")]
     InvalidCLValue(String),
 
-    /// Event name not found in loaded schema.
-    #[error("event schema missing: {0}")]
-    MissingEventSchema(String),
-
     ///
     #[error("rpc error: {error}")]
     RpcError {
@@ -30,4 +26,8 @@ pub enum ToolkitError {
     /// Expected a successful deploy.
     #[error("failed deploy")]
     FailedDeployError,
+
+    /// Event name not found in loaded schema.
+    #[error("event '{0}' not found in schema")]
+    MissingEventSchema(String),
 }
