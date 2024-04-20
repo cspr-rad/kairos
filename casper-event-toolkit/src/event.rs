@@ -316,7 +316,9 @@ fn parse_dynamic_clvalue<'a>(
                         new_remainder,
                     )
                 }
-                _ => panic!("Err(Error::Formatting)"),
+                _ => Err(ToolkitError::DeserializationError {
+                    context: "CLType::Option",
+                })?,
             }
         }
         casper_types::CLType::List(t) => {
@@ -389,7 +391,9 @@ fn parse_dynamic_clvalue<'a>(
                         new_remainder,
                     )
                 }
-                _ => panic!("Err(Error::Formatting)"),
+                _ => Err(ToolkitError::DeserializationError {
+                    context: "CLType::Result",
+                })?,
             }
         }
         casper_types::CLType::Map {
