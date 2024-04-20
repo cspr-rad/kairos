@@ -74,9 +74,7 @@ impl Fetcher {
 
         let execution_result = self.client.get_deploy_result(deploy_hash).await?;
         let effects = match execution_result {
-            casper_types::ExecutionResult::Failure { .. } => Err(ToolkitError::DeployError {
-                context: "failed execution",
-            }),
+            casper_types::ExecutionResult::Failure { .. } => Err(ToolkitError::FailedDeployError),
             casper_types::ExecutionResult::Success { effect, .. } => Ok(effect),
         }?;
 
