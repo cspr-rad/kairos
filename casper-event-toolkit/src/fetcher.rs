@@ -4,7 +4,7 @@ use casper_types::bytesrepr::FromBytes;
 use crate::error::ToolkitError;
 use crate::event::Event;
 use crate::metadata::CesMetadataRef;
-use crate::parser::parse_event_name_and_data;
+use crate::parser::{parse_event, parse_raw_event_name_and_data};
 use crate::rpc::client::CasperClient;
 
 pub struct Fetcher {
@@ -45,19 +45,10 @@ impl Fetcher {
             .get_stored_clvalue_from_dict(&events_data_uref, &id.to_string())
             .await?;
         let event_value_bytes = event_value.inner_bytes();
-        let (event_name, event_data) = parse_event_name_and_data(event_value_bytes)?;
+        let (event_name, event_data) = parse_raw_event_name_and_data(event_value_bytes)?;
 
         // Parse dynamic event data.
-        let dynamic_event_schema = match event_schema.0.get(&event_name) {
-            Some(schema) => Ok(schema.clone()),
-            None => Err(ToolkitError::MissingEventSchema(event_name.to_string())),
-        }?;
-        let dynamic_event_data =
-            crate::event::parse_dynamic_event_data(dynamic_event_schema.to_vec(), &event_data);
-        let dynamic_event = Event {
-            name: event_name,
-            fields: dynamic_event_data,
-        };
+        let dynamic_event = parse_event(event_name, &event_data, event_schema)?;
 
         Ok(dynamic_event)
     }
@@ -98,21 +89,12 @@ impl Fetcher {
             else {
                 continue;
             };
-            let Ok((event_name, event_data)) = parse_event_name_and_data(event_value_bytes) else {
+            let Ok((event_name, event_data)) = parse_raw_event_name_and_data(event_value_bytes) else {
                 continue;
             };
 
             // Parse dynamic event data.
-            let dynamic_event_schema = match event_schema.0.get(&event_name) {
-                Some(schema) => Ok(schema.clone()),
-                None => Err(ToolkitError::MissingEventSchema(event_name.to_string())),
-            }?;
-            let dynamic_event_data =
-                crate::event::parse_dynamic_event_data(dynamic_event_schema.to_vec(), &event_data);
-            let dynamic_event = Event {
-                name: event_name,
-                fields: dynamic_event_data,
-            };
+            let dynamic_event = parse_event(event_name, &event_data, event_schema)?;
 
             events.push(dynamic_event);
         }
