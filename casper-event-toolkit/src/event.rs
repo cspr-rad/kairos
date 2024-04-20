@@ -1,6 +1,6 @@
 use casper_event_standard::Schema;
 use casper_types::{
-    bytesrepr::{FromBytes, ToBytes, OPTION_NONE_TAG, OPTION_SOME_TAG}, CLType, CLValue
+    bytesrepr::{FromBytes, ToBytes, OPTION_NONE_TAG, OPTION_SOME_TAG, RESULT_ERR_TAG, RESULT_OK_TAG}, CLType, CLValue
 };
 
 use crate::error::ToolkitError;
@@ -170,7 +170,24 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
             value_bytes.extend(t_parsed);
             (CLValue::from_components(casper_types::CLType::ByteArray(t.clone()), value_bytes), new_remainder)
         },
-        casper_types::CLType::Result { ok, err } => todo!(),
+        casper_types::CLType::Result { ok: t_ok, err: t_err } => {
+            let (variant, remainder) = u8::from_bytes(bytes).unwrap();
+            match variant {
+                RESULT_ERR_TAG => {
+                    let (t_err_parsed, new_remainder) = parse_dynamic_clvalue(t_err, remainder).unwrap();
+                    let mut value_bytes = vec![variant];
+                    value_bytes.extend(t_err_parsed.inner_bytes());
+                    (CLValue::from_components(casper_types::CLType::Result { ok: t_ok.clone(), err: t_err.clone() }, value_bytes), new_remainder)
+                },
+                RESULT_OK_TAG => {
+                    let (t_ok_parsed, new_remainder) = parse_dynamic_clvalue(t_ok, remainder).unwrap();
+                    let mut value_bytes = vec![variant];
+                    value_bytes.extend(t_ok_parsed.inner_bytes());
+                    (CLValue::from_components(casper_types::CLType::Result { ok: t_ok.clone(), err: t_err.clone() }, value_bytes), new_remainder)
+                },
+                _ => panic!("Err(Error::Formatting)"),
+            }
+        },
         casper_types::CLType::Map { key, value } => todo!(),
         casper_types::CLType::Tuple1([t1]) => {
             let (t1_parsed, new_remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
@@ -220,6 +237,8 @@ mod tests {
         let cltype = clvalue.cl_type();
         let bytes = clvalue.inner_bytes();
 
+        println!("type: {:?}", cltype);
+
         // Dynamically parse data back.
         let (parsed_clvalue, remainder) = parse_dynamic_clvalue(cltype, bytes).unwrap();
 
@@ -263,6 +282,15 @@ mod tests {
         let array: [u8; 6] = [1, 0, 3, 2, 6, 6];
 
         roundtrip_assert(array);
+    }
+
+    #[test]
+    fn test_result_roundtrip() {
+        let res1: Result<u64, bool> = Ok(32);
+        let res2: Result<u64, bool> = Err(false);
+
+        roundtrip_assert(res1);
+        roundtrip_assert(res2);
     }
 
     #[test]
