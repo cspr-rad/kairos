@@ -104,7 +104,7 @@ impl CasperClient {
         }?;
 
         // Casper client use different type of named keys, so we have to additionally parse it.
-        let contract = crate::rpc::utils::extract_named_keys(contract);
+        let contract = crate::rpc::utils::extract_named_keys(contract)?;
 
         Ok(contract)
     }
