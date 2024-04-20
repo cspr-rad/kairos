@@ -70,112 +70,217 @@ fn parse_dynamic_clvalue<'a>(
 ) -> Result<(CLValue, &'a [u8]), ToolkitError> {
     let result = match cltype {
         casper_types::CLType::Bool => {
-            let (value, new_remainder) = bool::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                bool::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::Bool",
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::Bool",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::Bool, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::I32 => {
-            let (value, new_remainder) = i32::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                i32::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::I32",
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::I32",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::I32, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::I64 => {
-            let (value, new_remainder) = i64::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                i64::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::I64",
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::I64",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::I64, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::U8 => {
-            let (value, new_remainder) = u8::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                u8::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::U8",
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::U8",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::U8, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::U32 => {
-            let (value, new_remainder) = u32::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                u32::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::U32",
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::U32",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::U32, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::U64 => {
-            let (value, new_remainder) = u64::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                u64::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::U64",
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::U64",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::U64, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::U128 => {
-            let (value, new_remainder) = casper_types::U128::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) = casper_types::U128::from_bytes(bytes).map_err(|_e| {
+                ToolkitError::DeserializationError {
+                    context: "CLType::U128",
+                }
+            })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::U128",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::U128, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::U256 => {
-            let (value, new_remainder) = casper_types::U256::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) = casper_types::U256::from_bytes(bytes).map_err(|_e| {
+                ToolkitError::DeserializationError {
+                    context: "CLType::U256",
+                }
+            })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::U256",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::U256, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::U512 => {
-            let (value, new_remainder) = casper_types::U512::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) = casper_types::U512::from_bytes(bytes).map_err(|_e| {
+                ToolkitError::DeserializationError {
+                    context: "CLType::U512",
+                }
+            })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::U512",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::U512, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::Unit => {
-            let (value, new_remainder) = <()>::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                <()>::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::Unit",
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::Unit",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::Unit, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::String => {
-            let (value, new_remainder) = String::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                String::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::String",
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::String",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::String, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::Key => {
-            let (value, new_remainder) = casper_types::Key::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) = casper_types::Key::from_bytes(bytes).map_err(|_e| {
+                ToolkitError::DeserializationError {
+                    context: "CLType::Key",
+                }
+            })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::Key",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::Key, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::URef => {
-            let (value, new_remainder) = casper_types::URef::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) = casper_types::URef::from_bytes(bytes).map_err(|_e| {
+                ToolkitError::DeserializationError {
+                    context: "CLType::URef",
+                }
+            })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::URef",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::URef, value_bytes),
                 new_remainder,
             )
         }
         casper_types::CLType::PublicKey => {
-            let (value, new_remainder) = casper_types::PublicKey::from_bytes(bytes).unwrap();
-            let value_bytes = value.to_bytes().unwrap();
+            let (value, new_remainder) =
+                casper_types::PublicKey::from_bytes(bytes).map_err(|_e| {
+                    ToolkitError::DeserializationError {
+                        context: "CLType::PublicKey",
+                    }
+                })?;
+            let value_bytes = value
+                .to_bytes()
+                .map_err(|_e| ToolkitError::SerializationError {
+                    context: "CLType::PublicKey",
+                })?;
             (
                 CLValue::from_components(casper_types::CLType::PublicKey, value_bytes),
                 new_remainder,
@@ -183,7 +288,10 @@ fn parse_dynamic_clvalue<'a>(
         }
         // More complex types.
         casper_types::CLType::Option(t) => {
-            let (tag, remainder) = u8::from_bytes(bytes).unwrap();
+            let (tag, remainder) =
+                u8::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::Option",
+                })?;
             match tag {
                 OPTION_NONE_TAG => {
                     let value_bytes = vec![tag];
@@ -197,7 +305,7 @@ fn parse_dynamic_clvalue<'a>(
                     )
                 }
                 OPTION_SOME_TAG => {
-                    let (t_parsed, new_remainder) = parse_dynamic_clvalue(t, remainder).unwrap();
+                    let (t_parsed, new_remainder) = parse_dynamic_clvalue(t, remainder)?;
                     let mut value_bytes = vec![tag];
                     value_bytes.extend(t_parsed.inner_bytes());
                     (
@@ -212,11 +320,18 @@ fn parse_dynamic_clvalue<'a>(
             }
         }
         casper_types::CLType::List(t) => {
-            let (count, mut remainder) = u32::from_bytes(bytes).unwrap();
+            let (count, mut remainder) =
+                u32::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::List",
+                })?;
             let mut value_bytes = vec![];
-            value_bytes.extend(count.to_bytes().unwrap());
+            value_bytes.extend(count.to_bytes().map_err(|_e| {
+                ToolkitError::SerializationError {
+                    context: "CLType::List",
+                }
+            })?);
             for _ in 0..count {
-                let (t1_parsed, next_remainder) = parse_dynamic_clvalue(t, remainder).unwrap();
+                let (t1_parsed, next_remainder) = parse_dynamic_clvalue(t, remainder)?;
                 remainder = next_remainder;
                 value_bytes.extend(t1_parsed.inner_bytes());
             }
@@ -239,11 +354,13 @@ fn parse_dynamic_clvalue<'a>(
             ok: t_ok,
             err: t_err,
         } => {
-            let (variant, remainder) = u8::from_bytes(bytes).unwrap();
+            let (variant, remainder) =
+                u8::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::Result",
+                })?;
             match variant {
                 RESULT_ERR_TAG => {
-                    let (t_err_parsed, new_remainder) =
-                        parse_dynamic_clvalue(t_err, remainder).unwrap();
+                    let (t_err_parsed, new_remainder) = parse_dynamic_clvalue(t_err, remainder)?;
                     let mut value_bytes = vec![variant];
                     value_bytes.extend(t_err_parsed.inner_bytes());
                     (
@@ -258,8 +375,7 @@ fn parse_dynamic_clvalue<'a>(
                     )
                 }
                 RESULT_OK_TAG => {
-                    let (t_ok_parsed, new_remainder) =
-                        parse_dynamic_clvalue(t_ok, remainder).unwrap();
+                    let (t_ok_parsed, new_remainder) = parse_dynamic_clvalue(t_ok, remainder)?;
                     let mut value_bytes = vec![variant];
                     value_bytes.extend(t_ok_parsed.inner_bytes());
                     (
@@ -280,13 +396,20 @@ fn parse_dynamic_clvalue<'a>(
             key: t_key,
             value: t_value,
         } => {
-            let (num_keys, mut remainder) = u32::from_bytes(bytes).unwrap();
+            let (num_keys, mut remainder) =
+                u32::from_bytes(bytes).map_err(|_e| ToolkitError::DeserializationError {
+                    context: "CLType::Map",
+                })?;
             let mut value_bytes = vec![];
-            value_bytes.extend(num_keys.to_bytes().unwrap());
+            value_bytes.extend(num_keys.to_bytes().map_err(|_e| {
+                ToolkitError::SerializationError {
+                    context: "CLType::Map",
+                }
+            })?);
             for _ in 0..num_keys {
-                let (key_parsed, next_remainder) = parse_dynamic_clvalue(t_key, remainder).unwrap();
+                let (key_parsed, next_remainder) = parse_dynamic_clvalue(t_key, remainder)?;
                 let (value_parsed, next_remainder) =
-                    parse_dynamic_clvalue(t_value, next_remainder).unwrap();
+                    parse_dynamic_clvalue(t_value, next_remainder)?;
                 remainder = next_remainder;
                 value_bytes.extend(key_parsed.inner_bytes());
                 value_bytes.extend(value_parsed.inner_bytes());
@@ -303,7 +426,7 @@ fn parse_dynamic_clvalue<'a>(
             )
         }
         casper_types::CLType::Tuple1([t1]) => {
-            let (t1_parsed, new_remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
+            let (t1_parsed, new_remainder) = parse_dynamic_clvalue(t1, bytes)?;
             let mut value_bytes = vec![];
             value_bytes.extend(t1_parsed.inner_bytes());
             (
@@ -312,8 +435,8 @@ fn parse_dynamic_clvalue<'a>(
             )
         }
         casper_types::CLType::Tuple2([t1, t2]) => {
-            let (t1_parsed, remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
-            let (t2_parsed, new_remainder) = parse_dynamic_clvalue(t2, remainder).unwrap();
+            let (t1_parsed, remainder) = parse_dynamic_clvalue(t1, bytes)?;
+            let (t2_parsed, new_remainder) = parse_dynamic_clvalue(t2, remainder)?;
             let mut value_bytes = vec![];
             value_bytes.extend(t1_parsed.inner_bytes());
             value_bytes.extend(t2_parsed.inner_bytes());
@@ -326,9 +449,9 @@ fn parse_dynamic_clvalue<'a>(
             )
         }
         casper_types::CLType::Tuple3([t1, t2, t3]) => {
-            let (t1_parsed, remainder) = parse_dynamic_clvalue(t1, bytes).unwrap();
-            let (t2_parsed, remainder) = parse_dynamic_clvalue(t2, remainder).unwrap();
-            let (t3_parsed, new_remainder) = parse_dynamic_clvalue(t3, remainder).unwrap();
+            let (t1_parsed, remainder) = parse_dynamic_clvalue(t1, bytes)?;
+            let (t2_parsed, remainder) = parse_dynamic_clvalue(t2, remainder)?;
+            let (t3_parsed, new_remainder) = parse_dynamic_clvalue(t3, remainder)?;
             let mut value_bytes = vec![];
             value_bytes.extend(t1_parsed.inner_bytes());
             value_bytes.extend(t2_parsed.inner_bytes());
