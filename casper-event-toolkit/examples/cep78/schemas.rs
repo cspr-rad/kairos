@@ -1,5 +1,5 @@
 /// Schemas for CEP-78.
-/// Source: https://github.com/casper-ecosystem/cep-78-enhanced-nft/blob/7815f090b51b9153dd33a3d7c0ab939b61e5a411/contract/src/utils.rs#L808-L821
+/// Source: https://github.com/casper-ecosystem/cep-78-enhanced-nft/blob/7815f090b51b9153dd33a3d7c0ab939b61e5a411/contract/src/utils.rs#L810-L819
 ///
 use casper_event_standard::Schemas;
 
