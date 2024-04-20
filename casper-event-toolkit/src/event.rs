@@ -163,7 +163,13 @@ pub fn parse_dynamic_clvalue<'a>(cltype: &CLType, bytes: &'a [u8]) -> Result<(CL
             }
             (CLValue::from_components(casper_types::CLType::List(t.clone()), value_bytes), remainder)
         },
-        casper_types::CLType::ByteArray(_) => todo!(),
+        casper_types::CLType::ByteArray(t) => {
+            let fixed_length = *t as usize;
+            let mut value_bytes = vec![];
+            let (t_parsed, new_remainder) = bytes.split_at(fixed_length);
+            value_bytes.extend(t_parsed);
+            (CLValue::from_components(casper_types::CLType::ByteArray(t.clone()), value_bytes), new_remainder)
+        },
         casper_types::CLType::Result { ok, err } => todo!(),
         casper_types::CLType::Map { key, value } => todo!(),
         casper_types::CLType::Tuple1([t1]) => {
@@ -250,6 +256,13 @@ mod tests {
         let list: Vec<u64> = vec![1, 6, 3, 3];
 
         roundtrip_assert(list);
+    }
+
+    #[test]
+    fn test_bytearray_roundtrip() {
+        let array: [u8; 6] = [1, 0, 3, 2, 6, 6];
+
+        roundtrip_assert(array);
     }
 
     #[test]
