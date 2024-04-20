@@ -5,6 +5,7 @@ use casper_event_standard::Schemas;
 
 use crate::cep78::events;
 
+#[allow(unused)]
 pub fn get_local_schemas() -> Schemas {
     Schemas::new()
         .with::<events::Mint>()
