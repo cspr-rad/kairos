@@ -32,7 +32,7 @@ pub fn parse_event(
         None => Err(ToolkitError::MissingEventSchema(event_name.to_string())),
     }?;
     let dynamic_event_data =
-        crate::event::parse_dynamic_event_data(dynamic_event_schema, event_data);
+        crate::event::parse_dynamic_event_data(dynamic_event_schema, event_data)?;
     let dynamic_event = Event {
         name: event_name.to_string(),
         fields: dynamic_event_data,

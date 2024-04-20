@@ -36,7 +36,7 @@ const EVENT_PREFIX: &str = "event_";
 pub fn parse_dynamic_event_data(
     dynamic_event_schema: Schema,
     event_data: &[u8],
-) -> Vec<(String, CLValue)> {
+) -> Result<Vec<(String, CLValue)>, ToolkitError> {
     let mut event_fields = vec![];
 
     let mut remainder = event_data;
@@ -44,13 +44,13 @@ pub fn parse_dynamic_event_data(
     for (field_name, field_type) in schema_fields {
 
         let cltype = field_type.downcast();
-        let (field_value, new_remainder) = parse_dynamic_clvalue(&cltype, remainder).unwrap();
+        let (field_value, new_remainder) = parse_dynamic_clvalue(&cltype, remainder)?;
         remainder = new_remainder;
 
         event_fields.push((field_name, field_value));
     }
 
-    event_fields
+    Ok(event_fields)
 }
 
 // Deserializes bytes into CLValue, based on runtime CLType.
