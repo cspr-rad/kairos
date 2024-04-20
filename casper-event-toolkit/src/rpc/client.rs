@@ -98,9 +98,9 @@ impl CasperClient {
 
         let stored_value = self.query_global_state(state_root_hash, key, path).await?;
         let contract = match stored_value {
-            casper_client::types::StoredValue::Contract(v) => v,
-            _ => panic!("Expected contract."),
-        };
+            casper_client::types::StoredValue::Contract(v) => Ok(v),
+            _ => Err(ToolkitError::UnexpectedStoredValueType { expected_type: "contract" }),
+        }?;
 
         // Casper client use different type of named keys, so we have to additionally parse it.
         let contract = crate::rpc::utils::extract_named_keys(contract);
@@ -121,9 +121,9 @@ impl CasperClient {
 
         let stored_value = self.query_global_state(state_root_hash, key, path).await?;
         let clvalue = match stored_value {
-            casper_client::types::StoredValue::CLValue(v) => v,
-            _ => panic!("Expected CLValue."),
-        };
+            casper_client::types::StoredValue::CLValue(v) => Ok(v),
+            _ => Err(ToolkitError::UnexpectedStoredValueType { expected_type: "clvalue" })
+        }?;
 
         Ok(clvalue)
     }
@@ -158,9 +158,9 @@ impl CasperClient {
         .await
         .unwrap();
         let clvalue = match response.result.stored_value {
-            casper_client::types::StoredValue::CLValue(v) => v,
-            _ => panic!("Expected CLValue."),
-        };
+            casper_client::types::StoredValue::CLValue(v) => Ok(v),
+            _ => Err(ToolkitError::UnexpectedStoredValueType { expected_type: "clvalue" })
+        }?;
 
         Ok(clvalue)
     }
