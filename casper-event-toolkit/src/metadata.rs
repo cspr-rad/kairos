@@ -2,7 +2,7 @@ pub use casper_types::URef;
 
 use crate::error::ToolkitError;
 use crate::rpc::client::CasperClient;
-use crate::utils;
+use crate::utils::{self, parse_hash};
 
 const EVENTS_SCHEMA_KEY: &str = "__events_schema";
 const EVENTS_LENGTH_KEY: &str = "__events_length";
@@ -21,8 +21,7 @@ impl CesMetadataRef {
         contract_hash: &str,
     ) -> Result<CesMetadataRef, ToolkitError> {
         // Build contract hash.
-        let contract_hash_bytes = hex::decode(contract_hash).unwrap();
-        let contract_hash = casper_types::HashAddr::try_from(contract_hash_bytes.as_ref()).unwrap();
+        let contract_hash = parse_hash(contract_hash)?;
 
         // Fetch contract named keys.
         let contract_named_keys = client.get_contract_named_keys(contract_hash).await?;

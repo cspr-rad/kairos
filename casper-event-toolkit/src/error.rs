@@ -13,6 +13,10 @@ pub enum ToolkitError {
     #[error("clvalue invalid: {0}")]
     InvalidCLValue(String),
 
+    /// Unable to parse hash.
+    #[error("unparsable hash address: {context}")]
+    InvalidHash { context: &'static str},
+
     /// Expected contract type at stored value.
     #[error("stored value type invalid, expected {expected_type}")]
     UnexpectedStoredValueType { expected_type: &'static str },
