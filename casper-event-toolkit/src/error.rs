@@ -13,7 +13,7 @@ pub enum ToolkitError {
     #[error("clvalue invalid: {0}")]
     InvalidCLValue(String),
 
-    ///
+    /// Unable to get data from RPC.
     #[error("rpc error: {error}")]
     RpcError {
         #[from]
