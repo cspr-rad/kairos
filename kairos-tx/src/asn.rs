@@ -23,6 +23,28 @@ impl From<PublicKey> for Vec<u8> {
 
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(delegate)]
+pub struct Signature(pub(crate) OctetString);
+
+// Converts an ASN.1 decoded signature into raw byte representation.
+impl From<Signature> for Vec<u8> {
+    fn from(value: Signature) -> Self {
+        value.0.into()
+    }
+}
+
+#[derive(AsnType, Encode, Decode, Debug)]
+#[rasn(delegate)]
+pub struct PayloadHash(pub(crate) OctetString);
+
+// Converts an ASN.1 decoded payload hash into raw byte representation.
+impl From<PayloadHash> for Vec<u8> {
+    fn from(value: PayloadHash) -> Self {
+        value.0.into()
+    }
+}
+
+#[derive(AsnType, Encode, Decode, Debug)]
+#[rasn(delegate)]
 pub struct Amount(pub(crate) Integer);
 
 // Attempts to convert an ASN.1 decoded amount (which is represented as a big integer)
@@ -56,6 +78,23 @@ impl TryFrom<Nonce> for u64 {
             .to_u64()
             .ok_or(TxError::ConstraintViolation { field: "nonce" })
     }
+}
+
+#[derive(AsnType, Encode, Decode, Debug)]
+#[non_exhaustive]
+pub struct Transaction {
+    pub public_key: PublicKey, // NOTE: Field name can be different than defined in schema, as only **order** is crucial
+    pub payload: SigningPayload,
+    pub algorithm: SigningAlgorithm,
+    pub signature: Signature,
+}
+
+#[derive(AsnType, Encode, Decode, Debug, PartialEq, Copy, Clone)]
+#[rasn(enumerated)]
+#[non_exhaustive]
+pub enum SigningAlgorithm {
+    CasperSecp256k1 = 0,
+    CasperEd25519 = 1,
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
