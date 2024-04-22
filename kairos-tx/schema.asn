@@ -4,8 +4,27 @@ TxSchema DEFINITIONS AUTOMATIC TAGS ::= BEGIN
 
   -- Basic types.
   PublicKey ::= OCTET STRING
+  Signature ::= OCTET STRING
+  PayloadHash ::= OCTET STRING
   Amount ::= INTEGER (0..18446744073709551615)
   Nonce ::= INTEGER (0..18446744073709551615)
+
+  -- Full, top-level transaction type.
+  Transaction ::= SEQUENCE {
+    publicKey PublicKey,
+    payload SigningPayload,
+    hash PayloadHash,
+    algorithm SigningAlgorithm,
+    signature Signature,
+    ...
+  }
+
+  -- Support for multiple signing algorithms.
+  SigningAlgorithm ::= ENUMERATED {
+    casperSecp256k1 (0),
+    casperEd25519 (1),
+    ...
+  }
 
   -- Transaction payload for signing.
   SigningPayload ::= SEQUENCE {
