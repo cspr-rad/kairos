@@ -471,6 +471,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "casper-client"
+version = "2.0.0"
+source = "git+https://github.com/casper-ecosystem/casper-client-rs?branch=release-2.0.0#438b660733d1f70890e143b3a9c8ccae22822b57"
+dependencies = [
+ "async-trait",
+ "base16",
+ "base64 0.13.1",
+ "casper-hashing",
+ "casper-types 3.0.0",
+ "clap",
+ "clap_complete",
+ "derp",
+ "ed25519-dalek 1.0.1",
+ "getrandom",
+ "hex-buffer-serde 0.4.0",
+ "humantime",
+ "itertools",
+ "jsonrpc-lite",
+ "k256 0.7.3",
+ "num-traits",
+ "once_cell",
+ "pem 1.1.1",
+ "rand 0.8.5",
+ "reqwest 0.11.27",
+ "schemars",
+ "serde",
+ "serde_json",
+ "signature 1.2.2",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "uint",
+ "untrusted 0.9.0",
+ "vergen",
+]
+
+[[package]]
 name = "casper-hashing"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1734,6 +1771,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairos-l1-query"
+version = "0.1.0"
+dependencies = [
+ "casper-client 2.0.0 (git+https://github.com/casper-ecosystem/casper-client-rs?branch=release-2.0.0)",
+ "casper-hashing",
+ "casper-types 3.0.0",
+ "tokio",
+]
+
+[[package]]
 name = "kairos-server"
 version = "0.1.0"
 dependencies = [
@@ -1758,7 +1805,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "backoff",
- "casper-client",
+ "casper-client 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nom",
  "reqwest 0.12.3",
  "sd-notify",
