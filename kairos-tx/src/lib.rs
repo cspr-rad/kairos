@@ -11,7 +11,7 @@ use sha2::Digest;
 // Hash is obtained from payload by computing sha256 of DER encoded ASN.1 data.
 pub fn hash(payload: &asn::SigningPayload) -> Result<[u8; 32], error::TxError> {
     let data = rasn::der::encode(payload).map_err(error::TxError::EncodeError)?;
-    let tx_hash: [u8; 32] = sha2::Sha256::digest(&data).into();
+    let tx_hash: [u8; 32] = sha2::Sha256::digest(data).into();
     Ok(tx_hash)
 }
 
@@ -22,12 +22,10 @@ pub fn make_tx(
     algorithm: asn::SigningAlgorithm,
     signature: asn::Signature,
 ) -> asn::Transaction {
-    let transaction = asn::Transaction {
+    asn::Transaction {
         public_key,
         payload,
         algorithm,
         signature,
-    };
-
-    transaction
+    }
 }
