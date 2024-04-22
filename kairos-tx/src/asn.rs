@@ -147,6 +147,22 @@ pub struct Withdrawal {
     pub amount: Amount,
 }
 
+impl TryFrom<&[u8]> for Transaction {
+    type Error = TxError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        rasn::der::decode(value).map_err(TxError::DecodeError)
+    }
+}
+
+impl TryFrom<Transaction> for Vec<u8> {
+    type Error = TxError;
+
+    fn try_from(value: Transaction) -> Result<Self, Self::Error> {
+        rasn::der::encode(&value).map_err(TxError::EncodeError)
+    }
+}
+
 impl TryFrom<&[u8]> for SigningPayload {
     type Error = TxError;
 
