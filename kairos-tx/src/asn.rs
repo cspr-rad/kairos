@@ -21,6 +21,12 @@ impl From<PublicKey> for Vec<u8> {
     }
 }
 
+impl From<Vec<u8>> for PublicKey {
+    fn from(value: Vec<u8>) -> Self {
+        PublicKey(OctetString::copy_from_slice(&value))
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(delegate)]
 pub struct Signature(pub(crate) OctetString);
@@ -29,6 +35,12 @@ pub struct Signature(pub(crate) OctetString);
 impl From<Signature> for Vec<u8> {
     fn from(value: Signature) -> Self {
         value.0.into()
+    }
+}
+
+impl From<Vec<u8>> for Signature {
+    fn from(value: Vec<u8>) -> Self {
+        Signature(OctetString::copy_from_slice(&value))
     }
 }
 
