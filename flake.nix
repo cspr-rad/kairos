@@ -27,7 +27,7 @@
     advisory-db.flake = false;
     risc0pkgs.url = "github:cspr-rad/risc0pkgs";
     risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
-    cctl.url = "github:casper-network/cctl";
+    cctl.url = "github:casper-network/cctl/fix-macos";
     csprpkgs.follows = "cctl/csprpkgs";
   };
 

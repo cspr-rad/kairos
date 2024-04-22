@@ -31,15 +31,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1713290505,
-        "narHash": "sha256-1ENlS1j+8p7MWjJWtG3X+HYpu1t2F7k2Ty/9/WJnF1Y=",
+        "lastModified": 1713806148,
+        "narHash": "sha256-QwVYuyRYRmkliEEIvD2wxVP7vhaHMqNKyaAqP59/cdQ=",
         "owner": "casper-network",
         "repo": "cctl",
-        "rev": "07f61b5a629ec0a15c5e0b90756f2e7e4a3fa654",
+        "rev": "52d16067d940cefe0b9f29f1fb6af4ebcce30c76",
         "type": "github"
       },
       "original": {
         "owner": "casper-network",
+        "ref": "fix-macos",
         "repo": "cctl",
         "type": "github"
       }
