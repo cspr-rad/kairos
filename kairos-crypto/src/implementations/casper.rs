@@ -85,6 +85,40 @@ impl CryptoSigner for Signer {
 
         Ok(public_key)
     }
+
+    #[cfg(feature = "tx")]
+    fn verify_tx(&self, tx: kairos_tx::asn::Transaction) -> Result<(), CryptoError> {
+        let tx_hash = kairos_tx::hash(&tx.payload).map_err(|_e| CryptoError::TxHashingError)?;
+        let signature: Vec<u8> = tx.signature.into();
+        self.verify(tx_hash, signature)?;
+
+        Ok(())
+    }
+
+    #[cfg(feature = "tx")]
+    fn sign_tx_payload(
+        &self,
+        payload: kairos_tx::asn::SigningPayload,
+    ) -> Result<kairos_tx::asn::Transaction, CryptoError> {
+        // Validate payload signature.
+        let tx_hash = kairos_tx::hash(&payload).map_err(|_e| CryptoError::TxHashingError)?;
+        let signature = self.sign(tx_hash)?;
+
+        // Prepare public key.
+        let public_key = self.to_public_key()?;
+
+        // Prepare algorithm.
+        let algorithm = match self.public_key {
+            PublicKey::Ed25519(_) => Ok(kairos_tx::asn::SigningAlgorithm::CasperEd25519),
+            PublicKey::Secp256k1(_) => Ok(kairos_tx::asn::SigningAlgorithm::CasperSecp256k1),
+            _ => Err(CryptoError::InvalidSigningAlgorithm),
+        }?;
+
+        // Build full transaction.
+        let tx = kairos_tx::make_tx(public_key.into(), payload, algorithm, signature.into());
+
+        Ok(tx)
+    }
 }
 
 #[cfg(test)]
