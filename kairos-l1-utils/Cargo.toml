@@ -1,0 +1,11 @@
+[package]
+name = "kairos-l1-query"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+casper-client = {git="https://github.com/casper-ecosystem/casper-client-rs", branch="release-2.0.0"}
+casper-types = "3.0.0"
+casper-hashing = "2.0.0"
+tokio = {version="1.36.0", features=["full"]}
