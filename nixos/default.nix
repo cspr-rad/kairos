@@ -30,7 +30,9 @@ in
             ./tests/end-to-end.nix
             {
               inherit mkKairosHostConfig;
-              inherit (self.packages."x86_64-linux") kairos;
+              inherit (self.packages.${pkgs.system}) kairos;
+              cctlModule = self.nixosModules.cctl;
+              inherit (inputs.csprpkgs.packages.${pkgs.system}) casper-client-rs;
             };
       };
     nixosModules = {
@@ -39,6 +41,12 @@ in
         {
           imports = [ ./modules/kairos.nix ];
           services.kairos.package = self.packages.${pkgs.system}.kairos;
+        };
+      cctl =
+        { pkgs, lib, ... }:
+        {
+          imports = [ ./modules/cctl.nix ];
+          services.cctl.package = self.packages.${pkgs.system}.cctld;
         };
     };
   };

@@ -48,10 +48,20 @@
             src = lib.cleanSourceWith {
               src = craneLib.path ./.;
               filter = path: type:
-                # Allow static files.
-                (lib.hasInfix "/fixtures/" path) ||
-                # Default filter (from crane) for .rs files.
-                (craneLib.filterCargoSources path type)
+                (builtins.any (includePath: lib.hasInfix includePath path) [
+                  "/kairos-cli"
+                  "/kairos-crypto"
+                  "/kairos-server"
+                  "/kairos-test-utils"
+                  "/kairos-tx"
+                  "/Cargo.toml"
+                  "/Cargo.lock"
+                ]) && (
+                  # Allow static files.
+                  (lib.hasInfix "/tests/fixtures/" path) ||
+                  # Default filter (from crane) for .rs files.
+                  (craneLib.filterCargoSources path type)
+                )
               ;
             };
             nativeBuildInputs = with pkgs; [ pkg-config ];
@@ -89,6 +99,22 @@
                 cp test-output.json $out
               '';
             });
+
+            kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
+              cargoExtraArgs = "-p kairos-tx --no-default-features";
+            });
+
+            cctld = pkgs.runCommand "cctld-wrapped"
+              {
+                buildInputs = [ pkgs.makeWrapper ];
+                meta.mainProgram = "cctld";
+              }
+              ''
+                mkdir -p $out/bin
+                makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
+                  --set PATH ${pkgs.lib.makeBinPath [inputs'.csprpkgs.packages.cctl ]}
+              '';
 
             default = self'.packages.kairos;
 
