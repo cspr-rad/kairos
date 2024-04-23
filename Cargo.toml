@@ -7,7 +7,7 @@ members = [
   "kairos-server",
   "kairos-tx",
   "kairos-test-utils", 
-  "kairos-l1-query",
+  "kairos-l1-utils",
 ]
 
 [workspace.package]
