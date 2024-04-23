@@ -4,3 +4,4 @@ result
 target
 .tmp
 .nixos-test-history
+.env

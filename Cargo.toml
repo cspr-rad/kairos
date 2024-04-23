@@ -6,8 +6,9 @@ members = [
   "kairos-crypto",
   "kairos-server",
   "kairos-tx",
-  "kairos-test-utils", 
+  "kairos-test-utils",
   "kairos-l1-utils",
+  "kairos-contracts/demo-contract-tests",
 ]
 
 [workspace.package]

@@ -1,7 +1,6 @@
 name: check
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
@@ -51,6 +50,18 @@ jobs:
         with:
           path: coverage-result/cobertura.xml
           minimum_coverage: 60
+      
+      - name: kairos-contracts x86_64-linux
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-contracts
+
+      - name: kairos-contracts x86_64-darwin
+        if: matrix.os == 'macos-latest'
+        run: nix build -L --no-link --show-trace .#packages.x86_64-darwin.kairos-contracts
+
+      - name: kairos-contracts aarch64-darwin
+        if: matrix.os == 'macos-14'
+        run: nix build -L --no-link --show-trace .#packages.aarch64-darwin.kairos-contracts
 
       - name: kairos x86_64-linux
         if: matrix.os == 'ubuntu-latest'

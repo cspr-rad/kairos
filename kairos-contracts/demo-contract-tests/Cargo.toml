@@ -1,0 +1,16 @@
+[package]
+name = "demo-contract-tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dev-dependencies]
+base64 = {version = "0.21.2", default-features = false, features = ["alloc"] }
+casper-engine-test-support = {version="7.0.0", default-features=false}
+casper-execution-engine = {version="7.0.0", default-features=false}
+casper-contract = {version="4.0.0", default-features=false}
+casper-types = {version="4.0.0", default-features=false}
+dotenvy = "0.15.7"
+lazy_static = "1.4.0"
