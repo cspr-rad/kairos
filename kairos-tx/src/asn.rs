@@ -234,13 +234,10 @@ mod tests {
             encoded,
             vec![
                 0b00110000, // T: 0b00 <- universal, 0b1 <- constructed, 0b10000 (16) <- SEQUENCE tag
-                0b00001100, // L: 0b0 <- short form, 0b0001100 (12) <- length
+                0b00001001, // L: 0b0 <- short form, 0b0001100 (9) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
                 0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
                 0b00000001, // V: 0b00000001 (1) <- value
-                0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
-                0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
-                0b00000000, // V: 0b00000000 (0) <- value
                 0b10100000, // T: 0b10 <- context-specific, 0b1 <- constructed, 0b00000 (0) <- CHOICE index
                 0b00000100, // L: 0b0 <- short form, 0b0000100 (4) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
@@ -263,9 +260,8 @@ mod tests {
         assert_eq!(
             encoded,
             vec![
-                0x30, 0x2E, // SEQUENCE (43 bytes)
+                0x30, 0x2B, // SEQUENCE (43 bytes)
                 0x02, 0x01, 0x01, // INTEGER (1 byte), value = 1
-                0x02, 0x01, 0x00, // INTEGER (1 byte), value = 0
                 0xA1, 0x26, // CHOICE (38 bytes), index = 1 (transfer body)
                 0x04, 0x20, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B,
                 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B,
@@ -284,9 +280,6 @@ mod tests {
             .der_encode()
             .unwrap();
 
-        assert_eq!(
-            encoded,
-            vec![48, 12, 2, 1, 1, 2, 1, 0, 162, 4, 2, 2, 3, 232]
-        );
+        assert_eq!(encoded, vec![48, 9, 2, 1, 1, 162, 4, 2, 2, 3, 232]);
     }
 }
