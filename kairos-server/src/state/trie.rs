@@ -80,7 +80,6 @@ pub struct BatchOutput {
 }
 
 /// A struct for tracking the state of the trie between batches.
-#[derive(Debug)]
 pub struct TrieState {
     db: Database,
     /// The root hash of the trie at the start of the current batch.
