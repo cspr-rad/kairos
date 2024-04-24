@@ -11,7 +11,7 @@ use crate::{
     routes::PayloadBody,
     state::{
         transactions::{Signed, Transaction, Transfer},
-        BatchStateManager, TrieStateThreadMsg,
+        BatchStateManager,
     },
     AppErr,
 };
@@ -39,7 +39,6 @@ pub async fn transfer_handler(
         }
     };
     let public_key = body.public_key;
-    let epoch = signing_payload.epoch.try_into().context("decoding epoch")?;
     let nonce = signing_payload.nonce.try_into().context("decoding nonce")?;
 
     tracing::info!("TODO: verifying transfer signature");
@@ -47,15 +46,10 @@ pub async fn transfer_handler(
     tracing::info!("queuing transaction for trie update");
 
     state
-        .queued_transactions
-        .send(TrieStateThreadMsg::Transaction(Signed {
+        .enqueue_transaction(Signed {
             public_key,
-            epoch,
             nonce,
             transaction: Transaction::Transfer(transfer),
-        }))
+        })
         .await
-        .context("sending transaction to trie thread")?;
-
-    Ok(())
 }

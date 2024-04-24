@@ -7,6 +7,7 @@ use kairos_server::{
     state::BatchStateManager,
 };
 use kairos_tx::asn::{Deposit, SigningPayload, Transfer, Withdrawal};
+use proptest::bits::u64;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
@@ -31,12 +32,9 @@ fn new_test_app() -> TestServer {
 async fn test_deposit_withdraw() {
     let server = new_test_app();
 
-    let nonce: u64 = 1;
-    let epoch: u64 = 0;
-    let amount: u64 = 100;
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: SigningPayload::new(nonce, epoch, Deposit::new(amount))
+        payload: SigningPayload::new(u64::MAX, Deposit::new(100))
             .try_into()
             .unwrap(),
 
@@ -63,63 +61,54 @@ async fn test_deposit_withdraw() {
         .await
         .assert_status_failure();
 
-    let nonce: u64 = 1;
-    let epoch: u64 = 0;
-    let amount: u64 = 50;
-    let withdrawal = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: SigningPayload::new(nonce, epoch, Withdrawal::new(amount))
-            .try_into()
-            .unwrap(),
-        signature: vec![],
-    };
-
     // first withdrawal
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(0, Withdrawal::new(50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
-
-    let nonce: u64 = 1;
-    let epoch: u64 = 0;
-    let amount: u64 = 51;
-    let withdrawal = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: SigningPayload::new(nonce, epoch, Withdrawal::new(amount))
-            .der_encode()
-            .unwrap(),
-        signature: vec![],
-    };
 
     // withdrawal with insufficient funds
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(1, Withdrawal::new(51))
+                .der_encode()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_failure();
-
-    let nonce: u64 = 1;
-    let epoch: u64 = 0;
-    let amount: u64 = 50;
-    let withdrawal = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: SigningPayload::new(nonce, epoch, Withdrawal::new(amount))
-            .try_into()
-            .unwrap(),
-        signature: vec![],
-    };
 
     // second withdrawal
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(1, Withdrawal::new(50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(2, Withdrawal::new(50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_failure();
 }
@@ -128,58 +117,43 @@ async fn test_deposit_withdraw() {
 async fn test_deposit_transfer_withdraw() {
     let server = new_test_app();
 
-    let nonce: u64 = 1;
-    let epoch: u64 = 0;
-    let amount: u64 = 100;
-    let deposit = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: SigningPayload::new(nonce, epoch, Deposit::new(amount))
-            .try_into()
-            .unwrap(),
-        signature: vec![],
-    };
-
-    let nonce: u64 = 1;
-    let epoch: u64 = 0;
-    let amount: u64 = 50;
-    let recipient: &[u8] = "bob_key".as_bytes();
-    let transfer = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: SigningPayload::new(nonce, epoch, Transfer::new(recipient, amount))
-            .try_into()
-            .unwrap(),
-        signature: vec![],
-    };
-
-    let nonce: u64 = 1;
-    let epoch: u64 = 0;
-    let amount: u64 = 50;
-    let withdrawal = PayloadBody {
-        public_key: "bob_key".into(),
-        payload: SigningPayload::new(nonce, epoch, Withdrawal::new(amount))
-            .try_into()
-            .unwrap(),
-        signature: vec![],
-    };
-
     // deposit
     server
         .post(DepositPath.to_uri().path())
-        .json(&deposit)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            // deposit's don't have a defined nonce
+            payload: SigningPayload::new(u64::MAX, Deposit::new(100))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 
     // transfer
     server
         .post(TransferPath.to_uri().path())
-        .json(&transfer)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(0, Transfer::new("bob_key".as_bytes(), 50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 
     // withdraw
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "bob_key".into(),
+            payload: SigningPayload::new(0, Withdrawal::new(50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 }

@@ -80,80 +80,41 @@ impl From<u64> for Nonce {
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
-#[rasn(delegate)]
-pub struct Epoch(pub(crate) Integer);
-
-impl TryFrom<Epoch> for u64 {
-    type Error = TxError;
-
-    fn try_from(value: Epoch) -> Result<Self, Self::Error> {
-        value
-            .0
-            .to_u64()
-            .ok_or(TxError::ConstraintViolation { field: "epoch" })
-    }
-}
-
-impl From<u64> for Epoch {
-    fn from(value: u64) -> Self {
-        Epoch(Integer::from(value))
-    }
-}
-
-#[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
 pub struct SigningPayload {
     pub nonce: Nonce,
-    pub epoch: Epoch,
     pub body: TransactionBody,
 }
 
 impl SigningPayload {
-    pub fn new(
-        nonce: impl Into<Nonce>,
-        epoch: impl Into<Epoch>,
-        body: impl Into<TransactionBody>,
-    ) -> Self {
+    pub fn new(nonce: impl Into<Nonce>, body: impl Into<TransactionBody>) -> Self {
         Self {
             nonce: nonce.into(),
-            epoch: epoch.into(),
             body: body.into(),
         }
     }
 
-    pub fn new_deposit(
-        nonce: impl Into<Nonce>,
-        epoch: impl Into<Epoch>,
-        amount: impl Into<Amount>,
-    ) -> Self {
+    pub fn new_deposit(nonce: impl Into<Nonce>, amount: impl Into<Amount>) -> Self {
         Self {
             nonce: nonce.into(),
-            epoch: epoch.into(),
             body: TransactionBody::Deposit(Deposit::new(amount)),
         }
     }
 
     pub fn new_transfer(
         nonce: impl Into<Nonce>,
-        epoch: impl Into<Epoch>,
         recipient: impl Into<PublicKey>,
         amount: impl Into<Amount>,
     ) -> Self {
         Self {
             nonce: nonce.into(),
-            epoch: epoch.into(),
             body: TransactionBody::Transfer(Transfer::new(recipient, amount)),
         }
     }
 
-    pub fn new_withdrawal(
-        nonce: impl Into<Nonce>,
-        epoch: impl Into<Epoch>,
-        amount: impl Into<Amount>,
-    ) -> Self {
+    pub fn new_withdrawal(nonce: impl Into<Nonce>, amount: impl Into<Amount>) -> Self {
         Self {
             nonce: nonce.into(),
-            epoch: epoch.into(),
             body: TransactionBody::Withdrawal(Withdrawal::new(amount)),
         }
     }
@@ -264,9 +225,8 @@ mod tests {
     #[test]
     fn test_encode_deposit() {
         const NONCE: u64 = 1;
-        const EPOCH: u64 = 0;
         const AMOUNT: u64 = 1000;
-        let encoded = SigningPayload::new_deposit(NONCE, EPOCH, AMOUNT)
+        let encoded = SigningPayload::new_deposit(NONCE, AMOUNT)
             .der_encode()
             .unwrap();
 
@@ -294,10 +254,9 @@ mod tests {
     #[test]
     fn test_encode_transfer() {
         const NONCE: u64 = 1;
-        const EPOCH: u64 = 0;
         const RECIPIENT: [u8; 32] = [11; 32];
         const AMOUNT: u64 = 1000;
-        let encoded = SigningPayload::new_transfer(NONCE, EPOCH, RECIPIENT, AMOUNT)
+        let encoded = SigningPayload::new_transfer(NONCE, RECIPIENT, AMOUNT)
             .der_encode()
             .unwrap();
 
@@ -319,10 +278,9 @@ mod tests {
 
     #[test]
     fn test_encode_withdrawal() {
-        const EPOCH: u64 = 0;
         const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = SigningPayload::new_withdrawal(NONCE, EPOCH, AMOUNT)
+        let encoded = SigningPayload::new_withdrawal(NONCE, AMOUNT)
             .der_encode()
             .unwrap();
 

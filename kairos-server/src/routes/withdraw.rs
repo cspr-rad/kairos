@@ -9,7 +9,7 @@ use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::routes::PayloadBody;
 use crate::state::transactions::{Signed, Transaction, Withdraw};
-use crate::state::{BatchStateManager, TrieStateThreadMsg};
+use crate::state::BatchStateManager;
 use crate::AppErr;
 
 #[derive(Debug, TypedPath)]
@@ -37,21 +37,15 @@ pub async fn withdraw_handler(
         }
     };
     let public_key = body.public_key;
-    let epoch = signing_payload.epoch.try_into().context("decoding epoch")?;
     let nonce = signing_payload.nonce.try_into().context("decoding nonce")?;
 
     tracing::info!("queuing withdrawal transaction");
 
     state
-        .queued_transactions
-        .send(TrieStateThreadMsg::Transaction(Signed {
+        .enqueue_transaction(Signed {
             public_key,
-            epoch,
             nonce,
             transaction: Transaction::Withdraw(withdrawal),
-        }))
+        })
         .await
-        .context("sending transaction to trie thread")?;
-
-    Ok(())
 }

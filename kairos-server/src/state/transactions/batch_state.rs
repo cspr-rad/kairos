@@ -1,50 +1,28 @@
-use std::{collections::HashSet, sync::Arc};
-
 use anyhow::anyhow;
 
 use sha2::{digest::FixedOutputReset, Digest, Sha256};
 
-use super::{entry_api_trait::*, Deposit, Signed, Transaction, Transfer, Withdraw};
+use super::{Deposit, Signed, Transaction, Transfer, Withdraw};
 use crate::{AppErr, PublicKey};
-use kairos_trie::{KeyHash, PortableHash, PortableUpdate};
+use kairos_trie::{stored::Store, KeyHash, PortableHash, PortableUpdate};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BatchState<DB> {
-    pub batch_epoch: u64,
-    pub batched_txns: BatchedTxns,
+    pub batched_txns: Vec<Signed<Transaction>>,
 
     pub kv_db: DB,
 }
 
-impl<DB: Entry<Key = kairos_trie::KeyHash, Value = Account>> BatchState<DB>
-where
-    AppErr: From<DB::Error>,
-{
-    pub fn new(batch_epoch: u64, kv_db: DB) -> Self {
+impl<S: Store<Account>> BatchState<kairos_trie::Transaction<S, Account>> {
+    pub fn new(kv_db: kairos_trie::Transaction<S, Account>) -> Self {
         Self {
-            batch_epoch,
-            batched_txns: BatchedTxns::new(),
+            batched_txns: Vec::new(),
             kv_db,
         }
     }
 
-    pub fn transaction(&mut self, txn: Signed<Transaction>) -> Result<(), AppErr> {
-        let Signed {
-            public_key,
-            epoch,
-            nonce: _,
-            transaction,
-        } = txn;
-
-        if epoch != self.batch_epoch {
-            return Err(anyhow!("transaction epoch does not match batch epoch").into());
-        }
-
-        if !self.batched_txns.contains(&transaction) {
-            return Err(anyhow!("transaction already in batch").into());
-        }
-
-        let amount = match &transaction {
+    pub fn execute_transaction(&mut self, txn: Signed<Transaction>) -> Result<(), AppErr> {
+        let amount = match &txn.transaction {
             Transaction::Transfer(transfer) => transfer.amount,
             Transaction::Deposit(deposit) => deposit.amount,
             Transaction::Withdraw(withdraw) => withdraw.amount,
@@ -54,20 +32,29 @@ where
             return Err(anyhow!("transaction amount must be greater than 0").into());
         }
 
-        match transaction {
-            Transaction::Transfer(ref transfer) => self.transfer(&public_key, transfer),
-            Transaction::Deposit(ref deposit) => self.deposit(&public_key, deposit),
-            Transaction::Withdraw(ref withdraw) => self.withdraw(&public_key, withdraw),
-        }?;
+        match txn.transaction {
+            Transaction::Transfer(ref transfer) => {
+                self.transfer(&txn.public_key, transfer, txn.nonce)?
+            }
+            Transaction::Deposit(ref deposit) => self.deposit(&txn.public_key, deposit)?,
+            Transaction::Withdraw(ref withdraw) => {
+                self.withdraw(&txn.public_key, withdraw, txn.nonce)?
+            }
+        }
 
-        self.batched_txns.insert(transaction);
+        self.batched_txns.push(txn);
 
         Ok(())
     }
 
     /// Avoid calling this method with a transfer that will fail.
     /// This method's prechecks may cause the Snapshot to bloat with unnecessary data if the transfer fails.
-    pub fn transfer(&mut self, sender: &PublicKey, transfer: &Transfer) -> Result<(), AppErr> {
+    pub fn transfer(
+        &mut self,
+        sender: &PublicKey,
+        transfer: &Transfer,
+        nonce: u64,
+    ) -> Result<(), AppErr> {
         let [sender_hash, recipient_hash] =
             hash_buffers([sender.as_slice(), transfer.recipient.as_slice()]);
 
@@ -79,6 +66,8 @@ where
         if sender_account.pubkey != *sender {
             return Err(anyhow!("hash collision detected on sender account").into());
         }
+
+        sender_account.check_nonce(nonce)?;
 
         if sender_account.balance < transfer.amount {
             return Err(anyhow!("sender has insufficient funds").into());
@@ -99,9 +88,11 @@ where
         }
 
         tracing::info!("applying transfer");
-        let sender_account = self.kv_db.entry(sender_hash)?.or_insert_with(|| {
+        let sender_account = self.kv_db.entry(&sender_hash)?.or_insert_with(|| {
             unreachable!("sender account should exist");
         });
+
+        sender_account.nonce += 1;
 
         // Remove the amount from the sender's account
         sender_account.balance = sender_account
@@ -109,9 +100,9 @@ where
             .checked_sub(transfer.amount)
             .expect("Sender balance underflow");
 
-        let recipient_account = self.kv_db.entry(recipient_hash)?.or_insert_with(|| {
+        let recipient_account = self.kv_db.entry(&recipient_hash)?.or_insert_with(|| {
             tracing::info!("creating new account for recipient");
-            Account::new(transfer.recipient.clone(), 0)
+            Account::new(transfer.recipient.clone(), 0, 0)
         });
 
         // Add the amount to the recipient's account
@@ -128,9 +119,9 @@ where
 
         let [recipient_hash] = hash_buffers([recipient.as_slice()]);
 
-        let recipient_account = self.kv_db.entry(recipient_hash)?.or_insert_with(|| {
+        let recipient_account = self.kv_db.entry(&recipient_hash)?.or_insert_with(|| {
             tracing::info!("creating new account for recipient");
-            Account::new(recipient.clone(), 0)
+            Account::new(recipient.clone(), 0, 0)
         });
 
         if recipient_account.pubkey != *recipient {
@@ -145,7 +136,12 @@ where
         Ok(())
     }
 
-    pub fn withdraw(&mut self, withdrawer: &PublicKey, withdraw: &Withdraw) -> Result<(), AppErr> {
+    pub fn withdraw(
+        &mut self,
+        withdrawer: &PublicKey,
+        withdraw: &Withdraw,
+        nonce: u64,
+    ) -> Result<(), AppErr> {
         tracing::info!("verifying the withdrawal can be applied");
 
         let [sender_hash] = hash_buffers([withdrawer.as_slice()]);
@@ -155,6 +151,8 @@ where
             .get(&sender_hash)?
             .ok_or_else(|| anyhow!("Sender does not have an account"))?;
 
+        sender_account.check_nonce(nonce)?;
+
         if sender_account.pubkey != *withdrawer {
             return Err(anyhow!("hash collision detected on sender account").into());
         }
@@ -163,9 +161,12 @@ where
             return Err(anyhow!("sender has insufficient funds").into());
         }
 
-        let sender_account = self.kv_db.entry(sender_hash)?.or_insert_with(|| {
+        let sender_account = self.kv_db.entry(&sender_hash)?.or_insert_with(|| {
             unreachable!("sender account should exist");
         });
+
+        sender_account.nonce += 1;
+
         sender_account.balance = sender_account
             .balance
             .checked_sub(withdraw.amount)
@@ -175,50 +176,34 @@ where
     }
 }
 
-// We could use a self-referential struct here to avoid Arc, but it's not worth the complexity
-#[derive(Default, Debug, Clone, PartialEq, Eq)]
-pub struct BatchedTxns {
-    set: HashSet<Arc<Transaction>>,
-    ord: Vec<Arc<Transaction>>,
-}
-
-impl BatchedTxns {
-    pub fn new() -> Self {
-        BatchedTxns::default()
-    }
-
-    /// Insert a transaction into the batch.
-    /// Returns true if the transaction was not already in the batch.
-    fn insert(&mut self, txn: Transaction) -> bool {
-        let txn = Arc::new(txn);
-        let new = self.set.insert(txn.clone());
-        if new {
-            self.ord.push(txn);
-        };
-
-        new
-    }
-
-    /// Check if a transaction is in the batch.
-    fn contains(&self, txn: &Transaction) -> bool {
-        self.set.contains(txn)
-    }
-
-    #[allow(dead_code)]
-    fn get(&self, op_idx: usize) -> Option<&Arc<Transaction>> {
-        self.ord.get(op_idx)
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Account {
     pub pubkey: PublicKey,
+    // Start at 0. Each transfer or withdrawal's `nonce` must match the account's `nonce`.
+    // Each successful transfer or withdrawal increments the `nonce`.
+    pub nonce: u64,
     pub balance: u64,
 }
 
 impl Account {
-    pub fn new(pubkey: PublicKey, balance: u64) -> Self {
-        Self { pubkey, balance }
+    pub fn new(pubkey: PublicKey, balance: u64, nonce: u64) -> Self {
+        Self {
+            pubkey,
+            nonce,
+            balance,
+        }
+    }
+
+    pub fn check_nonce(&self, nonce: u64) -> Result<(), AppErr> {
+        if self.nonce != nonce {
+            return Err(anyhow!(
+                "nonce mismatch: transaction nonce {nonce} does not match account nonce {}",
+                self.nonce
+            )
+            .into());
+        }
+
+        Ok(())
     }
 }
 

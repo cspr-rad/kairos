@@ -6,6 +6,7 @@ use std::{sync::Arc, thread::JoinHandle};
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 use tokio::sync::mpsc;
 
+use self::transactions::{Signed, Transaction};
 pub use self::trie::TrieStateThreadMsg;
 
 #[derive(Debug)]
@@ -15,9 +16,9 @@ pub struct BatchStateManager {
 }
 
 impl BatchStateManager {
-    pub fn new(db: trie::Database, batch_epoch: u64, batch_root: TrieRoot<NodeHash>) -> Arc<Self> {
+    pub fn new(db: trie::Database, batch_root: TrieRoot<NodeHash>) -> Arc<Self> {
         let (queued_transactions, receiver) = mpsc::channel(1000);
-        let trie_thread = trie::spawn_state_thread(receiver, db, batch_epoch, batch_root);
+        let trie_thread = trie::spawn_state_thread(receiver, db, batch_root);
 
         Arc::new(Self {
             trie_thread,
@@ -26,6 +27,19 @@ impl BatchStateManager {
     }
 
     pub fn new_empty() -> Arc<Self> {
-        Self::new(MemoryDb::empty(), 0, TrieRoot::default())
+        Self::new(MemoryDb::empty(), TrieRoot::default())
+    }
+
+    pub async fn enqueue_transaction(&self, txn: Signed<Transaction>) -> Result<(), crate::AppErr> {
+        let (msg, response) = TrieStateThreadMsg::transaction(txn);
+
+        self.queued_transactions
+            .send(msg)
+            .await
+            .expect("Could not send transaction to trie thread");
+
+        response
+            .await
+            .expect("Never received response from trie thread")
     }
 }

@@ -1,5 +1,4 @@
 pub mod batch_state;
-pub mod entry_api_trait;
 
 use kairos_tx::{asn, error::TxError};
 
@@ -17,7 +16,6 @@ pub enum Transaction {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Signed<T> {
     pub public_key: PublicKey,
-    pub epoch: u64,
     pub nonce: u64,
     pub transaction: T,
 }
