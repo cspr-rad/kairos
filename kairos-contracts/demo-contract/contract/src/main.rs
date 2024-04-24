@@ -68,7 +68,7 @@ pub extern "C" fn deposit() {
     let amount: U512 = runtime::get_named_arg(RUNTIME_ARG_AMOUNT);
     let tx: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_TX);
 
-    // TODO: Validate L2 transaction.
+    utils::validate_deposit_tx(&tx, &amount).unwrap_or_revert();
 
     let deposit_purse_uref: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
         .unwrap_or_revert_with(DepositError::MissingKeyDepositPurse)
