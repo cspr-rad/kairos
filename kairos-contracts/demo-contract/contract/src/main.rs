@@ -2,6 +2,7 @@
 #![no_main]
 extern crate alloc;
 use alloc::string::ToString;
+use alloc::vec::Vec;
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
@@ -15,7 +16,7 @@ mod constants;
 use constants::{
     KAIROS_DEPOSIT_CONTRACT_NAME, KAIROS_DEPOSIT_CONTRACT_PACKAGE, KAIROS_DEPOSIT_CONTRACT_UREF,
     KAIROS_DEPOSIT_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT,
-    RUNTIME_ARG_TEMP_PURSE,
+    RUNTIME_ARG_TEMP_PURSE, RUNTIME_ARG_TX,
 };
 mod entry_points;
 mod utils;
@@ -65,6 +66,10 @@ pub extern "C" fn get_purse() {
 pub extern "C" fn deposit() {
     let temp_purse: URef = runtime::get_named_arg(RUNTIME_ARG_TEMP_PURSE);
     let amount: U512 = runtime::get_named_arg(RUNTIME_ARG_AMOUNT);
+    let tx: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_TX);
+
+    // TODO: Validate L2 transaction.
+
     let deposit_purse_uref: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
         .unwrap_or_revert_with(DepositError::MissingKeyDepositPurse)
         .into_uref()

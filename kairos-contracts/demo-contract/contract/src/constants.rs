@@ -11,6 +11,7 @@ pub const RUNTIME_ARG_TEMP_PURSE: &str = "temp_purse";
 
 //#[allow(dead_code)]
 pub const RUNTIME_ARG_AMOUNT: &str = "amount";
+pub const RUNTIME_ARG_TX: &str = "tx";
 
 pub const EP_INIT_NAME: &str = "init";
 pub const EP_GET_PURSE_NAME: &str = "get_purse";
