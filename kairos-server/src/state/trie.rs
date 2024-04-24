@@ -49,7 +49,7 @@ pub fn spawn_state_thread(
         while let Some(msg) = queue.blocking_recv() {
             match msg {
                 TrieStateThreadMsg::Transaction(txn, responder) => {
-                    let res = state.batched_state.execute_transaction(txn);
+                    let res = state.batch_state.execute_transaction(txn);
 
                     responder.send(res).unwrap_or_else(|err| {
                         tracing::warn!(
@@ -79,11 +79,13 @@ pub struct BatchOutput {
     pub batched_txns: Vec<Signed<Transaction>>,
 }
 
+/// A struct for tracking the state of the trie between batches.
+#[derive(Debug)]
 pub struct TrieState {
     db: Database,
+    /// The root hash of the trie at the start of the current batch.
     batch_root: TrieRoot<NodeHash>,
-    batched_state:
-        BatchState<kairos_trie::Transaction<SnapshotBuilder<Database, Account>, Account>>,
+    batch_state: BatchState<kairos_trie::Transaction<SnapshotBuilder<Database, Account>, Account>>,
 }
 
 impl TrieState {
@@ -95,12 +97,12 @@ impl TrieState {
         Self {
             db,
             batch_root,
-            batched_state: BatchState::new(trie_txn),
+            batch_state: BatchState::new(trie_txn),
         }
     }
 
     pub fn commit_and_start_new_txn(&mut self) -> Result<BatchOutput, AppErr> {
-        let old_trie_txn = &self.batched_state.kv_db;
+        let old_trie_txn = &self.batch_state.kv_db;
         let old_root = self.batch_root;
         let new_root = old_trie_txn.commit(&mut DigestHasher::<Sha256>::default())?;
 
@@ -109,7 +111,7 @@ impl TrieState {
             SnapshotBuilder::<_, Account>::empty(self.db.clone()).with_trie_root_hash(new_root),
         );
 
-        let old_batch_state = mem::replace(&mut self.batched_state, BatchState::new(new_trie_txn));
+        let old_batch_state = mem::replace(&mut self.batch_state, BatchState::new(new_trie_txn));
         self.batch_root = new_root;
 
         Ok(

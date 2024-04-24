@@ -6,10 +6,12 @@ use super::{Deposit, Signed, Transaction, Transfer, Withdraw};
 use crate::{AppErr, PublicKey};
 use kairos_trie::{stored::Store, KeyHash, PortableHash, PortableUpdate};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// The state of the batch transaction against the trie.
+#[derive(Debug)]
 pub struct BatchState<DB> {
     pub batched_txns: Vec<Signed<Transaction>>,
 
+    /// A transactional key value store like `kairos_trie::Transaction`.
     pub kv_db: DB,
 }
 
