@@ -16,6 +16,8 @@ pub struct BatchStateManager {
 }
 
 impl BatchStateManager {
+    /// Create a new `BatchStateManager` with the given `db` and `batch_root`.
+    /// `batch_root` and it's decendents must be in the `db`.
     pub fn new(db: trie::Database, batch_root: TrieRoot<NodeHash>) -> Arc<Self> {
         let (queued_transactions, receiver) = mpsc::channel(1000);
         let trie_thread = trie::spawn_state_thread(receiver, db, batch_root);
@@ -26,6 +28,8 @@ impl BatchStateManager {
         })
     }
 
+    /// Create a new `BatchStateManager` with an empty `MemoryDb` and an empty `TrieRoot`.
+    /// This is useful for testing.
     pub fn new_empty() -> Arc<Self> {
         Self::new(MemoryDb::empty(), TrieRoot::default())
     }
