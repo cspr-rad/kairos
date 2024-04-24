@@ -81,6 +81,7 @@ pub extern "C" fn deposit() {
         account: get_immediate_caller().unwrap_or_revert(),
         amount,
         timestamp: None,
+        tx,
     };
     // this increases a counter automatically - we don't need to create one ourselves
     casper_event_standard::emit(new_deposit_record);
