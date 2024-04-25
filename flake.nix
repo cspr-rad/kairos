@@ -167,7 +167,7 @@
               };
               commentOnGh =
                 args@{ ...
-                }: pkgs.effects.modularEffect (args // {
+                }: pkgs.hci-effects.modularEffect (args // {
 
                   imports = [
                     inputs.hercules-ci-effects.modules.effect.git-auth
@@ -179,6 +179,7 @@
                     remote.url = primaryRepo.remoteHttpUrl;
                   };
                   effectScript = ''
+                    echo "Hello"
                     gh pr comment ${branch} --body-test "test"
                   '';
                 });
