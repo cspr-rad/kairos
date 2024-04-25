@@ -169,18 +169,17 @@
                 args@{ ...
                 }: pkgs.hci-effects.modularEffect (args // {
 
-                  imports = [
-                    inputs.hercules-ci-effects.modules.effect.git-auth
-                    inputs.hercules-ci-effects.modules.effect.git-auth-gh
-                  ];
-                  git.checkout.tokenSecret = "gh-token";
-                  git.checkout = {
-                    inherit (primaryRepo) forgeType;
-                    remote.url = primaryRepo.remoteHttpUrl;
-                  };
+                  #imports = [
+                  #  inputs.hercules-ci-effects.modules.effect.git-auth
+                  #  inputs.hercules-ci-effects.modules.effect.git-auth-gh
+                  #];
+                  #git.checkout.tokenSecret = "gh-token";
+                  #git.checkout = {
+                  #  inherit (primaryRepo) forgeType;
+                  #  remote.url = primaryRepo.remoteHttpUrl;
+                  #};
                   effectScript = ''
                     echo "Hello"
-                    gh pr comment ${branch} --body-test "test"
                   '';
                 });
             in
