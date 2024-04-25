@@ -52,7 +52,7 @@ nixosTest {
     #     amount = 1000
     #
     deposit_payload = "3009020100a004020203e8"
-    deposit_request = { "public_key": "deadbeef", "payload": deposit_payload, "signature": "cafebabe" }
+    deposit_request = { "public_key": "cafebabe", "payload": deposit_payload, "signature": "cafebabe" }
     # REST API
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/deposit -H 'Content-Type: application/json' -d '{}'".format(json.dumps(deposit_request)))
 
@@ -63,7 +63,7 @@ nixosTest {
     #     amount = 1000
     #
     transfer_payload = "3013020100a10e04086465616462656566020203e8"
-    transfer_request = { "public_key": "deadbeef", "payload": transfer_payload, "signature": "cafebabe" }
+    transfer_request = { "public_key": "cafebabe", "payload": transfer_payload, "signature": "cafebabe" }
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
 
     # Tx Payload
@@ -72,7 +72,7 @@ nixosTest {
     #     amount = 1000
     #
     withdraw_payload = "3009020101a204020203e8"
-    withdraw_request = { "public_key": "deadbeef", "payload": withdraw_payload, "signature": "cafebabe" }
+    withdraw_request = { "public_key": "deadbeef", "payload": withdraw_payload, "signature": "deadbeef" }
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
 
     # CLI with ed25519
