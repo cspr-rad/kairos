@@ -166,9 +166,8 @@
                 ];
               };
               commentOnGh =
-                args@{ hostname
-                , package
-                , ...
+                args@{
+                 ...
                 }: pkgs.effects.modularEffect (args // {
 
                   imports = [
@@ -176,13 +175,14 @@
                     inputs.hercules-ci-effects.modules.git-auth-gh
                   ];
                   git.checkout.tokenSecret = "gh-token";
-                  inherit hostname package;
                   effectScript = ''
                     gh pr comment ${branch} --body-test "test"
                   '';
                 });
             in
-            { };
+            {
+              testComment = commentOnGh {};
+            };
         };
     };
 }
