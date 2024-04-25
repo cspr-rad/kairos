@@ -46,24 +46,28 @@ nixosTest {
 
     kairos.succeed("casper-client get-node-status --node-address http://localhost:11101")
 
+    # TODO: use real public keys and signatures
+    alice_public_key = "alice_public_key"
+    bob_public_key = "bob_public_key"
+
     # Tx Payload
     #   nonce = 0
     #   deposit:
     #     amount = 1000
     #
     deposit_payload = "3009020100a004020203e8"
-    deposit_request = { "public_key": "deadbeef", "payload": deposit_payload, "signature": "cafebabe" }
+    deposit_request = { "public_key": alice_public_key, "payload": deposit_payload, "signature": "alice_sig_1_todo" }
     # REST API
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/deposit -H 'Content-Type: application/json' -d '{}'".format(json.dumps(deposit_request)))
 
     # Tx Payload
     #   nonce = 0
     #   transfer:
-    #     recipient = DEADBEEF
+    #     recipient = bob_public_key
     #     amount = 1000
     #
-    transfer_payload = "3013020100a10e04086465616462656566020203e8"
-    transfer_request = { "public_key": "deadbeef", "payload": transfer_payload, "signature": "cafebabe" }
+    transfer_payload = "3019020100a114040e626f625f7075626c69635f6b6579020203e8"
+    transfer_request = { "public_key": alice_public_key, "payload": transfer_payload, "signature": "alice_sig_2_todo" }
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
 
     # Tx Payload
@@ -72,7 +76,7 @@ nixosTest {
     #     amount = 1000
     #
     withdraw_payload = "3009020101a204020203e8"
-    withdraw_request = { "public_key": "deadbeef", "payload": withdraw_payload, "signature": "cafebabe" }
+    withdraw_request = { "public_key": bob_public_key, "payload": withdraw_payload, "signature": "bob_sig_1_todo" }
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
 
     # CLI with ed25519

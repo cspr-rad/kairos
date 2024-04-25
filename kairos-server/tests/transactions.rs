@@ -152,3 +152,46 @@ async fn test_deposit_transfer_withdraw() {
         .await
         .assert_status_success();
 }
+
+#[tokio::test]
+async fn test_deposit_transfer_to_self_withdraw() {
+    let server = new_test_app();
+
+    // deposit
+    server
+        .post(DepositPath.to_uri().path())
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            // deposit's don't have a defined nonce
+            payload: SigningPayload::new_deposit(1000).try_into().unwrap(),
+            signature: vec![],
+        })
+        .await
+        .assert_status_success();
+
+    // transfer
+    server
+        .post(TransferPath.to_uri().path())
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(0, Transfer::new("alice_key".as_bytes(), 1000))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
+        .await
+        .assert_status_success();
+
+    // withdraw
+    server
+        .post(WithdrawPath.to_uri().path())
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(1, Withdrawal::new(1000))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
+        .await
+        .assert_status_success();
+}

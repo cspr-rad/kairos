@@ -94,13 +94,13 @@ impl<S: Store<Account>> BatchState<kairos_trie::Transaction<S, Account>> {
             unreachable!("sender account should exist");
         });
 
-        sender_account.nonce += 1;
-
         // Remove the amount from the sender's account
         sender_account.balance = sender_account
             .balance
             .checked_sub(transfer.amount)
             .expect("Sender balance underflow");
+
+        sender_account.increment_nonce();
 
         let recipient_account = self.kv_db.entry(&recipient_hash)?.or_insert_with(|| {
             tracing::info!("creating new account for recipient");
@@ -146,33 +146,33 @@ impl<S: Store<Account>> BatchState<kairos_trie::Transaction<S, Account>> {
     ) -> Result<(), AppErr> {
         tracing::info!("verifying the withdrawal can be applied");
 
-        let [sender_hash] = hash_buffers([withdrawer.as_slice()]);
+        let [withdrawer_hash] = hash_buffers([withdrawer.as_slice()]);
 
-        let sender_account = self
+        let withdrawer_account = self
             .kv_db
-            .get(&sender_hash)?
-            .ok_or_else(|| anyhow!("Sender does not have an account"))?;
+            .get(&withdrawer_hash)?
+            .ok_or_else(|| anyhow!("withdrawer does not have an account"))?;
 
-        sender_account.check_nonce(nonce)?;
+        withdrawer_account.check_nonce(nonce)?;
 
-        if sender_account.pubkey != *withdrawer {
-            return Err(anyhow!("hash collision detected on sender account").into());
+        if withdrawer_account.pubkey != *withdrawer {
+            return Err(anyhow!("hash collision detected on withdrawer account").into());
         }
 
-        if sender_account.balance < withdraw.amount {
-            return Err(anyhow!("sender has insufficient funds").into());
+        if withdrawer_account.balance < withdraw.amount {
+            return Err(anyhow!("withdrawer has insufficient funds").into());
         }
 
-        let sender_account = self.kv_db.entry(&sender_hash)?.or_insert_with(|| {
-            unreachable!("sender account should exist");
+        let withdrawer_account = self.kv_db.entry(&withdrawer_hash)?.or_insert_with(|| {
+            unreachable!("withdrawer account should exist");
         });
 
-        sender_account.nonce += 1;
-
-        sender_account.balance = sender_account
+        withdrawer_account.balance = withdrawer_account
             .balance
             .checked_sub(withdraw.amount)
             .expect("sender balance underflow");
+
+        withdrawer_account.increment_nonce();
 
         Ok(())
     }
@@ -206,6 +206,13 @@ impl Account {
         }
 
         Ok(())
+    }
+
+    pub fn increment_nonce(&mut self) {
+        // TODO this is not a real problem an account will never have 2^64 transactions
+        // To make nonce wrapping safe
+        // we should expire transactions after a certain number of batches.
+        self.nonce = self.nonce.wrapping_add(1);
     }
 }
 
