@@ -157,7 +157,7 @@
       flake =
         {
           herculesCI.ciSystems = [ "x86_64-linux" ];
-          effects = { branch }:
+          effects = { branch, ... }:
             let
               pkgs = import inputs.nixpkgs {
                 system = "x86_64-linux";
