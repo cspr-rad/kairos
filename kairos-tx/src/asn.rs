@@ -97,9 +97,10 @@ impl SigningPayload {
         }
     }
 
-    pub fn new_deposit(nonce: impl Into<Nonce>, amount: impl Into<Amount>) -> Self {
+    pub fn new_deposit(amount: impl Into<Amount>) -> Self {
         Self {
-            nonce: nonce.into(),
+            // deposits have no meaningful nonce
+            nonce: 0.into(),
             body: TransactionBody::Deposit(Deposit::new(amount)),
         }
     }
@@ -223,15 +224,12 @@ impl TryFrom<SigningPayload> for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use crate::asn::SigningPayload;
+    use crate::asn::{Amount, SigningPayload};
 
     #[test]
     fn test_encode_deposit() {
-        const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = SigningPayload::new_deposit(NONCE, AMOUNT)
-            .der_encode()
-            .unwrap();
+        let encoded = SigningPayload::new_deposit(AMOUNT).der_encode().unwrap();
 
         assert_eq!(
             encoded,
@@ -240,7 +238,7 @@ mod tests {
                 0b00001001, // L: 0b0 <- short form, 0b0001100 (9) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
                 0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
-                0b00000001, // V: 0b00000001 (1) <- value
+                0b00000000, // V: 0b00000000 (0) <- value
                 0b10100000, // T: 0b10 <- context-specific, 0b1 <- constructed, 0b00000 (0) <- CHOICE index
                 0b00000100, // L: 0b0 <- short form, 0b0000100 (4) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
@@ -284,5 +282,28 @@ mod tests {
             .unwrap();
 
         assert_eq!(encoded, vec![48, 9, 2, 1, 1, 162, 4, 2, 2, 3, 232]);
+    }
+
+    #[test]
+    fn test_hex_encode_nixos_end_to_end_payloads() {
+        fn hex_encode(payload: SigningPayload) -> String {
+            hex::encode(payload.der_encode().unwrap())
+        }
+
+        let deposit_payload = hex_encode(SigningPayload::new_deposit(1000));
+        assert_eq!(deposit_payload.as_str(), "3009020100a004020203e8");
+
+        let transfer_payload = hex_encode(SigningPayload::new_transfer(
+            0,
+            "deadbeef".as_bytes(),
+            Amount::from(1000),
+        ));
+        assert_eq!(
+            transfer_payload.as_str(),
+            "3013020100a10e04086465616462656566020203e8"
+        );
+
+        let withdrawal_payload = hex_encode(SigningPayload::new_withdrawal(1, 1000));
+        assert_eq!(withdrawal_payload.as_str(), "3009020101a204020203e8");
     }
 }

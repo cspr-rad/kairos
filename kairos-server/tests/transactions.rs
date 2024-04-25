@@ -6,8 +6,7 @@ use kairos_server::{
     routes::{deposit::DepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody},
     state::BatchStateManager,
 };
-use kairos_tx::asn::{Deposit, SigningPayload, Transfer, Withdrawal};
-use proptest::bits::u64;
+use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
@@ -34,9 +33,7 @@ async fn test_deposit_withdraw() {
 
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: SigningPayload::new(u64::MAX, Deposit::new(100))
-            .try_into()
-            .unwrap(),
+        payload: SigningPayload::new_deposit(100).try_into().unwrap(),
 
         signature: vec![],
     };
@@ -123,9 +120,7 @@ async fn test_deposit_transfer_withdraw() {
         .json(&PayloadBody {
             public_key: "alice_key".into(),
             // deposit's don't have a defined nonce
-            payload: SigningPayload::new(u64::MAX, Deposit::new(100))
-                .try_into()
-                .unwrap(),
+            payload: SigningPayload::new_deposit(100).try_into().unwrap(),
             signature: vec![],
         })
         .await

@@ -47,31 +47,31 @@ nixosTest {
     kairos.succeed("casper-client get-node-status --node-address http://localhost:11101")
 
     # Tx Payload
-    #   nonce = 1
+    #   nonce = 0
     #   deposit:
     #     amount = 1000
     #
-    deposit_payload = "3009020101a004020203e8"
+    deposit_payload = "3009020100a004020203e8"
     deposit_request = { "public_key": "deadbeef", "payload": deposit_payload, "signature": "cafebabe" }
     # REST API
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/deposit -H 'Content-Type: application/json' -d '{}'".format(json.dumps(deposit_request)))
 
     # Tx Payload
-    #   nonce = 2
+    #   nonce = 0
     #   transfer:
     #     recipient = DEADBEEF
     #     amount = 1000
     #
-    transfer_payload = "300f020102a10a0404deadbeef020203e8"
+    transfer_payload = "3013020100a10e04086465616462656566020203e8"
     transfer_request = { "public_key": "deadbeef", "payload": transfer_payload, "signature": "cafebabe" }
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
 
     # Tx Payload
-    #   nonce = 3
+    #   nonce = 1
     #   withdrawal:
     #     amount = 1000
     #
-    withdraw_payload = "3009020103a204020203e8"
+    withdraw_payload = "3009020101a204020203e8"
     withdraw_request = { "public_key": "deadbeef", "payload": withdraw_payload, "signature": "cafebabe" }
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
 
