@@ -174,6 +174,7 @@
                     inputs.hercules-ci-effects.modules.effect.git-auth-gh
                   ];
                   git.checkout.tokenSecret = "gh-token";
+                  git.checkout.forgeType = "github";
                   effectScript = ''
                     gh pr comment ${branch} --body-test "test"
                   '';
