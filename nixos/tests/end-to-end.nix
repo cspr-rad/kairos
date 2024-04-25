@@ -67,11 +67,11 @@ nixosTest {
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
 
     # Tx Payload
-    #   nonce = 1
+    #   nonce = 0
     #   withdrawal:
     #     amount = 1000
     #
-    withdraw_payload = "3009020101a204020203e8"
+    withdraw_payload = "3009020100a204020203e8"
     withdraw_request = { "public_key": "deadbeef", "payload": withdraw_payload, "signature": "deadbeef" }
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
 
