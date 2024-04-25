@@ -298,7 +298,10 @@ mod tests {
             "bob_public_key".as_bytes(),
             Amount::from(1000),
         ));
-        assert_eq!(transfer_payload.as_str(), "3019020100a114040e626f625f7075626c69635f6b6579020203e8");
+        assert_eq!(
+            transfer_payload.as_str(),
+            "3019020100a114040e626f625f7075626c69635f6b6579020203e8"
+        );
 
         let withdrawal_payload = hex_encode(SigningPayload::new_withdrawal(1, 1000));
         assert_eq!(withdrawal_payload.as_str(), "3009020101a204020203e8");
