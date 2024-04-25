@@ -170,8 +170,8 @@
                 }: pkgs.effects.modularEffect (args // {
 
                   imports = [
-                    inputs.hercules-ci-effects.modules.git-auth
-                    inputs.hercules-ci-effects.modules.git-auth-gh
+                    inputs.hercules-ci-effects.modules.effect.git-auth
+                    inputs.hercules-ci-effects.modules.effect.git-auth-gh
                   ];
                   git.checkout.tokenSecret = "gh-token";
                   effectScript = ''
