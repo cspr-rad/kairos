@@ -176,7 +176,7 @@
                   git.checkout.tokenSecret = "gh-token";
                   git.checkout = {
                     inherit (primaryRepo) forgeType;
-                    remoteUrl = primaryRepo.remoteHttpUrl;
+                    remote.url = primaryRepo.remoteHttpUrl;
                   };
                   effectScript = ''
                     gh pr comment ${branch} --body-test "test"
