@@ -166,8 +166,7 @@
                 ];
               };
               commentOnGh =
-                args@{
-                 ...
+                args@{ ...
                 }: pkgs.effects.modularEffect (args // {
 
                   imports = [
@@ -181,7 +180,7 @@
                 });
             in
             {
-              testComment = commentOnGh {};
+              testComment = commentOnGh { };
             };
         };
     };
