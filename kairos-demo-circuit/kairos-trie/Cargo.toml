@@ -1,0 +1,27 @@
+[package]
+name = "kairos-trie"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[features]
+default = ["std"]
+std = []
+
+[profile.test]
+opt-level = 3
+debug-assertions = true
+overflow-checks = true
+
+
+[dependencies]
+digest = "0.10"
+bumpalo = "3"
+ouroboros = "0.18"
+serde = {version="1", default-features=false}
+
+
+[dev-dependencies]
+sha2 = "0.10"
+proptest-derive = { version = "0.4" }
+proptest = { version = "1"}
