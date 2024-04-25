@@ -29,12 +29,14 @@
     risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
     csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
     csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
+    hercules-ci-effects.url = "github:hercules-ci/hercules-ci-effects";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
       imports = [
+        inputs.hercules-ci-effects.flakeModule
         treefmt-nix.flakeModule
         ./kairos-prover
         ./nixos
@@ -153,8 +155,36 @@
             settings.formatter = { };
           };
         };
-      flake = {
-        herculesCI.ciSystems = [ "x86_64-linux" ];
-      };
+      flake =
+        {
+          herculesCI.ciSystems = [ "x86_64-linux" ];
+          effects = { branch }:
+            let
+              pkgs = import inputs.nixpkgs {
+                system = "x86_64-linux";
+                overlays = [
+                  inputs.hercules-ci-effects.overlays.default
+                ];
+              };
+              commentOnGh = args@{
+                hostname,
+                package,
+                ...
+              }: pkgs.effects.modularEffect (args // {
+
+                imports = [
+                  inputs.hercules-ci-effects.modules.git-auth
+                  inputs.hercules-ci-effects.modules.git-auth-gh
+                ];
+                git.checkout.tokenSecret = "gh-token";
+                inherit hostname package;
+                effectScript = ''
+                  gh pr comment ${branch} --body-test "test"
+                '';
+              });         
+            in
+          {
+          };
+        };
     };
 }
