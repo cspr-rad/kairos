@@ -1,5 +1,7 @@
 use casper_types::bytesrepr::{FromBytes, ToBytes};
 use casper_types::{crypto, PublicKey, SecretKey, Signature};
+
+#[cfg(feature = "fs")]
 use std::path::Path;
 
 use crate::CryptoError;
@@ -11,6 +13,7 @@ pub struct Signer {
 }
 
 impl CryptoSigner for Signer {
+    #[cfg(feature = "fs")]
     fn from_private_key_file<P: AsRef<Path>>(file: P) -> Result<Self, CryptoError>
     where
         Self: Sized,
