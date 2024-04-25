@@ -162,7 +162,7 @@
               pkgs = import inputs.nixpkgs {
                 system = "x86_64-linux";
                 overlays = [
-                  inputs.hercules-ci-effects.overlays.default
+                  inputs.hercules-ci-effects.overlay
                 ];
               };
               commentOnGh =
