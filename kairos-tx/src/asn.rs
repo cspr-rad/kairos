@@ -293,14 +293,16 @@ mod tests {
         let deposit_payload = hex_encode(SigningPayload::new_deposit(1000));
         assert_eq!(deposit_payload.as_str(), "3009020100a004020203e8");
 
+        let decoded_deadbeef = hex::decode("deadbeef").unwrap();
+
         let transfer_payload = hex_encode(SigningPayload::new_transfer(
             0,
-            "bob_public_key".as_bytes(),
+            decoded_deadbeef.as_slice(),
             Amount::from(1000),
         ));
         assert_eq!(
             transfer_payload.as_str(),
-            "3019020100a114040e626f625f7075626c69635f6b6579020203e8"
+            "300f020100a10a0404deadbeef020203e8"
         );
 
         let withdrawal_payload = hex_encode(SigningPayload::new_withdrawal(1, 1000));

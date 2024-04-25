@@ -62,7 +62,7 @@ nixosTest {
     #     recipient = deadbeef
     #     amount = 1000
     #
-    transfer_payload = "3013020100a10e04086465616462656566020203e8"
+    transfer_payload = "300f020100a10a0404deadbeef020203e8"
     transfer_request = { "public_key": "cafebabe", "payload": transfer_payload, "signature": "cafebabe" }
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
 
