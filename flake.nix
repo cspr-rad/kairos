@@ -165,25 +165,24 @@
                   inputs.hercules-ci-effects.overlays.default
                 ];
               };
-              commentOnGh = args@{
-                hostname,
-                package,
-                ...
-              }: pkgs.effects.modularEffect (args // {
+              commentOnGh =
+                args@{ hostname
+                , package
+                , ...
+                }: pkgs.effects.modularEffect (args // {
 
-                imports = [
-                  inputs.hercules-ci-effects.modules.git-auth
-                  inputs.hercules-ci-effects.modules.git-auth-gh
-                ];
-                git.checkout.tokenSecret = "gh-token";
-                inherit hostname package;
-                effectScript = ''
-                  gh pr comment ${branch} --body-test "test"
-                '';
-              });         
+                  imports = [
+                    inputs.hercules-ci-effects.modules.git-auth
+                    inputs.hercules-ci-effects.modules.git-auth-gh
+                  ];
+                  git.checkout.tokenSecret = "gh-token";
+                  inherit hostname package;
+                  effectScript = ''
+                    gh pr comment ${branch} --body-test "test"
+                  '';
+                });
             in
-          {
-          };
+            { };
         };
     };
 }
