@@ -36,7 +36,6 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
       imports = [
-        inputs.hercules-ci-effects.flakeModule
         treefmt-nix.flakeModule
         ./kairos-prover
         ./nixos
@@ -154,10 +153,10 @@
             programs.rustfmt.package = craneLib.rustfmt;
             settings.formatter = { };
           };
-          herculesCI.ciSystems = [ "x86_64-linux" ];
         };
       flake =
         {
+          herculesCI.ciSystems = [ "x86_64-linux" ];
           effects = { branch }:
             let
               pkgs = import inputs.nixpkgs {
