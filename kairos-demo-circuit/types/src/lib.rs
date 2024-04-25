@@ -5,9 +5,7 @@ use kairos_trie::{
 };
 
 extern crate alloc;
-use alloc::{
-    vec::Vec
-};
+use alloc::vec::Vec;
 
 use serde::{Serialize, Deserialize};
 
