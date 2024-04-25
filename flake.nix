@@ -157,7 +157,7 @@
       flake =
         {
           herculesCI.ciSystems = [ "x86_64-linux" ];
-          effects = { forgeType, remoteHttpUrl, branch, ... }:
+          effects = { branch, primaryRepo, ... }:
             let
               pkgs = import inputs.nixpkgs {
                 system = "x86_64-linux";
@@ -175,8 +175,8 @@
                   ];
                   git.checkout.tokenSecret = "gh-token";
                   git.checkout = {
-                    inherit forgeType;
-                    remoteUrl = remoteHttpUrl;
+                    inherit (primaryRepo) forgeType;
+                    remoteUrl = primaryRepo.remoteHttpUrl;
                   };
                   effectScript = ''
                     gh pr comment ${branch} --body-test "test"
