@@ -1,4 +1,6 @@
 #![no_std]
+pub mod verification_logic;
+
 use kairos_trie::{
     stored::{memory_db::MemoryDb, merkle::{SnapshotBuilder, Snapshot},},
     KeyHash, TrieRoot, NodeHash

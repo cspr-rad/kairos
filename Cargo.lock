@@ -4194,6 +4194,7 @@ dependencies = [
  "kairos-common-types",
  "kairos-trie",
  "serde",
+ "sha2 0.10.8",
 ]
 
 [[package]]

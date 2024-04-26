@@ -9,3 +9,4 @@ edition = "2021"
 serde = {version="1", default-features=false, features=["derive", "alloc"]}
 kairos-trie = {git="https://github.com/cspr-rad/kairos-trie", default-features=false, features=["serde"]}
 kairos-common-types = {path="../../kairos-common-types", default-features=false, features=["serde"]}
+sha2 = {version="0.10", default-features = false}
