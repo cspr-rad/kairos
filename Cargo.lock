@@ -4676,3 +4676,17 @@ dependencies = [
  "quote",
  "syn 2.0.60",
 ]
+
+[[package]]
+name = "zk-api"
+version = "0.1.0"
+dependencies = [
+ "bumpalo",
+ "circuits",
+ "kairos-trie",
+ "risc0-groth16",
+ "risc0-zkvm",
+ "serde",
+ "sha2 0.10.8",
+ "types",
+]

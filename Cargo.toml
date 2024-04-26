@@ -7,7 +7,13 @@ members = [
   "kairos-server",
   "kairos-tx",
   "kairos-test-utils",
-  "kairos-demo-circuit/tests"
+  "kairos-demo-circuit/tests",
+  "kairos-demo-circuit/zk-api"
+]
+
+exclude = [
+  "kairos-demo-circuit/circuits",
+  "kairos-demo-circuit/types"
 ]
 
 [workspace.package]
