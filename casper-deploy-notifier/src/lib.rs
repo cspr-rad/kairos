@@ -1,4 +1,3 @@
-use casper_types::AsymmetricType;
 use eventsource_stream::{Event, EventStreamError, Eventsource};
 use futures::stream::{BoxStream, TryStreamExt};
 use tokio::sync::mpsc;
@@ -68,20 +67,8 @@ impl DeployNotifier {
             match data {
                 SseData::ApiVersion(_) => Err(SseError::UnexpectedHandshake)?,
                 SseData::Other(_) => {}
-                SseData::DeployProcessed {
-                    execution_result,
-                    deploy_hash,
-                    account,
-                } => {
-                    let success = match *execution_result {
-                        casper_types::ExecutionResult::Failure { .. } => false,
-                        casper_types::ExecutionResult::Success { .. } => true,
-                    };
-                    let notification = Notification {
-                        deploy_hash: base16::encode_lower(deploy_hash.as_bytes()),
-                        public_key: account.to_hex(),
-                        success,
-                    };
+                SseData::DeployProcessed(event_details) => {
+                    let notification = event_details.into();
                     if let Err(_e) = tx.send(notification).await {
                         // Receiver probably dropeed.
                         break;

@@ -9,14 +9,17 @@ pub enum SseData {
     /// The version of node's API.
     ApiVersion(casper_types::ProtocolVersion),
     /// The given deploy has been executed, committed and forms part of the given block.
-    DeployProcessed {
-        deploy_hash: Box<casper_types::DeployHash>,
-        account: Box<casper_types::PublicKey>,
-        execution_result: Box<casper_types::ExecutionResult>,
-    },
+    DeployProcessed(DeployProcessed),
     /// The node is about to shut down.
     Shutdown,
     /// Other events, that we are not interested in.
     #[serde(untagged)]
     Other(serde_json::Value),
+}
+
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
+pub struct DeployProcessed {
+    pub deploy_hash: Box<casper_types::DeployHash>,
+    pub account: Box<casper_types::PublicKey>,
+    pub execution_result: Box<casper_types::ExecutionResult>,
 }
