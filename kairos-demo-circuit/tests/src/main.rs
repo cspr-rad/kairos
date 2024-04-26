@@ -27,39 +27,38 @@ fn main() {
     let maps: Vec<HashMap<KeyHash, u64>> = vec![map.clone(), map];
 
     let db = Rc::new(MemoryDb::<[u8; 8]>::empty());
-    let mut prior_root_hash: TrieRoot<NodeHash> = TrieRoot::default();
+    let mut old_root_hash: TrieRoot<NodeHash> = TrieRoot::default();
     /*
         - use snapshot builder with a predefined set of Operations
         - commit the DemoCircuitInput
         - run the circuit
     */
-    
-    
-    /*
-    // For example:
-    let input: u32 = 15 * u32::pow(2, 27) + 1;
+    let operations: Vec<Operation> = vec![Operation::Insert(KeyHash([0u32;8]), [0u8;8])];
+    let builder = SnapshotBuilder::empty(db).with_trie_root_hash(old_root_hash);
+    let mut txn = Transaction::from_snapshot_builder(builder);
+    let new_root_hash = txn.commit(&mut DigestHasher::<Sha256>::default()).unwrap();
+    let snapshot = txn.build_initial_snapshot();
+
+    let circuit_input: DemoCircuitInput = DemoCircuitInput{
+        batch: operations,
+        snapshot: snapshot,
+        new_root_hash: new_root_hash,
+        old_root_hash: old_root_hash
+    };
     let env = ExecutorEnv::builder()
-        .write(&input)
+        .write(&circuit_input)
         .unwrap()
         .build()
         .unwrap();
 
-    // Obtain the default prover.
     let prover = default_prover();
-
-    // Produce a receipt by proving the specified ELF binary.
     let receipt = prover
         .prove(env, DEMO_CIRCUIT_ELF)
         .unwrap();
 
-    // TODO: Implement code for retrieving receipt journal here.
-
-    // For example:
-    let _output: u32 = receipt.journal.decode().unwrap();
-
-    // The receipt was verified at the end of proving, but the below code is an
-    // example of how someone else could verify this receipt.
+    let _output: TrieRoot<NodeHash> = receipt.journal.decode().unwrap();
     receipt
         .verify(DEMO_CIRCUIT_ID)
-        .unwrap();*/
+        .expect("Failed to verify proof!");
+    println!("Result: {:?}", &_output);
 }

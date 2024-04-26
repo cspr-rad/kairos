@@ -109,7 +109,7 @@ fn main() {
     let input: DemoCircuitInput = env::read();
 
     // TODO: do something with the input
-
+    let output: TrieRoot<NodeHash> = verify_snapshot_and_compute_root(&input.batch, input.snapshot, input.new_root_hash);
     // write public output to the journal
-    env::commit(&input);
+    env::commit(&output);
 }

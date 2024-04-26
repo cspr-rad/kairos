@@ -11,10 +11,10 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DemoCircuitInput{
-    batch: Vec<Operation>,
-    snapshot: Snapshot<[u8; 8]>,
-    new_root_hash: TrieRoot<NodeHash>,
-    old_root_hash: TrieRoot<NodeHash>,
+    pub batch: Vec<Operation>,
+    pub snapshot: Snapshot<[u8; 8]>,
+    pub new_root_hash: TrieRoot<NodeHash>,
+    pub old_root_hash: TrieRoot<NodeHash>,
 }
 
 pub type Value = [u8; 8];
