@@ -9,22 +9,20 @@ fn example_rollup_proof(){
     use sha2::Sha256;
 
     use kairos_trie::{
-        stored::{memory_db::MemoryDb, merkle::SnapshotBuilder}, KeyHash, NodeHash, Transaction, TrieRoot,
+        stored::{memory_db::MemoryDb, merkle::SnapshotBuilder}, KeyHash, NodeHash, TrieRoot,
         stored::merkle::Snapshot,
         DigestHasher
     };
 
     use std::rc::Rc;
-    use types::Operation;
-    use types::DemoCircuitInput;
-
+    use types::{DemoCircuitInput, Transaction};
 
     let db: Rc<MemoryDb<[u8; 8]>> = Rc::new(MemoryDb::<[u8; 8]>::empty());
     let old_root_hash: TrieRoot<NodeHash> = TrieRoot::default();
 
-    let operations: Vec<Operation> = vec![Operation::Insert(KeyHash([0u32;8]), [0u8;8])];
+    let operations: Vec<Transaction> = vec![];
     let builder: SnapshotBuilder<Rc<MemoryDb<[u8; 8]>>, [u8; 8]> = SnapshotBuilder::empty(db).with_trie_root_hash(old_root_hash);
-    let txn: Transaction<SnapshotBuilder<Rc<MemoryDb<[u8; 8]>>, [u8; 8]>, [u8; 8]> = Transaction::from_snapshot_builder(builder);
+    let txn: kairos_trie::Transaction<SnapshotBuilder<Rc<MemoryDb<[u8; 8]>>, [u8; 8]>, [u8; 8]> = kairos_trie::Transaction::from_snapshot_builder(builder);
     let new_root_hash: TrieRoot<NodeHash> = txn.commit(&mut DigestHasher::<Sha256>::default()).unwrap();
     let snapshot: Snapshot<[u8; 8]> = txn.build_initial_snapshot();
 
