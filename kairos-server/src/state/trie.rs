@@ -71,6 +71,7 @@ pub fn spawn_state_thread(
     })
 }
 
+/// Proof input data that is sent to the L1 contract.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BatchOutput {
     pub new_root: TrieRoot<NodeHash>,
@@ -80,6 +81,8 @@ pub struct BatchOutput {
 }
 
 /// A struct for tracking the state of the trie between batches.
+///
+/// The `TrieStateThread` responds to messages by applying transactions against this struct.
 pub struct TrieState {
     db: Database,
     /// The root hash of the trie at the start of the current batch.
