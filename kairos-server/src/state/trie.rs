@@ -113,14 +113,11 @@ impl TrieState {
         let old_batch_state = mem::replace(&mut self.batch_state, BatchState::new(new_trie_txn));
         self.batch_root = new_root;
 
-        Ok(
-            BatchOutput {
-                new_root,
-                old_root,
-                snapshot,
-                batched_txns: old_batch_state.batched_txns,
-            },
-            // New TrieState at epoch + 1
-        )
+        Ok(BatchOutput {
+            new_root,
+            old_root,
+            snapshot,
+            batched_txns: old_batch_state.batched_txns,
+        })
     }
 }
