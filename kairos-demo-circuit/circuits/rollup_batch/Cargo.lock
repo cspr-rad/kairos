@@ -284,7 +284,7 @@ dependencies = [
 name = "demo_circuit"
 version = "0.1.0"
 dependencies = [
- "kairos-trie 0.1.0 (git+https://github.com/cspr-rad/kairos-trie)",
+ "kairos-trie",
  "risc0-zkvm",
  "sha2",
  "types",
@@ -394,21 +394,12 @@ dependencies = [
 [[package]]
 name = "kairos-trie"
 version = "0.1.0"
+source = "git+https://github.com/cspr-rad/kairos-trie#760a4b7a72334c737fe6b4a40f82ae0e1c35bcb3"
 dependencies = [
  "bumpalo",
  "digest",
  "ouroboros",
  "serde",
-]
-
-[[package]]
-name = "kairos-trie"
-version = "0.1.0"
-source = "git+https://github.com/cspr-rad/kairos-trie#979032a71b9ca9e5961124b6124ede7847ed9490"
-dependencies = [
- "bumpalo",
- "digest",
- "ouroboros",
 ]
 
 [[package]]
@@ -822,7 +813,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 name = "types"
 version = "0.1.0"
 dependencies = [
- "kairos-trie 0.1.0",
+ "kairos-trie",
  "serde",
 ]
 
@@ -872,9 +863,9 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.8.0"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63381fa6624bf92130a6b87c0d07380116f80b565c42cf0d754136f0238359ef"
+checksum = "525b4ec142c6b68a2d10f01f7bbf6755599ca3f81ea53b8431b7dd348f5fdb2d"
 dependencies = [
  "zeroize_derive",
 ]

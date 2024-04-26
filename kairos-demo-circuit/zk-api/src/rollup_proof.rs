@@ -1,4 +1,4 @@
-use methods::{
+use circuits::{
     DEMO_CIRCUIT_ELF, DEMO_CIRCUIT_ID
 };
 use risc0_zkvm::{default_prover, ExecutorEnv};
@@ -20,3 +20,6 @@ use std::{
 use types::{Operation, Value};
 use types::DemoCircuitInput;
 
+pub fn new() -> risc0_zkvm::Receipt{
+    todo!("call prover");
+}
