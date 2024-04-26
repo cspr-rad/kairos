@@ -28,11 +28,7 @@ fn main() {
 
     let db = Rc::new(MemoryDb::<[u8; 8]>::empty());
     let mut old_root_hash: TrieRoot<NodeHash> = TrieRoot::default();
-    /*
-        - use snapshot builder with a predefined set of Operations
-        - commit the DemoCircuitInput
-        - run the circuit
-    */
+
     let operations: Vec<Operation> = vec![Operation::Insert(KeyHash([0u32;8]), [0u8;8])];
     let builder = SnapshotBuilder::empty(db).with_trie_root_hash(old_root_hash);
     let mut txn = Transaction::from_snapshot_builder(builder);
@@ -61,4 +57,41 @@ fn main() {
         .verify(DEMO_CIRCUIT_ID)
         .expect("Failed to verify proof!");
     println!("Result: {:?}", &_output);
+}
+
+#[test]
+fn example_rollup_proof(){
+    let map: HashMap<KeyHash, u64> = HashMap::from_iter([(KeyHash([0; 8]), 0)]);
+    let maps: Vec<HashMap<KeyHash, u64>> = vec![map.clone(), map];
+
+    let db = Rc::new(MemoryDb::<[u8; 8]>::empty());
+    let mut old_root_hash: TrieRoot<NodeHash> = TrieRoot::default();
+
+    let operations: Vec<Operation> = vec![Operation::Insert(KeyHash([0u32;8]), [0u8;8])];
+    let builder = SnapshotBuilder::empty(db).with_trie_root_hash(old_root_hash);
+    let mut txn = Transaction::from_snapshot_builder(builder);
+    let new_root_hash = txn.commit(&mut DigestHasher::<Sha256>::default()).unwrap();
+    let snapshot = txn.build_initial_snapshot();
+
+    let circuit_input: DemoCircuitInput = DemoCircuitInput{
+        batch: operations,
+        snapshot: snapshot,
+        new_root_hash: new_root_hash,
+        old_root_hash: old_root_hash
+    };
+    let env = ExecutorEnv::builder()
+        .write(&circuit_input)
+        .unwrap()
+        .build()
+        .unwrap();
+
+    let prover = default_prover();
+    let receipt = prover
+        .prove(env, DEMO_CIRCUIT_ELF)
+        .unwrap();
+
+    let _output: TrieRoot<NodeHash> = receipt.journal.decode().unwrap();
+    receipt
+        .verify(DEMO_CIRCUIT_ID)
+        .expect("Failed to verify proof!");
 }

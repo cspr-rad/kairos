@@ -103,12 +103,7 @@ fn trie_op<S: Store<Value>>(
 }
 
 fn main() {
-    // TODO: Implement your guest code here
-
-    // read the input
     let input: DemoCircuitInput = env::read();
-
-    // TODO: do something with the input
     let output: TrieRoot<NodeHash> = verify_snapshot_and_compute_root(&input.batch, input.snapshot, input.new_root_hash);
     // write public output to the journal
     env::commit(&output);
