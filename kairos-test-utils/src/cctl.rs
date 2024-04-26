@@ -133,6 +133,8 @@ impl Drop for CCTLNetwork {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
         let network = CCTLNetwork::run().await.unwrap();
