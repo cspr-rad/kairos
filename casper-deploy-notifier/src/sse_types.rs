@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 ///
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize, Debug)]
 pub enum SseData {
-    /// The version of node's API.
+    /// The version of node's API. First event to receive, used for handshake.
     ApiVersion(casper_types::ProtocolVersion),
     /// The given deploy has been executed, committed and forms part of the given block.
     DeployProcessed(DeployProcessed),
