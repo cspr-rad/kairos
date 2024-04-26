@@ -284,7 +284,7 @@ dependencies = [
 name = "demo_circuit"
 version = "0.1.0"
 dependencies = [
- "kairos-trie",
+ "kairos-trie 0.1.0 (git+https://github.com/cspr-rad/kairos-trie)",
  "risc0-zkvm",
  "sha2",
  "types",
@@ -399,6 +399,16 @@ dependencies = [
  "digest",
  "ouroboros",
  "serde",
+]
+
+[[package]]
+name = "kairos-trie"
+version = "0.1.0"
+source = "git+https://github.com/cspr-rad/kairos-trie#979032a71b9ca9e5961124b6124ede7847ed9490"
+dependencies = [
+ "bumpalo",
+ "digest",
+ "ouroboros",
 ]
 
 [[package]]
@@ -812,7 +822,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 name = "types"
 version = "0.1.0"
 dependencies = [
- "kairos-trie",
+ "kairos-trie 0.1.0",
  "serde",
 ]
 

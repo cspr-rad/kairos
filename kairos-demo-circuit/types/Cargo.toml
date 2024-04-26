@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 serde = {version="1", default-features=false}
-kairos-trie = {path="../kairos-trie", default-features=false}
+kairos-trie = {git="https://github.com/cspr-rad/kairos-trie", default-features=false, features=["serde"]}

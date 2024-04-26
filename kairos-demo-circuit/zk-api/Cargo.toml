@@ -10,7 +10,7 @@ methods = { path = "../circuits" }
 risc0-zkvm = { version = "0.21.0" }
 risc0-groth16 = { version = "0.21.0" }
 serde = "1.0"
-kairos-trie = { path="../kairos-trie", default-features=false }
+kairos-trie = { git="https://github.com/cspr-rad/kairos-trie", default-features=false }
 types = {path="../types", default-features=false}
 sha2 = {version="0.10", default-features = false}
 bumpalo = "3"

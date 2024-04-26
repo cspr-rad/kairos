@@ -1,8 +1,6 @@
 #![no_main]
 // If you want to try std support, also update the guest Cargo.toml file
 #![no_std]  // std support is experimental
-
-
 use risc0_zkvm::guest::env;
 use kairos_trie::{
     stored::{
@@ -18,7 +16,7 @@ use types::{DemoCircuitInput, Operation, Value};
 
 risc0_zkvm::guest::entry!(main);
 
-fn verify_snapshot_and_compute_root(
+fn run_against_snapshot_and_return_root(
     batch: &[Operation],
     snapshot: Snapshot<[u8; 8]>,
     old_root_hash: TrieRoot<NodeHash>
@@ -104,7 +102,7 @@ fn trie_op<S: Store<Value>>(
 
 fn main() {
     let input: DemoCircuitInput = env::read();
-    let output: TrieRoot<NodeHash> = verify_snapshot_and_compute_root(&input.batch, input.snapshot, input.new_root_hash);
+    let output: TrieRoot<NodeHash> = run_against_snapshot_and_return_root(&input.batch, input.snapshot, input.new_root_hash);
     // write public output to the journal
     env::commit(&output);
 }

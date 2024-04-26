@@ -2127,10 +2127,17 @@ dependencies = [
  "bumpalo",
  "digest 0.10.7",
  "ouroboros",
- "proptest",
- "proptest-derive",
  "serde",
- "sha2 0.10.8",
+]
+
+[[package]]
+name = "kairos-trie"
+version = "0.1.0"
+source = "git+https://github.com/cspr-rad/kairos-trie#979032a71b9ca9e5961124b6124ede7847ed9490"
+dependencies = [
+ "bumpalo",
+ "digest 0.10.7",
+ "ouroboros",
 ]
 
 [[package]]
@@ -2809,17 +2816,6 @@ dependencies = [
  "rusty-fork",
  "tempfile",
  "unarray",
-]
-
-[[package]]
-name = "proptest-derive"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cf16337405ca084e9c78985114633b6827711d22b9e6ef6c6c0d665eb3f0b6e"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -3932,7 +3928,7 @@ name = "tests"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
- "kairos-trie",
+ "kairos-trie 0.1.0 (git+https://github.com/cspr-rad/kairos-trie)",
  "methods",
  "risc0-zkvm",
  "serde",
@@ -4196,7 +4192,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 name = "types"
 version = "0.1.0"
 dependencies = [
- "kairos-trie",
+ "kairos-trie 0.1.0",
  "serde",
 ]
 

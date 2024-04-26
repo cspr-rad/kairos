@@ -8,6 +8,6 @@ edition = "2021"
 [dependencies]
 # If you want to try (experimental) std support, add `features = [ "std" ]` to risc0-zkvm
 risc0-zkvm = { version = "0.21.0", default-features = false }
-kairos-trie = { path = "../../kairos-trie", default-features = false }
+kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", default-features = false }
 sha2 = {version="0.10", default-features = false}
 types = {path="../../types", default-features=false}
