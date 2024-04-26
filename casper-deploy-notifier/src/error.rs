@@ -7,6 +7,10 @@ pub enum SseError {
     #[error("Failed to connect to SSE endpoint: {0}")]
     ConnectionError(#[from] reqwest::Error),
 
+    /// Unable to run notifier, because there is no available connection.
+    #[error("Not connected to event stream")]
+    NotConnected,
+
     /// Connection issue with already opened stream.
     #[error("Stream error: {0}")]
     StreamError(#[from] EventStreamError<reqwest::Error>),

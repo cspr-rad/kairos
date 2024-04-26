@@ -12,13 +12,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tokio::spawn(async move {
         loop {
-            if let Err(e) = deploy_notifier.run(tx.clone()).await {
-                eprintln!("Error listening for deployment events: {:?}", e);
-
-                // Connection can sometimes be lost, so we retry after a delay.
-                eprintln!("Retrying in 5 seconds...",);
-                tokio::time::sleep(Duration::from_secs(5)).await;
+            if let Err(e) = deploy_notifier.connect().await {
+                eprintln!("Unable to connect: {:?}", e);
+                continue;
             }
+
+            if let Err(e) = deploy_notifier.run(tx.clone()).await {
+                eprintln!("Error while listening to deployment events: {:?}", e);
+            }
+
+            // Connection can sometimes be lost, so we retry after a delay.
+            eprintln!("Retrying in 5 seconds...",);
+            tokio::time::sleep(Duration::from_secs(5)).await;
         }
     });
 
