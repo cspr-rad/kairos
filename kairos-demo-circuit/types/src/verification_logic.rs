@@ -8,6 +8,8 @@ use kairos_trie::{stored::Store, KeyHash, PortableHash, PortableUpdate};
 
 type PublicKey = Vec<u8>;
 
+use serde::{Serialize, Deserialize};
+
 /// The state of the batch transaction against the trie.
 #[derive(Debug)]
 pub struct BatchState<DB> {
@@ -165,7 +167,7 @@ impl<S: Store<Account>> BatchState<kairos_trie::Transaction<S, Account>> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Account {
     pub pubkey: PublicKey,
     // Start at 0. Each transfer or withdrawal's `nonce` must match the account's `nonce`.

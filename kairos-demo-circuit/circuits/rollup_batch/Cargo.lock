@@ -284,6 +284,7 @@ dependencies = [
 name = "demo_circuit"
 version = "0.1.0"
 dependencies = [
+ "kairos-common-types",
  "kairos-trie",
  "risc0-zkvm",
  "sha2",

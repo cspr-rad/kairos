@@ -12,13 +12,13 @@ use kairos_trie::{
 };
 use sha2::Sha256;
 
-use types::{DemoCircuitInput, Transaction};
-
+use types::{DemoCircuitInput, transactions, verification_logic};
+use kairos_common_types;
 risc0_zkvm::guest::entry!(main);
 
 fn run_against_snapshot_and_return_root(
-    batch: &[Transaction],
-    snapshot: Snapshot<[u8; 8]>,
+    batch: &[kairos_common_types::transactions::Signed<transactions::Transaction>],
+    snapshot: Snapshot<verification_logic::Account>,
     old_root_hash: TrieRoot<NodeHash>
 ) -> TrieRoot<NodeHash>{
     assert_eq!(
@@ -28,6 +28,11 @@ fn run_against_snapshot_and_return_root(
             .unwrap()
     );
     let mut txn = kairos_trie::Transaction::from_snapshot(&snapshot).unwrap();
+    let mut batch_state = verification_logic::BatchState::new(txn);
+    for tx in batch{
+        batch_state.execute_transaction(tx.clone());
+    }
+    let txn = kairos_trie::Transaction::from_snapshot(&snapshot).unwrap();
     let root_hash = txn
         .calc_root_hash(&mut DigestHasher::<Sha256>::default())
         .unwrap();
