@@ -96,6 +96,14 @@ impl SigningPayload {
             body: body.into(),
         }
     }
+
+    pub fn der_encode(&self) -> Result<Vec<u8>, TxError> {
+        rasn::der::encode(self).map_err(TxError::EncodeError)
+    }
+
+    pub fn der_decode(value: impl AsRef<[u8]>) -> Result<Self, TxError> {
+        rasn::der::decode(value.as_ref()).map_err(TxError::DecodeError)
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
@@ -176,7 +184,7 @@ impl TryFrom<&[u8]> for SigningPayload {
     type Error = TxError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        rasn::der::decode(value).map_err(TxError::DecodeError)
+        SigningPayload::der_decode(value)
     }
 }
 
@@ -184,7 +192,7 @@ impl TryFrom<SigningPayload> for Vec<u8> {
     type Error = TxError;
 
     fn try_from(value: SigningPayload) -> Result<Self, Self::Error> {
-        rasn::der::encode(&value).map_err(TxError::EncodeError)
+        value.der_encode()
     }
 }
 
