@@ -204,7 +204,7 @@ mod tests {
     fn test_encode_deposit() {
         const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = make_deposit(NONCE, AMOUNT).unwrap();
+        let encoded = make_deposit(NONCE, AMOUNT).der_encode().unwrap();
 
         assert_eq!(
             encoded,
@@ -229,7 +229,9 @@ mod tests {
         const NONCE: u64 = 1;
         const RECIPIENT: [u8; 32] = [11; 32];
         const AMOUNT: u64 = 1000;
-        let encoded = make_transfer(NONCE, &RECIPIENT, AMOUNT).unwrap();
+        let encoded = make_transfer(NONCE, &RECIPIENT, AMOUNT)
+            .der_encode()
+            .unwrap();
 
         assert_eq!(
             encoded,
@@ -250,7 +252,7 @@ mod tests {
     fn test_encode_withdrawal() {
         const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = make_withdrawal(NONCE, AMOUNT).unwrap();
+        let encoded = make_withdrawal(NONCE, AMOUNT).der_encode().unwrap();
 
         assert_eq!(encoded, vec![48, 9, 2, 1, 1, 162, 4, 2, 2, 3, 232]);
     }
