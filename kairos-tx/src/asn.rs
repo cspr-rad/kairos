@@ -76,11 +76,26 @@ impl TryFrom<Nonce> for u64 {
     }
 }
 
+impl From<u64> for Nonce {
+    fn from(value: u64) -> Self {
+        Nonce(Integer::from(value))
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
 pub struct SigningPayload {
     pub nonce: Nonce,
     pub body: TransactionBody,
+}
+
+impl SigningPayload {
+    pub fn new(nonce: impl Into<Nonce>, body: impl Into<TransactionBody>) -> Self {
+        Self {
+            nonce: nonce.into(),
+            body: body.into(),
+        }
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
@@ -93,6 +108,24 @@ pub enum TransactionBody {
     Transfer(Transfer),
     #[rasn(tag(2))]
     Withdrawal(Withdrawal),
+}
+
+impl From<Deposit> for TransactionBody {
+    fn from(value: Deposit) -> Self {
+        TransactionBody::Deposit(value)
+    }
+}
+
+impl From<Transfer> for TransactionBody {
+    fn from(value: Transfer) -> Self {
+        TransactionBody::Transfer(value)
+    }
+}
+
+impl From<Withdrawal> for TransactionBody {
+    fn from(value: Withdrawal) -> Self {
+        TransactionBody::Withdrawal(value)
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
