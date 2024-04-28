@@ -97,9 +97,10 @@ impl SigningPayload {
         }
     }
 
-    pub fn new_deposit(nonce: impl Into<Nonce>, amount: impl Into<Amount>) -> Self {
+    pub fn new_deposit(amount: impl Into<Amount>) -> Self {
         Self {
-            nonce: nonce.into(),
+            // deposits have no meaningful nonce
+            nonce: 0.into(),
             body: TransactionBody::Deposit(Deposit::new(amount)),
         }
     }
@@ -227,11 +228,8 @@ mod tests {
 
     #[test]
     fn test_encode_deposit() {
-        const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = SigningPayload::new_deposit(NONCE, AMOUNT)
-            .der_encode()
-            .unwrap();
+        let encoded = SigningPayload::new_deposit(AMOUNT).der_encode().unwrap();
 
         assert_eq!(
             encoded,
@@ -240,7 +238,7 @@ mod tests {
                 0b00001001, // L: 0b0 <- short form, 0b0001001 (9) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
                 0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
-                0b00000001, // V: 0b00000001 (1) <- value
+                0b00000000, // V: 0b00000000 (0) <- value
                 0b10100000, // T: 0b10 <- context-specific, 0b1 <- constructed, 0b00000 (0) <- CHOICE index
                 0b00000100, // L: 0b0 <- short form, 0b0000100 (4) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag

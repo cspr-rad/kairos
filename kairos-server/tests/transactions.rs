@@ -27,13 +27,10 @@ fn new_test_app() -> TestServer {
 async fn test_deposit_withdraw() {
     let server = new_test_app();
 
-    let nonce: u64 = 1;
     let amount: u64 = 100;
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: SigningPayload::new_deposit(nonce, amount)
-            .der_encode()
-            .unwrap(),
+        payload: SigningPayload::new_deposit(amount).der_encode().unwrap(),
         signature: vec![],
     };
 
@@ -119,13 +116,10 @@ async fn test_deposit_withdraw() {
 async fn test_deposit_transfer_withdraw() {
     let server = new_test_app();
 
-    let nonce: u64 = 1;
     let amount: u64 = 100;
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: SigningPayload::new_deposit(nonce, amount)
-            .der_encode()
-            .unwrap(),
+        payload: SigningPayload::new_deposit(amount).der_encode().unwrap(),
         signature: vec![],
     };
 
