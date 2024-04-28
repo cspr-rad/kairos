@@ -40,6 +40,12 @@ impl TryFrom<Amount> for u64 {
     }
 }
 
+impl From<u64> for Amount {
+    fn from(value: u64) -> Self {
+        Amount(Integer::from(value))
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(delegate)]
 pub struct Nonce(pub(crate) Integer);
@@ -81,6 +87,14 @@ pub enum TransactionBody {
 #[non_exhaustive]
 pub struct Deposit {
     pub amount: Amount,
+}
+
+impl Deposit {
+    pub fn new(amount: impl Into<Amount>) -> Self {
+        Self {
+            amount: amount.into(),
+        }
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
