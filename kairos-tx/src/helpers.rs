@@ -1,23 +1,24 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
+use crate::asn::Integer;
 use crate::asn::{
     Amount, Deposit, Nonce, PublicKey, SigningPayload, TransactionBody, Transfer, Withdrawal,
 };
-use crate::asn::{Integer, OctetString};
 use crate::error::TxError;
 
 pub fn make_deposit(nonce: u64, amount: impl Into<Amount>) -> Result<Vec<u8>, TxError> {
     create_payload(nonce, TransactionBody::Deposit(Deposit::new(amount)))
 }
 
-pub fn make_transfer(nonce: u64, recipient: &[u8], amount: u64) -> Result<Vec<u8>, TxError> {
+pub fn make_transfer(
+    nonce: u64,
+    recipient: impl Into<PublicKey>,
+    amount: impl Into<Amount>,
+) -> Result<Vec<u8>, TxError> {
     create_payload(
         nonce,
-        TransactionBody::Transfer(Transfer {
-            recipient: PublicKey(OctetString::copy_from_slice(recipient)),
-            amount: Amount(Integer::from(amount)),
-        }),
+        TransactionBody::Transfer(Transfer::new(recipient, amount)),
     )
 }
 

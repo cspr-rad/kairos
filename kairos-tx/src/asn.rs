@@ -21,6 +21,18 @@ impl From<PublicKey> for Vec<u8> {
     }
 }
 
+impl From<&[u8]> for PublicKey {
+    fn from(value: &[u8]) -> Self {
+        PublicKey(OctetString::copy_from_slice(value))
+    }
+}
+
+impl<const N: usize> From<&[u8; N]> for PublicKey {
+    fn from(value: &[u8; N]) -> Self {
+        PublicKey(OctetString::copy_from_slice(value))
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(delegate)]
 pub struct Amount(pub(crate) Integer);
@@ -102,6 +114,15 @@ impl Deposit {
 pub struct Transfer {
     pub recipient: PublicKey,
     pub amount: Amount,
+}
+
+impl Transfer {
+    pub fn new(recipient: impl Into<PublicKey>, amount: impl Into<Amount>) -> Self {
+        Self {
+            recipient: recipient.into(),
+            amount: amount.into(),
+        }
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
