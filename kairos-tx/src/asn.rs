@@ -110,6 +110,14 @@ pub struct Withdrawal {
     pub amount: Amount,
 }
 
+impl Withdrawal {
+    pub fn new(amount: impl Into<Amount>) -> Self {
+        Self {
+            amount: amount.into(),
+        }
+    }
+}
+
 impl TryFrom<&[u8]> for SigningPayload {
     type Error = TxError;
 
