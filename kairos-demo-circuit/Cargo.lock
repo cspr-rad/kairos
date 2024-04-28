@@ -2113,7 +2113,6 @@ dependencies = [
  "bumpalo",
  "circuits",
  "kairos-trie",
- "risc0-groth16",
  "risc0-zkvm",
  "serde",
  "sha2",
