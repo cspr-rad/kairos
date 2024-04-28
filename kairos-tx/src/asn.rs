@@ -97,6 +97,31 @@ impl SigningPayload {
         }
     }
 
+    pub fn new_deposit(nonce: impl Into<Nonce>, amount: impl Into<Amount>) -> Self {
+        Self {
+            nonce: nonce.into(),
+            body: TransactionBody::Deposit(Deposit::new(amount)),
+        }
+    }
+
+    pub fn new_transfer(
+        nonce: impl Into<Nonce>,
+        recipient: impl Into<PublicKey>,
+        amount: impl Into<Amount>,
+    ) -> Self {
+        Self {
+            nonce: nonce.into(),
+            body: TransactionBody::Transfer(Transfer::new(recipient, amount)),
+        }
+    }
+
+    pub fn new_withdrawal(nonce: impl Into<Nonce>, amount: impl Into<Amount>) -> Self {
+        Self {
+            nonce: nonce.into(),
+            body: TransactionBody::Withdrawal(Withdrawal::new(amount)),
+        }
+    }
+
     pub fn der_encode(&self) -> Result<Vec<u8>, TxError> {
         rasn::der::encode(self).map_err(TxError::EncodeError)
     }
@@ -198,13 +223,15 @@ impl TryFrom<SigningPayload> for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::{make_deposit, make_transfer, make_withdrawal};
+    use crate::asn::SigningPayload;
 
     #[test]
     fn test_encode_deposit() {
         const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = make_deposit(NONCE, AMOUNT).der_encode().unwrap();
+        let encoded = SigningPayload::new_deposit(NONCE, AMOUNT)
+            .der_encode()
+            .unwrap();
 
         assert_eq!(
             encoded,
@@ -229,7 +256,7 @@ mod tests {
         const NONCE: u64 = 1;
         const RECIPIENT: [u8; 32] = [11; 32];
         const AMOUNT: u64 = 1000;
-        let encoded = make_transfer(NONCE, &RECIPIENT, AMOUNT)
+        let encoded = SigningPayload::new_transfer(NONCE, &RECIPIENT, AMOUNT)
             .der_encode()
             .unwrap();
 
@@ -252,7 +279,9 @@ mod tests {
     fn test_encode_withdrawal() {
         const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = make_withdrawal(NONCE, AMOUNT).der_encode().unwrap();
+        let encoded = SigningPayload::new_withdrawal(NONCE, AMOUNT)
+            .der_encode()
+            .unwrap();
 
         assert_eq!(encoded, vec![48, 9, 2, 1, 1, 162, 4, 2, 2, 3, 232]);
     }
