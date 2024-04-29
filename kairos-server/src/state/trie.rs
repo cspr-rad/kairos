@@ -83,6 +83,8 @@ pub struct BatchOutput {
 /// A struct for tracking the state of the trie between batches.
 ///
 /// The `TrieStateThread` responds to messages by applying transactions against this struct.
+/// When a commit message is received, the trie state is committed and a new trie state is created.
+/// Committing the trie state returns a `BatchOutput` which serves as the proof input data for the L1 contract.
 pub struct TrieState {
     db: Database,
     /// The root hash of the trie at the start of the current batch.
@@ -103,6 +105,7 @@ impl TrieState {
         }
     }
 
+    /// Calculate the new root hash of the trie and sync changes to the database.
     pub fn commit_and_start_new_txn(&mut self) -> Result<BatchOutput, AppErr> {
         let old_trie_txn = &self.batch_state.kv_db;
         let old_root = self.batch_root;
