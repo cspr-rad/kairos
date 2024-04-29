@@ -27,6 +27,8 @@
     advisory-db.flake = false;
     risc0pkgs.url = "github:cspr-rad/risc0pkgs";
     risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
+    csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
+    csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
@@ -46,10 +48,20 @@
             src = lib.cleanSourceWith {
               src = craneLib.path ./.;
               filter = path: type:
-                # Allow static files.
-                (lib.hasInfix "/fixtures/" path) ||
-                # Default filter (from crane) for .rs files.
-                (craneLib.filterCargoSources path type)
+                (builtins.any (includePath: lib.hasInfix includePath path) [
+                  "/kairos-cli"
+                  "/kairos-crypto"
+                  "/kairos-server"
+                  "/kairos-test-utils"
+                  "/kairos-tx"
+                  "/Cargo.toml"
+                  "/Cargo.lock"
+                ]) && (
+                  # Allow static files.
+                  (lib.hasInfix "/tests/fixtures/" path) ||
+                  # Default filter (from crane) for .rs files.
+                  (craneLib.filterCargoSources path type)
+                )
               ;
             };
             nativeBuildInputs = with pkgs; [ pkg-config ];
@@ -60,6 +72,9 @@
               libiconv
               darwin.apple_sdk.frameworks.Security
               darwin.apple_sdk.frameworks.SystemConfiguration
+            ];
+            checkInputs = [
+              inputs'.csprpkgs.packages.cctl
             ];
             meta.mainProgram = "kairos-server";
           };
@@ -80,6 +95,22 @@
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
+            kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
+              cargoExtraArgs = "-p kairos-tx --no-default-features";
+            });
+
+            cctld = pkgs.runCommand "cctld-wrapped"
+              {
+                buildInputs = [ pkgs.makeWrapper ];
+                meta.mainProgram = "cctld";
+              }
+              ''
+                mkdir -p $out/bin
+                makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
+                  --set PATH ${pkgs.lib.makeBinPath [inputs'.csprpkgs.packages.cctl ]}
+              '';
+
             default = self'.packages.kairos;
 
             kairos-docs = craneLib.cargoDoc (kairosNodeAttrs // {
@@ -90,16 +121,27 @@
           checks = {
             lint = craneLib.cargoClippy (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
-              cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+              cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
 
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+              # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
+              # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
+              cargoTarpaulinExtraArgs = "--features=all-tests --skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
+              # For some reason cargoTarpaulin runs the tests in the buildPhase
+              buildInputs = kairosNodeAttrs.buildInputs ++ [
+                inputs'.csprpkgs.packages.cctl
+              ];
             });
 
             audit = craneLib.cargoAudit {
               inherit (kairosNodeAttrs) src;
               advisory-db = inputs.advisory-db;
+              # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
+              # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
+              # FIXME --ignore RUSTSEC-2024-0013 ignores libgit2-sys 0.14.2+1.5.1 vulnerability caused by introducing casper-client 2.0.0
+              cargoAuditExtraArgs = "--ignore yanked --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
             };
           };
 

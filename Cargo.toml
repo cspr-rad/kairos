@@ -4,7 +4,10 @@ resolver = "2"
 members = [
   "casper-deploy-notifier",
   "kairos-cli",
+  "kairos-crypto",
   "kairos-server",
+  "kairos-tx",
+  "kairos-test-utils",
 ]
 
 [workspace.package]
@@ -12,4 +15,3 @@ name = "kairos"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-
