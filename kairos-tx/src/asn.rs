@@ -125,6 +125,17 @@ pub struct Transaction {
     pub signature: Signature,
 }
 
+impl Transaction {
+    pub fn new(public_key: impl Into<PublicKey>, payload: SigningPayload, algorithm: SigningAlgorithm, signature: Signature) -> Self {
+        Self {
+            public_key: public_key.into(),
+            payload,
+            algorithm,
+            signature,
+        }
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug, PartialEq, Copy, Clone)]
 #[rasn(enumerated)]
 #[non_exhaustive]

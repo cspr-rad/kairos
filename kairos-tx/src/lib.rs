@@ -13,18 +13,3 @@ pub fn hash(payload: &asn::SigningPayload) -> Result<[u8; 32], error::TxError> {
     let tx_hash: [u8; 32] = sha2::Sha256::digest(data).into();
     Ok(tx_hash)
 }
-
-// Constructor for non-exhaustive transaction struct.
-pub fn make_tx(
-    public_key: asn::PublicKey,
-    payload: asn::SigningPayload,
-    algorithm: asn::SigningAlgorithm,
-    signature: asn::Signature,
-) -> asn::Transaction {
-    asn::Transaction {
-        public_key,
-        payload,
-        algorithm,
-        signature,
-    }
-}
