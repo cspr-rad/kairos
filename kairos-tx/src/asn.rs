@@ -138,7 +138,13 @@ impl Transaction {
     ///
     /// CAUTION: This method does NOT perform validity checks - please use
     /// `kairos-crypto::sign_tx_payload()` to construct it safely.
-    pub fn new(public_key: impl Into<PublicKey>, payload: SigningPayload, hash: impl Into<PayloadHash>, algorithm: SigningAlgorithm, signature: Signature) -> Self {
+    pub fn new(
+        public_key: impl Into<PublicKey>,
+        payload: SigningPayload,
+        hash: impl Into<PayloadHash>,
+        algorithm: SigningAlgorithm,
+        signature: Signature,
+    ) -> Self {
         Self {
             public_key: public_key.into(),
             payload,
