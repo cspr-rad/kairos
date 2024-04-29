@@ -235,7 +235,7 @@ mod tests {
             encoded,
             vec![
                 0b00110000, // T: 0b00 <- universal, 0b1 <- constructed, 0b10000 (16) <- SEQUENCE tag
-                0b00001001, // L: 0b0 <- short form, 0b0001100 (9) <- length
+                0b00001001, // L: 0b0 <- short form, 0b0001001 (9) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
                 0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
                 0b00000000, // V: 0b00000000 (0) <- value
