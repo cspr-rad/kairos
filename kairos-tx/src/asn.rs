@@ -10,7 +10,7 @@ use num_traits::cast::ToPrimitive;
 use rasn::types::AsnType;
 use rasn::{Decode, Encode};
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct PublicKey(pub(crate) OctetString);
 
@@ -33,7 +33,7 @@ impl<const N: usize> From<&[u8; N]> for PublicKey {
     }
 }
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct Amount(pub(crate) Integer);
 
@@ -58,7 +58,7 @@ impl From<u64> for Amount {
     }
 }
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct Nonce(pub(crate) Integer);
 
@@ -224,7 +224,7 @@ impl TryFrom<SigningPayload> for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use crate::asn::SigningPayload;
+    use crate::asn::{Deposit, SigningPayload};
 
     #[test]
     fn test_encode_deposit() {
@@ -247,6 +247,16 @@ mod tests {
                 0b11101000, //    128 + 64 + 32 + 8 = 1000 <- value
             ]
         );
+    }
+
+    #[test]
+    fn test_extract_deposit_amount_without_taking_ownership() {
+        const AMOUNT: u64 = 1000;
+        let encoded = Deposit::new(AMOUNT);
+        let encoded_ref = &encoded;
+
+        let extracted_amount: u64 = (encoded_ref.amount.clone()).try_into().unwrap();
+        assert_eq!(extracted_amount, AMOUNT);
     }
 
     #[test]
