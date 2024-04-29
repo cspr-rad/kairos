@@ -39,7 +39,7 @@ impl<const N: usize> From<&[u8; N]> for PublicKey {
     }
 }
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct Signature(pub(crate) OctetString);
 
@@ -56,7 +56,7 @@ impl From<Vec<u8>> for Signature {
     }
 }
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct PayloadHash(pub(crate) OctetString);
 
