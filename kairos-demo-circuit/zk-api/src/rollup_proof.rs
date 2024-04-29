@@ -59,6 +59,17 @@ fn run_against_active_prover(env: ExecutorEnv<'_>) -> risc0_zkvm::Receipt {
 #[cfg(feature = "groth16")]
 fn run_against_active_prover(env: ExecutorEnv<'_>) -> risc0_zkvm::Receipt {
     use risc0_groth16::docker::stark_to_snark;
+    use risc0_zkvm::{
+        get_prover_server, 
+        recursion::identity_p254, 
+        CompactReceipt, 
+        ExecutorImpl, 
+        InnerReceipt, 
+        ProverOpts, 
+        Receipt, 
+        VerifierContext
+    };
+    
     let mut exec = ExecutorImpl::from_elf(env, DEMO_CIRCUIT_ELF).unwrap();
     let session = exec.run().unwrap();
     let opts = ProverOpts::default();
