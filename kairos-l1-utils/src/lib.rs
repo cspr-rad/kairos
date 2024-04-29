@@ -23,6 +23,7 @@ pub async fn install_wasm_bytecode(
 ) -> SuccessResponse<PutDeployResult> {
     let session: ExecutableDeployItem =
         ExecutableDeployItem::new_module_bytes(module_bytes.into(), runtime_args);
+    println!("{}", secret_key_path);
     let secret_key_bytes: Vec<u8> = fs::read(secret_key_path).unwrap();
     let secret_key: SecretKey = SecretKey::from_pem(secret_key_bytes.clone()).unwrap();
 
@@ -77,30 +78,81 @@ pub async fn query_counter(node_address: &str, rpc_port: &str, counter_uref: &st
     value
 }
 
-#[tokio::test]
-async fn state_root_hash() {
-    let srh = query_state_root_hash("http://127.0.0.1:11101/rpc").await;
-    println!("Srh: {:?}", &srh);
-}
-
+#[cfg_attr(not(feature = "cctl-tests"), ignore)]
 #[tokio::test]
 async fn install_wasm() {
+    use anyhow::anyhow;
+    use backoff::{backoff::Constant, future::retry};
+    use casper_client::{get_deploy, Error, JsonRpcId, Verbosity};
     use casper_types::{runtime_args, RuntimeArgs};
+    use kairos_test_utils::cctl::CCTLNetwork;
     use std::fs::File;
     use std::io::Read;
-    let mut wasm_file: File =
-        File::open("/Users/chef/Desktop/demo-contract-optimized.wasm").unwrap();
+    use std::path::Path;
+
+    let network = CCTLNetwork::run().await.unwrap();
+    let node = network
+        .nodes
+        .first()
+        .expect("Expected at least one node after successful network run");
+    let node_address: &str = &format!("http://localhost:{}", node.port.rpc_port);
+
+    let wasm_path = Path::new(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
+    let mut wasm_file: File = File::open(wasm_path).unwrap();
     let mut wasm_bytes: Vec<u8> = Vec::new();
     wasm_file.read_to_end(&mut wasm_bytes).unwrap();
-    let secret_key_path: &str = "/Users/chef/Desktop/secret_key.pem";
+
     let runtime_args: RuntimeArgs = runtime_args! {};
     let result: SuccessResponse<PutDeployResult> = install_wasm_bytecode(
-        "http://127.0.0.1:11101/rpc",
+        node_address,
         "cspr-dev-cctl",
         runtime_args,
         &wasm_bytes,
-        secret_key_path,
+        network
+            .assets_dir
+            .join("users/user-1/secret_key.pem")
+            .to_str()
+            .unwrap(),
     )
     .await;
-    println!("Deploy result: {:?}", &result);
+
+    // wait for successful processing of deploy
+    retry(
+        Constant::new(std::time::Duration::from_millis(100)),
+        || async {
+            get_deploy(
+                JsonRpcId::Number(1),
+                node_address,
+                Verbosity::High,
+                result.result.deploy_hash,
+                true,
+            )
+            .await
+            .map_err(|err| match &err {
+                Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
+                    backoff::Error::transient(anyhow!(err))
+                }
+                _ => backoff::Error::permanent(anyhow!(err)),
+            })
+            .map(|success| {
+                if success
+                    .result
+                    .execution_results
+                    .iter()
+                    .all(|execution_result| match execution_result.result {
+                        casper_types::ExecutionResult::Success { .. } => true,
+                        casper_types::ExecutionResult::Failure { .. } => false,
+                    })
+                {
+                    Ok(())
+                } else {
+                    Err(backoff::Error::transient(anyhow!(
+                        "Deploy was not processed yet"
+                    )))
+                }
+            })?
+        },
+    )
+    .await
+    .unwrap()
 }
