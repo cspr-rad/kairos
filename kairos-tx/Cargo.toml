@@ -11,6 +11,9 @@ num-traits = "0.2"
 rasn = { version = "0.12", default-features = false, features = ["macros"] }
 sha2 = "0.10"
 
+[dev-dependencies]
+hex = "0.4"
+
 [features]
 default = ["std"]
 std = []

@@ -10,7 +10,7 @@ use num_traits::cast::ToPrimitive;
 use rasn::types::AsnType;
 use rasn::{Decode, Encode};
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct PublicKey(pub(crate) OctetString);
 
@@ -24,6 +24,18 @@ impl From<PublicKey> for Vec<u8> {
 impl From<Vec<u8>> for PublicKey {
     fn from(value: Vec<u8>) -> Self {
         PublicKey(OctetString::copy_from_slice(&value))
+    }
+}
+
+impl From<&[u8]> for PublicKey {
+    fn from(value: &[u8]) -> Self {
+        PublicKey(OctetString::copy_from_slice(value))
+    }
+}
+
+impl<const N: usize> From<&[u8; N]> for PublicKey {
+    fn from(value: &[u8; N]) -> Self {
+        PublicKey(OctetString::copy_from_slice(value))
     }
 }
 
@@ -55,7 +67,7 @@ impl From<PayloadHash> for Vec<u8> {
     }
 }
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct Amount(pub(crate) Integer);
 
@@ -74,7 +86,13 @@ impl TryFrom<Amount> for u64 {
     }
 }
 
-#[derive(AsnType, Encode, Decode, Debug)]
+impl From<u64> for Amount {
+    fn from(value: u64) -> Self {
+        Amount(Integer::from(value))
+    }
+}
+
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct Nonce(pub(crate) Integer);
 
@@ -89,6 +107,12 @@ impl TryFrom<Nonce> for u64 {
             .0
             .to_u64()
             .ok_or(TxError::ConstraintViolation { field: "nonce" })
+    }
+}
+
+impl From<u64> for Nonce {
+    fn from(value: u64) -> Self {
+        Nonce(Integer::from(value))
     }
 }
 
@@ -116,6 +140,49 @@ pub struct SigningPayload {
     pub body: TransactionBody,
 }
 
+impl SigningPayload {
+    pub fn new(nonce: impl Into<Nonce>, body: impl Into<TransactionBody>) -> Self {
+        Self {
+            nonce: nonce.into(),
+            body: body.into(),
+        }
+    }
+
+    pub fn new_deposit(amount: impl Into<Amount>) -> Self {
+        Self {
+            // deposits have no meaningful nonce
+            nonce: 0.into(),
+            body: TransactionBody::Deposit(Deposit::new(amount)),
+        }
+    }
+
+    pub fn new_transfer(
+        nonce: impl Into<Nonce>,
+        recipient: impl Into<PublicKey>,
+        amount: impl Into<Amount>,
+    ) -> Self {
+        Self {
+            nonce: nonce.into(),
+            body: TransactionBody::Transfer(Transfer::new(recipient, amount)),
+        }
+    }
+
+    pub fn new_withdrawal(nonce: impl Into<Nonce>, amount: impl Into<Amount>) -> Self {
+        Self {
+            nonce: nonce.into(),
+            body: TransactionBody::Withdrawal(Withdrawal::new(amount)),
+        }
+    }
+
+    pub fn der_encode(&self) -> Result<Vec<u8>, TxError> {
+        rasn::der::encode(self).map_err(TxError::EncodeError)
+    }
+
+    pub fn der_decode(value: impl AsRef<[u8]>) -> Result<Self, TxError> {
+        rasn::der::decode(value.as_ref()).map_err(TxError::DecodeError)
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[rasn(choice)]
 #[non_exhaustive]
@@ -128,10 +195,36 @@ pub enum TransactionBody {
     Withdrawal(Withdrawal),
 }
 
+impl From<Deposit> for TransactionBody {
+    fn from(value: Deposit) -> Self {
+        TransactionBody::Deposit(value)
+    }
+}
+
+impl From<Transfer> for TransactionBody {
+    fn from(value: Transfer) -> Self {
+        TransactionBody::Transfer(value)
+    }
+}
+
+impl From<Withdrawal> for TransactionBody {
+    fn from(value: Withdrawal) -> Self {
+        TransactionBody::Withdrawal(value)
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
 pub struct Deposit {
     pub amount: Amount,
+}
+
+impl Deposit {
+    pub fn new(amount: impl Into<Amount>) -> Self {
+        Self {
+            amount: amount.into(),
+        }
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug)]
@@ -141,10 +234,27 @@ pub struct Transfer {
     pub amount: Amount,
 }
 
+impl Transfer {
+    pub fn new(recipient: impl Into<PublicKey>, amount: impl Into<Amount>) -> Self {
+        Self {
+            recipient: recipient.into(),
+            amount: amount.into(),
+        }
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
 pub struct Withdrawal {
     pub amount: Amount,
+}
+
+impl Withdrawal {
+    pub fn new(amount: impl Into<Amount>) -> Self {
+        Self {
+            amount: amount.into(),
+        }
+    }
 }
 
 impl TryFrom<&[u8]> for Transaction {
@@ -167,7 +277,7 @@ impl TryFrom<&[u8]> for SigningPayload {
     type Error = TxError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        rasn::der::decode(value).map_err(TxError::DecodeError)
+        SigningPayload::der_decode(value)
     }
 }
 
@@ -175,19 +285,18 @@ impl TryFrom<SigningPayload> for Vec<u8> {
     type Error = TxError;
 
     fn try_from(value: SigningPayload) -> Result<Self, Self::Error> {
-        rasn::der::encode(&value).map_err(TxError::EncodeError)
+        value.der_encode()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::helpers::{make_deposit, make_transfer, make_withdrawal};
+    use crate::asn::{Deposit, SigningPayload};
 
     #[test]
     fn test_encode_deposit() {
-        const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = make_deposit(NONCE, AMOUNT).unwrap();
+        let encoded = SigningPayload::new_deposit(AMOUNT).der_encode().unwrap();
 
         assert_eq!(
             encoded,
@@ -196,7 +305,7 @@ mod tests {
                 0b00001001, // L: 0b0 <- short form, 0b0001001 (9) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
                 0b00000001, // L: 0b0 <- short form, 0b0000001 (1) <- length
-                0b00000001, // V: 0b00000001 (1) <- value
+                0b00000000, // V: 0b00000000 (0) <- value
                 0b10100000, // T: 0b10 <- context-specific, 0b1 <- constructed, 0b00000 (0) <- CHOICE index
                 0b00000100, // L: 0b0 <- short form, 0b0000100 (4) <- length
                 0b00000010, // T: 0b00 <- universal, 0b0 <- primitive, 0b00010 (2) <- INTEGER tag
@@ -208,11 +317,23 @@ mod tests {
     }
 
     #[test]
+    fn test_extract_deposit_amount_without_taking_ownership() {
+        const AMOUNT: u64 = 1000;
+        let encoded = Deposit::new(AMOUNT);
+        let encoded_ref = &encoded;
+
+        let extracted_amount: u64 = (encoded_ref.amount.clone()).try_into().unwrap();
+        assert_eq!(extracted_amount, AMOUNT);
+    }
+
+    #[test]
     fn test_encode_transfer() {
         const NONCE: u64 = 1;
         const RECIPIENT: [u8; 32] = [11; 32];
         const AMOUNT: u64 = 1000;
-        let encoded = make_transfer(NONCE, &RECIPIENT, AMOUNT).unwrap();
+        let encoded = SigningPayload::new_transfer(NONCE, &RECIPIENT, AMOUNT)
+            .der_encode()
+            .unwrap();
 
         assert_eq!(
             encoded,
@@ -233,8 +354,35 @@ mod tests {
     fn test_encode_withdrawal() {
         const NONCE: u64 = 1;
         const AMOUNT: u64 = 1000;
-        let encoded = make_withdrawal(NONCE, AMOUNT).unwrap();
+        let encoded = SigningPayload::new_withdrawal(NONCE, AMOUNT)
+            .der_encode()
+            .unwrap();
 
         assert_eq!(encoded, vec![48, 9, 2, 1, 1, 162, 4, 2, 2, 3, 232]);
+    }
+
+    #[test]
+    fn test_hex_encode_nixos_end_to_end_payloads() {
+        fn hex_encode(payload: SigningPayload) -> String {
+            hex::encode(payload.der_encode().unwrap())
+        }
+
+        let deposit_payload = hex_encode(SigningPayload::new_deposit(1000));
+        assert_eq!(deposit_payload.as_str(), "3009020100a004020203e8");
+
+        let decoded_deadbabe = hex::decode("deadbabe").unwrap();
+
+        let transfer_payload = hex_encode(SigningPayload::new_transfer(
+            0,
+            decoded_deadbabe.as_slice(),
+            1000,
+        ));
+        assert_eq!(
+            transfer_payload.as_str(),
+            "300f020100a10a0404deadbabe020203e8"
+        );
+
+        let withdrawal_payload = hex_encode(SigningPayload::new_withdrawal(0, 1000));
+        assert_eq!(withdrawal_payload.as_str(), "3009020100a204020203e8");
     }
 }
