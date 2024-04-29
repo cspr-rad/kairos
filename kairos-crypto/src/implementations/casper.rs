@@ -115,7 +115,7 @@ impl CryptoSigner for Signer {
         }?;
 
         // Build full transaction.
-        let tx = kairos_tx::asn::Transaction::new(public_key, payload, algorithm, signature.into());
+        let tx = kairos_tx::asn::Transaction::new(public_key, payload, &tx_hash, algorithm, signature.into());
 
         Ok(tx)
     }

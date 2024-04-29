@@ -68,6 +68,12 @@ impl From<PayloadHash> for Vec<u8> {
     }
 }
 
+impl From<&[u8; 32]> for PayloadHash {
+    fn from(value: &[u8; 32]) -> Self {
+        PayloadHash(OctetString::copy_from_slice(value))
+    }
+}
+
 #[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct Amount(pub(crate) Integer);
@@ -122,15 +128,18 @@ impl From<u64> for Nonce {
 pub struct Transaction {
     pub public_key: PublicKey, // NOTE: Field name can be different than defined in schema, as only **order** is crucial
     pub payload: SigningPayload,
+    pub hash: PayloadHash,
     pub algorithm: SigningAlgorithm,
     pub signature: Signature,
 }
 
 impl Transaction {
-    pub fn new(public_key: impl Into<PublicKey>, payload: SigningPayload, algorithm: SigningAlgorithm, signature: Signature) -> Self {
+    /// Constructs full transaction structure.
+    pub fn new(public_key: impl Into<PublicKey>, payload: SigningPayload, hash: impl Into<PayloadHash>, algorithm: SigningAlgorithm, signature: Signature) -> Self {
         Self {
             public_key: public_key.into(),
             payload,
+            hash: hash.into(),
             algorithm,
             signature,
         }
