@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 extern crate alloc;
-use alloc::{string::ToString, vec::Vec};
+use alloc::string::ToString;
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
