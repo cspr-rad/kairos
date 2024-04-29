@@ -7,7 +7,6 @@ members = [
   "kairos-server",
   "kairos-tx",
   "kairos-test-utils",
-  "kairos-demo-circuit/tests",
   "kairos-demo-circuit/zk-api"
 , "kairos-common-types"
 ]

@@ -5,9 +5,8 @@ use risc0_zkvm::{default_prover, ExecutorEnv};
 use sha2::Sha256;
 
 use kairos_trie::{
-    stored::{memory_db::MemoryDb, merkle::SnapshotBuilder}, KeyHash, NodeHash, TrieRoot,
-    stored::merkle::Snapshot,
-    DigestHasher
+    stored::{memory_db::MemoryDb, merkle::SnapshotBuilder}, NodeHash, TrieRoot,
+    stored::merkle::Snapshot, DigestHasher
 };
 
 use std::rc::Rc;
@@ -32,16 +31,13 @@ pub fn prove(db: Rc<MemoryDb<Account>>, old_root_hash: TrieRoot<NodeHash>, opera
         old_root_hash: old_root_hash
     };
 
-    let env = ExecutorEnv::builder()
+    let env: ExecutorEnv<'_> = ExecutorEnv::builder()
         .write(&circuit_input)
         .unwrap()
         .build()
         .unwrap();
 
-    let prover = default_prover();
-    prover
-        .prove(env, DEMO_CIRCUIT_ELF)
-        .expect("Failed to generate proof!")
+    run_against_active_prover(env)
 }
 
 pub fn verify(receipt: risc0_zkvm::Receipt) -> bool{
@@ -50,6 +46,37 @@ pub fn verify(receipt: risc0_zkvm::Receipt) -> bool{
         Ok(_) => true,
         Err(_) => false
     }
+}
+
+#[cfg(not(feature="groth16"))]
+fn run_against_active_prover(env: ExecutorEnv<'_>) -> risc0_zkvm::Receipt {
+    let prover = default_prover();
+    prover
+        .prove(env, DEMO_CIRCUIT_ELF)
+        .expect("Failed to generate proof!")
+}
+
+#[cfg(feature = "groth16")]
+fn run_against_active_prover(env: ExecutorEnv<'_>) -> risc0_zkvm::Receipt {
+    use risc0_groth16::docker::stark_to_snark;
+    let mut exec = ExecutorImpl::from_elf(env, DEMO_CIRCUIT_ELF).unwrap();
+    let session = exec.run().unwrap();
+    let opts = ProverOpts::default();
+    let ctx = VerifierContext::default();
+    let prover = get_prover_server(&opts).unwrap();
+    let receipt = prover.prove_session(&ctx, &session).unwrap();
+
+    let claim = receipt.get_claim().unwrap();
+    let composite_receipt = receipt.inner.composite().unwrap();
+    let succinct_receipt = prover.compress(composite_receipt).unwrap();
+    let journal = session.journal.unwrap().bytes;
+    let ident_receipt = identity_p254(&succinct_receipt).unwrap();
+    let seal_bytes = ident_receipt.get_seal_bytes();
+    let seal = stark_to_snark(&seal_bytes).unwrap().to_vec();
+    Receipt::new(
+        InnerReceipt::Compact(CompactReceipt { seal, claim }),
+        journal,
+    )
 }
 
 #[test]

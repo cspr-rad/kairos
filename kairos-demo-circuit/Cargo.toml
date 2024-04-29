@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["circuits", "tests", "types", "zk-api"]
+members = ["circuits", "types", "zk-api"]
 
 # Always optimize; building and running the guest takes much longer without optimization.
 [profile.dev]

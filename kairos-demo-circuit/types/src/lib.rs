@@ -2,8 +2,8 @@
 pub mod verification_logic;
 
 use kairos_trie::{
-    stored::{memory_db::MemoryDb, merkle::{SnapshotBuilder, Snapshot},},
-    KeyHash, TrieRoot, NodeHash
+    stored::merkle::Snapshot,
+    TrieRoot, NodeHash
 };
 
 extern crate alloc;
