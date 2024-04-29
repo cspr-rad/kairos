@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::sync::Arc;
 
 use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
@@ -7,8 +7,14 @@ use tracing::*;
 
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
-use crate::routes::PayloadBody;
-use crate::{state::LockedBatchState, AppErr};
+use crate::{
+    routes::PayloadBody,
+    state::{
+        transactions::{Signed, Transaction},
+        BatchStateManager,
+    },
+    AppErr,
+};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
 #[typed_path("/api/v1/deposit")]
@@ -17,14 +23,14 @@ pub struct DepositPath;
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn deposit_handler(
     _: DepositPath,
-    state: State<LockedBatchState>,
+    state: State<Arc<BatchStateManager>>,
     Json(body): Json<PayloadBody>,
 ) -> Result<(), AppErr> {
     tracing::info!("parsing transaction data");
     let signing_payload: SigningPayload =
         body.payload.as_slice().try_into().context("payload err")?;
     let deposit = match signing_payload.body {
-        TransactionBody::Deposit(deposit) => deposit,
+        TransactionBody::Deposit(deposit) => deposit.try_into().context("decoding deposit")?,
         _ => {
             return Err(AppErr::set_status(
                 anyhow!("invalid transaction type"),
@@ -32,31 +38,15 @@ pub async fn deposit_handler(
             ))
         }
     };
-    let amount = u64::try_from(deposit.amount).context("invalid amount")?;
+
     let public_key = body.public_key;
+    let nonce = signing_payload.nonce.try_into().context("decoding nonce")?;
 
-    tracing::info!("TODO: verifying deposit");
-
-    tracing::info!("TODO: adding deposit to batch");
-
-    let mut state = state.deref().write().await;
-    let account = state.balances.entry(public_key.clone());
-
-    let balance = account.or_insert(0);
-    let updated_balance = balance.checked_add(amount).ok_or_else(|| {
-        AppErr::set_status(
-            anyhow!("deposit would overflow account"),
-            StatusCode::CONFLICT,
-        )
-    })?;
-
-    *balance = updated_balance;
-
-    tracing::info!(
-        "Updated account public_key={:?} balance={}",
-        public_key,
-        updated_balance
-    );
-
-    Ok(())
+    state
+        .enqueue_transaction(Signed {
+            public_key,
+            nonce,
+            transaction: Transaction::Deposit(deposit),
+        })
+        .await
 }
