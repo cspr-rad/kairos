@@ -4,9 +4,9 @@ use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
 use kairos_server::{
     routes::{deposit::DepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody},
-    state::BatchState,
+    state::BatchStateManager,
 };
-use kairos_tx::helpers::{make_deposit, make_transfer, make_withdrawal};
+use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
@@ -20,18 +20,20 @@ fn new_test_app() -> TestServer {
     });
     let config = TestServerConfig::builder().mock_transport().build();
 
-    TestServer::new_with_config(kairos_server::app_router(BatchState::new()), config).unwrap()
+    TestServer::new_with_config(
+        kairos_server::app_router(BatchStateManager::new_empty()),
+        config,
+    )
+    .unwrap()
 }
 
 #[tokio::test]
 async fn test_deposit_withdraw() {
     let server = new_test_app();
 
-    let nonce: u64 = 1;
-    let amount: u64 = 100;
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
-        payload: make_deposit(nonce, amount).unwrap(),
+        payload: SigningPayload::new_deposit(100).try_into().unwrap(),
         signature: vec![],
     };
 
@@ -55,54 +57,54 @@ async fn test_deposit_withdraw() {
         .await
         .assert_status_failure();
 
-    let nonce: u64 = 1;
-    let amount: u64 = 50;
-    let withdrawal = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, amount).unwrap(),
-        signature: vec![],
-    };
-
     // first withdrawal
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(0, Withdrawal::new(50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
-
-    let nonce: u64 = 1;
-    let amount: u64 = 51;
-    let withdrawal = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, amount).unwrap(),
-        signature: vec![],
-    };
 
     // withdrawal with insufficient funds
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(1, Withdrawal::new(51))
+                .der_encode()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_failure();
-
-    let nonce: u64 = 1;
-    let amount: u64 = 50;
-    let withdrawal = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: make_withdrawal(nonce, amount).unwrap(),
-        signature: vec![],
-    };
 
     // second withdrawal
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(1, Withdrawal::new(50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(2, Withdrawal::new(50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_failure();
 }
@@ -111,49 +113,84 @@ async fn test_deposit_withdraw() {
 async fn test_deposit_transfer_withdraw() {
     let server = new_test_app();
 
-    let nonce: u64 = 1;
-    let amount: u64 = 100;
-    let deposit = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: make_deposit(nonce, amount).unwrap(),
-        signature: vec![],
-    };
-
-    let nonce: u64 = 1;
-    let amount: u64 = 50;
-    let recipient: &[u8] = "bob_key".as_bytes();
-    let transfer = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: make_transfer(nonce, recipient, amount).unwrap(),
-        signature: vec![],
-    };
-
-    let nonce: u64 = 1;
-    let amount: u64 = 50;
-    let withdrawal = PayloadBody {
-        public_key: "bob_key".into(),
-        payload: make_withdrawal(nonce, amount).unwrap(),
-        signature: vec![],
-    };
-
     // deposit
     server
         .post(DepositPath.to_uri().path())
-        .json(&deposit)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            // deposit's don't have a defined nonce
+            payload: SigningPayload::new_deposit(100).try_into().unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 
     // transfer
     server
         .post(TransferPath.to_uri().path())
-        .json(&transfer)
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(0, Transfer::new("bob_key".as_bytes(), 50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 
     // withdraw
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&withdrawal)
+        .json(&PayloadBody {
+            public_key: "bob_key".into(),
+            payload: SigningPayload::new(0, Withdrawal::new(50))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
+        .await
+        .assert_status_success();
+}
+
+#[tokio::test]
+async fn test_deposit_transfer_to_self_withdraw() {
+    let server = new_test_app();
+
+    // deposit
+    server
+        .post(DepositPath.to_uri().path())
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            // deposit's don't have a defined nonce
+            payload: SigningPayload::new_deposit(1000).try_into().unwrap(),
+            signature: vec![],
+        })
+        .await
+        .assert_status_success();
+
+    // transfer
+    server
+        .post(TransferPath.to_uri().path())
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(0, Transfer::new("alice_key".as_bytes(), 1000))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
+        .await
+        .assert_status_success();
+
+    // withdraw
+    server
+        .post(WithdrawPath.to_uri().path())
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            payload: SigningPayload::new(1, Withdrawal::new(1000))
+                .try_into()
+                .unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 }

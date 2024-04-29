@@ -66,3 +66,12 @@ impl From<anyhow::Error> for AppErr {
         }
     }
 }
+
+impl From<kairos_trie::TrieError> for AppErr {
+    fn from(error: kairos_trie::TrieError) -> Self {
+        Self {
+            error: anyhow::Error::msg(error.to_string()),
+            status: Some(StatusCode::INTERNAL_SERVER_ERROR),
+        }
+    }
+}

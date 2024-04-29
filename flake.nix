@@ -49,6 +49,7 @@
               src = craneLib.path ./.;
               filter = path: type:
                 (builtins.any (includePath: lib.hasInfix includePath path) [
+                  "/casper-deploy-notifier"
                   "/kairos-cli"
                   "/kairos-crypto"
                   "/kairos-server"
