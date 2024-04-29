@@ -9,6 +9,12 @@ use tokio::sync::mpsc;
 use self::transactions::{Signed, Transaction};
 pub use self::trie::TrieStateThreadMsg;
 
+/// The `BatchStateManager` is a piece of Axum state.
+/// It is the entry point for interacting with the trie.
+///
+/// Messages are sent to the trie thread via the `queued_transactions` channel.
+/// The trie thread processes these messages and sends responses back to the caller
+/// via a oneshot channel in each `TrieStateThreadMsg`.
 #[derive(Debug)]
 pub struct BatchStateManager {
     pub trie_thread: JoinHandle<()>,
@@ -17,7 +23,8 @@ pub struct BatchStateManager {
 
 impl BatchStateManager {
     /// Create a new `BatchStateManager` with the given `db` and `batch_root`.
-    /// `batch_root` and it's decendents must be in the `db`.
+    /// `batch_root` and it's descendants must be in the `db`.
+    /// This method spawns the trie state thread, it should be called only once.
     pub fn new(db: trie::Database, batch_root: TrieRoot<NodeHash>) -> Arc<Self> {
         let (queued_transactions, receiver) = mpsc::channel(1000);
         let trie_thread = trie::spawn_state_thread(receiver, db, batch_root);
