@@ -82,6 +82,8 @@
                   "/kairos-crypto"
                   "/kairos-server"
                   "/kairos-test-utils"
+                  "/kairos-l1-utils"
+                  "/kairos-contracts"
                   "/kairos-tx"
                   "/Cargo.toml"
                   "/Cargo.lock"
