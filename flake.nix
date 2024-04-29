@@ -25,10 +25,12 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    # Pin to a revision with working risc0 build
-    risc0pkgs.url = "github:cspr-rad/risc0pkgs/7acff27ce7116777cc7f5a162efa9b599808ed97";
-    # FIXME once we are able to build with upstream rustc we should uncomment this
-    #risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
+    risc0pkgs.url = "github:cspr-rad/risc0pkgs";
+    # FIXME: We don't want to follow our nixpkgs revision
+    # to avoid rebuilding the r0vm over and over again
+    # whenever we update nixpkgs, while we are not using
+    # it yet in kairos-prover
+    # risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
     csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
     csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };
