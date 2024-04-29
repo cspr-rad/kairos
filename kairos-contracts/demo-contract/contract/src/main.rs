@@ -57,35 +57,6 @@ pub extern "C" fn get_purse() {
     );
 }
 
-// Batch submission EP with host verifier: Unimplemented
-// This entry point will verify a batch proof and update the trie root
-// TODO: Store the trie root under a URef in this deposit contract
-// QUESTION: What is the initial root and state of the trie?
-#[no_mangle]
-pub extern "C" fn submit_batch() {
-    // receive some serialized proof
-    // the proof will include a public journal with the updated trie root
-    // public journal will include all deposits
-    let _serialized_proof: Vec<u8> = runtime::get_named_arg("serialized_proof");
-    // TODO: VERIFY proof and UPDATE the trie root    
-    // TODO: UPDATE last_processed_deposit_counter by `n`, where `n` is the amount of deposits processed in this batch.
-
-    // OPEN QUESTIONS
-    // How are L1 deposits verified when proving?
-    // Are deposits and transfers private or public inputs to the circuit / guest?
-    // Do we want to only store the most recent root, or a history of roots?
-    // Option<Root>
-
-    // Merkle proof for each state transition in the Trie
-    // If that matches the current root it'll be valid
-    // DA must store all transitions and those are verified against the root hash?
-    // Triestate is stored in the L2
-    // The trie is updated inside the guest
-
-    // Trie verifies Balance against L1 root -> not responsible for proving updates
-    // Update Trie inside Circuit
-}
-
 // Entry point called by a user through session code to deposit funds.
 // Due to Casper < 2.0 purse management and access control, it is necessary that
 // a temporary purse is funded and passed to the deposit contract, since this is

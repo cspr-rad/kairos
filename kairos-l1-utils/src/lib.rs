@@ -1,6 +1,5 @@
 use casper_client::{
-    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId,
-    Verbosity,
+    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
 };
 use casper_hashing::Digest;
 use casper_types::URef;
@@ -86,9 +85,9 @@ async fn state_root_hash() {
 
 #[tokio::test]
 async fn install_wasm() {
+    use casper_types::{runtime_args, RuntimeArgs};
     use std::fs::File;
     use std::io::Read;
-    use casper_types::{RuntimeArgs, runtime_args};
     let mut wasm_file: File =
         File::open("/Users/chef/Desktop/demo-contract-optimized.wasm").unwrap();
     let mut wasm_bytes: Vec<u8> = Vec::new();
