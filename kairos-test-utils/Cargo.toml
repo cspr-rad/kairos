@@ -11,6 +11,10 @@ version.workspace = true
 test = false
 bench = false
 
+[features]
+all-tests = ["cctl-tests"]
+cctl-tests = []
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 

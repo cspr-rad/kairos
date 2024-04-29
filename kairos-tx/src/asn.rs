@@ -10,7 +10,7 @@ use num_traits::cast::ToPrimitive;
 use rasn::types::AsnType;
 use rasn::{Decode, Encode};
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct PublicKey(pub(crate) OctetString);
 
@@ -27,13 +27,19 @@ impl From<PublicKey> for Vec<u8> {
     }
 }
 
-impl<const N: usize> From<[u8; N]> for PublicKey {
-    fn from(value: [u8; N]) -> Self {
-        PublicKey(OctetString::copy_from_slice(&value))
+impl From<&[u8]> for PublicKey {
+    fn from(value: &[u8]) -> Self {
+        PublicKey(OctetString::copy_from_slice(value))
     }
 }
 
-#[derive(AsnType, Encode, Decode, Debug)]
+impl<const N: usize> From<&[u8; N]> for PublicKey {
+    fn from(value: &[u8; N]) -> Self {
+        PublicKey(OctetString::copy_from_slice(value))
+    }
+}
+
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct Amount(pub(crate) Integer);
 
@@ -58,7 +64,7 @@ impl From<u64> for Amount {
     }
 }
 
-#[derive(AsnType, Encode, Decode, Debug)]
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
 pub struct Nonce(pub(crate) Integer);
 
@@ -224,7 +230,7 @@ impl TryFrom<SigningPayload> for Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use crate::asn::{Amount, SigningPayload};
+    use crate::asn::{Deposit, SigningPayload};
 
     #[test]
     fn test_encode_deposit() {
@@ -250,11 +256,21 @@ mod tests {
     }
 
     #[test]
+    fn test_extract_deposit_amount_without_taking_ownership() {
+        const AMOUNT: u64 = 1000;
+        let encoded = Deposit::new(AMOUNT);
+        let encoded_ref = &encoded;
+
+        let extracted_amount: u64 = (encoded_ref.amount.clone()).try_into().unwrap();
+        assert_eq!(extracted_amount, AMOUNT);
+    }
+
+    #[test]
     fn test_encode_transfer() {
         const NONCE: u64 = 1;
         const RECIPIENT: [u8; 32] = [11; 32];
         const AMOUNT: u64 = 1000;
-        let encoded = SigningPayload::new_transfer(NONCE, RECIPIENT, AMOUNT)
+        let encoded = SigningPayload::new_transfer(NONCE, &RECIPIENT, AMOUNT)
             .der_encode()
             .unwrap();
 
@@ -293,16 +309,16 @@ mod tests {
         let deposit_payload = hex_encode(SigningPayload::new_deposit(1000));
         assert_eq!(deposit_payload.as_str(), "3009020100a004020203e8");
 
-        let decoded_deadbeef = hex::decode("deadbeef").unwrap();
+        let decoded_deadbabe = hex::decode("deadbabe").unwrap();
 
         let transfer_payload = hex_encode(SigningPayload::new_transfer(
             0,
-            decoded_deadbeef.as_slice(),
-            Amount::from(1000),
+            decoded_deadbabe.as_slice(),
+            1000,
         ));
         assert_eq!(
             transfer_payload.as_str(),
-            "300f020100a10a0404deadbeef020203e8"
+            "300f020100a10a0404deadbabe020203e8"
         );
 
         let withdrawal_payload = hex_encode(SigningPayload::new_withdrawal(0, 1000));
