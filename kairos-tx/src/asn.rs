@@ -14,12 +14,6 @@ use rasn::{Decode, Encode};
 #[rasn(delegate)]
 pub struct PublicKey(pub(crate) OctetString);
 
-impl From<&[u8]> for PublicKey {
-    fn from(value: &[u8]) -> Self {
-        PublicKey(OctetString::copy_from_slice(value))
-    }
-}
-
 // Converts an ASN.1 decoded public key into raw byte representation.
 impl From<PublicKey> for Vec<u8> {
     fn from(value: PublicKey) -> Self {
