@@ -9,6 +9,7 @@ pub use rasn::types::{Integer, OctetString};
 use num_traits::cast::ToPrimitive;
 use rasn::types::AsnType;
 use rasn::{Decode, Encode};
+use sha2::Digest;
 
 #[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
@@ -191,6 +192,15 @@ impl SigningPayload {
 
     pub fn der_decode(value: impl AsRef<[u8]>) -> Result<Self, TxError> {
         rasn::der::decode(value.as_ref()).map_err(TxError::DecodeError)
+    }
+
+    // Computes the hash for a transaction.
+    // Hash is obtained from payload by computing sha256 of DER encoded ASN.1 data.
+    pub fn hash(&self) -> Result<[u8; 32], TxError> {
+        let data = self.der_encode()?;
+        let tx_hash: [u8; 32] = sha2::Sha256::digest(data).into();
+
+        Ok(tx_hash)
     }
 }
 

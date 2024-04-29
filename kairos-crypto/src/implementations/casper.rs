@@ -88,7 +88,7 @@ impl CryptoSigner for Signer {
 
     #[cfg(feature = "tx")]
     fn verify_tx(&self, tx: kairos_tx::asn::Transaction) -> Result<(), CryptoError> {
-        let tx_hash = kairos_tx::hash(&tx.payload).map_err(|_e| CryptoError::TxHashingError)?;
+        let tx_hash = tx.payload.hash().map_err(|_e| CryptoError::TxHashingError)?;
         let signature: Vec<u8> = tx.signature.into();
         self.verify(tx_hash, signature)?;
 
@@ -101,7 +101,7 @@ impl CryptoSigner for Signer {
         payload: kairos_tx::asn::SigningPayload,
     ) -> Result<kairos_tx::asn::Transaction, CryptoError> {
         // Validate payload signature.
-        let tx_hash = kairos_tx::hash(&payload).map_err(|_e| CryptoError::TxHashingError)?;
+        let tx_hash = payload.hash().map_err(|_e| CryptoError::TxHashingError)?;
         let signature = self.sign(tx_hash)?;
 
         // Prepare public key.
