@@ -34,7 +34,6 @@ async fn test_deposit_withdraw() {
     let deposit = PayloadBody {
         public_key: "alice_key".into(),
         payload: SigningPayload::new_deposit(100).try_into().unwrap(),
-
         signature: vec![],
     };
 
