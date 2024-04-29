@@ -20,8 +20,8 @@ pub enum CryptoError {
 
     /// Unable to compute transaction hash - invalid data given.
     #[cfg(feature = "tx")]
-    #[error("unable to hash transaction data")]
-    TxHashingError,
+    #[error("unable to hash transaction data: {error}")]
+    TxHashingError { error: String },
     /// Signing algorithm is not available in `kairos-tx`.
     #[cfg(feature = "tx")]
     #[error("algorithm not available in tx format")]
