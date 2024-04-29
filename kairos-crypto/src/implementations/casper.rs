@@ -100,7 +100,7 @@ impl CryptoSigner for Signer {
         &self,
         payload: kairos_tx::asn::SigningPayload,
     ) -> Result<kairos_tx::asn::Transaction, CryptoError> {
-        // Validate payload signature.
+        // Compute payload signature.
         let tx_hash = payload.hash().map_err(|_e| CryptoError::TxHashingError)?;
         let signature = self.sign(tx_hash)?;
 
