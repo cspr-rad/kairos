@@ -181,18 +181,18 @@ impl<S: Store<Account>> BatchState<kairos_trie::Transaction<S, Account>> {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Account {
     pub pubkey: PublicKey,
+    pub balance: u64,
     // Start at 0. Each transfer or withdrawal's `nonce` must match the account's `nonce`.
     // Each successful transfer or withdrawal increments the `nonce`.
     pub nonce: u64,
-    pub balance: u64,
 }
 
 impl Account {
     pub fn new(pubkey: PublicKey, balance: u64, nonce: u64) -> Self {
         Self {
             pubkey,
-            nonce,
             balance,
+            nonce,
         }
     }
 
