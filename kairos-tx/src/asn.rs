@@ -153,6 +153,14 @@ impl Transaction {
             signature,
         }
     }
+
+    pub fn der_encode(&self) -> Result<Vec<u8>, TxError> {
+        rasn::der::encode(self).map_err(TxError::EncodeError)
+    }
+
+    pub fn der_decode(value: impl AsRef<[u8]>) -> Result<Self, TxError> {
+        rasn::der::decode(value.as_ref()).map_err(TxError::DecodeError)
+    }
 }
 
 #[derive(AsnType, Encode, Decode, Debug, PartialEq, Copy, Clone)]
@@ -300,7 +308,7 @@ impl TryFrom<&[u8]> for Transaction {
     type Error = TxError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        rasn::der::decode(value).map_err(TxError::DecodeError)
+        Transaction::der_decode(value)
     }
 }
 
@@ -308,7 +316,7 @@ impl TryFrom<Transaction> for Vec<u8> {
     type Error = TxError;
 
     fn try_from(value: Transaction) -> Result<Self, Self::Error> {
-        rasn::der::encode(&value).map_err(TxError::EncodeError)
+        value.der_encode()
     }
 }
 
