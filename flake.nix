@@ -160,7 +160,7 @@
           checks = {
             lint = craneLib.cargoClippy (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
-              cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+              cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
 
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
@@ -168,8 +168,7 @@
 
               # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
               # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
-              cargoTarpaulinExtraArgs = "--skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
-
+              cargoTarpaulinExtraArgs = "--features=all-tests --skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
               # For some reason cargoTarpaulin runs the tests in the buildPhase
               buildInputs = kairosNodeAttrs.buildInputs ++ [
                 inputs'.csprpkgs.packages.cctl
