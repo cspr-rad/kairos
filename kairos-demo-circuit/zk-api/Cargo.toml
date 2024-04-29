@@ -17,5 +17,4 @@ bumpalo = "3"
 
 [features]
 # If this feature is used, the groth16 wrapper will be used, otherwise the default prover will be used.
-groth16 = []
-risc0-groth16 = ["dep:risc0-groth16"]
+groth16 = ["dep:risc0-groth16"]
