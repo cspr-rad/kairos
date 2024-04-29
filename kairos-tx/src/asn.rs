@@ -283,4 +283,29 @@ mod tests {
 
         assert_eq!(encoded, vec![48, 9, 2, 1, 1, 162, 4, 2, 2, 3, 232]);
     }
+
+    #[test]
+    fn test_hex_encode_nixos_end_to_end_payloads() {
+        fn hex_encode(payload: SigningPayload) -> String {
+            hex::encode(payload.der_encode().unwrap())
+        }
+
+        let deposit_payload = hex_encode(SigningPayload::new_deposit(1000));
+        assert_eq!(deposit_payload.as_str(), "3009020100a004020203e8");
+
+        let decoded_deadbabe = hex::decode("deadbabe").unwrap();
+
+        let transfer_payload = hex_encode(SigningPayload::new_transfer(
+            0,
+            decoded_deadbabe.as_slice(),
+            1000,
+        ));
+        assert_eq!(
+            transfer_payload.as_str(),
+            "300f020100a10a0404deadbabe020203e8"
+        );
+
+        let withdrawal_payload = hex_encode(SigningPayload::new_withdrawal(0, 1000));
+        assert_eq!(withdrawal_payload.as_str(), "3009020100a204020203e8");
+    }
 }
