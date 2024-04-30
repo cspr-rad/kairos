@@ -17,7 +17,6 @@ pub const DEFAULT_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
 pub async fn install_wasm_bytecode(
     node_address: &str,
-    rpc_port: &str,
     chain_name: &str,
     runtime_args: RuntimeArgs,
     module_bytes: &[u8],
@@ -35,7 +34,7 @@ pub async fn install_wasm_bytecode(
         .unwrap();
 
     casper_client::put_deploy(
-        JsonRpcId::String(rpc_port.to_string()),
+        JsonRpcId::String(0.to_string()),
         node_address,
         casper_client::Verbosity::Low,
         deploy,
@@ -44,9 +43,9 @@ pub async fn install_wasm_bytecode(
     .unwrap()
 }
 
-pub async fn query_state_root_hash(node_address: &str, rpc_port: &str) -> Digest {
+pub async fn query_state_root_hash(node_address: &str) -> Digest {
     get_state_root_hash(
-        JsonRpcId::String(rpc_port.to_owned()),
+        JsonRpcId::String(0.to_string()),
         node_address,
         Verbosity::Low,
         None,
@@ -59,7 +58,7 @@ pub async fn query_state_root_hash(node_address: &str, rpc_port: &str) -> Digest
 }
 
 pub async fn query_counter(node_address: &str, rpc_port: &str, counter_uref: &str) -> u64 {
-    let srh: Digest = query_state_root_hash(node_address, rpc_port).await;
+    let srh: Digest = query_state_root_hash(node_address).await;
     let stored_value: StoredValue = query_global_state(
         JsonRpcId::String(rpc_port.to_owned()),
         node_address,
@@ -81,7 +80,7 @@ pub async fn query_counter(node_address: &str, rpc_port: &str, counter_uref: &st
 
 #[tokio::test]
 async fn state_root_hash() {
-    let srh = query_state_root_hash("http://127.0.0.1:11101/rpc", "11101").await;
+    let srh = query_state_root_hash("http://127.0.0.1:11101/rpc").await;
     println!("Srh: {:?}", &srh);
 }
 
@@ -98,7 +97,6 @@ async fn install_wasm() {
     let runtime_args: RuntimeArgs = runtime_args! {};
     let result: SuccessResponse<PutDeployResult> = install_wasm_bytecode(
         "http://127.0.0.1:11101/rpc",
-        "11101",
         "cspr-dev-cctl",
         runtime_args,
         &wasm_bytes,
