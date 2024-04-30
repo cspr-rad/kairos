@@ -1,5 +1,5 @@
 use casper_client::{
-    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity
+    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
 };
 use casper_hashing::Digest;
 use casper_types::{ContractWasmHash, URef};
@@ -9,7 +9,7 @@ use casper_client::{
     types::{Deploy, DeployBuilder, ExecutableDeployItem, Timestamp},
     SuccessResponse,
 };
-use casper_types::{crypto::SecretKey, RuntimeArgs, Key};
+use casper_types::{crypto::SecretKey, Key, RuntimeArgs};
 use std::fs;
 
 pub const DEFAULT_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
@@ -57,16 +57,34 @@ pub async fn query_state_root_hash(node_address: &str) -> Digest {
     .unwrap()
 }
 
-pub async fn query_contract_uref_from_installing_account(node_address: &str, srh: Digest, account: Key, contract_identifier: &str, contract_uref: &str) -> URef{
-    let stored_value: StoredValue = query_stored_value(node_address, srh, account, vec![contract_identifier.to_owned()]).await;
-    let contract: ContractWasmHash = match stored_value{
+pub async fn query_contract_uref_from_installing_account(
+    node_address: &str,
+    srh: Digest,
+    account: Key,
+    contract_identifier: &str,
+    contract_uref: &str,
+) -> URef {
+    let stored_value: StoredValue = query_stored_value(
+        node_address,
+        srh,
+        account,
+        vec![contract_identifier.to_owned()],
+    )
+    .await;
+    let contract: ContractWasmHash = match stored_value {
         StoredValue::Contract(contract) => *contract.contract_wasm_hash(),
-        _ => panic!("Missing or invalid Value")
+        _ => panic!("Missing or invalid Value"),
     };
-    let stored_value: StoredValue = query_stored_value(node_address, srh, contract.into(), vec![contract_uref.into()]).await;
-    let value: URef = match stored_value{
+    let stored_value: StoredValue = query_stored_value(
+        node_address,
+        srh,
+        contract.into(),
+        vec![contract_uref.into()],
+    )
+    .await;
+    let value: URef = match stored_value {
         StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
-        _ => panic!("Missing or invalid Value")
+        _ => panic!("Missing or invalid Value"),
     };
 
     value
@@ -74,7 +92,13 @@ pub async fn query_contract_uref_from_installing_account(node_address: &str, srh
 
 pub async fn query_counter(node_address: &str, counter_uref: &str) -> u64 {
     let srh: Digest = query_state_root_hash(node_address).await;
-    let stored_value: StoredValue = query_stored_value(node_address, srh, casper_types::Key::URef(URef::from_formatted_str(counter_uref).unwrap()), Vec::new()).await;
+    let stored_value: StoredValue = query_stored_value(
+        node_address,
+        srh,
+        casper_types::Key::URef(URef::from_formatted_str(counter_uref).unwrap()),
+        Vec::new(),
+    )
+    .await;
     let value: u64 = match stored_value {
         StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
         _ => panic!("Missing Value!"),
@@ -82,14 +106,19 @@ pub async fn query_counter(node_address: &str, counter_uref: &str) -> u64 {
     value
 }
 
-async fn query_stored_value(node_address: &str, srh: Digest, key: Key, path: Vec<String>) -> StoredValue{
+async fn query_stored_value(
+    node_address: &str,
+    srh: Digest,
+    key: Key,
+    path: Vec<String>,
+) -> StoredValue {
     query_global_state(
         JsonRpcId::String(0.to_string()),
         node_address,
         Verbosity::Low,
         casper_client::rpcs::GlobalStateIdentifier::StateRootHash(srh),
         key,
-        path
+        path,
     )
     .await
     .unwrap()
