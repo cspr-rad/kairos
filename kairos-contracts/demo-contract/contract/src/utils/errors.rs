@@ -7,13 +7,12 @@ pub enum DepositError {
     InvalidContext = 0,
     MissingKey = 1,
     FailedToGetArgBytes = 2,
-    MissingOptionalArgument = 3,
-    AlreadyInitialized = 4,
-    MissingKeyDepositPurse = 5,
-    MissingKeyLastProcessedDepositCounter = 6,
-    MissingKeyDepositEventDict = 7,
-    FailedToCreateDepositDict = 8,
-    FailedToReturnContractPurseAsReference = 9,
+    AlreadyInitialized = 3,
+    MissingKeyDepositPurse = 4,
+    MissingKeyLastProcessedDepositCounter = 5,
+    MissingKeyDepositEventDict = 6,
+    FailedToCreateDepositDict = 7,
+    FailedToReturnContractPurseAsReference = 8,
 }
 
 impl From<DepositError> for ApiError {
