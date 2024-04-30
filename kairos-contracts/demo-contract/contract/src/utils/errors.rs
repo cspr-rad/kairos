@@ -10,11 +10,10 @@ pub enum DepositError {
     MissingOptionalArgument = 3,
     AlreadyInitialized = 4,
     MissingKeyDepositPurse = 5,
-    MissingKeyMostRecentDepositCounter = 6,
-    MissingKeyLastProcessedDepositCounter = 7,
-    MissingKeyDepositEventDict = 8,
-    FailedToCreateDepositDict = 9,
-    FailedToReturnContractPurseAsReference = 10,
+    MissingKeyLastProcessedDepositCounter = 6,
+    MissingKeyDepositEventDict = 7,
+    FailedToCreateDepositDict = 8,
+    FailedToReturnContractPurseAsReference = 9,
 }
 
 impl From<DepositError> for ApiError {
