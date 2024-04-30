@@ -1,11 +1,13 @@
 pub mod error;
 pub mod implementations;
 
+#[cfg(feature = "fs")]
 use std::path::Path;
 
 use error::CryptoError;
 
 pub trait CryptoSigner {
+    #[cfg(feature = "fs")]
     fn from_private_key_file<P: AsRef<Path>>(file: P) -> Result<Self, CryptoError>
     where
         Self: Sized;

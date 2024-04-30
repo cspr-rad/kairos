@@ -8,6 +8,7 @@ license.workspace = true
 default = ["crypto-casper", "tx"]
 crypto-casper = ["casper-types"]
 tx = ["kairos-tx"]
+fs = ["casper-types/std"] # TODO: Change `std` -> `std-fs-io` in the future version.
 
 [lib]
 
@@ -17,4 +18,4 @@ thiserror = "1"
 kairos-tx = { path = "../kairos-tx", optional = true }
 
 # Casper signer implementation.
-casper-types = { version = "4", optional = true, features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
+casper-types = { version = "4", optional = true }
