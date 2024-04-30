@@ -1,6 +1,5 @@
 pub const KAIROS_DEPOSIT_CONTRACT_NAME: &str = "kairos_demo_contract";
 
-//#[allow(dead_code)]
 pub const KAIROS_DEPOSIT_CONTRACT_PACKAGE: &str = "kairos_contract_package";
 pub const KAIROS_DEPOSIT_CONTRACT_UREF: &str = "demo_contract";
 
@@ -9,7 +8,6 @@ pub const KAIROS_DEPOSIT_PURSE: &str = "kairos_deposit_purse";
 
 pub const RUNTIME_ARG_TEMP_PURSE: &str = "temp_purse";
 
-//#[allow(dead_code)]
 pub const RUNTIME_ARG_AMOUNT: &str = "amount";
 
 pub const EP_INIT_NAME: &str = "init";
