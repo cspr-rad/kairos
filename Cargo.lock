@@ -1813,6 +1813,7 @@ version = "0.1.0"
 dependencies = [
  "casper-types 4.0.1",
  "hex",
+ "kairos-tx",
  "thiserror",
 ]
 
@@ -1869,6 +1870,7 @@ dependencies = [
  "hex",
  "num-traits",
  "rasn",
+ "sha2 0.10.8",
 ]
 
 [[package]]
