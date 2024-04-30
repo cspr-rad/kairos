@@ -71,6 +71,9 @@ pub extern "C" fn deposit() {
         .unwrap_or_revert_with(ApiError::UnexpectedKeyVariant);
     system::transfer_from_purse_to_purse(temp_purse, deposit_purse_uref, amount, None)
         .unwrap_or_revert();
+    
+    // kairos utilizes u64 so only amounts that can be converted are accepted.
+    let amount = u64::try_from(amount).unwrap_or_revert();
 
     let new_deposit_record: Deposit = Deposit {
         account: get_immediate_caller().unwrap_or_revert(),
