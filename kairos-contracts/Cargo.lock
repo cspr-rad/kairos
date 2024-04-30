@@ -148,7 +148,7 @@ name = "casper-contract"
 version = "4.0.0"
 source = "git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6#35222130c58b3c9997a358d4248ddae603836496"
 dependencies = [
- "casper-types",
+ "casper-types 4.0.1 (git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6)",
  "hex_fmt",
  "wee_alloc",
 ]
@@ -160,7 +160,7 @@ source = "git+https://github.com/cspr-rad/casper-event-standard?branch=kairos-de
 dependencies = [
  "casper-contract",
  "casper-event-standard-macro",
- "casper-types",
+ "casper-types 4.0.1 (git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6)",
 ]
 
 [[package]]
@@ -171,6 +171,32 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "casper-types"
+version = "4.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e01525b7bbae90fe9de3f1def6ffe05052a94ed7d14b1c2b38baec81eeec31b"
+dependencies = [
+ "base16",
+ "base64 0.13.1",
+ "bitflags",
+ "blake2",
+ "ed25519-dalek",
+ "hex",
+ "hex_fmt",
+ "k256",
+ "num",
+ "num-derive",
+ "num-integer",
+ "num-rational",
+ "num-traits",
+ "rand",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "uint",
 ]
 
 [[package]]
@@ -245,7 +271,8 @@ dependencies = [
  "bincode",
  "casper-contract",
  "casper-event-standard",
- "casper-types",
+ "casper-types 4.0.1 (git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6)",
+ "kairos-crypto",
  "kairos-tx",
 ]
 
@@ -354,7 +381,7 @@ name = "deposit-session"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
- "casper-types",
+ "casper-types 4.0.1 (git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6)",
 ]
 
 [[package]]
@@ -577,6 +604,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairos-crypto"
+version = "0.1.0"
+source = "git+https://github.com/cspr-rad/kairos.git?branch=main#f5fb2a6332d96db86735a561098613b38b0ff1e8"
+dependencies = [
+ "casper-types 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hex",
+ "kairos-tx",
+ "thiserror",
+]
+
+[[package]]
 name = "kairos-tx"
 version = "0.1.0"
 source = "git+https://github.com/cspr-rad/kairos.git?branch=main#f5fb2a6332d96db86735a561098613b38b0ff1e8"
@@ -617,7 +655,7 @@ name = "malicious-reader"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
- "casper-types",
+ "casper-types 4.0.1 (git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6)",
 ]
 
 [[package]]
@@ -625,7 +663,7 @@ name = "malicious-session"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
- "casper-types",
+ "casper-types 4.0.1 (git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6)",
 ]
 
 [[package]]
@@ -1068,6 +1106,26 @@ name = "tap"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
+
+[[package]]
+name = "thiserror"
+version = "1.0.59"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0126ad08bff79f29fc3ae6a55cc72352056dfff61e3ff8bb7129476d44b23aa"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.59"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1cd413b5d558b4c5bf3680e324a6fa5014e7b7c067a51e69dbdf47eb7148b66"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.60",
+]
 
 [[package]]
 name = "typenum"
