@@ -57,39 +57,6 @@ pub async fn query_state_root_hash(node_address: &str) -> Digest {
     .unwrap()
 }
 
-pub async fn query_contract_uref_from_installing_account(
-    node_address: &str,
-    srh: Digest,
-    account: Key,
-    contract_identifier: &str,
-    contract_uref: &str,
-) -> URef {
-    let stored_value: StoredValue = query_stored_value(
-        node_address,
-        srh,
-        account,
-        vec![contract_identifier.to_owned()],
-    )
-    .await;
-    let contract: ContractWasmHash = match stored_value {
-        StoredValue::Contract(contract) => *contract.contract_wasm_hash(),
-        _ => panic!("Missing or invalid Value"),
-    };
-    let stored_value: StoredValue = query_stored_value(
-        node_address,
-        srh,
-        contract.into(),
-        vec![contract_uref.into()],
-    )
-    .await;
-    let value: URef = match stored_value {
-        StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
-        _ => panic!("Missing or invalid Value"),
-    };
-
-    value
-}
-
 pub async fn query_counter(node_address: &str, counter_uref: &str) -> u64 {
     let srh: Digest = query_state_root_hash(node_address).await;
     let stored_value: StoredValue = query_stored_value(

@@ -6,11 +6,10 @@ use casper_types::{
     account::AccountHash, contracts::NamedKeys, runtime_args, ContractHash, Key, RuntimeArgs, URef,
     U512,
 };
-use lazy_static::lazy_static;
-use utils::create_funded_dummy_account;
-extern crate dotenvy;
 use dotenvy::dotenv;
-use std::env;
+use lazy_static::lazy_static;
+use std::{env, path::PathBuf};
+use utils::create_funded_dummy_account;
 
 pub const ACCOUNT_USER_1: [u8; 32] = [1u8; 32];
 pub const ACCOUNT_USER_2: [u8; 32] = [2u8; 32];
@@ -18,10 +17,11 @@ pub const ACCOUNT_USER_3: [u8; 32] = [3u8; 32];
 
 // This defines a static variable for the path to WASM binaries
 lazy_static! {
-    static ref PATH_TO_WASM_BINARIES: String = {
+    static ref PATH_TO_WASM_BINARIES: PathBuf = {
         dotenv().ok();
         env::var("PATH_TO_WASM_BINARIES")
             .expect("Missing environment variable PATH_TO_WASM_BINARIES")
+            .into()
     };
 }
 
@@ -100,10 +100,10 @@ impl TestContext {
         let session_args = runtime_args! {};
         let install_contract_request = ExecuteRequestBuilder::standard(
             admin,
-            &format!(
-                "{}/{}",
-                *PATH_TO_WASM_BINARIES, "demo-contract-optimized.wasm"
-            ),
+            &*PATH_TO_WASM_BINARIES
+                .join("demo-contract-optimized.wasm")
+                .to_str()
+                .expect("Failed to parse path as str"),
             session_args,
         )
         .build();
@@ -134,12 +134,6 @@ impl TestContext {
         self.builder.get_purse_balance(contract_purse_uref)
     }
 
-    /*// read a u64 counter from the contract named keys e.g. "last_processed_deposit_counter"
-    pub fn read_counter_value(&mut self, account: AccountHash, name: &str) -> u64 {
-        let contract_hash = self.contract_hash("kairos_demo_contract", account);
-        self.builder.get_value(contract_hash, name)
-    }*/
-
     // see deposit-session
     pub fn run_deposit_session(&mut self, amount: U512, installer: AccountHash, user: AccountHash) {
         let session_args = runtime_args! {
@@ -148,10 +142,10 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             user,
-            &format!(
-                "{}/{}",
-                *PATH_TO_WASM_BINARIES, "deposit-session-optimized.wasm"
-            ),
+            &*PATH_TO_WASM_BINARIES
+                .join("deposit-session-optimized.wasm")
+                .to_str()
+                .expect("Failed to parse path as str"),
             session_args,
         )
         .build();
@@ -171,10 +165,10 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
-            &format!(
-                "{}/{}",
-                *PATH_TO_WASM_BINARIES, "malicious-session-optimized.wasm"
-            ),
+            &*PATH_TO_WASM_BINARIES
+                .join("malicious-session-optimized.wasm")
+                .to_str()
+                .expect("Failed to parse path as str"),
             session_args,
         )
         .build();
@@ -196,10 +190,10 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
-            &format!(
-                "{}/{}",
-                *PATH_TO_WASM_BINARIES, "malicious-reader-optimized.wasm"
-            ),
+            &*PATH_TO_WASM_BINARIES
+                .join("malicious-reader-optimized.wasm")
+                .to_str()
+                .expect("Failed to parse path as str"),
             session_args,
         )
         .build();
