@@ -2,7 +2,7 @@ use casper_client::{
     get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
 };
 use casper_hashing::Digest;
-use casper_types::{ContractWasmHash, URef};
+use casper_types::URef;
 
 use casper_client::{
     rpcs::results::PutDeployResult,
@@ -10,7 +10,7 @@ use casper_client::{
     SuccessResponse,
 };
 use casper_types::{crypto::SecretKey, Key, RuntimeArgs};
-use std::{fs, hash::Hash, path};
+use std::fs;
 
 pub const DEFAULT_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
@@ -93,7 +93,12 @@ async fn query_stored_value(
     .stored_value
 }
 
-pub async fn query_contract_counter(node_address: &str, srh: Digest, contract_hash: Key, path: Vec<String>) -> u64{
+pub async fn query_contract_counter(
+    node_address: &str,
+    srh: Digest,
+    contract_hash: Key,
+    path: Vec<String>,
+) -> u64 {
     let stored_value: StoredValue = query_global_state(
         JsonRpcId::String(0.to_string()),
         node_address,
@@ -107,9 +112,9 @@ pub async fn query_contract_counter(node_address: &str, srh: Digest, contract_ha
     .result
     .stored_value;
 
-    let value: u64 = match stored_value{
+    let value: u64 = match stored_value {
         StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
-        _ => panic!("Missing or invalid Value")
+        _ => panic!("Missing or invalid Value"),
     };
 
     value
@@ -196,7 +201,7 @@ async fn install_wasm() {
 
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 #[tokio::test]
-async fn counter_query_test(){
+async fn counter_query_test() {
     use anyhow::anyhow;
     use backoff::{backoff::Constant, future::retry};
     use casper_client::{get_deploy, Error, JsonRpcId, Verbosity};
@@ -273,8 +278,20 @@ async fn counter_query_test(){
     .unwrap();
 
     // this is the default cctl account for user-1
-    let account: Key = Key::from_formatted_str("account-hash-5a9eb1f7da515d9fa2f0b74e18ec84cccf90f146269d538073416dff432a3c77").unwrap();
+    let account: Key = Key::from_formatted_str(
+        "account-hash-5a9eb1f7da515d9fa2f0b74e18ec84cccf90f146269d538073416dff432a3c77",
+    )
+    .unwrap();
     let srh: Digest = query_state_root_hash(node_address).await;
-    let counter_value: u64 = query_contract_counter(node_address, srh, account, vec!["kairos_demo_contract".to_string(), "last_processed_deposit_counter".to_string()]).await;
+    let counter_value: u64 = query_contract_counter(
+        node_address,
+        srh,
+        account,
+        vec![
+            "kairos_demo_contract".to_string(),
+            "last_processed_deposit_counter".to_string(),
+        ],
+    )
+    .await;
     assert_eq!(counter_value, 0_u64);
 }
