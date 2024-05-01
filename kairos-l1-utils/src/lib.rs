@@ -10,7 +10,7 @@ use casper_client::{
     SuccessResponse,
 };
 use casper_types::{crypto::SecretKey, Key, RuntimeArgs};
-use std::fs;
+use std::{fs, hash::Hash, path};
 
 pub const DEFAULT_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
@@ -93,6 +93,28 @@ async fn query_stored_value(
     .stored_value
 }
 
+pub async fn query_contract_counter(node_address: &str, srh: Digest, contract_hash: Key, path: Vec<String>) -> u64{
+    let stored_value: StoredValue = query_global_state(
+        JsonRpcId::String(0.to_string()),
+        node_address,
+        Verbosity::Low,
+        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(srh),
+        contract_hash.into(),
+        path,
+    )
+    .await
+    .expect("Failed to query contract for path")
+    .result
+    .stored_value;
+
+    let value: u64 = match stored_value{
+        StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
+        _ => panic!("Missing or invalid Value")
+    };
+
+    value
+}
+
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 #[tokio::test]
 async fn install_wasm() {
@@ -170,4 +192,89 @@ async fn install_wasm() {
     )
     .await
     .unwrap()
+}
+
+#[cfg_attr(not(feature = "cctl-tests"), ignore)]
+#[tokio::test]
+async fn counter_query_test(){
+    use anyhow::anyhow;
+    use backoff::{backoff::Constant, future::retry};
+    use casper_client::{get_deploy, Error, JsonRpcId, Verbosity};
+    use casper_types::{runtime_args, RuntimeArgs};
+    use kairos_test_utils::cctl::CCTLNetwork;
+    use std::fs::File;
+    use std::io::Read;
+    use std::path::Path;
+
+    let network = CCTLNetwork::run().await.unwrap();
+    let node = network
+        .nodes
+        .first()
+        .expect("Expected at least one node after successful network run");
+    let node_address: &str = &format!("http://localhost:{}", node.port.rpc_port);
+
+    let wasm_path = Path::new(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
+    let mut wasm_file: File = File::open(wasm_path).unwrap();
+    let mut wasm_bytes: Vec<u8> = Vec::new();
+    wasm_file.read_to_end(&mut wasm_bytes).unwrap();
+
+    let runtime_args: RuntimeArgs = runtime_args! {};
+    let result: SuccessResponse<PutDeployResult> = install_wasm_bytecode(
+        node_address,
+        "cspr-dev-cctl",
+        runtime_args,
+        &wasm_bytes,
+        network
+            .assets_dir
+            .join("users/user-1/secret_key.pem")
+            .to_str()
+            .unwrap(),
+    )
+    .await;
+
+    // wait for successful processing of deploy
+    retry(
+        Constant::new(std::time::Duration::from_millis(100)),
+        || async {
+            get_deploy(
+                JsonRpcId::Number(1),
+                node_address,
+                Verbosity::High,
+                result.result.deploy_hash,
+                true,
+            )
+            .await
+            .map_err(|err| match &err {
+                Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
+                    backoff::Error::transient(anyhow!(err))
+                }
+                _ => backoff::Error::permanent(anyhow!(err)),
+            })
+            .map(|success| {
+                if success
+                    .result
+                    .execution_results
+                    .iter()
+                    .all(|execution_result| match execution_result.result {
+                        casper_types::ExecutionResult::Success { .. } => true,
+                        casper_types::ExecutionResult::Failure { .. } => false,
+                    })
+                {
+                    Ok(())
+                } else {
+                    Err(backoff::Error::transient(anyhow!(
+                        "Deploy was not processed yet"
+                    )))
+                }
+            })?
+        },
+    )
+    .await
+    .unwrap();
+
+    // this is the default cctl account for user-1
+    let account: Key = Key::from_formatted_str("account-hash-5a9eb1f7da515d9fa2f0b74e18ec84cccf90f146269d538073416dff432a3c77").unwrap();
+    let srh: Digest = query_state_root_hash(node_address).await;
+    let counter_value: u64 = query_contract_counter(node_address, srh, account, vec!["kairos_demo_contract".to_string(), "last_processed_deposit_counter".to_string()]).await;
+    assert_eq!(counter_value, 0_u64);
 }
