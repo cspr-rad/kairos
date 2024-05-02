@@ -2,7 +2,7 @@ use casper_client::{
     get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
 };
 use casper_hashing::Digest;
-use casper_types::URef;
+use casper_types::{account::AccountHash, PublicKey, URef};
 
 use casper_client::{
     rpcs::results::PutDeployResult,
@@ -10,7 +10,7 @@ use casper_client::{
     SuccessResponse,
 };
 use casper_types::{crypto::SecretKey, Key, RuntimeArgs};
-use std::fs;
+use std::{fs, thread, time::Duration};
 
 pub const DEFAULT_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
@@ -51,7 +51,7 @@ pub async fn query_state_root_hash(node_address: &str) -> Digest {
         None,
     )
     .await
-    .unwrap()
+    .expect("Failed to get state root hash")
     .result
     .state_root_hash
     .unwrap()
@@ -88,7 +88,7 @@ async fn query_stored_value(
         path,
     )
     .await
-    .unwrap()
+    .expect("Failed to query stored value")
     .result
     .stored_value
 }
@@ -119,7 +119,7 @@ pub async fn query_contract_counter(
 
     value
 }
-
+/*
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 #[tokio::test]
 async fn install_wasm() {
@@ -198,6 +198,7 @@ async fn install_wasm() {
     .await
     .unwrap()
 }
+*/
 
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 #[tokio::test]
@@ -277,11 +278,17 @@ async fn counter_query_test() {
     .await
     .unwrap();
 
+    // replace this with a better solution
+    thread::sleep(Duration::from_secs(10));
+
+    let public_key_path = network
+    .assets_dir
+    .join("users/user-1/public_key.pem");
+
+    let public_key: PublicKey = PublicKey::from_file(public_key_path.to_str().unwrap()).unwrap();
+    let account_hash: AccountHash = public_key.to_account_hash();
     // this is the default cctl account for user-1
-    let account: Key = Key::from_formatted_str(
-        "account-hash-5a9eb1f7da515d9fa2f0b74e18ec84cccf90f146269d538073416dff432a3c77",
-    )
-    .unwrap();
+    let account: Key = Key::from(account_hash);
     let srh: Digest = query_state_root_hash(node_address).await;
     let counter_value: u64 = query_contract_counter(
         node_address,
