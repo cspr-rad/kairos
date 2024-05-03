@@ -1803,7 +1803,11 @@ dependencies = [
  "clap",
  "hex",
  "kairos-crypto",
+ "kairos-server",
  "predicates",
+ "reqwest 0.12.4",
+ "serde",
+ "serde_json",
  "thiserror",
 ]
 
