@@ -12,6 +12,9 @@ use axum_extra::routing::RouterExt;
 
 pub use errors::AppErr;
 
+use crate::config::ServerConfig;
+use crate::state::BatchStateManager;
+
 type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 
@@ -21,4 +24,16 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
         .typed_post(routes::withdraw_handler)
         .typed_post(routes::transfer_handler)
         .with_state(state)
+}
+
+pub async fn run(config: ServerConfig) {
+    tracing_subscriber::fmt::init();
+
+    let app = app_router(BatchStateManager::new_empty());
+
+    tracing::info!("starting http server on `{}`", config.socket_addr);
+    let listener = tokio::net::TcpListener::bind(config.socket_addr)
+        .await
+        .unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
