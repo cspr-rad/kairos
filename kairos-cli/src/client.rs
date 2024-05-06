@@ -50,7 +50,7 @@ pub fn submit_transaction_request(
         .map_err(Into::<KairosClientError>::into)?;
     let status = response.status();
     if !status.is_success() {
-        Err(KairosClientError::ResponseError(status.to_string()))
+        Err(KairosClientError::KairosServerError(status.to_string()))
     } else {
         Ok(())
     }
