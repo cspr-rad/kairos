@@ -9,6 +9,7 @@ pub use rasn::types::{Integer, OctetString};
 use num_traits::cast::ToPrimitive;
 use rasn::types::AsnType;
 use rasn::{Decode, Encode};
+use sha2::Digest;
 
 #[derive(AsnType, Encode, Decode, Debug, Clone)]
 #[rasn(delegate)]
@@ -21,6 +22,12 @@ impl From<PublicKey> for Vec<u8> {
     }
 }
 
+impl From<Vec<u8>> for PublicKey {
+    fn from(value: Vec<u8>) -> Self {
+        PublicKey(OctetString::copy_from_slice(&value))
+    }
+}
+
 impl From<&[u8]> for PublicKey {
     fn from(value: &[u8]) -> Self {
         PublicKey(OctetString::copy_from_slice(value))
@@ -30,6 +37,40 @@ impl From<&[u8]> for PublicKey {
 impl<const N: usize> From<&[u8; N]> for PublicKey {
     fn from(value: &[u8; N]) -> Self {
         PublicKey(OctetString::copy_from_slice(value))
+    }
+}
+
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
+#[rasn(delegate)]
+pub struct Signature(pub(crate) OctetString);
+
+// Converts an ASN.1 decoded signature into raw byte representation.
+impl From<Signature> for Vec<u8> {
+    fn from(value: Signature) -> Self {
+        value.0.into()
+    }
+}
+
+impl From<Vec<u8>> for Signature {
+    fn from(value: Vec<u8>) -> Self {
+        Signature(OctetString::copy_from_slice(&value))
+    }
+}
+
+#[derive(AsnType, Encode, Decode, Debug, Clone)]
+#[rasn(delegate)]
+pub struct PayloadHash(pub(crate) OctetString);
+
+// Converts an ASN.1 decoded payload hash into raw byte representation.
+impl From<PayloadHash> for Vec<u8> {
+    fn from(value: PayloadHash) -> Self {
+        value.0.into()
+    }
+}
+
+impl From<&[u8; 32]> for PayloadHash {
+    fn from(value: &[u8; 32]) -> Self {
+        PayloadHash(OctetString::copy_from_slice(value))
     }
 }
 
@@ -84,6 +125,54 @@ impl From<u64> for Nonce {
 
 #[derive(AsnType, Encode, Decode, Debug)]
 #[non_exhaustive]
+pub struct Transaction {
+    pub public_key: PublicKey, // NOTE: Field name can be different than defined in schema, as only **order** is crucial
+    pub payload: SigningPayload,
+    pub hash: PayloadHash,
+    pub algorithm: SigningAlgorithm,
+    pub signature: Signature,
+}
+
+impl Transaction {
+    /// Wraps full transaction data for storing.
+    ///
+    /// CAUTION: This method does NOT perform validity checks - please use
+    /// `kairos-crypto::sign_tx_payload()` to construct it safely.
+    pub fn new(
+        public_key: impl Into<PublicKey>,
+        payload: SigningPayload,
+        hash: impl Into<PayloadHash>,
+        algorithm: SigningAlgorithm,
+        signature: Signature,
+    ) -> Self {
+        Self {
+            public_key: public_key.into(),
+            payload,
+            hash: hash.into(),
+            algorithm,
+            signature,
+        }
+    }
+
+    pub fn der_encode(&self) -> Result<Vec<u8>, TxError> {
+        rasn::der::encode(self).map_err(TxError::EncodeError)
+    }
+
+    pub fn der_decode(value: impl AsRef<[u8]>) -> Result<Self, TxError> {
+        rasn::der::decode(value.as_ref()).map_err(TxError::DecodeError)
+    }
+}
+
+#[derive(AsnType, Encode, Decode, Debug, PartialEq, Copy, Clone)]
+#[rasn(enumerated)]
+#[non_exhaustive]
+pub enum SigningAlgorithm {
+    CasperSecp256k1 = 0,
+    CasperEd25519 = 1,
+}
+
+#[derive(AsnType, Encode, Decode, Debug)]
+#[non_exhaustive]
 pub struct SigningPayload {
     pub nonce: Nonce,
     pub body: TransactionBody,
@@ -129,6 +218,15 @@ impl SigningPayload {
 
     pub fn der_decode(value: impl AsRef<[u8]>) -> Result<Self, TxError> {
         rasn::der::decode(value.as_ref()).map_err(TxError::DecodeError)
+    }
+
+    // Computes the hash for a transaction.
+    // Hash is obtained from payload by computing sha256 of DER encoded ASN.1 data.
+    pub fn hash(&self) -> Result<[u8; 32], TxError> {
+        let data = self.der_encode()?;
+        let tx_hash: [u8; 32] = sha2::Sha256::digest(data).into();
+
+        Ok(tx_hash)
     }
 }
 
@@ -203,6 +301,22 @@ impl Withdrawal {
         Self {
             amount: amount.into(),
         }
+    }
+}
+
+impl TryFrom<&[u8]> for Transaction {
+    type Error = TxError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        Transaction::der_decode(value)
+    }
+}
+
+impl TryFrom<Transaction> for Vec<u8> {
+    type Error = TxError;
+
+    fn try_from(value: Transaction) -> Result<Self, Self::Error> {
+        value.der_encode()
     }
 }
 

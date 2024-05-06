@@ -1,14 +1,15 @@
+use std::net::SocketAddr;
 use std::{fmt, str::FromStr};
 
 #[derive(Debug)]
 pub struct ServerConfig {
-    pub port: u16,
+    pub socket_addr: SocketAddr,
 }
 
 impl ServerConfig {
     pub fn from_env() -> Result<Self, String> {
-        let port = parse_env_as::<u16>("KAIROS_SERVER_PORT")?;
-        Ok(Self { port })
+        let socket_addr = parse_env_as::<SocketAddr>("KAIROS_SERVER_SOCKET_ADDR")?;
+        Ok(Self { socket_addr })
     }
 }
 

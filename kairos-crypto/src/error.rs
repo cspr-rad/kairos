@@ -17,4 +17,13 @@ pub enum CryptoError {
     /// Private key is not provided.
     #[error("private key is not provided")]
     MissingPrivateKey,
+
+    /// Unable to compute transaction hash - invalid data given.
+    #[cfg(feature = "tx")]
+    #[error("unable to hash transaction data: {error}")]
+    TxHashingError { error: String },
+    /// Signing algorithm is not available in `kairos-tx`.
+    #[cfg(feature = "tx")]
+    #[error("algorithm not available in tx format")]
+    InvalidSigningAlgorithm,
 }
