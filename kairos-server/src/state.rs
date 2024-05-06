@@ -3,11 +3,11 @@ mod trie;
 
 use std::{sync::Arc, thread::JoinHandle};
 
-use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 use tokio::sync::mpsc;
 
-use self::transactions::{Signed, Transaction};
 pub use self::trie::TrieStateThreadMsg;
+use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
+use kairos_types::transactions::{Signed, Transaction};
 
 /// The `BatchStateManager` is a piece of Axum state.
 /// It is the entry point for interacting with the trie.

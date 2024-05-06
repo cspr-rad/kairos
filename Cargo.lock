@@ -1829,6 +1829,7 @@ dependencies = [
  "hex",
  "kairos-trie",
  "kairos-tx",
+ "kairos-types",
  "proptest",
  "serde",
  "serde_json",
@@ -1873,6 +1874,13 @@ dependencies = [
  "num-traits",
  "rasn",
  "sha2 0.10.8",
+]
+
+[[package]]
+name = "kairos-types"
+version = "0.1.0"
+dependencies = [
+ "kairos-tx",
 ]
 
 [[package]]

@@ -6,10 +6,7 @@ use std::{
 use sha2::Sha256;
 use tokio::sync::{mpsc, oneshot};
 
-use super::transactions::{
-    batch_state::{Account, BatchState},
-    Signed, Transaction,
-};
+use super::transactions::batch_state::{Account, BatchState};
 use crate::AppErr;
 use kairos_trie::{
     stored::{
@@ -18,6 +15,7 @@ use kairos_trie::{
     },
     DigestHasher, NodeHash, TrieRoot,
 };
+use kairos_types::transactions::{Signed, Transaction};
 
 pub type Database = MemoryDb<Account>;
 

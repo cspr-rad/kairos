@@ -6,15 +6,9 @@ use axum_extra::routing::TypedPath;
 use tracing::instrument;
 
 use kairos_tx::asn::{SigningPayload, TransactionBody};
+use kairos_types::transactions::{Signed, Transaction, Transfer};
 
-use crate::{
-    routes::PayloadBody,
-    state::{
-        transactions::{Signed, Transaction, Transfer},
-        BatchStateManager,
-    },
-    AppErr,
-};
+use crate::{routes::PayloadBody, state::BatchStateManager, AppErr};
 
 #[derive(TypedPath)]
 #[typed_path("/api/v1/transfer")]

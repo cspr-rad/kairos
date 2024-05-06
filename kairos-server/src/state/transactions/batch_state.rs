@@ -2,9 +2,9 @@ use anyhow::anyhow;
 
 use sha2::{digest::FixedOutputReset, Digest, Sha256};
 
-use super::{Deposit, Signed, Transaction, Transfer, Withdraw};
 use crate::{AppErr, PublicKey};
 use kairos_trie::{stored::Store, KeyHash, PortableHash, PortableUpdate};
+use kairos_types::transactions::{Deposit, Signed, Transaction, Transfer, Withdraw};
 
 /// The state of the batch transaction against the trie.
 #[derive(Debug)]
