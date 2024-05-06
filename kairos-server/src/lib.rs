@@ -27,13 +27,12 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
 }
 
 pub async fn run(config: ServerConfig) {
-    tracing_subscriber::fmt::init();
-
     let app = app_router(BatchStateManager::new_empty());
 
     tracing::info!("starting http server on `{}`", config.socket_addr);
     let listener = tokio::net::TcpListener::bind(config.socket_addr)
         .await
         .unwrap();
+    tracing::info!("listening on `{}`", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
 }
