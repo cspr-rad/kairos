@@ -27,8 +27,6 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
 }
 
 pub async fn run(config: ServerConfig) {
-    tracing_subscriber::fmt::init();
-
     let app = app_router(BatchStateManager::new_empty());
 
     tracing::info!("starting http server on `{}`", config.socket_addr);
