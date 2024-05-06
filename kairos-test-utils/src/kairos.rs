@@ -25,6 +25,7 @@ impl Kairos {
         let config = kairos_server::config::ServerConfig { socket_addr };
 
         let process_handle = tokio::spawn(async move {
+            tracing_subscriber::fmt::init();
             kairos_server::run(config).await;
         });
 
