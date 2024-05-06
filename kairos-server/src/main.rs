@@ -1,5 +1,5 @@
 use dotenvy::dotenv;
-use kairos_server::{config::ServerConfig, run};
+use kairos_server::config::ServerConfig;
 
 #[tokio::main]
 async fn main() {
@@ -9,5 +9,5 @@ async fn main() {
     let _ = dotenv();
     let config = ServerConfig::from_env()
         .unwrap_or_else(|e| panic!("Failed to parse server config from environment: {}", e));
-    run(config).await
+    kairos_server::run(config).await
 }
