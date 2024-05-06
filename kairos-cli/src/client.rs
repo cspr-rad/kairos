@@ -1,6 +1,6 @@
 use kairos_server::routes::PayloadBody;
 
-use reqwest::{Client, Url};
+use reqwest::{blocking, Url};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -36,18 +36,17 @@ impl From<reqwest::Error> for KairosClientError {
     }
 }
 
-pub async fn submit_transaction_request(
-    client: &Client,
+pub fn submit_transaction_request(
     base_url: &Url,
     deposit_request: &PayloadBody,
 ) -> Result<(), KairosClientError> {
+    let client = blocking::Client::new();
     let url = base_url.join("/api/v1/deposit").unwrap();
     let response = client
         .post(url)
         .header("Content-Type", "application/json")
         .json(deposit_request)
         .send()
-        .await
         .map_err(Into::<KairosClientError>::into)?;
     let status = response.status();
     if !status.is_success() {
