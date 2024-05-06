@@ -1,20 +1,9 @@
 use backoff::future::retry;
 use backoff::ExponentialBackoff;
 use reqwest::Url;
-use std::env;
 use std::io;
 use std::net::{SocketAddr, TcpListener};
-use std::path::PathBuf;
-use std::process::{Child, Command};
 use tokio::net::TcpStream;
-
-// A hacky way to get the cargo binary directory path
-pub fn bin_dir() -> PathBuf {
-    let mut path = env::current_exe().unwrap();
-    path.pop(); // pop kairos_test_utils-hash
-    path.pop(); // pop deps
-    path
-}
 
 async fn wait_for_port(address: &SocketAddr) -> Result<(), io::Error> {
     retry(ExponentialBackoff::default(), || async {
@@ -25,7 +14,7 @@ async fn wait_for_port(address: &SocketAddr) -> Result<(), io::Error> {
 
 pub struct Kairos {
     pub url: Url,
-    process_handle: Child,
+    process_handle: tokio::task::JoinHandle<()>,
 }
 
 impl Kairos {
@@ -33,15 +22,14 @@ impl Kairos {
         let socket_addr = TcpListener::bind("127.0.0.1:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap();
-        let kairos = bin_dir().join("kairos-server");
-        let process_handle = Command::new(kairos)
-            .env("KAIROS_SERVER_SOCKET_ADDR", &socket_addr.to_string())
-            .spawn()
-            .expect("Failed to start the kairos-server");
+        let config = kairos_server::config::ServerConfig { socket_addr };
 
-        wait_for_port(url.socket_addrs(|| Option::None).unwrap().first().unwrap())
-            .await
-            .unwrap();
+        let process_handle = tokio::spawn(async move {
+            tracing_subscriber::fmt::init();
+            kairos_server::run(config).await;
+        });
+
+        wait_for_port(&socket_addr).await.unwrap();
 
         Ok(Kairos {
             url,
@@ -52,7 +40,7 @@ impl Kairos {
 
 impl Drop for Kairos {
     fn drop(&mut self) {
-        let _ = self.process_handle.kill();
+        self.process_handle.abort()
     }
 }
 

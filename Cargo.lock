@@ -1845,12 +1845,14 @@ dependencies = [
  "anyhow",
  "backoff",
  "casper-client",
+ "kairos-server",
  "nom",
  "reqwest 0.12.4",
  "sd-notify",
  "tempfile",
  "tokio",
  "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
