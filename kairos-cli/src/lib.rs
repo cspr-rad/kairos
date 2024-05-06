@@ -14,8 +14,8 @@ use reqwest::Url;
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
-    #[arg(long, value_name = "URL")]
-    pub kairos_server_address: Option<Url>,
+    #[arg(long, value_name = "URL", default_value = "http://0.0.0.0:9999")]
+    pub kairos_server_address: Url,
 }
 
 #[derive(Subcommand)]
@@ -34,8 +34,6 @@ pub fn run(
         kairos_server_address,
     }: Cli,
 ) -> Result<String, CliError> {
-    let kairos_server_address =
-        kairos_server_address.unwrap_or(Url::parse("http://0.0.0.0:9999").unwrap());
     match command {
         Command::Deposit(args) => commands::deposit::run(args, kairos_server_address),
         Command::Transfer(args) => commands::transfer::run(args),
