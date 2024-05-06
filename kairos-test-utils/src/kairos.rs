@@ -30,14 +30,12 @@ pub struct Kairos {
 
 impl Kairos {
     pub async fn run() -> Result<Kairos, io::Error> {
-        let port = TcpListener::bind("127.0.0.1:0")?
-            .local_addr()?
-            .port()
-            .to_string();
-        let url = Url::parse(format!("http://127.0.0.1:{}", port).as_str()).unwrap();
+        let socket_addr = TcpListener::bind("127.0.0.1:0")?.local_addr()?;
+        let port = socket_addr.port().to_string();
+        let url = Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap();
         let kairos = bin_dir().join("kairos-server");
         let process_handle = Command::new(kairos)
-            .env("KAIROS_SERVER_PORT", &port)
+            .env("KAIROS_SERVER_SOCKET_ADDR", &socket_addr.to_string())
             .spawn()
             .expect("Failed to start the kairos-server");
 
