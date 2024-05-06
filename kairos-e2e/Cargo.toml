@@ -1,0 +1,20 @@
+[package]
+name = "kairos-e2e"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "kairos_e2e"
+path = "src/lib.rs"
+
+[dependencies]
+inventory = "0.3.15"
+mimicaw = "0.1.3"
+serde_yaml = "0.9.34"
+tokio = {version = "1.37.0", features=["full"]}
+tracing = "0.1.40"
+
+[[test]]
+name = "kairos-e2e"
+harness = false

@@ -31,3 +31,4 @@ kairos-tx = { path = "../kairos-tx" }
 [dev-dependencies]
 proptest = "1"
 axum-test = "14"
+kairos-e2e = { path = "../kairos-e2e" }

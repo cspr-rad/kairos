@@ -1,9 +1,10 @@
 use casper_client::{
-    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId,
+    get_state_root_hash, types::StoredValue, JsonRpcId,
     Verbosity,
 };
+pub use casper_client::query_global_state;
 use casper_hashing::Digest;
-use casper_types::URef;
+use casper_types::{URef, Key, ContractWasmHash};
 
 use casper_client::{
     rpcs::results::PutDeployResult,
@@ -57,51 +58,87 @@ pub async fn query_state_root_hash(node_address: &str) -> Digest {
     .unwrap()
 }
 
-pub async fn query_counter(node_address: &str, rpc_port: &str, counter_uref: &str) -> u64 {
-    let srh: Digest = query_state_root_hash(node_address).await;
+pub async fn query_contract_counter(node_address: &str, srh: Digest, contract_hash: Key, path: Vec<String>) -> u64{
     let stored_value: StoredValue = query_global_state(
-        JsonRpcId::String(rpc_port.to_owned()),
+        JsonRpcId::String(0.to_string()),
         node_address,
         Verbosity::Low,
         casper_client::rpcs::GlobalStateIdentifier::StateRootHash(srh),
-        casper_types::Key::URef(URef::from_formatted_str(counter_uref).unwrap()),
-        Vec::new(),
+        contract_hash.into(),
+        path,
+    )
+    .await
+    .expect("Failed to query contract for path")
+    .result
+    .stored_value;
+
+    let value: u64 = match stored_value{
+        StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
+        _ => panic!("Missing or invalid Value")
+    };
+
+    value
+}
+
+pub async fn obtain_contract_uref(node_address: &str, srh: Digest, account: Key, contract_identifier: &str, contract_uref: &str) -> URef {
+    let stored_value: StoredValue = query_global_state(
+        JsonRpcId::String(0.to_string()),
+        node_address,
+        Verbosity::Low,
+        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(srh),
+        account,
+        vec![contract_identifier.to_owned()],
     )
     .await
     .unwrap()
     .result
     .stored_value;
-    let value: u64 = match stored_value {
-        StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
-        _ => panic!("Missing Value!"),
+
+    let contract: ContractWasmHash = match stored_value{
+        StoredValue::Contract(contract) => *contract.contract_wasm_hash(),
+        _ => panic!("Missing or invalid Value - contract identifier is incorrect")
     };
+
+    let stored_value: StoredValue = query_global_state(
+        JsonRpcId::String(0.to_string()),
+        node_address,
+        Verbosity::Low,
+        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(srh),
+        contract.into(),
+        vec![contract_uref.into()],
+    )
+    .await
+    .unwrap()
+    .result
+    .stored_value;
+
+    let value: URef = match stored_value{
+        StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
+        _ => panic!("Missing or invalid Value - contract uref does not exist")
+    };
+
     value
 }
 
-#[tokio::test]
-async fn state_root_hash() {
-    let srh = query_state_root_hash("http://127.0.0.1:11101/rpc").await;
-    println!("Srh: {:?}", &srh);
-}
-
-#[tokio::test]
-async fn install_wasm() {
-    use std::fs::File;
-    use std::io::Read;
-    use casper_types::{RuntimeArgs, runtime_args};
-    let mut wasm_file: File =
-        File::open("/Users/chef/Desktop/demo-contract-optimized.wasm").unwrap();
-    let mut wasm_bytes: Vec<u8> = Vec::new();
-    wasm_file.read_to_end(&mut wasm_bytes).unwrap();
-    let secret_key_path: &str = "/Users/chef/Desktop/secret_key.pem";
-    let runtime_args: RuntimeArgs = runtime_args! {};
-    let result: SuccessResponse<PutDeployResult> = install_wasm_bytecode(
-        "http://127.0.0.1:11101/rpc",
-        "cspr-dev-cctl",
-        runtime_args,
-        &wasm_bytes,
-        secret_key_path,
-    )
-    .await;
-    println!("Deploy result: {:?}", &result);
-}
+// #[tokio::test]
+// async fn install_wasm() {
+//     use std::fs::File;
+//     use std::io::Read;
+//     use casper_types::{RuntimeArgs, runtime_args};
+//     let mut wasm_file: File =
+//         File::open("/Users/chef/Desktop/demo-contract-optimized.wasm").unwrap();
+//     let mut wasm_bytes: Vec<u8> = Vec::new();
+//     wasm_file.read_to_end(&mut wasm_bytes).unwrap();
+//     let secret_key_path: &str = "/Users/chef/Desktop/secret_key.pem";
+//     let runtime_args: RuntimeArgs = runtime_args! {};
+//     let result: SuccessResponse<PutDeployResult> = install_wasm_bytecode(
+//         "http://127.0.0.1:11101/rpc",
+//         "11101",
+//         "cspr-dev-cctl",
+//         runtime_args,
+//         &wasm_bytes,
+//         secret_key_path,
+//     )
+//     .await;
+//     println!("Deploy result: {:?}", &result);
+// }

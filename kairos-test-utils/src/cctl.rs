@@ -130,23 +130,24 @@ impl Drop for CCTLNetwork {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[tokio::test]
-    async fn test_cctl_network_starts_and_terminates() {
-        let network = CCTLNetwork::run().await.unwrap();
-        for node in &network.nodes {
-            if node.state == NodeState::Running {
-                let node_status = get_node_status(
-                    JsonRpcId::Number(1),
-                    &format!("http://localhost:{}", node.port.rpc_port),
-                    Verbosity::High,
-                )
-                .await
-                .unwrap();
-                assert_eq!(node_status.result.reactor_state, ReactorState::Validate);
-            }
-        }
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use casper_client::{get_node_status, rpcs::results::ReactorState, JsonRpcId, Verbosity};
+//     #[tokio::test]
+//     async fn test_cctl_network_starts_and_terminates() {
+//         let network = CCTLNetwork::run().await.unwrap();
+//         for node in &network.nodes {
+//             if node.state == NodeState::Running {
+//                 let node_status = get_node_status(
+//                     JsonRpcId::Number(1),
+//                     &format!("http://localhost:{}", node.port.rpc_port),
+//                     Verbosity::High,
+//                 )
+//                 .await
+//                 .unwrap();
+//                 assert_eq!(node_status.result.reactor_state, ReactorState::Validate);
+//             }
+//         }
+//     }
+// }

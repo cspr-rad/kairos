@@ -1,5 +1,5 @@
 [package]
-name = "kairos-l1-query"
+name = "kairos-l1-utils"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -9,3 +9,11 @@ casper-client = {git="https://github.com/casper-ecosystem/casper-client-rs", bra
 casper-types = "3.0.0"
 casper-hashing = "2.0.0"
 tokio = {version="1.36.0", features=["full"]}
+
+[dev-dependencies]
+kairos-e2e = { path = "../kairos-e2e" }
+inventory = "0.3.15"
+
+[[test]]
+name = "kairos-l1-utils"
+harness = false
