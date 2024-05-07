@@ -18,11 +18,14 @@ pub struct Kairos {
 }
 
 impl Kairos {
-    pub async fn run() -> Result<Kairos, io::Error> {
-        let socket_addr = TcpListener::bind("127.0.0.1:0")?.local_addr()?;
+    pub async fn run(casper_node_url: Url) -> Result<Kairos, io::Error> {
+        let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
-        let url = Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap();
-        let config = kairos_server::config::ServerConfig { socket_addr };
+        let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
+        let config = kairos_server::config::ServerConfig {
+            socket_addr,
+            casper_node_url: casper_node_url.to_string(),
+        };
 
         let process_handle = tokio::spawn(async move {
             tracing_subscriber::fmt::init();
@@ -49,6 +52,8 @@ mod tests {
     use super::*;
     #[tokio::test]
     async fn test_kairos_starts_and_terminates() {
-        let _kairos = Kairos::run().await.unwrap();
+        let _kairos = Kairos::run(Url::parse("http://0.0.0.0:0").unwrap())
+            .await
+            .unwrap();
     }
 }
