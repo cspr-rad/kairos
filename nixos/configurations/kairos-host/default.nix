@@ -16,7 +16,7 @@
       enableACME = true;
       locations = {
         "/api" = {
-          proxyPass = "http://127.0.0.1:${toString config.services.kairos.port}";
+          proxyPass = "http://${config.services.kairos.bindAddress}:${toString config.services.kairos.port}";
         };
       };
     };
