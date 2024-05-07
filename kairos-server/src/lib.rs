@@ -33,6 +33,7 @@ pub async fn run(config: ServerConfig) {
         .await
         .unwrap();
     tracing::info!("listening on `{}`", listener.local_addr().unwrap());
+
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await
