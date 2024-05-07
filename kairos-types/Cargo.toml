@@ -7,6 +7,8 @@ license.workspace = true
 [features]
 default = ["std"]
 std = []
+serde = ["dep:serde"]
 
 [dependencies]
 kairos-tx = { path = "../kairos-tx" }
+serde = { version = "1", default-features = false, features = ["derive", "alloc"], optional = true }

@@ -5,6 +5,7 @@ use kairos_tx::{asn, error::TxError};
 type PublicKey = Vec<u8>;
 // These need to be broken out for use in the zkvm
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Transaction {
     Transfer(Transfer),
@@ -12,6 +13,7 @@ pub enum Transaction {
     Withdraw(Withdraw),
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Signed<T> {
     pub public_key: PublicKey,
@@ -19,17 +21,20 @@ pub struct Signed<T> {
     pub transaction: T,
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Transfer {
     pub recipient: PublicKey,
     pub amount: u64,
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Deposit {
     pub amount: u64,
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Withdraw {
     pub amount: u64,

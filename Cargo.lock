@@ -1881,6 +1881,7 @@ name = "kairos-types"
 version = "0.1.0"
 dependencies = [
  "kairos-tx",
+ "serde",
 ]
 
 [[package]]
