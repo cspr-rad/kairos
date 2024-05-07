@@ -3,7 +3,12 @@ use kairos_server::config::ServerConfig;
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt::init();
+    let subscriber = tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber).expect("Failed to set subscriber");
+
     // loads the environment from the current directories .env file
     // if the .env does not exist in the current directory,
     // we still go ahead and try to obtain a server config from the environment
