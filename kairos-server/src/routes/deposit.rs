@@ -1,19 +1,11 @@
-
-use anyhow::{anyhow, Context};
-use axum::{extract::State, http::StatusCode, Json};
+use anyhow::anyhow;
+use axum::{extract::State, Json};
 use axum_extra::routing::TypedPath;
+use rand::Rng;
 use tracing::*;
 
-use kairos_tx::asn::{SigningPayload, TransactionBody};
+use casper_client::{put_deploy, types::Deploy, JsonRpcId};
 
-use crate::{
-    routes::PayloadBody,
-    state::{
-        transactions::{Signed, Transaction},
-        BatchStateManager,
-    },
-    AppErr,
-};
 use crate::{state::ServerState, AppErr};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
@@ -23,30 +15,31 @@ pub struct DepositPath;
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn deposit_handler(
     _: DepositPath,
-    Json(body): Json<PayloadBody>,
-) -> Result<(), AppErr> {
-    tracing::info!("parsing transaction data");
-    let signing_payload: SigningPayload =
-        body.payload.as_slice().try_into().context("payload err")?;
-    let deposit = match signing_payload.body {
-        TransactionBody::Deposit(deposit) => deposit.try_into().context("decoding deposit")?,
-        _ => {
-            return Err(AppErr::set_status(
-                anyhow!("invalid transaction type"),
-                StatusCode::BAD_REQUEST,
-            ))
-        }
-    };
-
-    let public_key = body.public_key;
-    let nonce = signing_payload.nonce.try_into().context("decoding nonce")?;
-
-    state
-        .enqueue_transaction(Signed {
-            public_key,
-            nonce,
-            transaction: Transaction::Deposit(deposit),
-        })
     state: State<ServerState>,
+    Json(body): Json<Deploy>,
+) -> Result<String, AppErr> {
+    let depositor_account = body.header().account();
+    let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
+    match body
+        .approvals()
+        .iter()
+        .find(|approval| approval.signer() == depositor_account)
+    {
+        None => return Err(anyhow!("Deploy not signed by depositor").into()),
+        Some(_) => put_deploy(
+            expected_rpc_id.clone(),
+            &state.server_config.casper_node_url,
+            casper_client::Verbosity::High,
+            body,
+        )
         .await
+        .map_err(Into::<AppErr>::into)
+        .map(|response| {
+            if response.id == expected_rpc_id {
+                Ok(response.result.deploy_hash.to_string())
+            } else {
+                Err(anyhow!("Deploy not signed by depositor").into())
+            }
+        })?,
+    }
 }

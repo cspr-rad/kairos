@@ -2,11 +2,20 @@ use std::sync::{Arc, OnceLock};
 
 use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
+use casper_client::{
+    types::{DeployBuilder, Timestamp},
+    TransferTarget,
+};
+use casper_types::{
+    crypto::{PublicKey, SecretKey},
+    AsymmetricType,
+};
 use kairos_server::{
     config::ServerConfig,
     routes::{deposit::DepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody},
     state::{BatchStateManager, ServerStateInner},
 };
+use kairos_test_utils::cctl::CCTLNetwork;
 use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
 use tracing_subscriber::{prelude::*, EnvFilter};
 
@@ -34,8 +43,41 @@ fn new_test_app_with_casper_node(casper_node_url: &str) -> TestServer {
 
     TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()
 }
+
+#[tokio::test]
+async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
+    let network = CCTLNetwork::run().await.unwrap();
+    let node = network
+        .nodes
+        .first()
+        .expect("Expected at least one node after successful network run");
+
+    let server = new_test_app_with_casper_node(&format!("http://localhost:{}", node.port.rpc_port));
+    let sender_secret_key_file = network.assets_dir.join("users/user-1/secret_key.pem");
+    let sender_secret_key = SecretKey::from_file(sender_secret_key_file).unwrap();
+    let recipient_public_key_hex =
+        std::fs::read_to_string(network.assets_dir.join("users/user-2/public_key_hex")).unwrap();
+    let recipient = PublicKey::from_hex(recipient_public_key_hex).unwrap();
+    // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
+    let deploy = DeployBuilder::new_transfer(
+        "cspr-dev-cctl",
+        2_500_000_000u64,
+        // Option::None use the accounts main purse
+        Option::None,
+        TransferTarget::PublicKey(recipient),
+        Option::None,
+        &sender_secret_key,
     )
-    .unwrap()
+    .with_timestamp(Timestamp::now())
+    .with_standard_payment(2_500_000_000u64)
+    .build()
+    .unwrap();
+
+    server
+        .post(DepositPath.to_uri().path())
+        .json(&deploy)
+        .await
+        .assert_status_success();
 }
 
 #[tokio::test]
