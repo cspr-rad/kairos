@@ -1,10 +1,11 @@
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 
 use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
 use kairos_server::{
+    config::ServerConfig,
     routes::{deposit::DepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody},
-    state::BatchStateManager,
+    state::{BatchStateManager, ServerStateInner},
 };
 use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
 use tracing_subscriber::{prelude::*, EnvFilter};
@@ -12,6 +13,10 @@ use tracing_subscriber::{prelude::*, EnvFilter};
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 
 fn new_test_app() -> TestServer {
+    new_test_app_with_casper_node("0.0.0.0:0")
+}
+
+fn new_test_app_with_casper_node(casper_node_url: &str) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
             .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "trace".into()))
@@ -19,10 +24,16 @@ fn new_test_app() -> TestServer {
             .init();
     });
     let config = TestServerConfig::builder().mock_transport().build();
+    let state = Arc::new(ServerStateInner {
+        batch_state_manager: BatchStateManager::new_empty(),
+        server_config: ServerConfig {
+            socket_addr: "0.0.0.0:0".parse().unwrap(),
+            casper_node_url: casper_node_url.to_string(),
+        },
+    });
 
-    TestServer::new_with_config(
-        kairos_server::app_router(BatchStateManager::new_empty()),
-        config,
+    TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()
+}
     )
     .unwrap()
 }

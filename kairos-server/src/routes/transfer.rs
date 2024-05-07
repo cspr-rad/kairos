@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
@@ -11,7 +9,7 @@ use crate::{
     routes::PayloadBody,
     state::{
         transactions::{Signed, Transaction, Transfer},
-        BatchStateManager,
+        ServerState,
     },
     AppErr,
 };
@@ -23,7 +21,7 @@ pub struct TransferPath;
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn transfer_handler(
     _: TransferPath,
-    State(state): State<Arc<BatchStateManager>>,
+    State(state): State<ServerState>,
     Json(body): Json<PayloadBody>,
 ) -> Result<(), AppErr> {
     tracing::info!("parsing transaction data");
@@ -46,6 +44,7 @@ pub async fn transfer_handler(
     tracing::info!("queuing transaction for trie update");
 
     state
+        .batch_state_manager
         .enqueue_transaction(Signed {
             public_key,
             nonce,

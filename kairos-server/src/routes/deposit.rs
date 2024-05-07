@@ -1,4 +1,3 @@
-use std::sync::Arc;
 
 use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
@@ -15,6 +14,7 @@ use crate::{
     },
     AppErr,
 };
+use crate::{state::ServerState, AppErr};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
 #[typed_path("/api/v1/deposit")]
@@ -23,7 +23,6 @@ pub struct DepositPath;
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn deposit_handler(
     _: DepositPath,
-    state: State<Arc<BatchStateManager>>,
     Json(body): Json<PayloadBody>,
 ) -> Result<(), AppErr> {
     tracing::info!("parsing transaction data");
@@ -48,5 +47,6 @@ pub async fn deposit_handler(
             nonce,
             transaction: Transaction::Deposit(deposit),
         })
+    state: State<ServerState>,
         .await
 }

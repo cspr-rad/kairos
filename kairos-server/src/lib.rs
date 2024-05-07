@@ -13,12 +13,12 @@ use axum_extra::routing::RouterExt;
 pub use errors::AppErr;
 
 use crate::config::ServerConfig;
-use crate::state::BatchStateManager;
+use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 
 type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 
-pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
+pub fn app_router(state: ServerState) -> Router {
     Router::new()
         .typed_post(routes::deposit_handler)
         .typed_post(routes::withdraw_handler)
@@ -27,12 +27,16 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
 }
 
 pub async fn run(config: ServerConfig) {
-    let app = app_router(BatchStateManager::new_empty());
-
     let listener = tokio::net::TcpListener::bind(config.socket_addr)
         .await
         .unwrap_or_else(|err| panic!("Failed to bind to address {}: {}", config.socket_addr, err));
     tracing::info!("listening on `{}`", listener.local_addr().unwrap());
+
+    let state = Arc::new(ServerStateInner {
+        batch_state_manager: BatchStateManager::new_empty(),
+        server_config: config.clone(),
+    });
+    let app = app_router(state);
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
