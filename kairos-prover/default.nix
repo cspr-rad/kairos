@@ -1,11 +1,13 @@
 { self, inputs, ... }:
 {
-  perSystem = { config, self', inputs', system, pkgs, ... }:
+  perSystem = { config, self', inputs', system, pkgs, lib, ... }:
     {
       devShells.risczero = pkgs.mkShell {
         RISC0_RUST_SRC = "${self'.packages.kairos-prover.toolchain}/lib/rustlib/src/rust";
         RISC0_DEV_MODE = 1;
         inputsFrom = [ self.packages.${system}.kairos-prover ];
+        # I cannot install Metal via Nix, so you need to follow the standard xcode metal installation instructions
+        buildInputs = lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ Metal SystemConfiguration ]);
         nativeBuildInputs = [ inputs'.risc0pkgs.packages.r0vm ];
       };
       packages = {
