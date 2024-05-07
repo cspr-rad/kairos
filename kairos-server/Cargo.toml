@@ -11,6 +11,10 @@ name = "kairos-server"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+all-tests = ["cctl-tests"]
+cctl-tests = []
+
 [dependencies]
 dotenvy = "0.15"
 axum = { version = "0.7", features = ["tracing"] }

@@ -45,6 +45,7 @@ fn new_test_app_with_casper_node(casper_node_url: &str) -> TestServer {
 }
 
 #[tokio::test]
+#[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
     let network = CCTLNetwork::run().await.unwrap();
     let node = network
