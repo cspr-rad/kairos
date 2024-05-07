@@ -1,15 +1,20 @@
 use std::net::SocketAddr;
 use std::{fmt, str::FromStr};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ServerConfig {
     pub socket_addr: SocketAddr,
+    pub casper_node_url: String,
 }
 
 impl ServerConfig {
     pub fn from_env() -> Result<Self, String> {
         let socket_addr = parse_env_as::<SocketAddr>("KAIROS_SERVER_SOCKET_ADDR")?;
-        Ok(Self { socket_addr })
+        let casper_node_url = parse_env_as::<String>("KAIROS_CASPER_NODE_URL")?;
+        Ok(Self {
+            socket_addr,
+            casper_node_url,
+        })
     }
 }
 
