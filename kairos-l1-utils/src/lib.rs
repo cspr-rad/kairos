@@ -281,9 +281,7 @@ async fn counter_query_test() {
     // replace this with a better solution
     thread::sleep(Duration::from_secs(10));
 
-    let public_key_path = network
-    .assets_dir
-    .join("users/user-1/public_key.pem");
+    let public_key_path = network.assets_dir.join("users/user-1/public_key.pem");
 
     let public_key: PublicKey = PublicKey::from_file(public_key_path.to_str().unwrap()).unwrap();
     let account_hash: AccountHash = public_key.to_account_hash();
