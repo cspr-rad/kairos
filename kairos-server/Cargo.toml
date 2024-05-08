@@ -40,4 +40,4 @@ sha2 = "0.10"
 proptest = "1"
 axum-test = "14"
 kairos-test-utils = { path = "../kairos-test-utils" }
-casper-types = "*"
+casper-types = "3"

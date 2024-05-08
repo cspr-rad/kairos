@@ -4,7 +4,11 @@ use axum_extra::routing::TypedPath;
 use rand::Rng;
 use tracing::*;
 
-use casper_client::{put_deploy, types::Deploy, JsonRpcId};
+use casper_client::{
+    put_deploy,
+    types::{Deploy, DeployHash},
+    JsonRpcId,
+};
 
 use crate::{state::ServerState, AppErr};
 
@@ -17,7 +21,7 @@ pub async fn deposit_handler(
     _: DepositPath,
     state: State<ServerState>,
     Json(body): Json<Deploy>,
-) -> Result<String, AppErr> {
+) -> Result<Json<DeployHash>, AppErr> {
     let depositor_account = body.header().account();
     let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
     match body
@@ -36,7 +40,7 @@ pub async fn deposit_handler(
         .map_err(Into::<AppErr>::into)
         .map(|response| {
             if response.id == expected_rpc_id {
-                Ok(response.result.deploy_hash.to_string())
+                Ok(Json(response.result.deploy_hash))
             } else {
                 Err(anyhow!("Deploy not signed by depositor").into())
             }
