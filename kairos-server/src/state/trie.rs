@@ -8,6 +8,7 @@ use tokio::sync::{mpsc, oneshot};
 
 use super::transactions::batch_state::{Account, BatchState};
 use crate::AppErr;
+use kairos_circuit_logic::transactions::{Signed, Transaction};
 use kairos_trie::{
     stored::{
         memory_db::MemoryDb,
@@ -15,7 +16,6 @@ use kairos_trie::{
     },
     DigestHasher, NodeHash, TrieRoot,
 };
-use kairos_types::transactions::{Signed, Transaction};
 
 pub type Database = MemoryDb<Account>;
 

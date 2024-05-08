@@ -13,6 +13,9 @@ metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
 methods = { path = "../methods" }
 risc0-zkvm = "=0.21.0"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio = { version = "1", features = ["rt-multi-thread", "tracing", "macros"] }
+kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde"] }
+kairos-prover-server = { path = "../../kairos-prover-server" }
 
 
 [dev-dependencies]

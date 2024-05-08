@@ -5,8 +5,8 @@ use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use tracing::*;
 
+use kairos_circuit_logic::transactions::{Signed, Transaction};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
-use kairos_types::transactions::{Signed, Transaction};
 
 use crate::{routes::PayloadBody, state::BatchStateManager, AppErr};
 

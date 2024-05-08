@@ -6,8 +6,8 @@ use std::{sync::Arc, thread::JoinHandle};
 use tokio::sync::mpsc;
 
 pub use self::trie::TrieStateThreadMsg;
+use kairos_circuit_logic::transactions::{Signed, Transaction};
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
-use kairos_types::transactions::{Signed, Transaction};
 
 /// The `BatchStateManager` is a piece of Axum state.
 /// It is the entry point for interacting with the trie.
