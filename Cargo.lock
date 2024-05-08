@@ -477,6 +477,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "casper-contract"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4243fe64dad13cfbc610a11b72587f5cebcc7578db057be19a8a67d75d64f947"
+dependencies = [
+ "casper-types 3.0.0",
+ "hex_fmt",
+]
+
+[[package]]
 name = "casper-deploy-notifier"
 version = "0.1.0"
 dependencies = [
@@ -487,6 +497,42 @@ dependencies = [
  "reqwest 0.11.27",
  "serde",
  "serde_json",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "casper-event-standard"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ed45e66b669318d85741db80cc99f3b2b679bffe0f560466d2deb392b37e03a"
+dependencies = [
+ "casper-contract",
+ "casper-event-standard-macro",
+ "casper-types 3.0.0",
+]
+
+[[package]]
+name = "casper-event-standard-macro"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae75de0e6c2fba6be7967fa7d2b0734bf0914ab47979fae4b5bc262f8bf53730"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "casper-event-toolkit"
+version = "0.1.1"
+source = "git+https://github.com/koxu1996/casper-event-toolkit.git#fdfcc2105b524d2f7d2a557c45363822f19a01e0"
+dependencies = [
+ "casper-client",
+ "casper-event-standard",
+ "casper-hashing",
+ "casper-types 3.0.0",
+ "hex",
  "thiserror",
  "tokio",
 ]
@@ -1832,6 +1878,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "axum-test",
+ "casper-event-toolkit",
  "dotenvy",
  "hex",
  "kairos-trie",

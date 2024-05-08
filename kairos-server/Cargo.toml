@@ -29,6 +29,7 @@ hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
 sha2 = "0.10"
+casper-event-toolkit = { git = "https://github.com/koxu1996/casper-event-toolkit.git", version = "0.1.1" }
 
 [dev-dependencies]
 proptest = "1"
