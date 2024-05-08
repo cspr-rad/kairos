@@ -67,6 +67,9 @@
             };
             nativeBuildInputs = with pkgs; [ pkg-config ];
 
+            KAIROS_DEPOSIT_SESSION_WASM = ./deposit-session-optimized.wasm;
+            CASPER_CHAIN_NAME = "cspr-dev-cctl";
+
             buildInputs = with pkgs; [
               openssl.dev
             ] ++ lib.optionals stdenv.isDarwin [
@@ -84,6 +87,8 @@
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            KAIROS_DEPOSIT_SESSION_WASM = ./deposit-session-optimized.wasm;
+            CASPER_CHAIN_NAME = "cspr-dev-cctl";
             inputsFrom = [ self'.packages.kairos ];
           };
 
