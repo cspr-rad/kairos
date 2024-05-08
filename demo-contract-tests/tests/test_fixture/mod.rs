@@ -100,7 +100,7 @@ impl TestContext {
         let session_args = runtime_args! {};
         let install_contract_request = ExecuteRequestBuilder::standard(
             admin,
-            &*PATH_TO_WASM_BINARIES
+            PATH_TO_WASM_BINARIES
                 .join("demo-contract-optimized.wasm")
                 .to_str()
                 .expect("Failed to parse path as str"),
@@ -142,7 +142,7 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             user,
-            &*PATH_TO_WASM_BINARIES
+            PATH_TO_WASM_BINARIES
                 .join("deposit-session-optimized.wasm")
                 .to_str()
                 .expect("Failed to parse path as str"),
@@ -165,7 +165,7 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
-            &*PATH_TO_WASM_BINARIES
+            PATH_TO_WASM_BINARIES
                 .join("malicious-session-optimized.wasm")
                 .to_str()
                 .expect("Failed to parse path as str"),
@@ -190,7 +190,7 @@ impl TestContext {
         };
         let session_request = ExecuteRequestBuilder::standard(
             msg_sender,
-            &*PATH_TO_WASM_BINARIES
+            PATH_TO_WASM_BINARIES
                 .join("malicious-reader-optimized.wasm")
                 .to_str()
                 .expect("Failed to parse path as str"),
