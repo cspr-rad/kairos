@@ -8,7 +8,6 @@ members = [
   "kairos-server",
   "kairos-tx",
   "kairos-test-utils",
-  "kairos-l1-utils",
   "demo-contract-tests",
 ]
 

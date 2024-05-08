@@ -2028,19 +2028,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kairos-l1-utils"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "backoff",
- "casper-client",
- "casper-hashing 2.0.0",
- "casper-types 3.0.0",
- "kairos-test-utils",
- "tokio",
-]
-
-[[package]]
 name = "kairos-server"
 version = "0.1.0"
 dependencies = [
