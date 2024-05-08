@@ -2,15 +2,9 @@ use crate::client;
 use crate::common::args::{AmountArg, PrivateKeyPathArg};
 use crate::error::CliError;
 
-use reqwest::Url;
-
-use kairos_crypto::error::CryptoError;
-use kairos_crypto::implementations::Signer;
-use kairos_crypto::CryptoSigner;
-use kairos_server::routes::PayloadBody;
-use kairos_tx::asn::SigningPayload;
-
+use casper_types::crypto::SecretKey;
 use clap::Parser;
+use reqwest::Url;
 
 #[derive(Parser, Debug)]
 pub struct Args {
@@ -22,21 +16,20 @@ pub struct Args {
 
 pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     let amount: u64 = args.amount.field;
-    let signer =
-        Signer::from_private_key_file(args.private_key_path.field).map_err(CryptoError::from)?;
-    let public_key = signer.to_public_key()?;
+    let depositor_secret_key = SecretKey::from_file(args.private_key_path.field).unwrap();
 
-    let payload = SigningPayload::new_deposit(amount)
-        .try_into()
-        .expect("Failed serialize the deposit payload to bytes");
-    let signature = signer.sign(&payload)?;
-    let deposit_request = PayloadBody {
-        public_key,
-        payload,
-        signature,
-    };
-
-    client::submit_transaction_request(&kairos_server_address, &deposit_request)
+    client::deposit(&kairos_server_address, &depositor_secret_key, amount)
         .map_err(Into::<CliError>::into)
-        .map(|_| "ok".to_string())
+        .map(|deploy_hash| {
+            // to_string crops the hash to <hash-prefix>..<hash-postfix>
+            // thus we use serde to get the full string, and remove the
+            // double quotes that get added during serialization
+            let mut output: String = serde_json::to_string(&deploy_hash)
+                .unwrap()
+                .chars()
+                .filter(|&c| c != '"') // Filter out the double quotes
+                .collect();
+            output.push('\n');
+            output
+        })
 }

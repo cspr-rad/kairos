@@ -1,5 +1,10 @@
 use assert_cmd::Command;
+use reqwest::Url;
 use std::path::PathBuf;
+
+use casper_client::types::DeployHash;
+use casper_hashing::Digest;
+use kairos_test_utils::{cctl, kairos};
 
 // Helper function to get the path to a fixture file
 fn fixture_path(relative_path: &str) -> PathBuf {
@@ -9,11 +14,19 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 }
 
 #[tokio::test]
+#[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
-    let kairos = kairos_test_utils::kairos::Kairos::run().await.unwrap();
+    let network = cctl::CCTLNetwork::run().await.unwrap();
+    let node = network
+        .nodes
+        .first()
+        .expect("Expected at least one node after successful network run");
+    let node_url = Url::parse(&format!("http://localhost:{}", node.port.rpc_port)).unwrap();
+
+    let kairos = kairos::Kairos::run(node_url).await.unwrap();
 
     tokio::task::spawn_blocking(move || {
-        let secret_key_path = fixture_path("ed25519/secret_key.pem");
+        let depositor_secret_key_path = network.assets_dir.join("users/user-1/secret_key.pem");
 
         let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
         cmd.arg("--kairos-server-address")
@@ -22,8 +35,17 @@ async fn deposit_successful_with_ed25519() {
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
-            .arg(secret_key_path);
-        cmd.assert().success().stdout("ok\n");
+            .arg(depositor_secret_key_path);
+        cmd.assert()
+            .success()
+            .stdout(predicates::function::function(|stdout: &str| {
+                let raw_hash = stdout.trim_end();
+                DeployHash::new(
+                    Digest::from_hex(raw_hash)
+                        .expect("Failed to parse deploy hash after depositing"),
+                );
+                true
+            }));
     })
     .await
     .unwrap();
