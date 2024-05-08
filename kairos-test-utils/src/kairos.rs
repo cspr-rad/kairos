@@ -22,7 +22,13 @@ impl Kairos {
         let socket_addr = TcpListener::bind("127.0.0.1:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap();
-        let config = kairos_server::config::ServerConfig { socket_addr };
+        let casper_node_rpc = Url::parse("http://127.0.0.1:9999").unwrap();
+        let casper_contract_hash = String::from("cafebabe");
+        let config = kairos_server::config::ServerConfig {
+            socket_addr,
+            casper_node_rpc,
+            casper_contract_hash,
+        };
 
         let process_handle = tokio::spawn(async move {
             tracing_subscriber::fmt::init();

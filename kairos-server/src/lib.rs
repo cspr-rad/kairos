@@ -3,6 +3,7 @@ pub mod errors;
 pub mod routes;
 pub mod state;
 
+mod l1_sync;
 mod utils;
 
 use std::sync::Arc;
@@ -13,6 +14,7 @@ use axum_extra::routing::RouterExt;
 pub use errors::AppErr;
 
 use crate::config::ServerConfig;
+use crate::l1_sync::service::L1SyncService;
 use crate::state::BatchStateManager;
 
 type PublicKey = Vec<u8>;
@@ -27,7 +29,26 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
 }
 
 pub async fn run(config: ServerConfig) {
-    let app = app_router(BatchStateManager::new_empty());
+    let state = BatchStateManager::new_empty();
+
+    // Run layer 1 synchronization.
+    // TODO: Replace interval with SSE trigger.
+    let batch_state_manager = state.clone();
+    let l1_sync_service = Arc::new(L1SyncService::new(batch_state_manager).await);
+    tokio::spawn(async move {
+        if let Err(e) = l1_sync_service
+            .initialize(
+                config.casper_node_rpc.to_string(),
+                config.casper_contract_hash,
+            )
+            .await
+        {
+            panic!("Event manager failed to initialize: {}", e);
+        }
+        l1_sync::interval_trigger::run(l1_sync_service).await;
+    });
+
+    let app = app_router(state);
 
     let listener = tokio::net::TcpListener::bind(config.socket_addr)
         .await
