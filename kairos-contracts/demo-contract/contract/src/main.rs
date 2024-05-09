@@ -2,6 +2,7 @@
 #![no_main]
 extern crate alloc;
 use alloc::string::ToString;
+use alloc::vec;
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
@@ -87,21 +88,18 @@ pub extern "C" fn deposit() {
 
 #[no_mangle]
 pub extern "C" fn call() {
-    let entry_points = {
-        let mut entry_points = EntryPoints::new();
-        entry_points.add_entry_point(entry_points::init());
-        entry_points.add_entry_point(entry_points::get_purse());
-        entry_points.add_entry_point(entry_points::deposit());
-        entry_points
-    };
-    // this counter will be udpated by the entry point that processes / verifies batches
-    let mut named_keys = NamedKeys::new();
-    let last_processed_deposit_counter = storage::new_uref(0u64);
+    let entry_points = EntryPoints::from(vec![
+        entry_points::init(),
+        entry_points::get_purse(),
+        entry_points::deposit(),
+    ]);
 
-    named_keys.insert(
+    // this counter will be udpated by the entry point that processes / verifies batches
+    let last_processed_deposit_counter = storage::new_uref(0u64);
+    let named_keys = NamedKeys::from([(
         KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),
         last_processed_deposit_counter.into(),
-    );
+    )]);
 
     let (contract_hash, _) = storage::new_locked_contract(
         entry_points,
