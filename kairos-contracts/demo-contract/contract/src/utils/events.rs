@@ -5,7 +5,7 @@ use casper_types::Key;
 
 #[derive(Event)]
 pub struct Deposit {
-    pub account: Key,
+    pub depositor: Key,
     pub amount: u64,
     pub timestamp: Option<String>,
 }

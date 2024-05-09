@@ -77,7 +77,7 @@ pub extern "C" fn deposit() {
         u64::try_from(amount).unwrap_or_else(|_| runtime::revert(ApiError::InvalidArgument));
 
     let new_deposit_record: Deposit = Deposit {
-        account: get_immediate_caller().unwrap_or_revert(),
+        depositor: get_immediate_caller().unwrap_or_revert(),
         amount,
         timestamp: None,
     };
