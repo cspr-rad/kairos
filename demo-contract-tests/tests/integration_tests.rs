@@ -1,9 +1,8 @@
 mod test_fixture;
 #[cfg(test)]
 mod tests {
-    use crate::test_fixture::{run_session_with_args, TestContext};
-    use casper_types::{runtime_args, RuntimeArgs, U512};
-    use std::path::Path;
+    use crate::test_fixture::TestContext;
+    use casper_types::U512;
 
     #[test]
     fn should_install_deposit_contract() {
@@ -11,118 +10,46 @@ mod tests {
     }
 
     #[test]
-    fn deposit_into_purse() {
-        let TestContext {
-            mut builder,
-            user_1,
-            contract_hash,
-            contract_purse,
-        } = TestContext::new();
+    fn test_deposit_succeeds() {
+        let mut fixture = TestContext::new();
 
-        let user_uref = builder.get_expected_account(user_1).main_purse();
-        let user_balance_before = builder.get_purse_balance(user_uref);
+        let user = fixture.create_funded_user();
+        let user_balance_before = fixture.get_user_balance(user);
 
         // check that the contract balance is zero before depositing
-        let contract_balance_before = builder.get_purse_balance(contract_purse);
+        let deposit_amount = U512::from(100000000000u64);
+        let contract_balance_before = fixture.get_contract_balance();
         assert_eq!(contract_balance_before, U512::zero());
 
         // user_1 deposits the deposit_amount
-        let deposit_session_path =
-            Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
-        let deposit_amount = U512::from(100000000000u64);
-        let session_args = runtime_args! {
-            "amount" => deposit_amount,
-            "demo_contract" => contract_hash
-        };
-        run_session_with_args(
-            &mut builder,
-            deposit_session_path.as_path(),
-            user_1,
-            session_args,
-        );
-        builder.expect_success();
+        fixture.deposit_succeeds(user, deposit_amount);
 
         // the contract balance should afterward equal to the deposit_amount
-        let contract_balance_after = builder.get_purse_balance(contract_purse);
+        let contract_balance_after = fixture.get_contract_balance();
         assert_eq!(contract_balance_after, deposit_amount);
 
-        let user_balance_after = builder.get_purse_balance(user_uref);
+        let user_balance_after = fixture.get_user_balance(user);
         assert!(user_balance_after <= user_balance_before - deposit_amount);
     }
 
-    // see malicious-session
     #[test]
-    fn run_malicious_session() {
-        let TestContext {
-            mut builder,
-            user_1,
-            contract_hash,
-            ..
-        } = TestContext::new();
+    fn test_transfer_from_contract_purse_to_user_fails() {
+        let mut fixture = TestContext::new();
 
-        let deposit_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("deposit-session-optimized.wasm");
-        let session_args = runtime_args! {
-            "amount" => U512::from(100000000000u64),
-            "demo_contract" => contract_hash
-        };
-        run_session_with_args(
-            &mut builder,
-            deposit_session_path.as_path(),
-            user_1,
-            session_args.clone(),
-        );
-        builder.expect_success();
+        let user = fixture.create_funded_user();
+        let amount = U512::from(100000000000u64);
+        fixture.deposit_succeeds(user, amount);
 
-        let malicious_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("malicious-session-optimized.wasm");
-        run_session_with_args(
-            &mut builder,
-            malicious_session_path.as_path(),
-            user_1,
-            session_args,
-        );
-        builder.expect_failure();
+        fixture.transfer_from_contract_purse_to_user_fails(user, amount)
     }
 
-    // see malicious-reader
     #[test]
-    fn run_malicious_reader() {
-        let TestContext {
-            mut builder,
-            user_1,
-            contract_hash,
-            contract_purse,
-        } = TestContext::new();
+    fn test_transfer_from_contract_purse_by_uref_should_fails() {
+        let mut fixture = TestContext::new();
+        let user = fixture.create_funded_user();
+        let amount = U512::from(100000000000u64);
+        fixture.deposit_succeeds(user, amount);
 
-        let deposit_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("deposit-session-optimized.wasm");
-        let session_args = runtime_args! {
-            "amount" => U512::from(100000000000u64),
-            "demo_contract" => contract_hash
-        };
-        run_session_with_args(
-            &mut builder,
-            deposit_session_path.as_path(),
-            user_1,
-            session_args,
-        );
-        builder.expect_success();
-
-        let deposit_amount = U512::from(100000000000u64);
-        let session_args = runtime_args! {
-            "amount" => deposit_amount,
-            "demo_contract" => contract_hash,
-            "purse_uref" => contract_purse
-        };
-        let malicious_reader_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("malicious-reader-optimized.wasm");
-        run_session_with_args(
-            &mut builder,
-            malicious_reader_session_path.as_path(),
-            user_1,
-            session_args,
-        );
-        builder.expect_failure();
+        fixture.transfer_from_contract_purse_by_uref_to_user_fails(user, amount)
     }
 }

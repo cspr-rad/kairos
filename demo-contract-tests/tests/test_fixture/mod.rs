@@ -8,35 +8,21 @@ use casper_types::{
     crypto::{PublicKey, SecretKey},
     runtime_args,
     system::{handle_payment::ARG_TARGET, mint::ARG_ID},
-    RuntimeArgs,
+    RuntimeArgs, U512,
 };
 use std::path::Path;
 
 use casper_engine_test_support::{InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST};
 use casper_types::{ContractHash, URef};
-use dotenvy::dotenv;
-use lazy_static::lazy_static;
-use std::{env, path::PathBuf};
+use std::env;
 
 pub const ADMIN_SECRET_KEY: [u8; 32] = [1u8; 32];
-pub const USER_1_SECRET_KEY: [u8; 32] = [2u8; 32];
-
-// This defines a static variable for the path to WASM binaries
-lazy_static! {
-    static ref PATH_TO_WASM_BINARIES: PathBuf = {
-        dotenv().ok();
-        env::var("PATH_TO_WASM_BINARIES")
-            .expect("Missing environment variable PATH_TO_WASM_BINARIES")
-            .into()
-    };
-}
 
 #[derive(Default)]
 pub struct TestContext {
     pub builder: InMemoryWasmTestBuilder,
-    pub user_1: AccountHash,
-    pub contract_hash: ContractHash,
-    pub contract_purse: URef,
+    contract_hash: ContractHash,
+    contract_purse: URef,
 }
 
 impl TestContext {
@@ -45,8 +31,6 @@ impl TestContext {
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
         let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
-        let user_1 = create_funded_account_for_secret_key_bytes(&mut builder, USER_1_SECRET_KEY);
-
         let deposit_contract_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
             .join("demo-contract-optimized.wasm");
         run_session_with_args(
@@ -77,10 +61,82 @@ impl TestContext {
 
         TestContext {
             builder,
-            user_1,
             contract_hash,
             contract_purse,
         }
+    }
+
+    pub fn create_funded_user(&mut self) -> AccountHash {
+        let mut random_secret_key: [u8; 32] = rand::random();
+        while random_secret_key == ADMIN_SECRET_KEY {
+            random_secret_key = rand::random();
+        }
+        create_funded_account_for_secret_key_bytes(&mut self.builder, random_secret_key)
+    }
+
+    pub fn get_user_balance(&mut self, user: AccountHash) -> U512 {
+        let user_uref = self.builder.get_expected_account(user).main_purse();
+        self.builder.get_purse_balance(user_uref)
+    }
+
+    pub fn get_contract_balance(&mut self) -> U512 {
+        self.builder.get_purse_balance(self.contract_purse)
+    }
+
+    pub fn deposit_succeeds(&mut self, depositor: AccountHash, amount: U512) {
+        let deposit_session_path =
+            Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
+        let session_args = runtime_args! {
+            "amount" => amount,
+            "demo_contract" => self.contract_hash
+        };
+        run_session_with_args(
+            &mut self.builder,
+            deposit_session_path.as_path(),
+            depositor,
+            session_args,
+        );
+        self.builder.expect_success();
+    }
+
+    pub fn transfer_from_contract_purse_to_user_fails(
+        &mut self,
+        receiver: AccountHash,
+        amount: U512,
+    ) {
+        let session_args = runtime_args! {
+            "amount" => amount,
+            "demo_contract" => self.contract_hash
+        };
+        let malicious_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
+            .join("malicious-session-optimized.wasm");
+        run_session_with_args(
+            &mut self.builder,
+            malicious_session_path.as_path(),
+            receiver,
+            session_args,
+        );
+        self.builder.expect_failure();
+    }
+    pub fn transfer_from_contract_purse_by_uref_to_user_fails(
+        &mut self,
+        receiver: AccountHash,
+        amount: U512,
+    ) {
+        let session_args = runtime_args! {
+            "amount" => amount,
+            "demo_contract" => self.contract_hash,
+            "purse_uref" => self.contract_purse
+        };
+        let malicious_reader_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
+            .join("malicious-reader-optimized.wasm");
+        run_session_with_args(
+            &mut self.builder,
+            malicious_reader_session_path.as_path(),
+            receiver,
+            session_args,
+        );
+        self.builder.expect_failure();
     }
 }
 

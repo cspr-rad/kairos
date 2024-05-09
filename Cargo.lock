@@ -1017,8 +1017,7 @@ dependencies = [
  "casper-engine-test-support",
  "casper-execution-engine",
  "casper-types 4.0.1",
- "dotenvy",
- "lazy_static",
+ "rand 0.8.5",
 ]
 
 [[package]]
