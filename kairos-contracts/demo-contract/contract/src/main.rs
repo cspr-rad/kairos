@@ -80,7 +80,6 @@ pub extern "C" fn deposit() {
     let new_deposit_record: Deposit = Deposit {
         depositor: get_immediate_caller().unwrap_or_revert(),
         amount,
-        timestamp: None,
     };
     // this increases a counter automatically - we don't need to create one ourselves
     casper_event_standard::emit(new_deposit_record);
