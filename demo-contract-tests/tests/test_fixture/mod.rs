@@ -20,7 +20,8 @@ pub const ADMIN_SECRET_KEY: [u8; 32] = [1u8; 32];
 
 #[derive(Default)]
 pub struct TestContext {
-    pub builder: InMemoryWasmTestBuilder,
+    builder: InMemoryWasmTestBuilder,
+    pub admin: AccountHash,
     contract_hash: ContractHash,
     contract_purse: URef,
 }
@@ -61,6 +62,7 @@ impl TestContext {
 
         TestContext {
             builder,
+            admin,
             contract_hash,
             contract_purse,
         }

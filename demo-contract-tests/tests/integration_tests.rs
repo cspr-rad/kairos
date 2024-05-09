@@ -44,12 +44,33 @@ mod tests {
     }
 
     #[test]
-    fn test_transfer_from_contract_purse_by_uref_should_fails() {
+    fn test_transfer_from_contract_purse_to_admin_fails() {
+        let mut fixture = TestContext::new();
+
+        let user = fixture.create_funded_user();
+        let amount = U512::from(100000000000u64);
+        fixture.deposit_succeeds(user, amount);
+
+        fixture.transfer_from_contract_purse_to_user_fails(fixture.admin, amount)
+    }
+
+    #[test]
+    fn test_transfer_from_contract_purse_by_uref_to_user_should_fails() {
         let mut fixture = TestContext::new();
         let user = fixture.create_funded_user();
         let amount = U512::from(100000000000u64);
         fixture.deposit_succeeds(user, amount);
 
         fixture.transfer_from_contract_purse_by_uref_to_user_fails(user, amount)
+    }
+
+    #[test]
+    fn test_transfer_from_contract_purse_by_uref_to_admin_should_fails() {
+        let mut fixture = TestContext::new();
+        let user = fixture.create_funded_user();
+        let amount = U512::from(100000000000u64);
+        fixture.deposit_succeeds(user, amount);
+
+        fixture.transfer_from_contract_purse_by_uref_to_user_fails(fixture.admin, amount)
     }
 }
