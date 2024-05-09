@@ -1012,7 +1012,6 @@ dependencies = [
 name = "demo-contract-tests"
 version = "0.1.0"
 dependencies = [
- "base64 0.21.7",
  "casper-contract",
  "casper-engine-test-support",
  "casper-execution-engine",
