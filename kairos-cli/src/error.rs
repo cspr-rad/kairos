@@ -1,7 +1,8 @@
+use crate::client::KairosClientError;
+use kairos_crypto::error::CryptoError;
+
 use hex::FromHexError;
 use thiserror::Error;
-
-use kairos_crypto::error::CryptoError;
 
 #[derive(Error, Debug)]
 pub enum CliError {
@@ -16,5 +17,11 @@ pub enum CliError {
     ParseError {
         #[from]
         error: FromHexError,
+    },
+    /// Kairos HTTP client error
+    #[error("http client error: {error}")]
+    KairosClientError {
+        #[from]
+        error: KairosClientError,
     },
 }

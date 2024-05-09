@@ -31,7 +31,7 @@ pub async fn run(config: ServerConfig) {
 
     let listener = tokio::net::TcpListener::bind(config.socket_addr)
         .await
-        .unwrap();
+        .unwrap_or_else(|err| panic!("Failed to bind to address {}: {}", config.socket_addr, err));
     tracing::info!("listening on `{}`", listener.local_addr().unwrap());
 
     axum::serve(listener, app)
