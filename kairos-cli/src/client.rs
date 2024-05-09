@@ -52,7 +52,7 @@ pub fn deposit(
     let deploy = DeployBuilder::new(
         env!("CASPER_CHAIN_NAME"),
         deposit_session,
-        &depositor_secret_key,
+        depositor_secret_key,
     )
     .with_standard_payment(amount)
     .with_timestamp(Timestamp::now())
