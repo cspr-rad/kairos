@@ -2015,7 +2015,7 @@ dependencies = [
  "kairos-test-utils",
  "kairos-tx",
  "predicates",
- "reqwest 0.12.4",
+ "reqwest 0.12.3",
  "serde",
  "serde_json",
  "thiserror",
