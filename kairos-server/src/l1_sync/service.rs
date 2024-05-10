@@ -93,7 +93,6 @@ async fn handle_command(
             let _ = completion_ack.send(());
         }
         SyncCommand::TriggerSync(completion_ack) => {
-            let mut em = event_manager.lock().await;
             em.process_new_events().await?;
             let _ = completion_ack.send(());
         }
