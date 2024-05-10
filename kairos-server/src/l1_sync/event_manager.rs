@@ -68,7 +68,7 @@ impl EventManager {
                 let txn = Signed {
                     public_key: "cafebabe".into(),
                     nonce: 0,
-                    transaction: Transaction::Deposit(Deposit { amount: 0 }),
+                    transaction: Transaction::Deposit(Deposit { amount: 100 }),
                 };
                 self.batch_service
                     .enqueue_transaction(txn)
