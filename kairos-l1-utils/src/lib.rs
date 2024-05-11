@@ -1,5 +1,5 @@
 use casper_client::{
-    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
+    get_state_root_hash, query_global_state, rpcs::results::{QueryBalanceResult, ResponseResult}, types::StoredValue, JsonRpcId, Verbosity
 };
 use casper_hashing::Digest;
 use casper_types::URef;
@@ -10,7 +10,7 @@ use casper_client::{
     SuccessResponse,
 };
 use casper_types::{crypto::SecretKey, Key, RuntimeArgs};
-use std::fs;
+use std::{fs, result};
 
 pub const DEFAULT_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
@@ -98,8 +98,8 @@ pub async fn query_contract_counter(
     srh: Digest,
     contract_hash: Key,
     path: Vec<String>,
-) -> u64 {
-    let stored_value: StoredValue = query_global_state(
+) -> Option<u64> {
+    let response = query_global_state(
         JsonRpcId::String(0.to_string()),
         node_address,
         Verbosity::Low,
@@ -107,23 +107,26 @@ pub async fn query_contract_counter(
         contract_hash,
         path,
     )
-    .await
-    .expect("Failed to query contract for path")
-    .result
-    .stored_value;
+    .await;//.result.stored_value
 
-    let value: u64 = match stored_value {
-        StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
-        _ => panic!("Missing or invalid Value"),
+    match response {
+        Ok(r) => {
+            let value: u64 = match r.result.stored_value {
+                StoredValue::CLValue(cl_value) => cl_value.into_t().unwrap(),
+                _ => panic!("Missing or invalid Value"),
+            };
+            return Some(value);
+        },
+        Err(_) => {
+            return None
+        }
     };
-
-    value
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::thread;
+    use std::{thread, time::Duration};
     #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn install_wasm() {
@@ -284,27 +287,38 @@ mod tests {
         .await
         .unwrap();
 
-        // replace this with a better solution
-        thread::sleep(std::time::Duration::from_secs(20));
-
         let public_key_path = network.assets_dir.join("users/user-1/public_key.pem");
-
         let public_key: PublicKey =
             PublicKey::from_file(public_key_path.to_str().unwrap()).unwrap();
         let account_hash: AccountHash = public_key.to_account_hash();
         // this is the default cctl account for user-1
         let account: Key = Key::from(account_hash);
         let srh: Digest = query_state_root_hash(node_address).await;
-        let counter_value: u64 = query_contract_counter(
-            node_address,
-            srh,
-            account,
-            vec![
-                "kairos_demo_contract".to_string(),
-                "last_processed_deposit_counter".to_string(),
-            ],
-        )
-        .await;
-        assert_eq!(counter_value, 0u64);
+
+        let mut r = 0u64;
+        loop{
+            thread::sleep(Duration::from_secs(1));
+            let counter_value: Option<u64> = query_contract_counter(
+                node_address,
+                srh,
+                account,
+                vec![
+                    "kairos_demo_contract".to_string(),
+                    "last_processed_deposit_counter".to_string(),
+                ],
+            )
+            .await;
+            match counter_value{
+                Some(c) => {
+                    println!("Found some counter value: {:?}", c);
+                    assert_eq!(c, 0u64);
+                    break;
+                },
+                None => {
+                    println!("Waiting on state to update: {:?}", r);
+                }
+            }
+            r += 1;
+        }
     }
 }
