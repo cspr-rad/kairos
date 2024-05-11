@@ -124,7 +124,6 @@ pub async fn query_contract_counter(
 mod tests {
     use super::*;
     use std::thread;
-    /*
     #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn install_wasm() {
@@ -203,7 +202,6 @@ mod tests {
         .await
         .unwrap()
     }
-    */
 
     #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
@@ -286,7 +284,7 @@ mod tests {
         .unwrap();
 
         // replace this with a better solution
-        thread::sleep(std::time::Duration::from_secs(10));
+        thread::sleep(std::time::Duration::from_secs(20));
 
         let public_key_path = network.assets_dir.join("users/user-1/public_key.pem");
 
@@ -306,6 +304,6 @@ mod tests {
             ],
         )
         .await;
-        assert_eq!(counter_value, 0_u64);
+        assert_eq!(counter_value, 0u64);
     }
 }
