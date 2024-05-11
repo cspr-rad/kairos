@@ -143,7 +143,8 @@ mod tests {
             .expect("Expected at least one node after successful network run");
         let node_address: &str = &format!("http://localhost:{}", node.port.rpc_port);
 
-        let wasm_path = Path::new(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
+        let wasm_path =
+            Path::new(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
         let mut wasm_file: File = File::open(wasm_path).unwrap();
         let mut wasm_bytes: Vec<u8> = Vec::new();
         wasm_file.read_to_end(&mut wasm_bytes).unwrap();
