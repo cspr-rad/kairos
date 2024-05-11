@@ -1,5 +1,8 @@
 use casper_client::{
-    get_state_root_hash, query_global_state, rpcs::results::{QueryBalanceResult, ResponseResult}, types::StoredValue, JsonRpcId, Verbosity
+    get_state_root_hash, query_global_state,
+    rpcs::results::{QueryBalanceResult, ResponseResult},
+    types::StoredValue,
+    JsonRpcId, Verbosity,
 };
 use casper_hashing::Digest;
 use casper_types::URef;
@@ -107,7 +110,7 @@ pub async fn query_contract_counter(
         contract_hash,
         path,
     )
-    .await;//.result.stored_value
+    .await; //.result.stored_value
 
     match response {
         Ok(r) => {
@@ -116,10 +119,8 @@ pub async fn query_contract_counter(
                 _ => panic!("Missing or invalid Value"),
             };
             return Some(value);
-        },
-        Err(_) => {
-            return None
         }
+        Err(_) => return None,
     };
 }
 
@@ -296,7 +297,7 @@ mod tests {
         let srh: Digest = query_state_root_hash(node_address).await;
 
         let mut r = 0u64;
-        loop{
+        loop {
             thread::sleep(Duration::from_secs(1));
             let counter_value: Option<u64> = query_contract_counter(
                 node_address,
@@ -308,12 +309,12 @@ mod tests {
                 ],
             )
             .await;
-            match counter_value{
+            match counter_value {
                 Some(c) => {
                     println!("Found some counter value: {:?}", c);
                     assert_eq!(c, 0u64);
                     break;
-                },
+                }
                 None => {
                     println!("Waiting on state to update: {:?}", r);
                 }
