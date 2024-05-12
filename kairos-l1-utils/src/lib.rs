@@ -287,6 +287,8 @@ mod tests {
         )
         .await
         .unwrap();
+        println!("Deploy was processed successfully.");
+        thread::sleep(Duration::from_secs(1));
 
         let public_key_path = network.assets_dir.join("users/user-1/public_key.pem");
         let public_key: PublicKey =
@@ -294,11 +296,10 @@ mod tests {
         let account_hash: AccountHash = public_key.to_account_hash();
         // this is the default cctl account for user-1
         let account: Key = Key::from(account_hash);
-        let srh: Digest = query_state_root_hash(node_address).await;
-
         let mut r = 0u64;
         loop {
             thread::sleep(Duration::from_secs(1));
+            let srh: Digest = query_state_root_hash(node_address).await;
             let counter_value: Option<u64> = query_contract_counter(
                 node_address,
                 srh,
