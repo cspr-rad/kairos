@@ -1,6 +1,5 @@
 use casper_client::{
     get_state_root_hash, query_global_state,
-    rpcs::results::{QueryBalanceResult, ResponseResult},
     types::StoredValue,
     JsonRpcId, Verbosity,
 };
@@ -13,7 +12,7 @@ use casper_client::{
     SuccessResponse,
 };
 use casper_types::{crypto::SecretKey, Key, RuntimeArgs};
-use std::{fs, result};
+use std::fs;
 
 pub const DEFAULT_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
@@ -288,8 +287,6 @@ mod tests {
         .await
         .unwrap();
         println!("Deploy was processed successfully.");
-        thread::sleep(Duration::from_secs(1));
-
         let public_key_path = network.assets_dir.join("users/user-1/public_key.pem");
         let public_key: PublicKey =
             PublicKey::from_file(public_key_path.to_str().unwrap()).unwrap();

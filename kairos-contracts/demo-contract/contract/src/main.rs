@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 extern crate alloc;
-use alloc::string::ToString;
+use alloc::string::{String, ToString};
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
@@ -13,9 +13,9 @@ use casper_types::{
 };
 mod constants;
 use constants::{
-    KAIROS_DEPOSIT_CONTRACT_NAME, KAIROS_DEPOSIT_CONTRACT_PACKAGE, KAIROS_DEPOSIT_CONTRACT_UREF,
-    KAIROS_DEPOSIT_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT,
-    RUNTIME_ARG_TEMP_PURSE,
+    KAIROS_CURRENT_TRIE_ROOT_HASH, KAIROS_DEPOSIT_CONTRACT_NAME, KAIROS_DEPOSIT_CONTRACT_PACKAGE,
+    KAIROS_DEPOSIT_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER,
+    RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
 };
 mod entry_points;
 mod utils;
@@ -57,6 +57,11 @@ pub extern "C" fn get_purse() {
     );
 }
 
+#[no_mangle]
+pub extern "C" fn submit_batch() {
+    todo!("Implement submit_batch entry point");
+}
+
 // Entry point called by a user through session code to deposit funds.
 // Due to Casper < 2.0 purse management and access control, it is necessary that
 // a temporary purse is funded and passed to the deposit contract, since this is
@@ -92,15 +97,23 @@ pub extern "C" fn call() {
         entry_points.add_entry_point(entry_points::init());
         entry_points.add_entry_point(entry_points::get_purse());
         entry_points.add_entry_point(entry_points::deposit());
+        entry_points.add_entry_point(entry_points::submit_batch());
         entry_points
     };
     // this counter will be udpated by the entry point that processes / verifies batches
     let mut named_keys = NamedKeys::new();
     let last_processed_deposit_counter = storage::new_uref(u64::from(0u8));
 
+    let initial_trie_root_hash: Option<String> = None;
+    let current_trie_root_hash = storage::new_uref(initial_trie_root_hash);
+
     named_keys.insert(
         KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),
         last_processed_deposit_counter.into(),
+    );
+    named_keys.insert(
+        KAIROS_CURRENT_TRIE_ROOT_HASH.to_string(),
+        current_trie_root_hash.into(),
     );
 
     let (contract_hash, _) = storage::new_locked_contract(
