@@ -16,7 +16,9 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
-    let network = cctl::CCTLNetwork::run(Option::None).await.unwrap();
+    let network = cctl::CCTLNetwork::run(Option::None, Option::None)
+        .await
+        .unwrap();
     let node = network
         .nodes
         .first()
