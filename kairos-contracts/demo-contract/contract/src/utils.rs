@@ -48,12 +48,12 @@ pub(crate) fn validate_deposit_tx(tx_bytes: &[u8], amount: &U512) -> Result<(), 
         .try_into()
         .map_err(|_e| DepositError::InvalidTransactionData)?;
     let deposit_body = match tx.payload.body {
-        kairos_tx::asn::TransactionBody::Deposit(body) => Ok(body),
+        kairos_tx::asn::TransactionBody::Deposit(ref body) => Ok(body),
         _ => Err(DepositError::InvalidTransactionType),
     }?;
 
     // Transaction signer must be the contract caller.
-    let tx_raw_public_key: Vec<u8> = tx.public_key.into();
+    let tx_raw_public_key: Vec<u8> = tx.public_key.clone().into();
     let (tx_public_key, _rem) = casper_types::PublicKey::from_bytes(&tx_raw_public_key)
         .map_err(|_e| DepositError::FailedToParsePublicKey)?;
     let tx_account_hash: AccountHash = (&tx_public_key).into();
@@ -65,6 +65,7 @@ pub(crate) fn validate_deposit_tx(tx_bytes: &[u8], amount: &U512) -> Result<(), 
     // Transaction amount must be equal to amount transfered to the contract.
     let claimed_amount: u64 = deposit_body
         .amount
+        .clone()
         .try_into()
         .map_err(|_e| DepositError::FailedToParseTransactionAmount)?;
     let transfered_amount = match amount.0 {
