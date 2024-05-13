@@ -28,13 +28,10 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
         .with_state(state)
 }
 
-pub async fn run(config: ServerConfig) {
-    let state = BatchStateManager::new_empty();
-
+pub async fn run_l1_sync(config: ServerConfig, batch_service: Arc<BatchStateManager>) {
     // Run layer 1 synchronization.
     // TODO: Replace interval with SSE trigger.
-    let batch_state_manager = state.clone();
-    let l1_sync_service = Arc::new(L1SyncService::new(batch_state_manager).await);
+    let l1_sync_service = Arc::new(L1SyncService::new(batch_service).await);
     tokio::spawn(async move {
         if let Err(e) = l1_sync_service
             .initialize(config.casper_rpc.to_string(), config.casper_contract_hash)
@@ -44,6 +41,12 @@ pub async fn run(config: ServerConfig) {
         }
         l1_sync::interval_trigger::run(l1_sync_service).await;
     });
+}
+
+pub async fn run(config: ServerConfig) {
+    let state = BatchStateManager::new_empty();
+
+    run_l1_sync(config.clone(), state.clone()).await;
 
     let app = app_router(state);
 
