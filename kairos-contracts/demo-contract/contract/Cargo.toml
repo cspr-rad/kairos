@@ -13,7 +13,6 @@ bincode = "1.3.3"
 kairos-tx = { git = "https://github.com/cspr-rad/kairos.git", branch = "main" } # TODO: Switch to `path` after contract PR merge/rebase.
 kairos-crypto = { git = "https://github.com/cspr-rad/kairos.git", branch = "main" } # TODO: Switch to `path` after contract PR merge/rebase.
 
-
 [build]
 target = "wasm32-unknown-unknown"
 

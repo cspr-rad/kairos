@@ -19,6 +19,15 @@ in
       type = types.package;
     };
 
+    bindAddress = mkOption {
+      type = types.str;
+      default = "0.0.0.0";
+      example = "0.0.0.0";
+      description = mdDoc ''
+        Port to listen on.
+      '';
+    };
+
     port = mkOption {
       type = types.port;
       default = 60000;
@@ -54,7 +63,7 @@ in
         requires = [ "network-online.target" ];
         environment = {
           RUST_LOG = cfg.logLevel;
-          KAIROS_SERVER_PORT = builtins.toString cfg.port;
+          KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
         };
         serviceConfig = mkMerge [
           {

@@ -84,6 +84,7 @@
                   "/kairos-test-utils"
                   "/kairos-l1-utils"
                   "/kairos-contracts"
+                  "/demo-contract-tests"
                   "/kairos-tx"
                   "/Cargo.toml"
                   "/Cargo.lock"
