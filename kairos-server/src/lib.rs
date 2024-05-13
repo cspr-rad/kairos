@@ -29,10 +29,33 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
 pub async fn run(config: ServerConfig) {
     let app = app_router(BatchStateManager::new_empty());
 
-    tracing::info!("starting http server on `{}`", config.socket_addr);
     let listener = tokio::net::TcpListener::bind(config.socket_addr)
         .await
-        .unwrap();
+        .unwrap_or_else(|err| panic!("Failed to bind to address {}: {}", config.socket_addr, err));
     tracing::info!("listening on `{}`", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
+
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("Failed to install Ctrl+C handler");
+    };
+
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("Failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    tokio::select! {
+        _ = ctrl_c => {tracing::info!("Received CTRL+C signal, shutting down...")},
+        _ = terminate => {tracing::info!("Received shutdown signal, shutting down...")},
+    }
 }

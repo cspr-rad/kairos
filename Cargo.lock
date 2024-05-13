@@ -1820,8 +1820,15 @@ dependencies = [
  "clap",
  "hex",
  "kairos-crypto",
+ "kairos-server",
+ "kairos-test-utils",
+ "kairos-tx",
  "predicates",
+ "reqwest 0.12.4",
+ "serde",
+ "serde_json",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]
@@ -2791,6 +2798,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2 0.4.4",
