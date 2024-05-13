@@ -37,10 +37,7 @@ pub async fn run(config: ServerConfig) {
     let l1_sync_service = Arc::new(L1SyncService::new(batch_state_manager).await);
     tokio::spawn(async move {
         if let Err(e) = l1_sync_service
-            .initialize(
-                config.casper_node_rpc.to_string(),
-                config.casper_contract_hash,
-            )
+            .initialize(config.casper_rpc.to_string(), config.casper_contract_hash)
             .await
         {
             panic!("Event manager failed to initialize: {}", e);

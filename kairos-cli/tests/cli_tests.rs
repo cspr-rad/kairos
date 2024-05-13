@@ -1,4 +1,5 @@
 use assert_cmd::Command;
+use reqwest::Url;
 use std::path::PathBuf;
 
 // Helper function to get the path to a fixture file
@@ -10,7 +11,10 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 
 #[tokio::test]
 async fn deposit_successful_with_ed25519() {
-    let kairos = kairos_test_utils::kairos::Kairos::run().await.unwrap();
+    let dummy_rpc = Url::parse("http://127.0.0.1:11101").unwrap();
+    let kairos = kairos_test_utils::kairos::Kairos::run(dummy_rpc)
+        .await
+        .unwrap();
 
     tokio::task::spawn_blocking(move || {
         let secret_key_path = fixture_path("ed25519/secret_key.pem");
