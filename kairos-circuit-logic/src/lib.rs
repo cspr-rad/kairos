@@ -28,23 +28,14 @@ pub struct ProofInputs {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct ProofOutputs {
-    pub trie_root: TrieRoot<NodeHash>,
+    pub pre_batch_trie_root: TrieRoot<NodeHash>,
+    pub post_batch_trie_root: TrieRoot<NodeHash>,
+    /// TODO consider replacing with a count and hash of the processed deposits
+    pub deposits: Box<[L1Deposit]>,
     pub withdrawals: Box<[Signed<Withdraw>]>,
 }
 
 impl ProofInputs {
-    pub fn new(
-        l1_deposits: impl Into<Box<[L1Deposit]>>,
-        l2_transactions: impl Into<Box<[Signed<L2Transactions>]>>,
-        trie_snapshot: Snapshot<Account>,
-    ) -> Self {
-        Self {
-            l1_deposits: l1_deposits.into(),
-            l2_transactions: l2_transactions.into(),
-            trie_snapshot,
-        }
-    }
-
     pub fn run_batch_proof_logic(self) -> Result<ProofOutputs, String> {
         let ProofInputs {
             l1_deposits,
@@ -52,20 +43,23 @@ impl ProofInputs {
             trie_snapshot,
         } = self;
 
+        let hasher = &mut DigestHasher::<Sha256>::default();
+
         let mut trie = AccountTrie::new_try_from_snapshot(&trie_snapshot)?;
+        let pre_batch_trie_root = trie.txn.calc_root_hash(hasher)?;
 
         let withdrawals = trie.apply_batch(
+            &l1_deposits,
             // Replace with Box<[T]>: IntoIterator once Rust 2024 is stable
-            Vec::from(l1_deposits).into_iter(),
             Vec::from(l2_transactions).into_iter(),
         )?;
 
-        let trie_root = trie
-            .txn
-            .calc_root_hash(&mut DigestHasher::<Sha256>::default())?;
+        let post_batch_trie_root = trie.txn.calc_root_hash(hasher)?;
 
         Ok(ProofOutputs {
-            trie_root,
+            pre_batch_trie_root,
+            post_batch_trie_root,
+            deposits: l1_deposits,
             withdrawals,
         })
     }

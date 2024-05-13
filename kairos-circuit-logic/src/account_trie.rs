@@ -31,11 +31,11 @@ impl<'s> AccountTrie<'s> {
 
     pub fn apply_batch(
         &mut self,
-        l1_deposits: impl Iterator<Item = L1Deposit>,
+        l1_deposits: &[L1Deposit],
         l2_transactions: impl Iterator<Item = Signed<L2Transactions>>,
     ) -> Result<Box<[Signed<Withdraw>]>, TxnErr> {
         for deposit in l1_deposits {
-            self.deposit(deposit)?;
+            self.deposit(deposit.clone())?;
         }
 
         let mut l2_withdrawals = Vec::new();

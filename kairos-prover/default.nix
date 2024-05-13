@@ -21,7 +21,7 @@
           };
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postInstall = ''
-            wrapProgram $out/bin/host \
+            wrapProgram $out/bin/kairos-prover-risc0-server \
               --set PATH ${pkgs.lib.makeBinPath [ inputs'.risc0pkgs.packages.r0vm ]}
           '';
         };
