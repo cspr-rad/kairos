@@ -1,5 +1,5 @@
 [package]
-name = "kairos-prover-server"
+name = "kairos-prover-server-lib"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

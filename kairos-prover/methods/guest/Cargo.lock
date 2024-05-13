@@ -414,14 +414,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4ec2a862134d2a7d32d7983ddcdd1c4923530833c9f2ea1a44fc5fa473989058"
 
 [[package]]
-name = "method_name"
-version = "0.1.0"
-dependencies = [
- "kairos-circuit-logic",
- "risc0-zkvm",
-]
-
-[[package]]
 name = "num-bigint"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -530,6 +522,14 @@ dependencies = [
  "syn 2.0.59",
  "version_check",
  "yansi",
+]
+
+[[package]]
+name = "prove_batch"
+version = "0.1.0"
+dependencies = [
+ "kairos-circuit-logic",
+ "risc0-zkvm",
 ]
 
 [[package]]

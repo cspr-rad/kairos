@@ -60,7 +60,7 @@
                   "/kairos-test-utils"
                   "/kairos-tx"
                   "/kairos-circuit-logic"
-                  "/kairos-prover-server"
+                  "/kairos-prover-server-lib"
                   "/Cargo.toml"
                   "/Cargo.lock"
                 ]) && (

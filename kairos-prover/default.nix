@@ -15,7 +15,10 @@
           pname = "kairos-prover";
           version = "0.0.1";
           src = ./.;
-          cargoHash = "sha256-9II2+wSPaHeKn+sXe3T6f8a3Nhl9ec9wHB9oQC8rHRA=";
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+            allowBuiltinFetchGit = true;
+          };
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postInstall = ''
             wrapProgram $out/bin/host \

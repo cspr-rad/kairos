@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "host",
+    "kairos-prover-risc0-server",
     "methods",
 ]
 

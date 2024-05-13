@@ -9,7 +9,7 @@ members = [
   "kairos-tx",
   "kairos-test-utils",
   "kairos-circuit-logic",
-  "kairos-prover-server",
+  "kairos-prover-server-lib",
 ]
 
 [workspace.package]
