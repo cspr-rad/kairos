@@ -1,7 +1,5 @@
 use casper_client::{
-    get_state_root_hash, query_global_state,
-    types::StoredValue,
-    JsonRpcId, Verbosity,
+    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
 };
 use casper_hashing::Digest;
 use casper_types::URef;
