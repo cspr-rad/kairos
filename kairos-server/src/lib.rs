@@ -29,6 +29,16 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
 }
 
 pub async fn run_l1_sync(config: ServerConfig, batch_service: Arc<BatchStateManager>) {
+    // Make sure real contract hash was provided.
+    if config.casper_contract_hash
+        == "0000000000000000000000000000000000000000000000000000000000000000"
+    {
+        tracing::warn!(
+            "Casper contract hash not configured, L1 synchronization will NOT be enabled."
+        );
+        return;
+    }
+
     // Run layer 1 synchronization.
     // TODO: Replace interval with SSE trigger.
     let l1_sync_service = Arc::new(L1SyncService::new(batch_service).await);
