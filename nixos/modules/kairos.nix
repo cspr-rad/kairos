@@ -65,6 +65,7 @@ in
           RUST_LOG = cfg.logLevel;
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
           KAIROS_SERVER_CASPER_RPC = "http://127.0.0.1:11101/rpc"; # TODO: Replace with CCTL's RPC url.
+          KAIROS_SERVER_CASPER_CONTRACT_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
         };
         serviceConfig = mkMerge [
           {
