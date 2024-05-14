@@ -130,6 +130,7 @@
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+              doCheck = false; # we don't need to check here, since the checks.coverage output runs the tests.
             });
 
             kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
