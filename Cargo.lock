@@ -1837,6 +1837,7 @@ dependencies = [
  "kairos-trie",
  "kairos-tx",
  "proptest",
+ "reqwest 0.12.4",
  "serde",
  "serde_json",
  "sha2 0.10.8",
