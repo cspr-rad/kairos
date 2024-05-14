@@ -30,7 +30,7 @@ impl Prover for NativeTrustedProver {
     fn prove_execution(proof_inputs: ProofInputs) -> Result<Proof<()>, Self::Error> {
         let logical_outputs = proof_inputs
             .run_batch_proof_logic()
-            .expect("Failed to run batch proof logic");
+            .map_err(|e| format!("Failed to run batch proof logic: {e}"))?;
         Ok(Proof {
             logical_outputs,
             proof_system_data: (),
