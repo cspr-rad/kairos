@@ -14,7 +14,18 @@
         kairos-prover = inputs.risc0pkgs.lib.${system}.buildRisc0Package {
           pname = "kairos-prover";
           version = "0.0.1";
-          src = ./.;
+            src = lib.cleanSourceWith {
+              src = ../.;
+              filter = path: type:
+                (builtins.any (includePath: lib.hasInfix includePath path) [
+                  "/kairos-prover"
+                  "/kairos-tx"
+                  "/kairos-circuit-logic"
+                  "/kairos-prover-server-lib"
+                  "/Cargo.toml"
+                ]);
+              };
+          sourceRoot = "source/kairos-prover";
           cargoLock = {
             lockFile = ./Cargo.lock;
             allowBuiltinFetchGit = true;
