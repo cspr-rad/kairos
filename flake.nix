@@ -29,6 +29,7 @@
     risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
     csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
     csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
+    hercules-ci-effects.url = "github:hercules-ci/hercules-ci-effects";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
@@ -154,8 +155,38 @@
             settings.formatter = { };
           };
         };
-      flake = {
-        herculesCI.ciSystems = [ "x86_64-linux" ];
-      };
+      flake =
+        {
+          herculesCI.ciSystems = [ "x86_64-linux" ];
+          effects = { branch, primaryRepo, ... }:
+            let
+              pkgs = import inputs.nixpkgs {
+                system = "x86_64-linux";
+                overlays = [
+                  inputs.hercules-ci-effects.overlay
+                ];
+              };
+              commentOnGh =
+                args@{ ...
+                }: pkgs.hci-effects.modularEffect (args // {
+
+                  #imports = [
+                  #  inputs.hercules-ci-effects.modules.effect.git-auth
+                  #  inputs.hercules-ci-effects.modules.effect.git-auth-gh
+                  #];
+                  #git.checkout.tokenSecret = "gh-token";
+                  #git.checkout = {
+                  #  inherit (primaryRepo) forgeType;
+                  #  remote.url = primaryRepo.remoteHttpUrl;
+                  #};
+                  effectScript = ''
+                    echo "Hello"
+                  '';
+                });
+            in
+            {
+              testComment = commentOnGh { };
+            };
+        };
     };
 }
