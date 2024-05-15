@@ -1,25 +1,9 @@
+use clap::Parser;
 use std::process;
 
-use clap::Parser;
-use kairos_cli::commands::{self, Command};
-
-#[derive(Parser)]
-#[command(name = "Kairos Client", about = "CLI for interacting with Kairos")]
-struct Cli {
-    #[command(subcommand)]
-    command: Command,
-}
-
 fn main() {
-    let cli = Cli::parse();
-
-    let result = match cli.command {
-        Command::Deposit(args) => commands::deposit::run(args),
-        Command::Transfer(args) => commands::transfer::run(args),
-        Command::Withdraw(args) => commands::withdraw::run(args),
-    };
-
-    match result {
+    let args = kairos_cli::Cli::parse();
+    match kairos_cli::run(args) {
         Ok(output) => {
             println!("{}", output)
         }

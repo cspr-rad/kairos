@@ -1,4 +1,5 @@
 use assert_cmd::Command;
+use reqwest::Url;
 use std::path::PathBuf;
 
 // Helper function to get the path to a fixture file
@@ -8,17 +9,28 @@ fn fixture_path(relative_path: &str) -> PathBuf {
     path
 }
 
-#[test]
-fn deposit_successful_with_ed25519() {
-    let secret_key_path = fixture_path("ed25519/secret_key.pem");
+#[tokio::test]
+async fn deposit_successful_with_ed25519() {
+    let dummy_rpc = Url::parse("http://127.0.0.1:11101").unwrap();
+    let kairos = kairos_test_utils::kairos::Kairos::run(dummy_rpc)
+        .await
+        .unwrap();
 
-    let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
-    cmd.arg("deposit")
-        .arg("--amount")
-        .arg("123")
-        .arg("--private-key")
-        .arg(secret_key_path);
-    cmd.assert().success().stdout("ok\n");
+    tokio::task::spawn_blocking(move || {
+        let secret_key_path = fixture_path("ed25519/secret_key.pem");
+
+        let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
+        cmd.arg("--kairos-server-address")
+            .arg(kairos.url.as_str())
+            .arg("deposit")
+            .arg("--amount")
+            .arg("123")
+            .arg("--private-key")
+            .arg(secret_key_path);
+        cmd.assert().success().stdout("ok\n");
+    })
+    .await
+    .unwrap();
 }
 
 #[test]

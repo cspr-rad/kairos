@@ -76,7 +76,7 @@ nixosTest {
     client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
 
     # CLI with ed25519
-    cli_output = client.succeed("kairos-cli deposit --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
+    cli_output = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
     assert "ok\n" in cli_output
 
     cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
@@ -86,7 +86,7 @@ nixosTest {
     assert "ok\n" in cli_output
 
     # CLI with secp256k1
-    cli_output = client.succeed("kairos-cli deposit --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
+    cli_output = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
     assert "ok\n" in cli_output
 
     cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
