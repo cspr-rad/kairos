@@ -1012,13 +1012,11 @@ dependencies = [
 name = "demo-contract-tests"
 version = "0.1.0"
 dependencies = [
- "base64 0.21.7",
  "casper-contract",
  "casper-engine-test-support",
  "casper-execution-engine",
  "casper-types 4.0.1",
- "dotenvy",
- "lazy_static",
+ "rand 0.8.5",
 ]
 
 [[package]]
@@ -2013,8 +2011,15 @@ dependencies = [
  "clap",
  "hex",
  "kairos-crypto",
+ "kairos-server",
+ "kairos-test-utils",
+ "kairos-tx",
  "predicates",
+ "reqwest 0.12.3",
+ "serde",
+ "serde_json",
  "thiserror",
+ "tokio",
 ]
 
 [[package]]
@@ -2025,19 +2030,6 @@ dependencies = [
  "hex",
  "kairos-tx",
  "thiserror",
-]
-
-[[package]]
-name = "kairos-l1-utils"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "backoff",
- "casper-client",
- "casper-hashing 2.0.0",
- "casper-types 3.0.0",
- "kairos-test-utils",
- "tokio",
 ]
 
 [[package]]
@@ -3066,6 +3058,7 @@ dependencies = [
  "base64 0.22.0",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2 0.4.4",

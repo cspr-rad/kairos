@@ -1,202 +1,177 @@
-mod utils;
 use casper_engine_test_support::{
-    ExecuteRequestBuilder, InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST,
+    ExecuteRequestBuilder, WasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR,
+    DEFAULT_ACCOUNT_INITIAL_BALANCE,
 };
+use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{
-    account::AccountHash, contracts::NamedKeys, runtime_args, ContractHash, Key, RuntimeArgs, URef,
-    U512,
+    account::AccountHash,
+    crypto::{PublicKey, SecretKey},
+    runtime_args,
+    system::{handle_payment::ARG_TARGET, mint::ARG_ID},
+    RuntimeArgs, U512,
 };
-use dotenvy::dotenv;
-use lazy_static::lazy_static;
-use std::{env, path::PathBuf};
-use utils::create_funded_dummy_account;
+use std::path::Path;
 
-pub const ACCOUNT_USER_1: [u8; 32] = [1u8; 32];
-pub const ACCOUNT_USER_2: [u8; 32] = [2u8; 32];
-pub const ACCOUNT_USER_3: [u8; 32] = [3u8; 32];
+use casper_engine_test_support::{InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST};
+use casper_types::{ContractHash, URef};
+use std::env;
 
-// This defines a static variable for the path to WASM binaries
-lazy_static! {
-    static ref PATH_TO_WASM_BINARIES: PathBuf = {
-        dotenv().ok();
-        env::var("PATH_TO_WASM_BINARIES")
-            .expect("Missing environment variable PATH_TO_WASM_BINARIES")
-            .into()
-    };
-}
+pub const ADMIN_SECRET_KEY: [u8; 32] = [1u8; 32];
 
+#[derive(Default)]
 pub struct TestContext {
-    pub builder: InMemoryWasmTestBuilder,
-    pub account_1: AccountHash,
-    pub account_2: AccountHash,
-    #[allow(dead_code)]
-    pub account_3: AccountHash,
+    builder: InMemoryWasmTestBuilder,
+    pub admin: AccountHash,
+    contract_hash: ContractHash,
+    contract_purse: URef,
 }
 
 impl TestContext {
     pub fn new() -> TestContext {
         let mut builder = InMemoryWasmTestBuilder::default();
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
-        let account_1 = create_funded_dummy_account(&mut builder, Some(ACCOUNT_USER_1));
-        let account_2 = create_funded_dummy_account(&mut builder, Some(ACCOUNT_USER_2));
-        let account_3 = create_funded_dummy_account(&mut builder, Some(ACCOUNT_USER_3));
+
+        let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
+        let deposit_contract_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
+            .join("demo-contract-optimized.wasm");
+        run_session_with_args(
+            &mut builder,
+            &deposit_contract_path,
+            admin,
+            runtime_args! {},
+        );
+
+        let contract_hash = builder
+            .get_expected_account(admin)
+            .named_keys()
+            .get("kairos_demo_contract")
+            .expect("must have contract hash key as part of contract creation")
+            .into_hash()
+            .map(ContractHash::new)
+            .expect("must get contract hash");
+
+        let contract = builder
+            .get_contract(contract_hash)
+            .expect("should have contract");
+        let contract_purse = *contract
+            .named_keys()
+            .get("kairos_deposit_purse")
+            .expect("Key not found")
+            .as_uref()
+            .unwrap();
 
         TestContext {
             builder,
-            account_1,
-            account_2,
-            account_3,
+            admin,
+            contract_hash,
+            contract_purse,
         }
     }
 
-    pub fn named_keys(&self, account: AccountHash) -> NamedKeys {
-        self.builder
-            .get_expected_account(account)
-            .named_keys()
-            .clone()
+    pub fn create_funded_user(&mut self) -> AccountHash {
+        let mut random_secret_key: [u8; 32] = rand::random();
+        while random_secret_key == ADMIN_SECRET_KEY {
+            random_secret_key = rand::random();
+        }
+        create_funded_account_for_secret_key_bytes(&mut self.builder, random_secret_key)
     }
 
-    pub fn get_contract_named_key(
-        &self,
-        contract_name: &str,
-        key_name: &str,
-        account: AccountHash,
-    ) -> Key {
-        let contract_hash = self.contract_hash_from_named_keys(contract_name, account);
-        *self
-            .builder
-            .get_contract(contract_hash)
-            .expect("should have contract")
-            .named_keys()
-            .get(key_name)
-            .expect("Key not found")
+    pub fn get_user_balance(&mut self, user: AccountHash) -> U512 {
+        let user_uref = self.builder.get_expected_account(user).main_purse();
+        self.builder.get_purse_balance(user_uref)
     }
 
-    pub fn contract_hash_from_named_keys(
-        &self,
-        key_name: &str,
-        account: AccountHash,
-    ) -> ContractHash {
-        self.named_keys(account)
-            .get(key_name)
-            .expect("must have contract hash key as part of contract creation")
-            .into_hash()
-            .map(ContractHash::new)
-            .expect("must get contract hash")
+    pub fn get_contract_balance(&mut self) -> U512 {
+        self.builder.get_purse_balance(self.contract_purse)
     }
 
-    pub fn contract_hash(&self, name: &str, account: AccountHash) -> ContractHash {
-        self.builder
-            .get_expected_account(account)
-            .named_keys()
-            .get(name)
-            .expect("must have contract hash key as part of contract creation")
-            .into_hash()
-            .map(ContractHash::new)
-            .expect("must get contract hash")
-    }
-
-    pub fn install_demo_contract(&mut self, admin: AccountHash) {
-        let session_args = runtime_args! {};
-        let install_contract_request = ExecuteRequestBuilder::standard(
-            admin,
-            PATH_TO_WASM_BINARIES
-                .join("demo-contract-optimized.wasm")
-                .to_str()
-                .expect("Failed to parse path as str"),
-            session_args,
-        )
-        .build();
-        self.builder
-            .exec(install_contract_request)
-            .expect_success()
-            .commit();
-    }
-
-    pub fn get_contract_purse_uref(&self, account: AccountHash) -> URef {
-        let seed_uref: URef = *self
-            .get_contract_named_key("kairos_demo_contract", "kairos_deposit_purse", account)
-            .as_uref()
-            .unwrap();
-        seed_uref
-    }
-
-    pub fn get_account_purse_uref(&self, account: AccountHash) -> URef {
-        self.builder.get_expected_account(account).main_purse()
-    }
-
-    #[allow(dead_code)]
-    pub fn get_contract_purse_balance(&self, account: AccountHash) -> U512 {
-        let contract_purse_uref: URef = *self
-            .get_contract_named_key("kairos_demo_contract", "kairos_deposit_purse", account)
-            .as_uref()
-            .unwrap();
-        self.builder.get_purse_balance(contract_purse_uref)
-    }
-
-    // see deposit-session
-    pub fn run_deposit_session(&mut self, amount: U512, installer: AccountHash, user: AccountHash) {
+    pub fn deposit_succeeds(&mut self, depositor: AccountHash, amount: U512) {
+        let deposit_session_path =
+            Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
         let session_args = runtime_args! {
             "amount" => amount,
-            "demo_contract" => self.contract_hash("kairos_demo_contract", installer)
+            "demo_contract" => self.contract_hash
         };
-        let session_request = ExecuteRequestBuilder::standard(
-            user,
-            PATH_TO_WASM_BINARIES
-                .join("deposit-session-optimized.wasm")
-                .to_str()
-                .expect("Failed to parse path as str"),
+        run_session_with_args(
+            &mut self.builder,
+            deposit_session_path.as_path(),
+            depositor,
             session_args,
-        )
-        .build();
-        self.builder.exec(session_request).expect_success().commit();
+        );
+        self.builder.expect_success();
     }
 
-    // see malicious-session
-    pub fn run_malicious_session(
+    pub fn transfer_from_contract_purse_to_user_fails(
         &mut self,
-        msg_sender: AccountHash,
+        receiver: AccountHash,
         amount: U512,
-        account: AccountHash,
     ) {
         let session_args = runtime_args! {
             "amount" => amount,
-            "demo_contract" => self.contract_hash("kairos_demo_contract", account)
+            "demo_contract" => self.contract_hash
         };
-        let session_request = ExecuteRequestBuilder::standard(
-            msg_sender,
-            PATH_TO_WASM_BINARIES
-                .join("malicious-session-optimized.wasm")
-                .to_str()
-                .expect("Failed to parse path as str"),
+        let malicious_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
+            .join("malicious-session-optimized.wasm");
+        run_session_with_args(
+            &mut self.builder,
+            malicious_session_path.as_path(),
+            receiver,
             session_args,
-        )
-        .build();
-        self.builder.exec(session_request).expect_failure().commit();
+        );
+        self.builder.expect_failure();
     }
-
-    // see malicious-reader
-    pub fn run_malicious_reader_session(
+    pub fn transfer_from_contract_purse_by_uref_to_user_fails(
         &mut self,
-        msg_sender: AccountHash,
+        receiver: AccountHash,
         amount: U512,
-        account: AccountHash,
-        deposit_purse_uref: URef,
     ) {
         let session_args = runtime_args! {
             "amount" => amount,
-            "demo_contract" => self.contract_hash("kairos_demo_contract", account),
-            "purse_uref" => deposit_purse_uref
+            "demo_contract" => self.contract_hash,
+            "purse_uref" => self.contract_purse
         };
-        let session_request = ExecuteRequestBuilder::standard(
-            msg_sender,
-            PATH_TO_WASM_BINARIES
-                .join("malicious-reader-optimized.wasm")
-                .to_str()
-                .expect("Failed to parse path as str"),
+        let malicious_reader_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
+            .join("malicious-reader-optimized.wasm");
+        run_session_with_args(
+            &mut self.builder,
+            malicious_reader_session_path.as_path(),
+            receiver,
             session_args,
-        )
-        .build();
-        self.builder.exec(session_request).expect_failure().commit();
+        );
+        self.builder.expect_failure();
     }
+}
+
+pub fn run_session_with_args(
+    builder: &mut WasmTestBuilder<InMemoryGlobalState>,
+    session_wasm_path: &Path,
+    user: AccountHash,
+    runtime_args: RuntimeArgs,
+) {
+    let session_request =
+        ExecuteRequestBuilder::standard(user, session_wasm_path.to_str().unwrap(), runtime_args)
+            .build();
+    builder.exec(session_request).commit();
+}
+
+/// Creates a funded account for the given ed25519 secret key in bytes
+/// It panics if the passed secret key bytes cannot be read
+pub fn create_funded_account_for_secret_key_bytes(
+    builder: &mut WasmTestBuilder<InMemoryGlobalState>,
+    account_secret_key_bytes: [u8; 32],
+) -> AccountHash {
+    let account_secret_key = SecretKey::ed25519_from_bytes(account_secret_key_bytes).unwrap();
+    let account_public_key = PublicKey::from(&account_secret_key);
+    let account_hash = account_public_key.to_account_hash();
+    let transfer = ExecuteRequestBuilder::transfer(
+        *DEFAULT_ACCOUNT_ADDR,
+        runtime_args! {
+            ARG_AMOUNT => DEFAULT_ACCOUNT_INITIAL_BALANCE / 10_u64,
+            ARG_TARGET => account_hash,
+            ARG_ID => Option::<u64>::None,
+        },
+    )
+    .build();
+    builder.exec(transfer).expect_success().commit();
+    account_hash
 }
