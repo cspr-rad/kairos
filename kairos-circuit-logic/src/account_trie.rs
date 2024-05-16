@@ -2,7 +2,7 @@ use alloc::{boxed::Box, format, string::String, vec::Vec};
 
 use sha2::{digest::FixedOutputReset, Digest, Sha256};
 
-use crate::transactions::{L1Deposit, L2Transactions, PublicKey, Signed, Transfer, Withdraw};
+use crate::transactions::{KairosTransaction, L1Deposit, PublicKey, Signed, Transfer, Withdraw};
 use kairos_trie::{stored::merkle::Snapshot, KeyHash, PortableHash, PortableUpdate};
 
 /// The state of the batch transaction against the trie.
@@ -29,35 +29,35 @@ impl<'s> AccountTrie<'s> {
         })
     }
 
+    #[allow(clippy::type_complexity)]
     pub fn apply_batch(
         &mut self,
-        l1_deposits: &[L1Deposit],
-        l2_transactions: impl Iterator<Item = Signed<L2Transactions>>,
-    ) -> Result<Box<[Signed<Withdraw>]>, TxnErr> {
-        for deposit in l1_deposits {
-            self.deposit(deposit.clone())?;
-        }
-
+        transactions: impl Iterator<Item = KairosTransaction>,
+    ) -> Result<(Box<[L1Deposit]>, Box<[Signed<Withdraw>]>), TxnErr> {
+        let mut l1_deposits = Vec::new();
         let mut l2_withdrawals = Vec::new();
-        for signed_txn in l2_transactions {
-            match &signed_txn.transaction {
-                L2Transactions::Transfer(transfer) => {
-                    self.transfer(&signed_txn.public_key, transfer, signed_txn.nonce)?;
+
+        for txn in transactions {
+            match txn {
+                KairosTransaction::Transfer(transfer) => {
+                    self.transfer(&transfer.public_key, &transfer.transaction, transfer.nonce)?;
                 }
-                L2Transactions::Withdraw(withdraw) => {
-                    self.withdraw(&signed_txn.public_key, withdraw, signed_txn.nonce)?;
-                    l2_withdrawals.push(Signed {
-                        public_key: signed_txn.public_key,
-                        nonce: signed_txn.nonce,
-                        transaction: Withdraw {
-                            amount: withdraw.amount,
-                        },
-                    });
+                KairosTransaction::Withdraw(withdraw) => {
+                    self.withdraw(&withdraw.public_key, &withdraw.transaction, withdraw.nonce)?;
+                    l2_withdrawals.push(withdraw);
+                }
+
+                KairosTransaction::Deposit(deposit) => {
+                    self.deposit(&deposit)?;
+                    l1_deposits.push(deposit);
                 }
             }
         }
 
-        Ok(l2_withdrawals.into_boxed_slice())
+        Ok((
+            l1_deposits.into_boxed_slice(),
+            l2_withdrawals.into_boxed_slice(),
+        ))
     }
 
     /// Avoid calling this method with a transfer that will fail.
@@ -108,7 +108,7 @@ impl<'s> AccountTrie<'s> {
         Ok(())
     }
 
-    pub fn deposit(&mut self, deposit: L1Deposit) -> Result<(), TxnErr> {
+    pub fn deposit(&mut self, deposit: &L1Deposit) -> Result<(), TxnErr> {
         let [recipient_hash] = hash_buffers([deposit.recipient.as_slice()]);
 
         let mut recipient_account = self.txn.entry(&recipient_hash)?;
@@ -120,7 +120,7 @@ impl<'s> AccountTrie<'s> {
 
             recipient_account
         } else {
-            recipient_account.or_insert_with(|| Account::new(deposit.recipient, 0, 0))
+            recipient_account.or_insert_with(|| Account::new(deposit.recipient.clone(), 0, 0))
         };
 
         recipient_account.balance = recipient_account

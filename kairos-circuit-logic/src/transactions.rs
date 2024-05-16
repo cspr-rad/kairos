@@ -5,6 +5,7 @@ use kairos_tx::{asn, error::TxError};
 
 pub type PublicKey = Vec<u8>;
 
+/// TODO remove this with future PR
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Transaction {
@@ -12,26 +13,24 @@ pub enum Transaction {
     Deposit(Deposit),
     Withdraw(Withdraw),
 }
-
-/// These are the transactions that are initiated by the L2.
-/// Deposit comes from the L1, Withdraw goes to the L1.
-/// Transfer is between L2 accounts.
+/// Transfer is between L2 accounts, entirely executed on L2.
+/// Withdraw is initiated on L2 and executed on the L1.
+/// Deposit comes from the L1, and is executed first on L1 and then on L2.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-// #[cfg_attr(feature = "arbitrary", derive(test_strategy::Arbitrary))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum L2Transactions {
-    Transfer(Transfer),
-    // #[cfg_attr(feature = "arbitrary", weight(3))]
-    Withdraw(Withdraw),
+pub enum KairosTransaction {
+    Transfer(Signed<Transfer>),
+    Withdraw(Signed<Withdraw>),
+    Deposit(L1Deposit),
 }
 
 /// A signed transaction.
-/// The signature should already be verified before yout construct this type.
+/// The signature should already be verified before you construct this type.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Signed<T> {
     pub public_key: PublicKey,
-    /// Increments with each `L2Transactions` (Transfer or Withdraw).
+    /// Increments with each Transfer or Withdraw from this account.
     pub nonce: u64,
     pub transaction: T,
 }
