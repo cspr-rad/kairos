@@ -14,7 +14,7 @@ use casper_types::{
 };
 mod constants;
 use constants::{
-    KAIROS_DEPOSIT_CONTRACT_NAME, KAIROS_DEPOSIT_CONTRACT_PACKAGE, KAIROS_DEPOSIT_CONTRACT_UREF,
+    KAIROS_DEPOSIT_CONTRACT_HASH, KAIROS_DEPOSIT_CONTRACT_PACKAGE, KAIROS_DEPOSIT_CONTRACT_UREF,
     KAIROS_DEPOSIT_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT,
     RUNTIME_ARG_TEMP_PURSE,
 };
@@ -104,7 +104,7 @@ pub extern "C" fn call() {
         Some(KAIROS_DEPOSIT_CONTRACT_UREF.to_string()),
     );
     let contract_hash_key = Key::from(contract_hash);
-    runtime::put_key(KAIROS_DEPOSIT_CONTRACT_NAME, contract_hash_key);
+    runtime::put_key(KAIROS_DEPOSIT_CONTRACT_HASH, contract_hash_key);
 
     let init_args = runtime_args! {};
     // Call the init entry point of the newly installed contract
