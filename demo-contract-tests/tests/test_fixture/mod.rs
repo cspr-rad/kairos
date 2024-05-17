@@ -32,19 +32,14 @@ impl TestContext {
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
         let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
-        let deposit_contract_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
+        let contract_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
             .join("demo-contract-optimized.wasm");
-        run_session_with_args(
-            &mut builder,
-            &deposit_contract_path,
-            admin,
-            runtime_args! {},
-        );
+        run_session_with_args(&mut builder, &contract_path, admin, runtime_args! {});
 
         let contract_hash = builder
             .get_expected_account(admin)
             .named_keys()
-            .get("kairos_demo_contract")
+            .get("kairos_contract_hash")
             .expect("must have contract hash key as part of contract creation")
             .into_hash()
             .map(ContractHash::new)

@@ -14,9 +14,8 @@ use casper_types::{
 };
 mod constants;
 use constants::{
-    KAIROS_DEPOSIT_CONTRACT_HASH, KAIROS_DEPOSIT_CONTRACT_PACKAGE, KAIROS_DEPOSIT_CONTRACT_UREF,
-    KAIROS_DEPOSIT_PURSE, KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT,
-    RUNTIME_ARG_TEMP_PURSE,
+    KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
+    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
 };
 mod entry_points;
 mod utils;
@@ -57,7 +56,7 @@ pub extern "C" fn get_purse() {
 
 // Entry point called by a user through session code to deposit funds.
 // Due to Casper < 2.0 purse management and access control, it is necessary that
-// a temporary purse is funded and passed to the deposit contract, since this is
+// a temporary purse is funded and passed to the contract, since this is
 // the only secure method of making a payment to a contract purse.
 #[no_mangle]
 pub extern "C" fn deposit() {
@@ -100,11 +99,11 @@ pub extern "C" fn call() {
     let (contract_hash, _) = storage::new_locked_contract(
         entry_points,
         Some(named_keys),
-        Some(KAIROS_DEPOSIT_CONTRACT_PACKAGE.to_string()),
-        Some(KAIROS_DEPOSIT_CONTRACT_UREF.to_string()),
+        Some(KAIROS_CONTRACT_PACKAGE_HASH.to_string()),
+        Some(KAIROS_CONTRACT_UREF.to_string()),
     );
     let contract_hash_key = Key::from(contract_hash);
-    runtime::put_key(KAIROS_DEPOSIT_CONTRACT_HASH, contract_hash_key);
+    runtime::put_key(KAIROS_CONTRACT_HASH, contract_hash_key);
 
     let init_args = runtime_args! {};
     // Call the init entry point of the newly installed contract

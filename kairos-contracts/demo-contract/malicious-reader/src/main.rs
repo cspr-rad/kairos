@@ -1,6 +1,6 @@
 /*
     This session code emulates an attack where a user tries to transfer funds
-    out of the deposit contract's purse, by passing the deposit contract purse as a runtime argument
+    out of the contract's purse, by passing the contract purse as a runtime argument
     and calling transfer_from_purse_to_purse
 */
 
