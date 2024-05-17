@@ -6,7 +6,7 @@ members = [
   "kairos-cli",
   "kairos-crypto",
   "kairos-server",
-  "kairos-tx",
+  "kairos-prover/kairos-tx",
   "kairos-test-utils",
   "kairos-prover-server-lib",
   "kairos-prover/kairos-circuit-logic",
