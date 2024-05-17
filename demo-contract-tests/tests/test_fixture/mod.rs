@@ -10,7 +10,7 @@ use casper_types::{
     system::{handle_payment::ARG_TARGET, mint::ARG_ID},
     RuntimeArgs, U512,
 };
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use casper_engine_test_support::{InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST};
 use casper_types::{ContractHash, URef};
@@ -26,14 +26,32 @@ pub struct TestContext {
     contract_purse: URef,
 }
 
+fn get_wasm_directory() -> PathBuf {
+    // Environment variable or default path.
+    let base_path = if let Ok(custom_path) = env::var("PATH_TO_WASM_BINARIES") {
+        PathBuf::from(custom_path)
+    } else if cfg!(debug_assertions) {
+        PathBuf::from("../kairos-contracts/target/wasm32-unknown-unknown/debug/")
+    } else {
+        PathBuf::from("../kairos-contracts/target/wasm32-unknown-unknown/release/")
+    };
+    if !base_path.exists() {
+        panic!("WASM directory does not exist: {}", base_path.display());
+    }
+
+    // TODO: Ensure all WASM files are optimized
+    //optimize_wasm_files(&base_path)?;
+
+    base_path
+}
+
 impl TestContext {
     pub fn new() -> TestContext {
         let mut builder = InMemoryWasmTestBuilder::default();
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
         let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
-        let contract_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("demo-contract-optimized.wasm");
+        let contract_path = get_wasm_directory().join("demo-contract-optimized.wasm");
         run_session_with_args(&mut builder, &contract_path, admin, runtime_args! {});
 
         let contract_hash = builder
@@ -81,8 +99,7 @@ impl TestContext {
     }
 
     pub fn deposit_succeeds(&mut self, depositor: AccountHash, amount: U512) {
-        let deposit_session_path =
-            Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
+        let deposit_session_path = get_wasm_directory().join("deposit-session-optimized.wasm");
         let session_args = runtime_args! {
             "amount" => amount,
             "demo_contract" => self.contract_hash
@@ -105,8 +122,7 @@ impl TestContext {
             "amount" => amount,
             "demo_contract" => self.contract_hash
         };
-        let malicious_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("malicious-session-optimized.wasm");
+        let malicious_session_path = get_wasm_directory().join("malicious-session-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_session_path.as_path(),
@@ -125,8 +141,8 @@ impl TestContext {
             "demo_contract" => self.contract_hash,
             "purse_uref" => self.contract_purse
         };
-        let malicious_reader_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("malicious-reader-optimized.wasm");
+        let malicious_reader_session_path =
+            get_wasm_directory().join("malicious-reader-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_reader_session_path.as_path(),
