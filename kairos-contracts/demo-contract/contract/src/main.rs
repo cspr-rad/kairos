@@ -100,8 +100,8 @@ pub extern "C" fn call() {
     let (contract_hash, _) = storage::new_locked_contract(
         entry_points,
         Some(named_keys),
-        Some(KAIROS_DEPOSIT_CONTRACT_UREF.to_string()),
         Some(KAIROS_DEPOSIT_CONTRACT_PACKAGE.to_string()),
+        Some(KAIROS_DEPOSIT_CONTRACT_UREF.to_string()),
     );
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_DEPOSIT_CONTRACT_NAME, contract_hash_key);
