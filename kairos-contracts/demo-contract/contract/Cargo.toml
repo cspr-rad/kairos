@@ -5,9 +5,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-casper-contract = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6", features=["no-std-helpers"]}
-casper-types = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6", default-features=false}
-casper-event-standard= {git="https://github.com/cspr-rad/casper-event-standard", branch="kairos-demo-1.5.6", default-features=false}
+casper-contract = { git = "https://github.com/cspr-rad/casper-node", branch = "kairos-demo-1.5.6", features = ["no-std-helpers"] }
+casper-types = { git = "https://github.com/cspr-rad/casper-node", branch = "kairos-demo-1.5.6", default-features = false }
+casper-event-standard = { git = "https://github.com/cspr-rad/casper-event-standard", branch = "kairos-demo-1.5.6", default-features = false }
 
 [build]
 target = "wasm32-unknown-unknown"
