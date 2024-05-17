@@ -15,7 +15,7 @@ arbitrary = ["dep:proptest", "dep:test-strategy", "std"]
 kairos-tx = { path = "../kairos-tx", default-features = false, optional = true }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", default-features = false }
 sha2 = { version = "0.10", default-features = false }
-serde = { version = "1", default-features = false, features = ["derive", "alloc"], optional = true }
+serde = { version = "=1.0.198", default-features = false, features = ["derive", "alloc"], optional = true }
 
 # dev dependencies enabled by arbitrary
 test-strategy = { version = "0.3", optional = true }

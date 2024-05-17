@@ -8,8 +8,8 @@ members = [
   "kairos-server",
   "kairos-tx",
   "kairos-test-utils",
-  "kairos-circuit-logic",
   "kairos-prover-server-lib",
+  "kairos-prover/kairos-circuit-logic",
 ]
 
 [workspace.package]

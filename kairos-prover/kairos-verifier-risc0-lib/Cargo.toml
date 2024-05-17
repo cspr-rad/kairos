@@ -11,8 +11,8 @@ metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
 [dependencies]
 methods = { path = "../methods" }
 risc0-zkvm = "=0.21.0"
-kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde"] }
 kairos-prover-server-lib = { path = "../../kairos-prover-server-lib" }
+kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"] }
 
 [target.'cfg(windows)'.dev-dependencies]
 # dlmalloc wants windows-sys 0.52.0
