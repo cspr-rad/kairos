@@ -7,7 +7,7 @@ license.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-casper-contract = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6", features=["test-support"]}
+casper-contract = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6"}
 casper-types = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6"}
 
 [[bin]]
