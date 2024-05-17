@@ -44,8 +44,8 @@
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
           rustToolchain = with inputs'.fenix.packages; combine [
-            stable.toolchain
-            targets.wasm32-unknown-unknown.latest.rust-std # WASM contracts are build with nigthly.
+            latest.toolchain
+            targets.wasm32-unknown-unknown.latest.rust-std
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
