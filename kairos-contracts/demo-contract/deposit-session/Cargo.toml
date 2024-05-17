@@ -5,8 +5,8 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-casper-contract = { version = "4.0.0" }
-casper-types = { version = "4.0.1" }
+casper-contract = { version = "4.0.0", default-features = false }
+casper-types = { version = "4.0.1", default-features = false }
 
 [[bin]]
 name = "deposit-session"
