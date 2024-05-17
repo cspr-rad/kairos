@@ -24,10 +24,7 @@ use utils::errors::DepositError;
 use utils::events::Deposit;
 use utils::get_immediate_caller;
 
-// This entry point is called once when the contract is installed
-// and sets up the security badges with the installer as an admin or the
-// optional list of admins.
-// The optional list of admins is passed to the installation session as a runtime argument.
+// This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
 // rather than the installing account.
 #[no_mangle]
