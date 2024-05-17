@@ -58,9 +58,9 @@
                   "/kairos-crypto"
                   "/kairos-server"
                   "/kairos-test-utils"
-                  "/kairos-prover-server-lib"
                   "/kairos-prover/kairos-tx"
                   "/kairos-prover/kairos-circuit-logic"
+                  "/kairos-prover/kairos-prover-server-lib"
                   "/Cargo.toml"
                   "/Cargo.lock"
                 ]) && (
