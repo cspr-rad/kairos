@@ -1,0 +1,24 @@
+[package]
+name = "contract"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+casper-contract = { version = "4.0.0", default-features = false, features = ["no-std-helpers"] }
+casper-types = { version = "4.0.1", default-features = false }
+casper-event-standard = { version = "0.5.0", default-features = false }
+
+[build]
+target = "wasm32-unknown-unknown"
+
+[[bin]]
+name = "demo-contract"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false
+
+[profile.release]
+codegen-units = 1
+lto = true

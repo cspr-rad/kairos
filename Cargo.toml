@@ -8,6 +8,7 @@ members = [
   "kairos-server",
   "kairos-tx",
   "kairos-test-utils",
+  "demo-contract-tests",
 ]
 
 [workspace.package]
