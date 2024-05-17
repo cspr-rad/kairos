@@ -10,3 +10,4 @@ casper-execution-engine = { version = "7.0.0", default-features = false }
 casper-contract = { version = "4.0.0", default-features = false }
 casper-types = { version = "4.0.1", default-features = false }
 rand = "0.8"
+wasm-opt = "0.116"
