@@ -1,3 +1,5 @@
+mod wasm_helper;
+
 use casper_engine_test_support::{
     ExecuteRequestBuilder, WasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR,
     DEFAULT_ACCOUNT_INITIAL_BALANCE,
@@ -14,7 +16,8 @@ use std::path::Path;
 
 use casper_engine_test_support::{InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST};
 use casper_types::{ContractHash, URef};
-use std::env;
+
+use self::wasm_helper::get_wasm_directory;
 
 pub const ADMIN_SECRET_KEY: [u8; 32] = [1u8; 32];
 
@@ -32,19 +35,13 @@ impl TestContext {
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
         let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
-        let deposit_contract_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("demo-contract-optimized.wasm");
-        run_session_with_args(
-            &mut builder,
-            &deposit_contract_path,
-            admin,
-            runtime_args! {},
-        );
+        let contract_path = get_wasm_directory().join("demo-contract-optimized.wasm");
+        run_session_with_args(&mut builder, &contract_path, admin, runtime_args! {});
 
         let contract_hash = builder
             .get_expected_account(admin)
             .named_keys()
-            .get("kairos_demo_contract")
+            .get("kairos_contract_hash")
             .expect("must have contract hash key as part of contract creation")
             .into_hash()
             .map(ContractHash::new)
@@ -86,8 +83,7 @@ impl TestContext {
     }
 
     pub fn deposit_succeeds(&mut self, depositor: AccountHash, amount: U512) {
-        let deposit_session_path =
-            Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
+        let deposit_session_path = get_wasm_directory().join("deposit-session-optimized.wasm");
         let session_args = runtime_args! {
             "amount" => amount,
             "demo_contract" => self.contract_hash
@@ -110,8 +106,7 @@ impl TestContext {
             "amount" => amount,
             "demo_contract" => self.contract_hash
         };
-        let malicious_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("malicious-session-optimized.wasm");
+        let malicious_session_path = get_wasm_directory().join("malicious-session-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_session_path.as_path(),
@@ -130,8 +125,8 @@ impl TestContext {
             "demo_contract" => self.contract_hash,
             "purse_uref" => self.contract_purse
         };
-        let malicious_reader_session_path = std::path::Path::new(env!("PATH_TO_WASM_BINARIES"))
-            .join("malicious-reader-optimized.wasm");
+        let malicious_reader_session_path =
+            get_wasm_directory().join("malicious-reader-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_reader_session_path.as_path(),

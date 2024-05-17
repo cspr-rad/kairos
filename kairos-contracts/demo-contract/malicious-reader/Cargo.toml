@@ -4,11 +4,9 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-casper-contract = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6", features=["test-support"]}
-casper-types = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6"}
+casper-contract = { version = "4.0.0", default-features = false }
+casper-types = { version = "4.0.1", default-features = false }
 
 [[bin]]
 name = "malicious-reader"

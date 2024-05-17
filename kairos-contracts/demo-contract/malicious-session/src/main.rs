@@ -1,6 +1,6 @@
 /*
     This session code emulates an attack where a user tries to transfer funds
-    out of the deposit contract's purse, by querying the get_purse entry point
+    out of the contract's purse, by querying the get_purse entry point
     and calling transfer_from_purse_to_purse
 */
 

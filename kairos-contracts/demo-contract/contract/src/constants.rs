@@ -1,7 +1,6 @@
-pub const KAIROS_DEPOSIT_CONTRACT_NAME: &str = "kairos_demo_contract";
-
-pub const KAIROS_DEPOSIT_CONTRACT_PACKAGE: &str = "kairos_contract_package";
-pub const KAIROS_DEPOSIT_CONTRACT_UREF: &str = "demo_contract";
+pub const KAIROS_CONTRACT_HASH: &str = "kairos_contract_hash";
+pub const KAIROS_CONTRACT_PACKAGE_HASH: &str = "kairos_contract_package_hash";
+pub const KAIROS_CONTRACT_UREF: &str = "kairos_contract_uref";
 
 pub const KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER: &str = "last_processed_deposit_counter";
 pub const KAIROS_DEPOSIT_PURSE: &str = "kairos_deposit_purse";

@@ -1,8 +1,5 @@
-/*
-    The utilities found in this file were scraped from other Casper contracts,
-    mainly cep-78 and cep-18.
-    This file is not necessarily due for review, unless breaking changes are suspected.
-*/
+// Utilities copied from cep-78 and cep-18 implementation.
+
 use casper_contract::contract_api::runtime;
 use casper_types::{system::CallStackElement, Key};
 

@@ -5,7 +5,7 @@ mod tests {
     use casper_types::U512;
 
     #[test]
-    fn should_install_deposit_contract() {
+    fn should_install_contract() {
         let _fixture = TestContext::new();
     }
 
