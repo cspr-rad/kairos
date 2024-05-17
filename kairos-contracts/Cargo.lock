@@ -67,7 +67,8 @@ checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 [[package]]
 name = "casper-contract"
 version = "4.0.0"
-source = "git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6#35222130c58b3c9997a358d4248ddae603836496"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d42901eb5b09bb79e7d7403642e70983ccac0f4812edf1de77d978abea5f3299"
 dependencies = [
  "casper-types",
  "hex_fmt",
@@ -77,7 +78,8 @@ dependencies = [
 [[package]]
 name = "casper-event-standard"
 version = "0.5.0"
-source = "git+https://github.com/cspr-rad/casper-event-standard?branch=kairos-demo-1.5.6#88b855da23d855d9680816a3dbb4b2e0c4f0ffa7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a3a1bdb142b4bfcdceec757422b2e292f446b72ce3613f881eb694f3925ef10"
 dependencies = [
  "casper-contract",
  "casper-event-standard-macro",
@@ -87,7 +89,8 @@ dependencies = [
 [[package]]
 name = "casper-event-standard-macro"
 version = "0.5.0"
-source = "git+https://github.com/cspr-rad/casper-event-standard?branch=kairos-demo-1.5.6#88b855da23d855d9680816a3dbb4b2e0c4f0ffa7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "485810e6c8387863a92e9b81e4e66ce290e2c96c0ad8ec4352e95128aa88900e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -97,7 +100,8 @@ dependencies = [
 [[package]]
 name = "casper-types"
 version = "4.0.1"
-source = "git+https://github.com/cspr-rad/casper-node?branch=kairos-demo-1.5.6#35222130c58b3c9997a358d4248ddae603836496"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e01525b7bbae90fe9de3f1def6ffe05052a94ed7d14b1c2b38baec81eeec31b"
 dependencies = [
  "base16",
  "base64",
