@@ -20,7 +20,6 @@ pub mod transactions;
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ProofInputs {
     pub transactions: Box<[KairosTransaction]>,
-
     pub trie_snapshot: Snapshot<Account>,
 }
 
