@@ -106,15 +106,20 @@ mod arbitrary_bounds {
     );
 
     #[derive(Debug, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
     pub enum RandomTransaction {
+        #[any(args)]
         Transfer(RandomTransfer),
+        #[any(args)]
         Withdraw(RandomWithdraw),
+        #[any(args)]
         L1Deposit(RandomL1Deposit),
     }
 
     #[derive(Debug, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
     pub struct ValidRandomTransaction(
-        #[strategy(any::<RandomTransaction>())]
+        #[strategy(any_with::<RandomTransaction>(args.clone()))]
         #[filter(|txn| match txn {
             RandomTransaction::Transfer(RandomTransfer((_, TxnExpectedResult::Success))) |
             RandomTransaction::Withdraw(RandomWithdraw((_, TxnExpectedResult::Success))) |
@@ -124,18 +129,10 @@ mod arbitrary_bounds {
         pub RandomTransaction,
     );
 
-    pub struct MaxBatchSize(pub usize);
-
-    impl Default for MaxBatchSize {
-        fn default() -> Self {
-            MaxBatchSize(100)
-        }
-    }
-
     #[derive(Debug, Default, Clone, Arbitrary)]
-    #[arbitrary(args = MaxBatchSize)]
+    #[arbitrary(args = AccountsState)]
     pub struct TestBatch {
-        #[strategy(collection::vec(any::<ValidRandomTransaction>(), 1..args.0))]
+        #[strategy(collection::vec(any_with::<ValidRandomTransaction>(args.clone()), 1..args.shared.max_batch_size))]
         pub transactions: Vec<ValidRandomTransaction>,
     }
 
@@ -153,6 +150,8 @@ mod arbitrary_bounds {
         shared: Rc<AccountsStateInner>,
     }
     pub struct AccountsStateInner {
+        pub max_batch_size: usize,
+        pub max_batch_count: usize,
         pub keys: PublicKeys,
         pub l1_accounts: RefCell<HashMap<Rc<PublicKey>, u64>>,
         pub l2_accounts: RefCell<HashMap<Rc<PublicKey>, Account>>,
@@ -184,6 +183,8 @@ mod arbitrary_bounds {
         pub fn new() -> Self {
             AccountsState {
                 shared: Rc::new(AccountsStateInner {
+                    max_batch_size: 100,
+                    max_batch_count: 100,
                     keys: PublicKeys::default(),
                     l1_accounts: RefCell::new(HashMap::new()),
                     l2_accounts: RefCell::new(HashMap::new()),
