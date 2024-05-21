@@ -69,7 +69,7 @@ pub use arbitrary_bounds::*;
 mod arbitrary_bounds {
     use std::{cell::RefCell, collections::HashMap, fmt, ops::Deref, rc::Rc};
 
-    use proptest::{prelude::*, sample};
+    use proptest::{collection, prelude::*, sample};
     use test_strategy::Arbitrary;
 
     use super::*;
@@ -105,20 +105,41 @@ mod arbitrary_bounds {
         pub (L1Deposit, TxnExpectedResult),
     );
 
-    #[derive(Debug, Clone, Arbitrary)]
-    #[arbitrary(args = AccountsState)]
+    #[derive(Debug, Clone)]
     pub enum RandomTransaction {
-        #[any(args)]
         Transfer(RandomTransfer),
-        #[any(args)]
         Withdraw(RandomWithdraw),
-        #[any(args)]
         L1Deposit(RandomL1Deposit),
+    }
+
+    impl proptest::arbitrary::Arbitrary for RandomTransaction {
+        type Parameters = AccountsState;
+        type Strategy = proptest::strategy::BoxedStrategy<Self>;
+        fn arbitrary_with(
+            args: <Self as proptest::arbitrary::Arbitrary>::Parameters,
+        ) -> Self::Strategy {
+            proptest::strategy::Strategy::boxed({
+                proptest::prop_oneof![
+                    1 => {
+                        let strategy_0 = proptest::arbitrary::any_with:: <RandomTransfer>(args.clone());
+                        proptest::strategy::Strategy::prop_map(strategy_0, Self::Transfer)
+                    },
+                    1 => {
+                        let strategy_0 = proptest::arbitrary::any_with:: <RandomWithdraw>(args.clone());
+                        proptest::strategy::Strategy::prop_map(strategy_0, Self::Withdraw)
+                    },
+                    1 => {
+                        let strategy_0 = proptest::arbitrary::any_with:: <RandomL1Deposit>(args);
+                        proptest::strategy::Strategy::prop_map(strategy_0, Self::L1Deposit)
+                    },
+                ]
+            })
+        }
     }
 
     #[derive(Debug, Clone, Arbitrary)]
     #[arbitrary(args = AccountsState)]
-    pub struct ValidRandomTransaction(
+    pub struct ValidRandomTransaction {
         #[strategy(any_with::<RandomTransaction>(args.clone()))]
         #[filter(|txn| match txn {
             RandomTransaction::Transfer(RandomTransfer((_, TxnExpectedResult::Success))) |
@@ -126,8 +147,31 @@ mod arbitrary_bounds {
             RandomTransaction::L1Deposit(RandomL1Deposit((_, TxnExpectedResult::Success))) => true,
             _ => false,
         })]
-        pub RandomTransaction,
-    );
+        pub txns: RandomTransaction,
+    }
+
+    #[derive(Debug, Default, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
+    pub struct TestBatch {
+        #[strategy(collection::vec(any_with::<ValidRandomTransaction>(args.clone()), 1..args.shared.max_batch_size))]
+        pub transactions: Vec<ValidRandomTransaction>,
+    }
+
+    #[derive(Debug, Default, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
+    pub struct TestBatchSequence {
+        #[strategy(collection::vec(any_with::<TestBatch>(args.clone()), 1..args.shared.max_batch_count))]
+        pub batches: Vec<TestBatch>,
+    }
+
+    impl TestBatchSequence {
+        pub fn into_vec(self) -> Vec<Vec<ValidRandomTransaction>> {
+            self.batches
+                .into_iter()
+                .map(|batch| batch.transactions)
+                .collect()
+        }
+    }
 
     #[derive(Debug, Default)]
     pub struct PublicKeys(pub Vec<Rc<PublicKey>>);
@@ -137,6 +181,8 @@ mod arbitrary_bounds {
         shared: Rc<AccountsStateInner>,
     }
     pub struct AccountsStateInner {
+        pub max_batch_size: usize,
+        pub max_batch_count: usize,
         pub keys: PublicKeys,
         pub l1_accounts: RefCell<HashMap<Rc<PublicKey>, u64>>,
         pub l2_accounts: RefCell<HashMap<Rc<PublicKey>, Account>>,
@@ -168,6 +214,8 @@ mod arbitrary_bounds {
         pub fn new() -> Self {
             AccountsState {
                 shared: Rc::new(AccountsStateInner {
+                    max_batch_size: 100,
+                    max_batch_count: 100,
                     keys: PublicKeys::default(),
                     l1_accounts: RefCell::new(HashMap::new()),
                     l2_accounts: RefCell::new(HashMap::new()),

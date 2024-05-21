@@ -52,9 +52,14 @@ impl Prover for Risc0Prover {
 
 #[cfg(test)]
 mod tests {
+    use proptest::prelude::*;
+
     use kairos_circuit_logic::{
         account_trie::test_logic::test_prove_batch,
-        transactions::{KairosTransaction, L1Deposit, Signed, Transfer, Withdraw},
+        transactions::{
+            AccountsState, KairosTransaction, L1Deposit, Signed, TestBatchSequence, Transfer,
+            Withdraw,
+        },
     };
     use kairos_prover_server_lib::Prover;
 
@@ -113,4 +118,7 @@ mod tests {
                 .expect("Failed to prove execution"))
         });
     }
+
+    #[test_strategy::proptest(ProptestConfig::default(), cases = 1)]
+    fn proptest_prove_batches(#[any(AccountsState::new())] batches: TestBatchSequence) {}
 }
