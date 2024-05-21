@@ -69,7 +69,7 @@ pub use arbitrary_bounds::*;
 mod arbitrary_bounds {
     use std::{cell::RefCell, collections::HashMap, fmt, ops::Deref, rc::Rc};
 
-    use proptest::{collection, prelude::*, sample};
+    use proptest::{prelude::*, sample};
     use test_strategy::Arbitrary;
 
     use super::*;

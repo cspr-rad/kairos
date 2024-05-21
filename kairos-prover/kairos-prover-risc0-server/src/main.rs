@@ -49,3 +49,68 @@ impl Prover for Risc0Prover {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use kairos_circuit_logic::{
+        account_trie::test_logic::test_prove_batch,
+        transactions::{KairosTransaction, L1Deposit, Signed, Transfer, Withdraw},
+    };
+    use kairos_prover_server_lib::Prover;
+
+    use crate::Risc0Prover;
+
+    #[test]
+    fn test_prove_simple_batches() {
+        let alice_public_key = "alice_public_key".as_bytes().to_vec();
+        let bob_public_key = "bob_public_key".as_bytes().to_vec();
+
+        let batches = vec![
+            vec![
+                KairosTransaction::Deposit(L1Deposit {
+                    recipient: alice_public_key.clone(),
+                    amount: 10,
+                }),
+                KairosTransaction::Transfer(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Transfer {
+                        recipient: bob_public_key.clone(),
+                        amount: 5,
+                    },
+                    nonce: 0,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Withdraw { amount: 5 },
+                    nonce: 1,
+                }),
+            ],
+            vec![
+                KairosTransaction::Transfer(Signed {
+                    public_key: bob_public_key.clone(),
+                    transaction: Transfer {
+                        recipient: alice_public_key.clone(),
+                        amount: 2,
+                    },
+                    nonce: 0,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: bob_public_key.clone(),
+                    transaction: Withdraw { amount: 3 },
+                    nonce: 1,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Withdraw { amount: 2 },
+                    nonce: 2,
+                }),
+            ],
+        ];
+
+        test_prove_batch(batches, |proof_inputs| {
+            Ok(Risc0Prover::prove_execution(proof_inputs)
+                .map(|o| o.logical_outputs)
+                .expect("Failed to prove execution"))
+        });
+    }
+}
