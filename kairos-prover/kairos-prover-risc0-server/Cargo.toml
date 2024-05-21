@@ -6,6 +6,7 @@ license.workspace = true
 
 
 [features]
+default = []
 disable-dev-mode = [ "risc0-zkvm/disable-dev-mode" ]
 cuda = [ "risc0-zkvm/cuda", "disable-dev-mode" ]
 metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
@@ -35,7 +36,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1.0"
 
 [dev-dependencies]
-kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde", "test-logic"], default-features = false }
+kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde", "test-logic", "arbitrary" ], default-features = false }
 test-strategy = { version = "0.3" }
 proptest = { version = "1" }
 # These crates are needed for the build-std feature, that is due to the Nix

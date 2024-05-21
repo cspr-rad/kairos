@@ -1452,21 +1452,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kairos-prover-server-lib"
-version = "0.1.0"
-dependencies = [
- "axum",
- "axum-extra",
- "dotenvy",
- "kairos-circuit-logic",
- "kairos-trie",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "kairos-trie"
 version = "0.1.0"
 source = "git+https://github.com/cspr-rad/kairos-trie#780cdcad2fb3f2d68a8a5f68c99cf611cb91d707"
@@ -1482,7 +1467,6 @@ name = "kairos-verifier-risc0-lib"
 version = "0.1.0"
 dependencies = [
  "kairos-circuit-logic",
- "kairos-prover-server-lib",
  "methods",
  "risc0-zkvm",
  "windows_aarch64_gnullvm 0.52.4",

@@ -4,15 +4,13 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[features]
 disable-dev-mode = [ "risc0-zkvm/disable-dev-mode" ]
-cuda = [ "risc0-zkvm/cuda", "disable-dev-mode" ]
-metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
 
 [dependencies]
 methods = { path = "../methods" }
-risc0-zkvm = "=0.21.0"
-kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde"] }
-kairos-prover-server-lib = { path = "../../kairos-prover-server-lib" }
+risc0-zkvm = { version = "=0.21.0", default-features = false }
+kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde"], default-features = false }
 
 [target.'cfg(windows)'.dev-dependencies]
 # dlmalloc wants windows-sys 0.52.0

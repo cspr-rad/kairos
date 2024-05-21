@@ -81,6 +81,12 @@ fn prove_execution(
     Ok((proof_outputs, receipt))
 }
 
+pub fn cfg_disable_dev_mode_feature() {
+    if cfg!(feature = "disable-dev-mode") {
+        std::env::set_var("RISC0_DEV_MODE", "0");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use proptest::prelude::*;
@@ -93,8 +99,12 @@ mod tests {
         },
     };
 
+    use crate::cfg_disable_dev_mode_feature;
+
     #[test]
     fn test_prove_simple_batches() {
+        cfg_disable_dev_mode_feature();
+
         let alice_public_key = "alice_public_key".as_bytes().to_vec();
         let bob_public_key = "bob_public_key".as_bytes().to_vec();
 
@@ -148,5 +158,7 @@ mod tests {
     }
 
     #[test_strategy::proptest(ProptestConfig::default(), cases = 1)]
-    fn proptest_prove_batches(#[any(AccountsState::new())] batches: TestBatchSequence) {}
+    fn proptest_prove_batches(#[any(AccountsState::new())] batches: TestBatchSequence) {
+        cfg_disable_dev_mode_feature();
+    }
 }
