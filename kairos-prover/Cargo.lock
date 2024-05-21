@@ -1428,13 +1428,19 @@ dependencies = [
 name = "kairos-prover-risc0-server"
 version = "0.1.0"
 dependencies = [
+ "axum",
+ "axum-extra",
+ "dotenvy",
  "kairos-circuit-logic",
- "kairos-prover-server-lib",
+ "kairos-trie",
  "methods",
  "proptest",
  "risc0-zkvm",
+ "serde",
+ "serde_json",
  "test-strategy",
  "tokio",
+ "tracing",
  "tracing-subscriber 0.3.18",
  "windows_aarch64_gnullvm 0.52.4",
  "windows_aarch64_msvc 0.52.4",

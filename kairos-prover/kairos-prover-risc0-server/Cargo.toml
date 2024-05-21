@@ -13,11 +13,26 @@ metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
 [dependencies]
 methods = { path = "../methods" }
 risc0-zkvm = "=0.21.0"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tokio = { version = "1", features = ["rt-multi-thread", "tracing", "macros"] }
-kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde"], default-features = false }
-kairos-prover-server-lib = { path = "../../kairos-prover-server-lib" }
 
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde"], default-features = false }
+kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", features = ["serde"] }
+
+tokio = { version = "1", features = ["rt-multi-thread", "tracing", "macros"] }
+axum = { version = "0.7", features = ["tracing"] }
+axum-extra = { version = "0.9", features = [
+    "typed-routing",
+    "typed-header",
+    "json-deserializer",
+] }
+
+dotenvy = "0.15"
+
+serde = { version = "1", features = ["derive"] }
+# TODO switch to bincode 2
+serde_json = "1.0"
 
 [dev-dependencies]
 kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde", "test-logic"], default-features = false }

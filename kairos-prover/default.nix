@@ -21,7 +21,6 @@
                   "/kairos-prover"
                   "/kairos-tx"
                   "/kairos-circuit-logic"
-                  "/kairos-prover-server-lib"
                   "/Cargo.toml"
                 ]);
               };
