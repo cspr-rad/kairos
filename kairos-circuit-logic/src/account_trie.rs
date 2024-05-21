@@ -249,3 +249,101 @@ fn hash_buffers<const N: usize, T: AsRef<[u8]>>(items: [T; N]) -> [KeyHash; N] {
 
     out
 }
+
+#[cfg(feature = "test-logic")]
+pub mod test_logic {
+    use crate::{ProofInputs, ProofOutputs};
+
+    use super::*;
+    use alloc::rc::Rc;
+    use kairos_trie::{stored::memory_db::MemoryDb, DigestHasher};
+
+    pub fn test_prove_batch(
+        batches: Vec<Vec<KairosTransaction>>,
+        proving_hook: impl Fn(ProofInputs) -> Result<ProofOutputs, String>,
+    ) {
+        let db = Rc::new(MemoryDb::<Account>::empty());
+        let mut prior_root_hash = TrieRoot::default();
+
+        for batch in batches.into_iter() {
+            let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash)
+                .expect("Failed to create account trie");
+            account_trie
+                .apply_batch(batch.iter().cloned())
+                .expect("Failed to apply batch");
+
+            let new_root_hash = account_trie
+                .txn
+                .commit(&mut DigestHasher::<sha2::Sha256>::default())
+                .expect("Failed to commit transaction");
+
+            let trie_snapshot = account_trie.txn.build_initial_snapshot();
+
+            let proof_inputs = ProofInputs {
+                transactions: batch.into_boxed_slice(),
+                trie_snapshot,
+            };
+
+            let ProofOutputs {
+                pre_batch_trie_root,
+                post_batch_trie_root,
+                deposits: _,
+                withdrawals: _,
+            } = proving_hook(proof_inputs).expect("Failed to prove execution");
+
+            assert_eq!(pre_batch_trie_root, prior_root_hash);
+            assert_eq!(post_batch_trie_root, new_root_hash);
+            prior_root_hash = new_root_hash;
+        }
+    }
+
+    #[test]
+    fn test_prove_simple_batches() {
+        let alice_public_key = "alice_public_key".as_bytes().to_vec();
+        let bob_public_key = "bob_public_key".as_bytes().to_vec();
+
+        let batches = vec![
+            vec![
+                KairosTransaction::Deposit(L1Deposit {
+                    recipient: alice_public_key.clone(),
+                    amount: 10,
+                }),
+                KairosTransaction::Transfer(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Transfer {
+                        recipient: bob_public_key.clone(),
+                        amount: 5,
+                    },
+                    nonce: 0,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Withdraw { amount: 5 },
+                    nonce: 1,
+                }),
+            ],
+            vec![
+                KairosTransaction::Transfer(Signed {
+                    public_key: bob_public_key.clone(),
+                    transaction: Transfer {
+                        recipient: alice_public_key.clone(),
+                        amount: 2,
+                    },
+                    nonce: 0,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: bob_public_key.clone(),
+                    transaction: Withdraw { amount: 3 },
+                    nonce: 1,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Withdraw { amount: 2 },
+                    nonce: 2,
+                }),
+            ],
+        ];
+
+        test_prove_batch(batches, |proof_inputs| proof_inputs.run_batch_proof_logic())
+    }
+}

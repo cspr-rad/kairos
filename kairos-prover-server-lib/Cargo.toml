@@ -27,7 +27,3 @@ tokio = { version = "1", features = ["tracing"] }
 tracing = "0.1"
 kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"] }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", features = ["serde"] }
-
-[dev-dependencies]
-proptest = { version = "1" }
-sha2 = { version = "0.10", default-features = false }
