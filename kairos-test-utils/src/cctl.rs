@@ -116,6 +116,15 @@ impl CCTLNetwork {
         .await
         .expect("Waiting for network to pass genesis failed");
 
+        tracing::info!("Waiting for block 1");
+        let output = Command::new("cctl-chain-await-until-block-n")
+            .env("CCTL_ASSETS", &assets_dir)
+            .arg("height=1")
+            .output()
+            .expect("Waiting for network to start processing blocks failed");
+        let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
+        tracing::info!("{}", output);
+
         Ok(CCTLNetwork { working_dir, nodes })
     }
 }
@@ -134,6 +143,7 @@ impl Drop for CCTLNetwork {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
         let network = CCTLNetwork::run(Option::None).await.unwrap();

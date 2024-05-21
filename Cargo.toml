@@ -2,12 +2,13 @@
 resolver = "2"
 
 members = [
+  "casper-deploy-notifier",
   "kairos-cli",
   "kairos-crypto",
   "kairos-server",
   "kairos-tx",
   "kairos-test-utils",
-  "kairos-contracts/deposit-contract-tests",
+  "demo-contract-tests",
 ]
 
 [workspace.package]

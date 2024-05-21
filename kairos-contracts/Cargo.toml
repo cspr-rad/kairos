@@ -2,10 +2,10 @@
 resolver = "2"
 
 members = [
-  "deposit-contracts/malicious-reader",
-  "deposit-contracts/malicious-session",
-  "deposit-contracts/deposit-session",
-  "deposit-contracts/contract",
+  "demo-contract/malicious-reader",
+  "demo-contract/malicious-session",
+  "demo-contract/deposit-session",
+  "demo-contract/contract",
 ]
 
 [workspace.package]

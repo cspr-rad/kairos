@@ -25,8 +25,10 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    risc0pkgs.url = "github:cspr-rad/risc0pkgs";
-    risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
+    # Pin to a revision with working risc0 build
+    risc0pkgs.url = "github:cspr-rad/risc0pkgs/7acff27ce7116777cc7f5a162efa9b599808ed97";
+    # FIXME once we are able to build with upstream rustc we should uncomment this
+    #risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
     csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
     csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -74,13 +76,23 @@
             src = lib.cleanSourceWith {
               src = craneLib.path ./.;
               filter = path: type:
-                !(builtins.elem (builtins.baseNameOf path) [ "kairos-contracts" "nixos" "kairos-prover" ]) &&
-                # Allow static files.
-                (lib.hasInfix "/fixtures/" path) ||
-                # ignore the kairos-contracts directory
-                !(lib.hasInfix "kairos-contracts/" path) ||
-                # Default filter (from crane) for .rs files.
-                (craneLib.filterCargoSources path type)
+                (builtins.any (includePath: lib.hasInfix includePath path) [
+                  "/casper-deploy-notifier"
+                  "/kairos-cli"
+                  "/kairos-crypto"
+                  "/kairos-server"
+                  "/kairos-test-utils"
+                  "/kairos-contracts"
+                  "/demo-contract-tests"
+                  "/kairos-tx"
+                  "/Cargo.toml"
+                  "/Cargo.lock"
+                ]) && (
+                  # Allow static files.
+                  (lib.hasInfix "/tests/fixtures/" path) ||
+                  # Default filter (from crane) for .rs files.
+                  (craneLib.filterCargoSources path type)
+                )
               ;
             };
             nativeBuildInputs = with pkgs; [ pkg-config ];
@@ -105,6 +117,7 @@
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             inputsFrom = [ self'.packages.kairos ];
           };
 
@@ -115,6 +128,11 @@
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+            });
+
+            kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
+              cargoExtraArgs = "-p kairos-tx --no-default-features";
             });
 
             cctld = pkgs.runCommand "cctld-wrapped"
@@ -146,20 +164,16 @@
           checks = {
             lint = craneLib.cargoClippy (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
-              cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+              cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
 
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
 
-              # FIXME fix weird issue with rust-nightly and tarpaulin https://github.com/xd009642/tarpaulin/issues/1499
-              RUSTFLAGS = "-Cstrip=none";
-
               # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
               # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
-              cargoTarpaulinExtraArgs = "--skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
+              cargoTarpaulinExtraArgs = "--features=all-tests --skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
               # For some reason cargoTarpaulin runs the tests in the buildPhase
-
               buildInputs = kairosNodeAttrs.buildInputs ++ [
                 inputs'.csprpkgs.packages.cctl
               ];
