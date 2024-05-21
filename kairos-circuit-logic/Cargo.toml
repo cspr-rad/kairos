@@ -9,7 +9,8 @@ default = ["std"]
 std = []
 serde = ["dep:serde", "kairos-trie/serde"]
 asn1 = ["dep:kairos-tx"]
-arbitrary = ["dep:proptest", "dep:test-strategy", "std"]
+arbitrary = ["dep:proptest", "dep:test-strategy", "std", "test-logic"]
+test-logic = []
 
 [dependencies]
 kairos-tx = { path = "../kairos-tx", default-features = false, optional = true }

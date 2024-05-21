@@ -83,3 +83,92 @@ pub async fn prove_batch<P: Prover>(
 
     Ok(Json(proof))
 }
+
+#[cfg(test)]
+mod tests {
+    use std::rc::Rc;
+
+    use kairos_circuit_logic::{
+        account_trie::{Account, AccountTrie},
+        transactions::{KairosTransaction, L1Deposit, Signed, Transfer, Withdraw},
+    };
+    use kairos_trie::{stored::memory_db::MemoryDb, DigestHasher, TrieRoot};
+
+    use crate::{NativeTrustedProver, Prover};
+
+    #[test]
+    fn test_prove_batch() {
+        let alice_public_key = "alice_public_key".as_bytes().to_vec();
+        let bob_public_key = "bob_public_key".as_bytes().to_vec();
+
+        let batches = vec![
+            vec![
+                KairosTransaction::Deposit(L1Deposit {
+                    recipient: alice_public_key.clone(),
+                    amount: 10,
+                }),
+                KairosTransaction::Transfer(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Transfer {
+                        recipient: bob_public_key.clone(),
+                        amount: 5,
+                    },
+                    nonce: 0,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Withdraw { amount: 5 },
+                    nonce: 1,
+                }),
+            ],
+            vec![
+                KairosTransaction::Transfer(Signed {
+                    public_key: bob_public_key.clone(),
+                    transaction: Transfer {
+                        recipient: alice_public_key.clone(),
+                        amount: 2,
+                    },
+                    nonce: 0,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: bob_public_key.clone(),
+                    transaction: Withdraw { amount: 3 },
+                    nonce: 1,
+                }),
+                KairosTransaction::Withdraw(Signed {
+                    public_key: alice_public_key.clone(),
+                    transaction: Withdraw { amount: 2 },
+                    nonce: 2,
+                }),
+            ],
+        ];
+
+        let db = Rc::new(MemoryDb::<Account>::empty());
+        let mut prior_root_hash = TrieRoot::default();
+
+        for batch in batches.into_iter() {
+            let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash)
+                .expect("Failed to create account trie");
+            account_trie
+                .apply_batch(batch.iter().cloned())
+                .expect("Failed to apply batch");
+
+            let new_root_hash = account_trie
+                .txn
+                .commit(&mut DigestHasher::<sha2::Sha256>::default())
+                .expect("Failed to commit transaction");
+
+            let trie_snapshot = account_trie.txn.build_initial_snapshot();
+
+            let proof_inputs = kairos_circuit_logic::ProofInputs {
+                transactions: batch.into_boxed_slice(),
+                trie_snapshot,
+            };
+
+            let _proof = NativeTrustedProver::prove_execution(proof_inputs)
+                .expect("Failed to prove execution");
+
+            prior_root_hash = new_root_hash;
+        }
+    }
+}

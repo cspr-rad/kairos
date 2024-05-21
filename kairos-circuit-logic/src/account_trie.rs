@@ -3,32 +3,63 @@ use alloc::{boxed::Box, format, string::String, vec::Vec};
 use sha2::{digest::FixedOutputReset, Digest, Sha256};
 
 use crate::transactions::{KairosTransaction, L1Deposit, PublicKey, Signed, Transfer, Withdraw};
-use kairos_trie::{stored::merkle::Snapshot, KeyHash, PortableHash, PortableUpdate};
+use kairos_trie::{
+    stored::{
+        merkle::{Snapshot, SnapshotBuilder},
+        DatabaseGet, Store,
+    },
+    KeyHash, NodeHash, PortableHash, PortableUpdate, TrieRoot,
+};
 
 /// The state of the batch transaction against the trie.
-pub struct AccountTrie<'s> {
-    pub txn: AccountTrieTxn<'s>,
+pub struct AccountTrie<S: Store<Account>> {
+    pub txn: AccountTrieTxn<S>,
 }
-pub type AccountTrieTxn<'s> = kairos_trie::Transaction<&'s Snapshot<Account>, Account>;
+pub type AccountTrieTxn<S> = kairos_trie::Transaction<S, Account>;
 
 /// TODO panic on error should be behind a feature flag
 type TxnErr = String;
 
-impl<'s> TryFrom<&'s Snapshot<Account>> for AccountTrie<'s> {
+impl<'s> TryFrom<&'s Snapshot<Account>> for AccountTrie<&'s Snapshot<Account>> {
     type Error = TxnErr;
 
     fn try_from(snapshot: &'s Snapshot<Account>) -> Result<Self, Self::Error> {
-        Self::new_try_from_snapshot(snapshot)
+        Ok(Self {
+            txn: kairos_trie::Transaction::from_snapshot(snapshot)?,
+        })
     }
 }
 
-impl<'s> AccountTrie<'s> {
+impl<Db: 'static + DatabaseGet<Account>> TryFrom<SnapshotBuilder<Db, Account>>
+    for AccountTrie<SnapshotBuilder<Db, Account>>
+{
+    type Error = TxnErr;
+    fn try_from(snapshot: SnapshotBuilder<Db, Account>) -> Result<Self, Self::Error> {
+        Ok(Self {
+            txn: kairos_trie::Transaction::from_snapshot_builder(snapshot),
+        })
+    }
+}
+
+impl<'s> AccountTrie<&'s Snapshot<Account>> {
     pub fn new_try_from_snapshot(snapshot: &'s Snapshot<Account>) -> Result<Self, TxnErr> {
         Ok(Self {
             txn: kairos_trie::Transaction::from_snapshot(snapshot)?,
         })
     }
+}
 
+impl<Db: 'static + DatabaseGet<Account>> AccountTrie<SnapshotBuilder<Db, Account>> {
+    pub fn new_try_from_db(db: Db, root_hash: TrieRoot<NodeHash>) -> Result<Self, TxnErr> {
+        Ok(Self {
+            txn: kairos_trie::Transaction::from_snapshot_builder(
+                SnapshotBuilder::empty(db).with_trie_root_hash(root_hash),
+            ),
+        })
+    }
+}
+
+impl<S: Store<Account>> AccountTrie<S> {
     #[allow(clippy::type_complexity)]
     pub fn apply_batch(
         &mut self,
