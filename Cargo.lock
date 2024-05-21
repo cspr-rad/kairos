@@ -1852,7 +1852,6 @@ dependencies = [
  "dotenvy",
  "kairos-circuit-logic",
  "kairos-trie",
- "proptest",
  "serde",
  "serde_json",
  "tokio",

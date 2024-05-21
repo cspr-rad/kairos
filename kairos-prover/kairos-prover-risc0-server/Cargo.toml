@@ -15,11 +15,14 @@ methods = { path = "../methods" }
 risc0-zkvm = "=0.21.0"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tokio = { version = "1", features = ["rt-multi-thread", "tracing", "macros"] }
-kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"] }
+kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"], default-features = false }
 kairos-prover-server-lib = { path = "../kairos-prover-server-lib" }
 
 
 [dev-dependencies]
+kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde", "test-logic"], default-features = false }
+test-strategy = { version = "0.3" }
+proptest = { version = "1" }
 # These crates are needed for the build-std feature, that is due to the Nix
 # sandbox and because cargo dependencies need to be vendored before the build
 # starts. Cargo fetches these dependencies impurely.

@@ -5,6 +5,7 @@ use kairos_tx::{asn, error::TxError};
 
 pub type PublicKey = Vec<u8>;
 
+/// TODO remove this with future PR
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Transaction {
@@ -12,35 +13,29 @@ pub enum Transaction {
     Deposit(Deposit),
     Withdraw(Withdraw),
 }
-
-/// These are the transactions that are initiated by the L2.
-/// Deposit comes from the L1, Withdraw goes to the L1.
-/// Transfer is between L2 accounts.
+/// Transfer is between L2 accounts, entirely executed on L2.
+/// Withdraw is initiated on L2 and executed on the L1.
+/// Deposit comes from the L1, and is executed first on L1 and then on L2.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-// #[cfg_attr(feature = "arbitrary", derive(test_strategy::Arbitrary))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum L2Transactions {
-    Transfer(Transfer),
-    // #[cfg_attr(feature = "arbitrary", weight(3))]
-    Withdraw(Withdraw),
+pub enum KairosTransaction {
+    Transfer(Signed<Transfer>),
+    Withdraw(Signed<Withdraw>),
+    Deposit(L1Deposit),
 }
 
 /// A signed transaction.
-/// The signature should already be verified before yout construct this type.
+/// The signature should already be verified before you construct this type.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Signed<T> {
     pub public_key: PublicKey,
-    /// Increments with each `L2Transactions` (Transfer or Withdraw).
+    /// Increments with each Transfer or Withdraw from this account.
     pub nonce: u64,
     pub transaction: T,
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "arbitrary",
-           derive(test_strategy::Arbitrary),
-           arbitrary(args = (AccountsState, MaxAmount))
-           )]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Transfer {
     pub recipient: PublicKey,
@@ -48,22 +43,10 @@ pub struct Transfer {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "arbitrary",
-           derive(test_strategy::Arbitrary),
-           arbitrary(args = (AccountsState, std::rc::Rc<PublicKey>)))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct L1Deposit {
-    #[cfg_attr(feature = "arbitrary",
-               strategy(proptest::prelude::any::<proptest::sample::Index>()),
-               map(|sampler| args.0.sample_keys(sampler)),
-               by_ref
-               )]
     pub recipient: PublicKey,
 
-    #[cfg_attr(feature = "arbitrary",
-               strategy(proptest::prelude::any::<proptest::sample::Index>()),
-               map(|sampler| args.0.deposit(&args.1, #recipient, sampler)),
-               )]
     pub amount: u64,
 }
 
@@ -75,9 +58,6 @@ pub struct Deposit {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "arbitrary",
-           derive(test_strategy::Arbitrary),
-           arbitrary(args = MaxAmount))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Withdraw {
     pub amount: u64,
@@ -89,16 +69,120 @@ pub use arbitrary_bounds::*;
 mod arbitrary_bounds {
     use std::{cell::RefCell, collections::HashMap, fmt, ops::Deref, rc::Rc};
 
+    use proptest::{collection, prelude::*, sample};
+    use test_strategy::Arbitrary;
+
     use super::*;
     use crate::account_trie::Account;
+
+    #[derive(Debug, Clone)]
+    pub enum TxnExpectedResult {
+        Success,
+        Failure,
+    }
+
+    #[derive(Debug, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
+    pub struct RandomTransfer(
+        #[strategy(any::<(sample::Index, sample::Index, sample::Index)>())]
+        #[map(|(sender, recipient, amount)| args.random_transfer(sender, recipient, amount, 0.))]
+        pub (Signed<Transfer>, TxnExpectedResult),
+    );
+
+    #[derive(Debug, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
+    pub struct RandomWithdraw(
+        #[strategy(any::<(sample::Index, sample::Index)>())]
+        #[map(|(sender, amount)| args.random_withdraw(sender, amount))]
+        pub (Signed<Withdraw>, TxnExpectedResult),
+    );
+
+    #[derive(Debug, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
+    pub struct RandomL1Deposit(
+        #[strategy(any::<(sample::Index, sample::Index, sample::Index)>())]
+        #[map(|(sender, recipient, amount)| args.random_deposit(sender, recipient, amount))]
+        pub (L1Deposit, TxnExpectedResult),
+    );
+
+    #[derive(Debug, Clone)]
+    pub enum RandomTransaction {
+        Transfer(RandomTransfer),
+        Withdraw(RandomWithdraw),
+        L1Deposit(RandomL1Deposit),
+    }
+
+    impl proptest::arbitrary::Arbitrary for RandomTransaction {
+        type Parameters = AccountsState;
+        type Strategy = proptest::strategy::BoxedStrategy<Self>;
+        fn arbitrary_with(
+            args: <Self as proptest::arbitrary::Arbitrary>::Parameters,
+        ) -> Self::Strategy {
+            proptest::strategy::Strategy::boxed({
+                proptest::prop_oneof![
+                    1 => {
+                        let strategy_0 = proptest::arbitrary::any_with:: <RandomTransfer>(args.clone());
+                        proptest::strategy::Strategy::prop_map(strategy_0, Self::Transfer)
+                    },
+                    1 => {
+                        let strategy_0 = proptest::arbitrary::any_with:: <RandomWithdraw>(args.clone());
+                        proptest::strategy::Strategy::prop_map(strategy_0, Self::Withdraw)
+                    },
+                    1 => {
+                        let strategy_0 = proptest::arbitrary::any_with:: <RandomL1Deposit>(args);
+                        proptest::strategy::Strategy::prop_map(strategy_0, Self::L1Deposit)
+                    },
+                ]
+            })
+        }
+    }
+
+    #[derive(Debug, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
+    pub struct ValidRandomTransaction {
+        #[strategy(any_with::<RandomTransaction>(args.clone()))]
+        #[filter(|txn| match txn {
+            RandomTransaction::Transfer(RandomTransfer((_, TxnExpectedResult::Success))) |
+            RandomTransaction::Withdraw(RandomWithdraw((_, TxnExpectedResult::Success))) |
+            RandomTransaction::L1Deposit(RandomL1Deposit((_, TxnExpectedResult::Success))) => true,
+            _ => false,
+        })]
+        pub txns: RandomTransaction,
+    }
+
+    #[derive(Debug, Default, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
+    pub struct TestBatch {
+        #[strategy(collection::vec(any_with::<ValidRandomTransaction>(args.clone()), 1..args.shared.max_batch_size))]
+        pub transactions: Vec<ValidRandomTransaction>,
+    }
+
+    #[derive(Debug, Default, Clone, Arbitrary)]
+    #[arbitrary(args = AccountsState)]
+    pub struct TestBatchSequence {
+        #[strategy(collection::vec(any_with::<TestBatch>(args.clone()), 1..args.shared.max_batch_count))]
+        pub batches: Vec<TestBatch>,
+    }
+
+    impl TestBatchSequence {
+        pub fn into_vec(self) -> Vec<Vec<ValidRandomTransaction>> {
+            self.batches
+                .into_iter()
+                .map(|batch| batch.transactions)
+                .collect()
+        }
+    }
 
     #[derive(Debug, Default)]
     pub struct PublicKeys(pub Vec<Rc<PublicKey>>);
 
+    #[derive(Clone)]
     pub struct AccountsState {
         shared: Rc<AccountsStateInner>,
     }
     pub struct AccountsStateInner {
+        pub max_batch_size: usize,
+        pub max_batch_count: usize,
         pub keys: PublicKeys,
         pub l1_accounts: RefCell<HashMap<Rc<PublicKey>, u64>>,
         pub l2_accounts: RefCell<HashMap<Rc<PublicKey>, Account>>,
@@ -122,56 +206,172 @@ mod arbitrary_bounds {
 
     impl Default for AccountsState {
         fn default() -> Self {
+            unreachable!("AccountsState should always be created with AccountsState::new()");
+        }
+    }
+
+    impl AccountsState {
+        pub fn new() -> Self {
             AccountsState {
                 shared: Rc::new(AccountsStateInner {
+                    max_batch_size: 100,
+                    max_batch_count: 100,
                     keys: PublicKeys::default(),
                     l1_accounts: RefCell::new(HashMap::new()),
                     l2_accounts: RefCell::new(HashMap::new()),
                 }),
             }
         }
-    }
 
-    impl AccountsState {
-        pub fn sample_keys(&self, sampler: proptest::sample::Index) -> PublicKey {
+        pub fn sample_keys(&self, sampler: sample::Index) -> PublicKey {
             let keys = &self.shared.keys;
             keys.0[sampler.index(keys.0.len())].to_vec()
         }
 
-        pub fn deposit(
+        pub fn random_deposit(
             &self,
-            sender: &PublicKey,
-            recipient: &PublicKey,
-            amount_sampler: proptest::sample::Index,
-        ) -> u64 {
+            sender: sample::Index,
+            recipient: sample::Index,
+            amount_sampler: sample::Index,
+        ) -> (L1Deposit, TxnExpectedResult) {
+            let sender = self.sample_keys(sender);
+            let recipient = self.sample_keys(recipient);
+
             let mut l1_accounts = self.shared.l1_accounts.borrow_mut();
-            let l1_amount = l1_accounts
-                .get_mut(sender)
+            let l1_balance = l1_accounts
+                .get_mut(&sender)
                 .expect("sender does not have an l1 account in AccountsState");
 
-            let amount = amount_sampler.index(*l1_amount as usize) as u64;
+            let amount = amount_sampler.index(*l1_balance as usize) as u64;
 
             let mut l2_accounts = self.shared.l2_accounts.borrow_mut();
 
             let l2_account = l2_accounts
-                .get_mut(recipient)
+                .get_mut(&recipient)
                 .expect("recipient does not have an l2 account in AccountsState");
 
             // if the deposit will fail don't change the test model state
-            if let (Some(l1_bal), Some(l2_bal)) = (
-                l1_amount.checked_sub(amount),
+            match (
+                l1_balance.checked_sub(amount),
                 l2_account.balance.checked_add(amount),
             ) {
-                *l1_amount = l1_bal;
-                l2_account.balance = l2_bal;
-            }
+                (Some(l1_bal), Some(l2_bal)) => {
+                    *l1_balance = l1_bal;
+                    l2_account.balance = l2_bal;
 
-            amount
+                    (L1Deposit { recipient, amount }, TxnExpectedResult::Success)
+                }
+                _ => {
+                    unreachable!("For now I am not testing the case where the deposit fails");
+                    // (L1Deposit { recipient, amount }, TxnExpectedResult::Failure)
+                }
+            }
+        }
+
+        pub fn random_transfer(
+            &self,
+            sender: sample::Index,
+            recipient: sample::Index,
+            amount: sample::Index,
+            insufficient_balance_prop: f64,
+        ) -> (Signed<Transfer>, TxnExpectedResult) {
+            let sender = self.sample_keys(sender);
+            let recipient = self.sample_keys(recipient);
+
+            let mut l2_accounts = self.shared.l2_accounts.borrow_mut();
+            let sender_account = l2_accounts
+                .get(&sender)
+                .expect("sender does not have an l2 account in AccountsState");
+            let sender_balance = sender_account.balance;
+            let nonce = sender_account.nonce;
+
+            let recipient_balance = l2_accounts
+                .get(&recipient)
+                .expect("recipient does not have an l2 account in AccountsState")
+                .balance;
+
+            // This not exact but is used to control the frequency of insufficient balance errors
+            let amount = amount
+                .index((sender_balance as f64 * (1. + insufficient_balance_prop)) as usize)
+                as u64;
+
+            let signed_transfer = |public_key: PublicKey, recipient: PublicKey| Signed {
+                public_key,
+                nonce,
+                transaction: Transfer { recipient, amount },
+            };
+
+            match (
+                sender_balance.checked_sub(amount),
+                recipient_balance.checked_add(amount),
+            ) {
+                (Some(new_sender_bal), Some(new_recipient_bal)) => {
+                    let sender_account = l2_accounts.get_mut(&sender).unwrap();
+                    sender_account.balance = new_sender_bal;
+                    sender_account.nonce += 1;
+
+                    l2_accounts.get_mut(&recipient).unwrap().balance = new_recipient_bal;
+
+                    (
+                        signed_transfer(sender, recipient),
+                        TxnExpectedResult::Success,
+                    )
+                }
+                _ => (
+                    signed_transfer(sender, recipient),
+                    TxnExpectedResult::Failure,
+                ),
+            }
+        }
+
+        pub fn random_withdraw(
+            &self,
+            sender: sample::Index,
+            amount: sample::Index,
+        ) -> (Signed<Withdraw>, TxnExpectedResult) {
+            let sender = self.sample_keys(sender);
+
+            let mut l2_accounts = self.shared.l2_accounts.borrow_mut();
+            let sender_account = l2_accounts
+                .get(&sender)
+                .expect("sender does not have an l2 account in AccountsState");
+            let sender_balance = sender_account.balance;
+            let nonce = sender_account.nonce;
+
+            let mut l1_accounts = self.shared.l1_accounts.borrow_mut();
+            let l1_balance = l1_accounts
+                .get_mut(&sender)
+                .expect("recipient does not have an l2 account in AccountsState");
+
+            // This not exact but is used to control the frequency of insufficient balance errors
+            let insufficient_balance_prop = 0.10;
+            let amount = amount
+                .index((sender_balance as f64 * (1. + insufficient_balance_prop)) as usize)
+                as u64;
+
+            let signed_withdraw = |public_key: PublicKey| Signed {
+                public_key,
+                nonce,
+                transaction: Withdraw { amount },
+            };
+
+            match (
+                sender_balance.checked_sub(amount),
+                l1_balance.checked_add(amount),
+            ) {
+                (Some(new_sender_bal), Some(new_recipient_bal)) => {
+                    let sender_account = l2_accounts.get_mut(&sender).unwrap();
+                    sender_account.balance = new_sender_bal;
+                    sender_account.nonce += 1;
+
+                    *l1_balance = new_recipient_bal;
+
+                    (signed_withdraw(sender), TxnExpectedResult::Success)
+                }
+                _ => (signed_withdraw(sender), TxnExpectedResult::Failure),
+            }
         }
     }
-
-    #[derive(Debug, Default)]
-    pub struct MaxAmount(pub u64);
 }
 
 #[cfg(feature = "asn1")]

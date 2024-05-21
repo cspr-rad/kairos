@@ -52,6 +52,7 @@
           mv .cargo-home/config.toml .cargo/config.toml
           export RISC0_RUST_SRC=${rustToolchain}/lib/rustlib/src/rust;
         '';
+        checkInputs = [ inputs'.risc0pkgs.packages.r0vm ];
       };
     in
     {
