@@ -49,30 +49,22 @@
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
           kairosNodeAttrs = {
-            src = lib.cleanSourceWith {
-              src = craneLib.path ./.;
-              filter = path: type:
-                (builtins.any (includePath: lib.hasInfix includePath path) [
-                  "/casper-deploy-notifier"
-                  "/kairos-cli"
-                  "/kairos-crypto"
-                  "/kairos-server"
-                  "/kairos-test-utils"
-                  "/kairos-prover/kairos-tx"
-                  "/kairos-prover/kairos-circuit-logic"
-                  "/kairos-prover/kairos-prover-server-lib"
-                  "/Cargo.toml"
-                  "/Cargo.lock"
-                ]) && (
-                  # Allow static files.
-                  (lib.hasInfix "/tests/fixtures/" path) ||
-                  # Default filter (from crane) for .rs files.
-                  (craneLib.filterCargoSources path type)
-                )
-              ;
+            src = lib.fileset.toSource {
+              root = ./.;
+              fileset = lib.fileset.unions [
+                ./Cargo.toml
+                ./Cargo.lock
+                ./casper-deploy-notifier
+                ./kairos-cli
+                ./kairos-crypto
+                ./kairos-server
+                ./kairos-test-utils
+                ./kairos-prover/kairos-tx
+                ./kairos-prover/kairos-circuit-logic
+                ./kairos-prover/kairos-prover-server-lib
+              ];
             };
             nativeBuildInputs = with pkgs; [ pkg-config ];
-
             buildInputs = with pkgs; [
               openssl.dev
             ] ++ lib.optionals stdenv.isDarwin [
