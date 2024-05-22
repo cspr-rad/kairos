@@ -75,28 +75,21 @@
           };
 
           kairosNodeAttrs = {
-            src = lib.cleanSourceWith {
-              src = craneLib.path ./.;
-              filter = path: type:
-                (builtins.any (includePath: lib.hasInfix includePath path) [
-                  "/casper-deploy-notifier"
-                  "/kairos-cli"
-                  "/kairos-crypto"
-                  "/kairos-server"
-                  "/kairos-test-utils"
-                  "/kairos-contracts"
-                  "/demo-contract-tests"
-                  "/kairos-tx"
-                  "/Cargo.toml"
-                  "/Cargo.lock"
-                ]) && (
-                  # Allow static files.
-                  (lib.hasInfix "/tests/fixtures/" path) ||
-                  # Default filter (from crane) for .rs files.
-                  (craneLib.filterCargoSources path type)
-                )
-              ;
+            src = lib.fileset.toSource {
+              root = ./.;
+              fileset = lib.fileset.unions [
+                ./Cargo.toml
+                ./Cargo.lock
+                ./casper-deploy-notifier
+                ./demo-contract-tests
+                ./kairos-cli
+                ./kairos-crypto
+                ./kairos-server
+                ./kairos-test-utils
+                ./kairos-tx
+              ];
             };
+
             nativeBuildInputs = with pkgs; [ pkg-config ];
 
             buildInputs = with pkgs; [
