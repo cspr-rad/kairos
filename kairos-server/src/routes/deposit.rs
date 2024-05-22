@@ -32,7 +32,7 @@ pub async fn deposit_handler(
         None => return Err(anyhow!("Deploy not signed by depositor").into()),
         Some(_) => put_deploy(
             expected_rpc_id.clone(),
-            &state.server_config.casper_node_url,
+            state.server_config.casper_rpc.as_str(),
             casper_client::Verbosity::High,
             body,
         )

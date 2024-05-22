@@ -21,7 +21,7 @@ async fn deposit_successful_with_ed25519() {
         .nodes
         .first()
         .expect("Expected at least one node after successful network run");
-    let node_url = Url::parse(&format!("http://localhost:{}", node.port.rpc_port)).unwrap();
+    let node_url = Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
 
     let kairos = kairos::Kairos::run(node_url).await.unwrap();
 
@@ -107,7 +107,7 @@ fn deposit_invalid_private_key_path() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stderr(predicates::str::contains("failed to parse private key"));
+        .stderr(predicates::str::contains("No such file or directory"));
 }
 
 #[test]
@@ -120,9 +120,9 @@ fn deposit_invalid_private_key_content() {
         .arg("123")
         .arg("--private-key")
         .arg(secret_key_path);
-    cmd.assert()
-        .failure()
-        .stderr(predicates::str::contains("failed to parse private key"));
+    cmd.assert().failure().stderr(predicates::str::contains(
+        "Failed to read secret key from file",
+    ));
 }
 
 #[test]

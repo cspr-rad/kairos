@@ -17,15 +17,12 @@ use kairos_server::{
 };
 use kairos_test_utils::cctl::CCTLNetwork;
 use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
+use reqwest::Url;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 
-fn new_test_app() -> TestServer {
-    new_test_app_with_casper_node("0.0.0.0:0")
-}
-
-fn new_test_app_with_casper_node(casper_node_url: &str) -> TestServer {
+fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
             .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "trace".into()))
@@ -37,7 +34,7 @@ fn new_test_app_with_casper_node(casper_node_url: &str) -> TestServer {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: ServerConfig {
             socket_addr: "0.0.0.0:0".parse().unwrap(),
-            casper_node_url: casper_node_url.to_string(),
+            casper_rpc: casper_node_url.clone(),
         },
     });
 
@@ -52,13 +49,18 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
         .nodes
         .first()
         .expect("Expected at least one node after successful network run");
+    let casper_node_url =
+        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
 
-    let server = new_test_app_with_casper_node(&format!("http://localhost:{}", node.port.rpc_port));
+    let server = new_test_app_with_casper_node(&casper_node_url);
+
     let sender_secret_key_file = network.assets_dir.join("users/user-1/secret_key.pem");
     let sender_secret_key = SecretKey::from_file(sender_secret_key_file).unwrap();
+
     let recipient_public_key_hex =
         std::fs::read_to_string(network.assets_dir.join("users/user-2/public_key_hex")).unwrap();
     let recipient = PublicKey::from_hex(recipient_public_key_hex).unwrap();
+
     // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
     let deploy = DeployBuilder::new_transfer(
         "cspr-dev-cctl",
@@ -82,14 +84,32 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
 }
 
 #[tokio::test]
+#[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn test_deposit_withdraw() {
-    let server = new_test_app();
+    let network = CCTLNetwork::run().await.unwrap();
+    let node = network
+        .nodes
+        .first()
+        .expect("Expected at least one node after successful network run");
+    let casper_node_url =
+        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
 
-    let deposit = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: SigningPayload::new_deposit(100).try_into().unwrap(),
-        signature: vec![],
-    };
+    let server = new_test_app_with_casper_node(&casper_node_url);
+
+    // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
+    let deposit_deploy = DeployBuilder::new_transfer(
+        "cspr-dev-cctl",
+        5_000_000_000u64,
+        // Option::None use the accounts main purse
+        Option::None,
+        TransferTarget::PublicKey(PublicKey::generate_ed25519().unwrap()),
+        Option::None,
+        &SecretKey::generate_ed25519().unwrap(),
+    )
+    .with_timestamp(Timestamp::now())
+    .with_standard_payment(5_000_000_000u64)
+    .build()
+    .unwrap();
 
     // no arguments
     server
@@ -100,14 +120,14 @@ async fn test_deposit_withdraw() {
     // deposit
     server
         .post(DepositPath.to_uri().path())
-        .json(&deposit)
+        .json(&deposit_deploy)
         .await
         .assert_status_success();
 
     // wrong arguments
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&deposit)
+        .json(&deposit_deploy)
         .await
         .assert_status_failure();
 
@@ -116,7 +136,7 @@ async fn test_deposit_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(0, Withdrawal::new(50))
+            payload: SigningPayload::new(0, Withdrawal::new(2_500_000_000u64))
                 .try_into()
                 .unwrap(),
             signature: vec![],
@@ -129,7 +149,7 @@ async fn test_deposit_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(1, Withdrawal::new(51))
+            payload: SigningPayload::new(1, Withdrawal::new(2_600_000_000u64))
                 .der_encode()
                 .unwrap(),
             signature: vec![],
@@ -142,7 +162,7 @@ async fn test_deposit_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(1, Withdrawal::new(50))
+            payload: SigningPayload::new(1, Withdrawal::new(2_500_000_000u64))
                 .try_into()
                 .unwrap(),
             signature: vec![],
@@ -164,18 +184,37 @@ async fn test_deposit_withdraw() {
 }
 
 #[tokio::test]
+#[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn test_deposit_transfer_withdraw() {
-    let server = new_test_app();
+    let network = CCTLNetwork::run().await.unwrap();
+    let node = network
+        .nodes
+        .first()
+        .expect("Expected at least one node after successful network run");
+    let casper_node_url =
+        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+
+    let server = new_test_app_with_casper_node(&casper_node_url);
+
+    // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
+    let deposit_deploy = DeployBuilder::new_transfer(
+        "cspr-dev-cctl",
+        5_000_000_000u64,
+        // Option::None use the accounts main purse
+        Option::None,
+        TransferTarget::PublicKey(PublicKey::generate_ed25519().unwrap()),
+        Option::None,
+        &SecretKey::generate_ed25519().unwrap(),
+    )
+    .with_timestamp(Timestamp::now())
+    .with_standard_payment(5_000_000_000u64)
+    .build()
+    .unwrap();
 
     // deposit
     server
         .post(DepositPath.to_uri().path())
-        .json(&PayloadBody {
-            public_key: "alice_key".into(),
-            // deposit's don't have a defined nonce
-            payload: SigningPayload::new_deposit(100).try_into().unwrap(),
-            signature: vec![],
-        })
+        .json(&deposit_deploy)
         .await
         .assert_status_success();
 
@@ -184,7 +223,7 @@ async fn test_deposit_transfer_withdraw() {
         .post(TransferPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(0, Transfer::new("bob_key".as_bytes(), 50))
+            payload: SigningPayload::new(0, Transfer::new("bob_key".as_bytes(), 2_500_000_000u64))
                 .try_into()
                 .unwrap(),
             signature: vec![],
@@ -197,7 +236,7 @@ async fn test_deposit_transfer_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "bob_key".into(),
-            payload: SigningPayload::new(0, Withdrawal::new(50))
+            payload: SigningPayload::new(0, Withdrawal::new(2_500_000_000u64))
                 .try_into()
                 .unwrap(),
             signature: vec![],
@@ -207,18 +246,37 @@ async fn test_deposit_transfer_withdraw() {
 }
 
 #[tokio::test]
+#[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn test_deposit_transfer_to_self_withdraw() {
-    let server = new_test_app();
+    let network = CCTLNetwork::run().await.unwrap();
+    let node = network
+        .nodes
+        .first()
+        .expect("Expected at least one node after successful network run");
+    let casper_node_url =
+        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+
+    let server = new_test_app_with_casper_node(&casper_node_url);
+
+    // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
+    let deposit_deploy = DeployBuilder::new_transfer(
+        "cspr-dev-cctl",
+        2_500_000_000u64,
+        // Option::None use the accounts main purse
+        Option::None,
+        TransferTarget::PublicKey(PublicKey::generate_ed25519().unwrap()),
+        Option::None,
+        &SecretKey::generate_ed25519().unwrap(),
+    )
+    .with_timestamp(Timestamp::now())
+    .with_standard_payment(2_500_000_000u64)
+    .build()
+    .unwrap();
 
     // deposit
     server
         .post(DepositPath.to_uri().path())
-        .json(&PayloadBody {
-            public_key: "alice_key".into(),
-            // deposit's don't have a defined nonce
-            payload: SigningPayload::new_deposit(1000).try_into().unwrap(),
-            signature: vec![],
-        })
+        .json(&deposit_deploy)
         .await
         .assert_status_success();
 
@@ -227,9 +285,12 @@ async fn test_deposit_transfer_to_self_withdraw() {
         .post(TransferPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(0, Transfer::new("alice_key".as_bytes(), 1000))
-                .try_into()
-                .unwrap(),
+            payload: SigningPayload::new(
+                0,
+                Transfer::new("alice_key".as_bytes(), 2_500_000_000u64),
+            )
+            .try_into()
+            .unwrap(),
             signature: vec![],
         })
         .await
@@ -240,7 +301,7 @@ async fn test_deposit_transfer_to_self_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(1, Withdrawal::new(1000))
+            payload: SigningPayload::new(1, Withdrawal::new(2_500_000_000u64))
                 .try_into()
                 .unwrap(),
             signature: vec![],

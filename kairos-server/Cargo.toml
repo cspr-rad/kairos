@@ -35,6 +35,7 @@ hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
 sha2 = "0.10"
+reqwest = "0.12"
 
 [dev-dependencies]
 proptest = "1"

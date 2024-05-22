@@ -16,7 +16,10 @@ pub struct Args {
 
 pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     let amount: u64 = args.amount.field;
-    let depositor_secret_key = SecretKey::from_file(args.private_key_path.field).unwrap();
+    let path = args.private_key_path.field;
+    let depositor_secret_key = SecretKey::from_file(&path)
+        .map_err(|err| panic!("Failed to read secret key from file {:?}: {}", path, err))
+        .unwrap();
 
     client::deposit(&kairos_server_address, &depositor_secret_key, amount)
         .map_err(Into::<CliError>::into)

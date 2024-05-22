@@ -5,6 +5,7 @@ use reqwest::{blocking, Url};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fs;
+use std::path::Path;
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum KairosClientError {
@@ -44,9 +45,14 @@ pub fn deposit(
     depositor_secret_key: &SecretKey,
     amount: u64,
 ) -> Result<DeployHash, KairosClientError> {
-    let deposit_session_wasm_path = env!("KAIROS_DEPOSIT_SESSION_WASM");
-    let deposit_session_wasm_bytes = fs::read(deposit_session_wasm_path)
-        .unwrap_or_else(|err| panic!("Failed to read the deposit session wasm file as bytes. KAIROS_DEPOSIT_SESSION_WASM was set to {}.\n{}", deposit_session_wasm_path, err));
+    let deposit_session_wasm_path =
+        Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
+    let deposit_session_wasm_bytes = fs::read(&deposit_session_wasm_path).unwrap_or_else(|err| {
+        panic!(
+            "Failed to read the deposit session wasm as bytes from file: {:?}.\n{}",
+            deposit_session_wasm_path, err
+        )
+    });
     let deposit_session =
         ExecutableDeployItem::new_module_bytes(deposit_session_wasm_bytes.into(), runtime_args! {});
     let deploy = DeployBuilder::new(
