@@ -18,11 +18,22 @@ use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 
+#[cfg(not(feature = "deposit-mock"))]
 pub fn app_router(state: ServerState) -> Router {
     Router::new()
         .typed_post(routes::deposit_handler)
         .typed_post(routes::withdraw_handler)
         .typed_post(routes::transfer_handler)
+        .with_state(state)
+}
+
+#[cfg(feature = "deposit-mock")]
+pub fn app_router(state: ServerState) -> Router {
+    Router::new()
+        .typed_post(routes::deposit_handler)
+        .typed_post(routes::withdraw_handler)
+        .typed_post(routes::transfer_handler)
+        .typed_post(routes::deposit_mock_handler)
         .with_state(state)
 }
 

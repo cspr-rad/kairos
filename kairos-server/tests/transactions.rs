@@ -12,15 +12,26 @@ use casper_types::{
 };
 use kairos_server::{
     config::ServerConfig,
-    routes::{deposit::DepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody},
+    routes::deposit::DepositPath,
     state::{BatchStateManager, ServerStateInner},
 };
 use kairos_test_utils::cctl::CCTLNetwork;
-use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
 use reqwest::Url;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
+#[cfg(feature = "deposit-mock")]
+use kairos_server::routes::{
+    deposit_mock::MockDepositPath, transfer::TransferPath, withdraw::WithdrawPath, PayloadBody,
+};
+#[cfg(feature = "deposit-mock")]
+use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
+
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
+
+#[cfg(feature = "deposit-mock")]
+fn new_test_app() -> TestServer {
+    new_test_app_with_casper_node(&Url::parse("http://0.0.0.0:0").unwrap())
+}
 
 fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
@@ -84,50 +95,33 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
 }
 
 #[tokio::test]
-#[cfg_attr(not(feature = "cctl-tests"), ignore)]
+#[cfg(feature = "deposit-mock")]
 async fn test_deposit_withdraw() {
-    let network = CCTLNetwork::run().await.unwrap();
-    let node = network
-        .nodes
-        .first()
-        .expect("Expected at least one node after successful network run");
-    let casper_node_url =
-        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let server = new_test_app();
 
-    let server = new_test_app_with_casper_node(&casper_node_url);
-
-    // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
-    let deposit_deploy = DeployBuilder::new_transfer(
-        "cspr-dev-cctl",
-        5_000_000_000u64,
-        // Option::None use the accounts main purse
-        Option::None,
-        TransferTarget::PublicKey(PublicKey::generate_ed25519().unwrap()),
-        Option::None,
-        &SecretKey::generate_ed25519().unwrap(),
-    )
-    .with_timestamp(Timestamp::now())
-    .with_standard_payment(5_000_000_000u64)
-    .build()
-    .unwrap();
+    let deposit = PayloadBody {
+        public_key: "alice_key".into(),
+        payload: SigningPayload::new_deposit(100).try_into().unwrap(),
+        signature: vec![],
+    };
 
     // no arguments
     server
-        .post(DepositPath.to_uri().path())
+        .post(MockDepositPath.to_uri().path())
         .await
         .assert_status_failure();
 
     // deposit
     server
-        .post(DepositPath.to_uri().path())
-        .json(&deposit_deploy)
+        .post(MockDepositPath.to_uri().path())
+        .json(&deposit)
         .await
         .assert_status_success();
 
     // wrong arguments
     server
         .post(WithdrawPath.to_uri().path())
-        .json(&deposit_deploy)
+        .json(&deposit)
         .await
         .assert_status_failure();
 
@@ -136,7 +130,7 @@ async fn test_deposit_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(0, Withdrawal::new(2_500_000_000u64))
+            payload: SigningPayload::new(0, Withdrawal::new(50))
                 .try_into()
                 .unwrap(),
             signature: vec![],
@@ -149,7 +143,7 @@ async fn test_deposit_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(1, Withdrawal::new(2_600_000_000u64))
+            payload: SigningPayload::new(1, Withdrawal::new(51))
                 .der_encode()
                 .unwrap(),
             signature: vec![],
@@ -162,7 +156,7 @@ async fn test_deposit_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(1, Withdrawal::new(2_500_000_000u64))
+            payload: SigningPayload::new(1, Withdrawal::new(50))
                 .try_into()
                 .unwrap(),
             signature: vec![],
@@ -184,37 +178,19 @@ async fn test_deposit_withdraw() {
 }
 
 #[tokio::test]
-#[cfg_attr(not(feature = "cctl-tests"), ignore)]
+#[cfg(feature = "deposit-mock")]
 async fn test_deposit_transfer_withdraw() {
-    let network = CCTLNetwork::run().await.unwrap();
-    let node = network
-        .nodes
-        .first()
-        .expect("Expected at least one node after successful network run");
-    let casper_node_url =
-        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
-
-    let server = new_test_app_with_casper_node(&casper_node_url);
-
-    // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
-    let deposit_deploy = DeployBuilder::new_transfer(
-        "cspr-dev-cctl",
-        5_000_000_000u64,
-        // Option::None use the accounts main purse
-        Option::None,
-        TransferTarget::PublicKey(PublicKey::generate_ed25519().unwrap()),
-        Option::None,
-        &SecretKey::generate_ed25519().unwrap(),
-    )
-    .with_timestamp(Timestamp::now())
-    .with_standard_payment(5_000_000_000u64)
-    .build()
-    .unwrap();
+    let server = new_test_app();
 
     // deposit
     server
-        .post(DepositPath.to_uri().path())
-        .json(&deposit_deploy)
+        .post(MockDepositPath.to_uri().path())
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            // deposit's don't have a defined nonce
+            payload: SigningPayload::new_deposit(100).try_into().unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 
@@ -223,7 +199,7 @@ async fn test_deposit_transfer_withdraw() {
         .post(TransferPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(0, Transfer::new("bob_key".as_bytes(), 2_500_000_000u64))
+            payload: SigningPayload::new(0, Transfer::new("bob_key".as_bytes(), 50))
                 .try_into()
                 .unwrap(),
             signature: vec![],
@@ -236,7 +212,7 @@ async fn test_deposit_transfer_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "bob_key".into(),
-            payload: SigningPayload::new(0, Withdrawal::new(2_500_000_000u64))
+            payload: SigningPayload::new(0, Withdrawal::new(50))
                 .try_into()
                 .unwrap(),
             signature: vec![],
@@ -246,37 +222,19 @@ async fn test_deposit_transfer_withdraw() {
 }
 
 #[tokio::test]
-#[cfg_attr(not(feature = "cctl-tests"), ignore)]
+#[cfg(feature = "deposit-mock")]
 async fn test_deposit_transfer_to_self_withdraw() {
-    let network = CCTLNetwork::run().await.unwrap();
-    let node = network
-        .nodes
-        .first()
-        .expect("Expected at least one node after successful network run");
-    let casper_node_url =
-        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
-
-    let server = new_test_app_with_casper_node(&casper_node_url);
-
-    // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
-    let deposit_deploy = DeployBuilder::new_transfer(
-        "cspr-dev-cctl",
-        2_500_000_000u64,
-        // Option::None use the accounts main purse
-        Option::None,
-        TransferTarget::PublicKey(PublicKey::generate_ed25519().unwrap()),
-        Option::None,
-        &SecretKey::generate_ed25519().unwrap(),
-    )
-    .with_timestamp(Timestamp::now())
-    .with_standard_payment(2_500_000_000u64)
-    .build()
-    .unwrap();
+    let server = new_test_app();
 
     // deposit
     server
-        .post(DepositPath.to_uri().path())
-        .json(&deposit_deploy)
+        .post(MockDepositPath.to_uri().path())
+        .json(&PayloadBody {
+            public_key: "alice_key".into(),
+            // deposit's don't have a defined nonce
+            payload: SigningPayload::new_deposit(1000).try_into().unwrap(),
+            signature: vec![],
+        })
         .await
         .assert_status_success();
 
@@ -285,12 +243,9 @@ async fn test_deposit_transfer_to_self_withdraw() {
         .post(TransferPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(
-                0,
-                Transfer::new("alice_key".as_bytes(), 2_500_000_000u64),
-            )
-            .try_into()
-            .unwrap(),
+            payload: SigningPayload::new(0, Transfer::new("alice_key".as_bytes(), 1000))
+                .try_into()
+                .unwrap(),
             signature: vec![],
         })
         .await
@@ -301,7 +256,7 @@ async fn test_deposit_transfer_to_self_withdraw() {
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(1, Withdrawal::new(2_500_000_000u64))
+            payload: SigningPayload::new(1, Withdrawal::new(1000))
                 .try_into()
                 .unwrap(),
             signature: vec![],

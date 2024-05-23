@@ -12,8 +12,9 @@ name = "kairos-server"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-all-tests = ["cctl-tests"]
+all-tests = ["cctl-tests", "deposit-mock"]
 cctl-tests = []
+deposit-mock = []
 
 [dependencies]
 dotenvy = "0.15"
