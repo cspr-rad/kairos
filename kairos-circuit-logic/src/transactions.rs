@@ -128,22 +128,17 @@ pub mod arbitrary {
     impl proptest::arbitrary::Arbitrary for RandomTransaction {
         type Parameters = AccountsState;
         type Strategy = proptest::strategy::BoxedStrategy<Self>;
-        fn arbitrary_with(
-            args: <Self as proptest::arbitrary::Arbitrary>::Parameters,
-        ) -> Self::Strategy {
+        fn arbitrary_with(args: AccountsState) -> Self::Strategy {
             proptest::strategy::Strategy::boxed({
                 proptest::prop_oneof![
                     1 => {
-                        let strategy_0 = proptest::arbitrary::any_with:: <RandomTransfer>(args.clone());
-                        proptest::strategy::Strategy::prop_map(strategy_0, Self::Transfer)
+                        proptest::strategy::Strategy::prop_map(RandomTransfer::arbitrary_with(args.clone()), Self::Transfer)
                     },
                     1 => {
-                        let strategy_0 = proptest::arbitrary::any_with:: <RandomWithdraw>(args.clone());
-                        proptest::strategy::Strategy::prop_map(strategy_0, Self::Withdraw)
+                        proptest::strategy::Strategy::prop_map(RandomWithdraw::arbitrary_with(args.clone()), Self::Withdraw)
                     },
                     1 => {
-                        let strategy_0 = proptest::arbitrary::any_with:: <RandomL1Deposit>(args);
-                        proptest::strategy::Strategy::prop_map(strategy_0, Self::L1Deposit)
+                        proptest::strategy::Strategy::prop_map(RandomL1Deposit::arbitrary_with(args), Self::L1Deposit)
                     },
                 ]
             })
@@ -153,35 +148,37 @@ pub mod arbitrary {
     #[derive(Debug, Clone, Arbitrary)]
     #[arbitrary(args = AccountsState)]
     pub struct ValidRandomTransaction {
-        #[strategy(any_with::<RandomTransaction>(args.clone()))]
-        #[filter(|txn| match txn {
-            RandomTransaction::Transfer(RandomTransfer((_, TxnExpectedResult::Success))) |
-            RandomTransaction::Withdraw(RandomWithdraw((_, TxnExpectedResult::Success))) |
-            RandomTransaction::L1Deposit(RandomL1Deposit((_, TxnExpectedResult::Success))) => true,
-            _ => false,
-        })]
-        pub txns: RandomTransaction,
+        #[strategy(any_with::<RandomTransaction>(args.clone()).prop_filter_map(
+            "Can't make valid transaction",
+            |txn| match txn {
+                RandomTransaction::Transfer(RandomTransfer((txn, TxnExpectedResult::Success))) => Some(KairosTransaction::Transfer(txn)),
+                RandomTransaction::Withdraw(RandomWithdraw((txn, TxnExpectedResult::Success))) => Some(KairosTransaction::Withdraw(txn)),
+                RandomTransaction::L1Deposit(RandomL1Deposit((txn, TxnExpectedResult::Success))) => Some(KairosTransaction::Deposit(txn)),
+                _ => None,
+            }
+        ))]
+        pub txns: KairosTransaction,
     }
 
     #[derive(Debug, Default, Clone, Arbitrary)]
     #[arbitrary(args = AccountsState)]
     pub struct TestBatch {
-        #[strategy(collection::vec(any_with::<ValidRandomTransaction>(args.clone()), 1..args.shared.max_batch_size))]
+        #[strategy(collection::vec(any_with::<ValidRandomTransaction>(args.clone()), 1..=args.shared.max_batch_size))]
         pub transactions: Vec<ValidRandomTransaction>,
     }
 
     #[derive(Debug, Default, Clone, Arbitrary)]
     #[arbitrary(args = AccountsState)]
     pub struct TestBatchSequence {
-        #[strategy(collection::vec(any_with::<TestBatch>(args.clone()), 1..args.shared.max_batch_count))]
+        #[strategy(collection::vec(any_with::<TestBatch>(args.clone()), 1..=args.shared.max_batch_count))]
         pub batches: Vec<TestBatch>,
     }
 
     impl TestBatchSequence {
-        pub fn into_vec(self) -> Vec<Vec<ValidRandomTransaction>> {
+        pub fn into_vec(self) -> Vec<Vec<KairosTransaction>> {
             self.batches
                 .into_iter()
-                .map(|batch| batch.transactions)
+                .map(|batch| batch.transactions.into_iter().map(|txn| txn.txns).collect())
                 .collect()
         }
     }
@@ -239,7 +236,7 @@ pub mod arbitrary {
                 hasher.update(public_key.as_slice());
                 let key = &KeyHash::from_bytes(&hasher.finalize_fixed_reset().into());
 
-                account_trie.txn.insert(key, account.clone()).unwrap();
+                account_trie.txn.insert(dbg!(key), account.clone()).unwrap();
             }
 
             let root = account_trie.txn.commit(&mut DigestHasher(hasher)).unwrap();
@@ -270,7 +267,17 @@ pub mod arbitrary {
                 .get_mut(&sender)
                 .expect("sender does not have an l1 account in AccountsState");
 
-            let amount = amount_sampler.index(*l1_balance as usize) as u64;
+            let amount = if *l1_balance == 0 {
+                return Ok((
+                    L1Deposit {
+                        recipient,
+                        amount: 0,
+                    },
+                    TxnExpectedResult::Failure,
+                ));
+            } else {
+                amount_sampler.index(*l1_balance as usize) as u64
+            };
 
             let mut l2 = self.shared.l2.borrow_mut();
 
@@ -321,7 +328,21 @@ pub mod arbitrary {
                 .balance;
 
             // This not exact but is used to control the frequency of insufficient balance errors
-            let amount = amount.index(sender_balance as usize) as u64;
+            let amount = if sender_balance == 0 {
+                return (
+                    Signed {
+                        public_key: sender.clone(),
+                        nonce,
+                        transaction: Transfer {
+                            recipient: recipient.clone(),
+                            amount: 0,
+                        },
+                    },
+                    TxnExpectedResult::Failure,
+                );
+            } else {
+                amount.index(sender_balance as usize) as u64
+            };
 
             let signed_transfer = |public_key: PublicKey, recipient: PublicKey| Signed {
                 public_key,
@@ -371,10 +392,18 @@ pub mod arbitrary {
             let l1_balance = l1.accounts.entry(sender.clone()).or_insert(0);
 
             // This not exact but is used to control the frequency of insufficient balance errors
-            let insufficient_balance_prop = 0.10;
-            let amount = amount
-                .index((sender_balance as f64 * (1. + insufficient_balance_prop)) as usize)
-                as u64;
+            let amount = if sender_balance == 0 {
+                return (
+                    Signed {
+                        public_key: sender.deref().clone(),
+                        nonce,
+                        transaction: Withdraw { amount: 0 },
+                    },
+                    TxnExpectedResult::Failure,
+                );
+            } else {
+                amount.index(sender_balance as usize) as u64
+            };
 
             let signed_withdraw = |public_key: PublicKey| Signed {
                 public_key,
@@ -430,7 +459,7 @@ pub mod arbitrary {
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with(_args: ()) -> Self::Strategy {
-            (proptest::collection::vec((any::<Rc<PublicKey>>(), 0..10_000u64), 1..100))
+            (proptest::collection::vec((any::<Rc<PublicKey>>(), 1..10_000u64), 1..100))
                 .prop_flat_map(|accounts| {
                     Just(Accounts {
                         pub_keys: accounts.iter().map(|(pk, _)| pk.clone()).collect(),
@@ -447,7 +476,7 @@ pub mod arbitrary {
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with(_args: ()) -> Self::Strategy {
-            (proptest::collection::vec((any::<Rc<PublicKey>>(), 0..10_000u64, 0..100u64), 1..100))
+            (proptest::collection::vec((any::<Rc<PublicKey>>(), 1..10_000u64, 0..100u64), 1..100))
                 .prop_flat_map(|accounts| {
                     Just(Accounts {
                         pub_keys: accounts.iter().map(|(pk, _, _)| pk.clone()).collect(),

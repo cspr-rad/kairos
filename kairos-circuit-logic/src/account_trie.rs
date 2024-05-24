@@ -359,6 +359,9 @@ pub mod test_logic {
             #[strategy(any::<AccountsState>().prop_flat_map(|a| any_with::<TestBatchSequence>(a)))]
             batches: TestBatchSequence,
         ) {
+            test_prove_batch(batches.into_vec(), |proof_inputs| {
+                proof_inputs.run_batch_proof_logic()
+            })
         }
     }
 }
