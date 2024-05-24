@@ -6,7 +6,7 @@ use tokio::signal;
 
 #[derive(Parser)]
 pub struct Cli {
-    #[clap(short, long)]
+    #[arg(short, long)]
     pub working_dir: Option<PathBuf>,
 }
 

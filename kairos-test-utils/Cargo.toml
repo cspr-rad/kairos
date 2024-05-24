@@ -21,7 +21,7 @@ cctl-tests = []
 
 anyhow = "1"
 backoff = { version = "0.4", features = ["tokio", "futures"]}
-clap = { version = "3", features = ["derive"] }
+clap = { version = "4", features = ["derive"] }
 casper-client = "2"
 nom = "7"
 sd-notify = "0.4"
