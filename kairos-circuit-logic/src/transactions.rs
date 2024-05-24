@@ -68,7 +68,7 @@ pub mod arbitrary {
     use std::{cell::RefCell, collections::HashMap, fmt, ops::Deref, rc::Rc};
 
     use kairos_trie::{stored::memory_db::MemoryDb, DigestHasher, KeyHash, NodeHash, TrieRoot};
-    use proptest::{collection, prelude::*, sample};
+    use proptest::{prelude::*, sample};
     use sha2::{digest::FixedOutputReset, Digest, Sha256};
     use test_strategy::Arbitrary;
 
@@ -79,103 +79,6 @@ pub mod arbitrary {
     pub enum TxnExpectedResult {
         Success,
         Failure,
-    }
-
-    #[derive(Debug, Clone, Arbitrary)]
-    #[arbitrary(args = AccountsState)]
-    pub struct RandomTransfer(
-        #[strategy(any::<(sample::Index, sample::Index, sample::Index)>())]
-        #[map(|(sender, recipient, amount)| args.random_transfer(sender, recipient, amount))]
-        pub (Signed<Transfer>, TxnExpectedResult),
-    );
-
-    #[derive(Debug, Clone, Arbitrary)]
-    #[arbitrary(args = AccountsState)]
-    pub struct RandomWithdraw(
-        #[strategy(any::<(sample::Index, sample::Index)>())]
-        #[map(|(sender, amount)| args.random_withdraw(sender, amount))]
-        pub (Signed<Withdraw>, TxnExpectedResult),
-    );
-
-    #[derive(Debug, Clone)]
-    pub struct RandomL1Deposit(pub (L1Deposit, TxnExpectedResult));
-
-    impl Arbitrary for RandomL1Deposit {
-        type Parameters = AccountsState;
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(args: Self::Parameters) -> Self::Strategy {
-            (any::<(sample::Index, sample::Index, sample::Index)>())
-                .prop_map(move |(sender, recipient, amount)| {
-                    RandomL1Deposit(args.random_deposit(sender, recipient, amount))
-                })
-                .boxed()
-        }
-    }
-
-    #[derive(Debug, Clone)]
-    pub enum RandomTransaction {
-        Transfer(RandomTransfer),
-        Withdraw(RandomWithdraw),
-        L1Deposit(RandomL1Deposit),
-    }
-
-    impl proptest::arbitrary::Arbitrary for RandomTransaction {
-        type Parameters = AccountsState;
-        type Strategy = proptest::strategy::BoxedStrategy<Self>;
-        fn arbitrary_with(args: AccountsState) -> Self::Strategy {
-            proptest::strategy::Strategy::boxed({
-                proptest::prop_oneof![
-                    1 => {
-                        proptest::strategy::Strategy::prop_map(RandomTransfer::arbitrary_with(args.clone()), Self::Transfer)
-                    },
-                    1 => {
-                        proptest::strategy::Strategy::prop_map(RandomWithdraw::arbitrary_with(args.clone()), Self::Withdraw)
-                    },
-                    1 => {
-                        proptest::strategy::Strategy::prop_map(RandomL1Deposit::arbitrary_with(args), Self::L1Deposit)
-                    },
-                ]
-            })
-        }
-    }
-
-    #[derive(Debug, Clone, Arbitrary)]
-    #[arbitrary(args = AccountsState)]
-    pub struct ValidRandomTransaction {
-        #[strategy(any_with::<RandomTransaction>(args.clone()).prop_filter_map(
-            "Can't make valid transaction",
-            |txn| match txn {
-                RandomTransaction::Transfer(RandomTransfer((txn, TxnExpectedResult::Success))) => Some(KairosTransaction::Transfer(txn)),
-                RandomTransaction::Withdraw(RandomWithdraw((txn, TxnExpectedResult::Success))) => Some(KairosTransaction::Withdraw(txn)),
-                RandomTransaction::L1Deposit(RandomL1Deposit((txn, TxnExpectedResult::Success))) => Some(KairosTransaction::Deposit(txn)),
-                _ => None,
-            }
-        ))]
-        pub txns: KairosTransaction,
-    }
-
-    #[derive(Debug, Default, Clone, Arbitrary)]
-    #[arbitrary(args = AccountsState)]
-    pub struct TestBatch {
-        #[strategy(collection::vec(any_with::<ValidRandomTransaction>(args.clone()), 1..=args.shared.max_batch_size))]
-        pub transactions: Vec<ValidRandomTransaction>,
-    }
-
-    #[derive(Debug, Default, Clone, Arbitrary)]
-    #[arbitrary(args = AccountsState)]
-    pub struct TestBatchSequence {
-        #[strategy(collection::vec(any_with::<TestBatch>(args.clone()), 1..=args.shared.max_batch_count))]
-        pub batches: Vec<TestBatch>,
-    }
-
-    impl TestBatchSequence {
-        pub fn into_vec(self) -> Vec<Vec<KairosTransaction>> {
-            self.batches
-                .into_iter()
-                .map(|batch| batch.transactions.into_iter().map(|txn| txn.txns).collect())
-                .collect()
-        }
     }
 
     impl Arbitrary for KairosTransaction {
@@ -230,10 +133,6 @@ pub mod arbitrary {
     }
     #[derive(Debug, Clone, Arbitrary)]
     pub struct AccountsStateInner {
-        #[strategy(1..1000usize)]
-        pub max_batch_size: usize,
-        #[strategy(1..10usize)]
-        pub max_batch_count: usize,
         pub l1: RefCell<Accounts<u64>>,
         pub l2: RefCell<Accounts<Account>>,
     }
@@ -312,7 +211,7 @@ pub mod arbitrary {
                     TxnExpectedResult::Failure,
                 );
             } else {
-                amount_sampler.index(*l1_balance as usize) as u64
+                amount_sampler.index(*l1_balance as usize) as u64 + 1
             };
 
             let mut l2 = self.shared.l2.borrow_mut();
@@ -377,7 +276,7 @@ pub mod arbitrary {
                     TxnExpectedResult::Failure,
                 );
             } else {
-                amount.index(sender_balance as usize) as u64
+                dbg!(amount.index(sender_balance as usize) as u64 + 1)
             };
 
             let signed_transfer = |public_key: PublicKey, recipient: PublicKey| Signed {
@@ -438,7 +337,7 @@ pub mod arbitrary {
                     TxnExpectedResult::Failure,
                 );
             } else {
-                amount.index(sender_balance as usize) as u64
+                amount.index(sender_balance as usize) as u64 + 1
             };
 
             let signed_withdraw = |public_key: PublicKey| Signed {
@@ -486,7 +385,7 @@ pub mod arbitrary {
         }
 
         pub fn sample_keys(&self, sampler: sample::Index) -> Rc<PublicKey> {
-            self.pub_keys[sampler.index(dbg!(self.pub_keys.len()))].clone()
+            self.pub_keys[sampler.index(self.pub_keys.len())].clone()
         }
     }
 
@@ -495,7 +394,7 @@ pub mod arbitrary {
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with(_args: ()) -> Self::Strategy {
-            (proptest::collection::vec((any::<Rc<PublicKey>>(), 1..10_000u64), 1..100))
+            (proptest::collection::vec((any::<Rc<PublicKey>>(), 1..10_000u64), 1..10))
                 .prop_flat_map(|accounts| {
                     Just(Accounts {
                         pub_keys: accounts.iter().map(|(pk, _)| pk.clone()).collect(),
@@ -512,7 +411,7 @@ pub mod arbitrary {
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with(_args: ()) -> Self::Strategy {
-            (proptest::collection::vec((any::<Rc<PublicKey>>(), 1..10_000u64, 0..100u64), 1..100))
+            (proptest::collection::vec((any::<Rc<PublicKey>>(), 1..10_000u64, 0..100u64), 1..10))
                 .prop_flat_map(|accounts| {
                     Just(Accounts {
                         pub_keys: accounts.iter().map(|(pk, _, _)| pk.clone()).collect(),

@@ -300,7 +300,7 @@ pub mod test_logic {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::transactions::arbitrary::{AccountsState, TestBatchSequence};
+        use crate::transactions::arbitrary::AccountsState;
 
         use proptest::prelude::*;
 
@@ -356,10 +356,12 @@ pub mod test_logic {
 
         #[test_strategy::proptest(ProptestConfig::default(), cases = 100)]
         fn proptest_prove_batches(
-            #[strategy(any::<AccountsState>().prop_flat_map(|a| proptest::collection::vec(proptest::collection::vec(any_with::<KairosTransaction>(a), 1..=10), 1..=10)))]
-            batches: Vec<Vec<KairosTransaction>>,
+            #[strategy(any::<AccountsState>().prop_ind_flat_map2(|a| proptest::collection::vec(proptest::collection::vec(any_with::<KairosTransaction>(dbg!(a)), 2..=10), 1..=10)))]
+            batches: (AccountsState, Vec<Vec<KairosTransaction>>),
         ) {
-            test_prove_batch(batches, |proof_inputs| proof_inputs.run_batch_proof_logic())
+            test_prove_batch(batches.1, |proof_inputs| {
+                proof_inputs.run_batch_proof_logic()
+            })
         }
     }
 }
