@@ -8,7 +8,7 @@ use crate::types::Notification;
 
 mod error;
 mod sse_types;
-mod types;
+pub mod types;
 
 const DEFAULT_SSE_SERVER: &str = "https://events.mainnet.casperlabs.io";
 const DEFAULT_EVENT_CHANNEL: &str = "/events/main";
