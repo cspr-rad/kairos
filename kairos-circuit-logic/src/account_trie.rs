@@ -250,7 +250,7 @@ fn hash_buffers<const N: usize, T: AsRef<[u8]>>(items: [T; N]) -> [KeyHash; N] {
     out
 }
 
-#[cfg(feature = "test-logic")]
+#[cfg(any(test, feature = "test-logic"))]
 pub mod test_logic {
     use crate::{ProofInputs, ProofOutputs};
 
@@ -297,53 +297,68 @@ pub mod test_logic {
         }
     }
 
-    #[test]
-    fn test_prove_simple_batches() {
-        let alice_public_key = "alice_public_key".as_bytes().to_vec();
-        let bob_public_key = "bob_public_key".as_bytes().to_vec();
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::transactions::arbitrary::{AccountsState, TestBatchSequence};
 
-        let batches = vec![
-            vec![
-                KairosTransaction::Deposit(L1Deposit {
-                    recipient: alice_public_key.clone(),
-                    amount: 10,
-                }),
-                KairosTransaction::Transfer(Signed {
-                    public_key: alice_public_key.clone(),
-                    transaction: Transfer {
-                        recipient: bob_public_key.clone(),
-                        amount: 5,
-                    },
-                    nonce: 0,
-                }),
-                KairosTransaction::Withdraw(Signed {
-                    public_key: alice_public_key.clone(),
-                    transaction: Withdraw { amount: 5 },
-                    nonce: 1,
-                }),
-            ],
-            vec![
-                KairosTransaction::Transfer(Signed {
-                    public_key: bob_public_key.clone(),
-                    transaction: Transfer {
+        use proptest::prelude::*;
+
+        #[test]
+        fn test_prove_simple_batches() {
+            let alice_public_key = "alice_public_key".as_bytes().to_vec();
+            let bob_public_key = "bob_public_key".as_bytes().to_vec();
+
+            let batches = vec![
+                vec![
+                    KairosTransaction::Deposit(L1Deposit {
                         recipient: alice_public_key.clone(),
-                        amount: 2,
-                    },
-                    nonce: 0,
-                }),
-                KairosTransaction::Withdraw(Signed {
-                    public_key: bob_public_key.clone(),
-                    transaction: Withdraw { amount: 3 },
-                    nonce: 1,
-                }),
-                KairosTransaction::Withdraw(Signed {
-                    public_key: alice_public_key.clone(),
-                    transaction: Withdraw { amount: 2 },
-                    nonce: 2,
-                }),
-            ],
-        ];
+                        amount: 10,
+                    }),
+                    KairosTransaction::Transfer(Signed {
+                        public_key: alice_public_key.clone(),
+                        transaction: Transfer {
+                            recipient: bob_public_key.clone(),
+                            amount: 5,
+                        },
+                        nonce: 0,
+                    }),
+                    KairosTransaction::Withdraw(Signed {
+                        public_key: alice_public_key.clone(),
+                        transaction: Withdraw { amount: 5 },
+                        nonce: 1,
+                    }),
+                ],
+                vec![
+                    KairosTransaction::Transfer(Signed {
+                        public_key: bob_public_key.clone(),
+                        transaction: Transfer {
+                            recipient: alice_public_key.clone(),
+                            amount: 2,
+                        },
+                        nonce: 0,
+                    }),
+                    KairosTransaction::Withdraw(Signed {
+                        public_key: bob_public_key.clone(),
+                        transaction: Withdraw { amount: 3 },
+                        nonce: 1,
+                    }),
+                    KairosTransaction::Withdraw(Signed {
+                        public_key: alice_public_key.clone(),
+                        transaction: Withdraw { amount: 2 },
+                        nonce: 2,
+                    }),
+                ],
+            ];
 
-        test_prove_batch(batches, |proof_inputs| proof_inputs.run_batch_proof_logic())
+            test_prove_batch(batches, |proof_inputs| proof_inputs.run_batch_proof_logic())
+        }
+
+        #[test_strategy::proptest(ProptestConfig::default(), cases = 100)]
+        fn proptest_prove_batches(
+            #[strategy(any::<AccountsState>().prop_flat_map(|a| any_with::<TestBatchSequence>(a)))]
+            batches: TestBatchSequence,
+        ) {
+        }
     }
 }

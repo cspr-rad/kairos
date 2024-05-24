@@ -63,17 +63,17 @@ pub struct Withdraw {
     pub amount: u64,
 }
 
-#[cfg(feature = "arbitrary")]
-pub use arbitrary_bounds::*;
-#[cfg(feature = "arbitrary")]
-mod arbitrary_bounds {
+#[cfg(any(test, feature = "arbitrary"))]
+pub mod arbitrary {
     use std::{cell::RefCell, collections::HashMap, fmt, ops::Deref, rc::Rc};
 
+    use kairos_trie::{stored::memory_db::MemoryDb, DigestHasher, KeyHash, NodeHash, TrieRoot};
     use proptest::{collection, prelude::*, sample};
+    use sha2::{digest::FixedOutputReset, Digest, Sha256};
     use test_strategy::Arbitrary;
 
     use super::*;
-    use crate::account_trie::Account;
+    use crate::account_trie::{Account, AccountTrie};
 
     #[derive(Debug, Clone)]
     pub enum TxnExpectedResult {
@@ -85,7 +85,7 @@ mod arbitrary_bounds {
     #[arbitrary(args = AccountsState)]
     pub struct RandomTransfer(
         #[strategy(any::<(sample::Index, sample::Index, sample::Index)>())]
-        #[map(|(sender, recipient, amount)| args.random_transfer(sender, recipient, amount, 0.))]
+        #[map(|(sender, recipient, amount)| args.random_transfer(sender, recipient, amount))]
         pub (Signed<Transfer>, TxnExpectedResult),
     );
 
@@ -97,13 +97,26 @@ mod arbitrary_bounds {
         pub (Signed<Withdraw>, TxnExpectedResult),
     );
 
-    #[derive(Debug, Clone, Arbitrary)]
-    #[arbitrary(args = AccountsState)]
-    pub struct RandomL1Deposit(
-        #[strategy(any::<(sample::Index, sample::Index, sample::Index)>())]
-        #[map(|(sender, recipient, amount)| args.random_deposit(sender, recipient, amount))]
-        pub (L1Deposit, TxnExpectedResult),
-    );
+    #[derive(Debug, Clone)]
+    pub struct RandomL1Deposit(pub (L1Deposit, TxnExpectedResult));
+
+    impl Arbitrary for RandomL1Deposit {
+        type Parameters = AccountsState;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(args: Self::Parameters) -> Self::Strategy {
+            (any::<(sample::Index, sample::Index, sample::Index)>())
+                .prop_filter_map(
+                    "Can't make valid deposit on this account, overflow, no funds, etc..",
+                    move |(sender, recipient, amount)| {
+                        args.random_deposit(sender, recipient, amount)
+                            .ok()
+                            .map(RandomL1Deposit)
+                    },
+                )
+                .boxed()
+        }
+    }
 
     #[derive(Debug, Clone)]
     pub enum RandomTransaction {
@@ -173,33 +186,37 @@ mod arbitrary_bounds {
         }
     }
 
-    #[derive(Debug, Default)]
-    pub struct PublicKeys(pub Vec<Rc<PublicKey>>);
-
-    #[derive(Clone)]
+    /// A test model for the state of the accounts on both L1 and L2.
+    /// This is used to generate random valid transactions.
+    #[derive(Clone, Arbitrary)]
     pub struct AccountsState {
-        shared: Rc<AccountsStateInner>,
+        #[by_ref]
+        pub shared: Rc<AccountsStateInner>,
+        #[map(|_:()| AccountsState::build_trie(#shared))]
+        pub initial_trie: (TrieRoot<NodeHash>, Rc<MemoryDb<Account>>),
     }
+    #[derive(Debug, Clone, Arbitrary)]
     pub struct AccountsStateInner {
+        #[strategy(1..1000usize)]
         pub max_batch_size: usize,
+        #[strategy(1..10usize)]
         pub max_batch_count: usize,
-        pub keys: PublicKeys,
-        pub l1_accounts: RefCell<HashMap<Rc<PublicKey>, u64>>,
-        pub l2_accounts: RefCell<HashMap<Rc<PublicKey>, Account>>,
+        pub l1: RefCell<Accounts<u64>>,
+        pub l2: RefCell<Accounts<Account>>,
     }
 
     impl fmt::Debug for AccountsState {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             writeln!(
                 f,
-                "\nAccountsState: {{\nAccountsState.l1_accounts: {:?}",
-                self.shared.deref().l1_accounts
+                "\nAccountsState: {{\nAccountsState.l1.accounts: {:?}",
+                self.shared.deref().l1.borrow().accounts
             )?;
 
             writeln!(
                 f,
-                "AccountsState.l2_accounts: {:?}\n}}",
-                self.shared.l2_accounts
+                "AccountsState.l2.accounts: {:?}\n}}",
+                self.shared.l2.borrow().accounts
             )
         }
     }
@@ -211,21 +228,25 @@ mod arbitrary_bounds {
     }
 
     impl AccountsState {
-        pub fn new() -> Self {
-            AccountsState {
-                shared: Rc::new(AccountsStateInner {
-                    max_batch_size: 100,
-                    max_batch_count: 100,
-                    keys: PublicKeys::default(),
-                    l1_accounts: RefCell::new(HashMap::new()),
-                    l2_accounts: RefCell::new(HashMap::new()),
-                }),
-            }
-        }
+        pub fn build_trie(
+            inner: &AccountsStateInner,
+        ) -> (TrieRoot<NodeHash>, Rc<MemoryDb<Account>>) {
+            let mut account_trie =
+                AccountTrie::new_try_from_db(Rc::new(MemoryDb::empty()), TrieRoot::Empty).unwrap();
 
-        pub fn sample_keys(&self, sampler: sample::Index) -> PublicKey {
-            let keys = &self.shared.keys;
-            keys.0[sampler.index(keys.0.len())].to_vec()
+            let mut hasher = Sha256::new();
+            for (public_key, account) in inner.l2.borrow().accounts.iter() {
+                hasher.update(public_key.as_slice());
+                let key = &KeyHash::from_bytes(&hasher.finalize_fixed_reset().into());
+
+                account_trie.txn.insert(key, account.clone()).unwrap();
+            }
+
+            let root = account_trie.txn.commit(&mut DigestHasher(hasher)).unwrap();
+
+            let db = account_trie.txn.data_store.db().clone();
+
+            (root, db)
         }
 
         pub fn random_deposit(
@@ -233,20 +254,28 @@ mod arbitrary_bounds {
             sender: sample::Index,
             recipient: sample::Index,
             amount_sampler: sample::Index,
-        ) -> (L1Deposit, TxnExpectedResult) {
-            let sender = self.sample_keys(sender);
-            let recipient = self.sample_keys(recipient);
+        ) -> Result<(L1Deposit, TxnExpectedResult), TestCaseError> {
+            let sender = self.shared.l1.borrow().sample_keys(sender);
+            let recipient = self
+                .shared
+                .l2
+                .borrow()
+                .sample_keys(recipient)
+                .deref()
+                .clone();
 
-            let mut l1_accounts = self.shared.l1_accounts.borrow_mut();
-            let l1_balance = l1_accounts
+            let mut l1 = self.shared.l1.borrow_mut();
+            let l1_balance = l1
+                .accounts
                 .get_mut(&sender)
                 .expect("sender does not have an l1 account in AccountsState");
 
             let amount = amount_sampler.index(*l1_balance as usize) as u64;
 
-            let mut l2_accounts = self.shared.l2_accounts.borrow_mut();
+            let mut l2 = self.shared.l2.borrow_mut();
 
-            let l2_account = l2_accounts
+            let l2_account = l2
+                .accounts
                 .get_mut(&recipient)
                 .expect("recipient does not have an l2 account in AccountsState");
 
@@ -259,7 +288,7 @@ mod arbitrary_bounds {
                     *l1_balance = l1_bal;
                     l2_account.balance = l2_bal;
 
-                    (L1Deposit { recipient, amount }, TxnExpectedResult::Success)
+                    Ok((L1Deposit { recipient, amount }, TxnExpectedResult::Success))
                 }
                 _ => {
                     unreachable!("For now I am not testing the case where the deposit fails");
@@ -273,27 +302,26 @@ mod arbitrary_bounds {
             sender: sample::Index,
             recipient: sample::Index,
             amount: sample::Index,
-            insufficient_balance_prop: f64,
         ) -> (Signed<Transfer>, TxnExpectedResult) {
-            let sender = self.sample_keys(sender);
-            let recipient = self.sample_keys(recipient);
+            let mut l2 = self.shared.l2.borrow_mut();
+            let sender = l2.sample_keys(sender).deref().clone();
+            let recipient = l2.sample_keys(recipient).deref().clone();
 
-            let mut l2_accounts = self.shared.l2_accounts.borrow_mut();
-            let sender_account = l2_accounts
+            let sender_account = l2
+                .accounts
                 .get(&sender)
                 .expect("sender does not have an l2 account in AccountsState");
             let sender_balance = sender_account.balance;
             let nonce = sender_account.nonce;
 
-            let recipient_balance = l2_accounts
+            let recipient_balance = l2
+                .accounts
                 .get(&recipient)
                 .expect("recipient does not have an l2 account in AccountsState")
                 .balance;
 
             // This not exact but is used to control the frequency of insufficient balance errors
-            let amount = amount
-                .index((sender_balance as f64 * (1. + insufficient_balance_prop)) as usize)
-                as u64;
+            let amount = amount.index(sender_balance as usize) as u64;
 
             let signed_transfer = |public_key: PublicKey, recipient: PublicKey| Signed {
                 public_key,
@@ -306,11 +334,11 @@ mod arbitrary_bounds {
                 recipient_balance.checked_add(amount),
             ) {
                 (Some(new_sender_bal), Some(new_recipient_bal)) => {
-                    let sender_account = l2_accounts.get_mut(&sender).unwrap();
+                    let sender_account = l2.accounts.get_mut(&sender).unwrap();
                     sender_account.balance = new_sender_bal;
                     sender_account.nonce += 1;
 
-                    l2_accounts.get_mut(&recipient).unwrap().balance = new_recipient_bal;
+                    l2.accounts.get_mut(&recipient).unwrap().balance = new_recipient_bal;
 
                     (
                         signed_transfer(sender, recipient),
@@ -329,19 +357,18 @@ mod arbitrary_bounds {
             sender: sample::Index,
             amount: sample::Index,
         ) -> (Signed<Withdraw>, TxnExpectedResult) {
-            let sender = self.sample_keys(sender);
+            let mut l2 = self.shared.l2.borrow_mut();
+            let sender = l2.sample_keys(sender);
 
-            let mut l2_accounts = self.shared.l2_accounts.borrow_mut();
-            let sender_account = l2_accounts
+            let sender_account = l2
+                .accounts
                 .get(&sender)
                 .expect("sender does not have an l2 account in AccountsState");
             let sender_balance = sender_account.balance;
             let nonce = sender_account.nonce;
 
-            let mut l1_accounts = self.shared.l1_accounts.borrow_mut();
-            let l1_balance = l1_accounts
-                .get_mut(&sender)
-                .expect("recipient does not have an l2 account in AccountsState");
+            let mut l1 = self.shared.l1.borrow_mut();
+            let l1_balance = l1.accounts.entry(sender.clone()).or_insert(0);
 
             // This not exact but is used to control the frequency of insufficient balance errors
             let insufficient_balance_prop = 0.10;
@@ -360,16 +387,88 @@ mod arbitrary_bounds {
                 l1_balance.checked_add(amount),
             ) {
                 (Some(new_sender_bal), Some(new_recipient_bal)) => {
-                    let sender_account = l2_accounts.get_mut(&sender).unwrap();
+                    let sender_account = l2.accounts.get_mut(&sender).unwrap();
                     sender_account.balance = new_sender_bal;
                     sender_account.nonce += 1;
 
                     *l1_balance = new_recipient_bal;
 
-                    (signed_withdraw(sender), TxnExpectedResult::Success)
+                    (signed_withdraw(sender.to_vec()), TxnExpectedResult::Success)
                 }
-                _ => (signed_withdraw(sender), TxnExpectedResult::Failure),
+                _ => (signed_withdraw(sender.to_vec()), TxnExpectedResult::Failure),
             }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct Accounts<A> {
+        pub pub_keys: Vec<Rc<PublicKey>>,
+        pub accounts: HashMap<Rc<PublicKey>, A>,
+    }
+
+    impl<A> Default for Accounts<A> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl<A> Accounts<A> {
+        pub fn new() -> Self {
+            Accounts {
+                pub_keys: Vec::new(),
+                accounts: HashMap::new(),
+            }
+        }
+
+        pub fn sample_keys(&self, sampler: sample::Index) -> Rc<PublicKey> {
+            self.pub_keys[sampler.index(dbg!(self.pub_keys.len()))].clone()
+        }
+    }
+
+    impl Arbitrary for Accounts<u64> {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_args: ()) -> Self::Strategy {
+            (proptest::collection::vec((any::<Rc<PublicKey>>(), 0..10_000u64), 1..100))
+                .prop_flat_map(|accounts| {
+                    Just(Accounts {
+                        pub_keys: accounts.iter().map(|(pk, _)| pk.clone()).collect(),
+                        accounts: accounts.into_iter().collect(),
+                    })
+                    .boxed()
+                })
+                .boxed()
+        }
+    }
+
+    impl Arbitrary for Accounts<Account> {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(_args: ()) -> Self::Strategy {
+            (proptest::collection::vec((any::<Rc<PublicKey>>(), 0..10_000u64, 0..100u64), 1..100))
+                .prop_flat_map(|accounts| {
+                    Just(Accounts {
+                        pub_keys: accounts.iter().map(|(pk, _, _)| pk.clone()).collect(),
+                        accounts: accounts
+                            .into_iter()
+                            .map(|(public_key, balance, nonce)| {
+                                let pubkey = (*public_key).clone();
+                                (
+                                    public_key,
+                                    Account {
+                                        pubkey,
+                                        balance,
+                                        nonce,
+                                    },
+                                )
+                            })
+                            .collect(),
+                    })
+                    .boxed()
+                })
+                .boxed()
         }
     }
 }

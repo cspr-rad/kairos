@@ -21,3 +21,7 @@ sha2 = { version = "0.10", default-features = false }
 # dev dependencies enabled by arbitrary
 test-strategy = { version = "0.3", optional = true }
 proptest = { version = "1", optional = true }
+
+[dev-dependencies]
+test-strategy = { version = "0.3" }
+proptest = { version = "1" }
