@@ -74,6 +74,11 @@
             '';
           };
 
+          # The casper-client's build.rs requires git at buildtime
+          git-mock = pkgs.writeShellScriptBin "git" ''
+            echo "got ya"
+          '';
+
           kairosNodeAttrs = {
             src = lib.fileset.toSource {
               root = ./.;
@@ -89,8 +94,7 @@
                 ./kairos-tx
               ];
             };
-
-            nativeBuildInputs = with pkgs; [ pkg-config ];
+            nativeBuildInputs = with pkgs; [ pkg-config git-mock ];
 
             buildInputs = with pkgs; [
               openssl.dev
@@ -113,7 +117,10 @@
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
-            inputsFrom = [ self'.packages.kairos ];
+            # We can't use inputsFrom = [ self'.packages.kairos ]; anymore
+            # because the casper-client's build.rs requires git at build-time
+            # and using inputsFrom will override the developers git with git-mock.
+            packages = [ rustToolchain pkgs.pkg-config ] ++ kairosNodeAttrs.buildInputs ++ kairosNodeAttrs.checkInputs;
           };
 
           packages = {
