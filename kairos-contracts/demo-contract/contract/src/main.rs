@@ -12,15 +12,14 @@ use casper_types::{
     contracts::NamedKeys, runtime_args, AccessRights, ApiError, CLValue, EntryPoints, Key,
     RuntimeArgs, URef, U512,
 };
-mod constants;
-use constants::{
+use contract_utils::constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
     KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
 };
+use contract_utils::Deposit;
 mod entry_points;
 mod utils;
 use utils::errors::DepositError;
-use utils::events::Deposit;
 use utils::get_immediate_caller;
 
 // This entry point is called once when the contract is installed.

@@ -8,6 +8,7 @@ license.workspace = true
 casper-contract = { version = "4.0.0", default-features = false, features = ["no-std-helpers"] }
 casper-types = { version = "4.0.1", default-features = false }
 casper-event-standard = { version = "0.5.0", default-features = false }
+contract-utils = { path = "../contract-utils" }
 
 [build]
 target = "wasm32-unknown-unknown"

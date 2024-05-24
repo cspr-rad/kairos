@@ -4,7 +4,6 @@ use casper_contract::contract_api::runtime;
 use casper_types::{system::CallStackElement, Key};
 
 pub mod errors;
-pub mod events;
 use errors::DepositError;
 
 /// Wrap the immediate caller as a Key and return it

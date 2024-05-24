@@ -1,8 +1,8 @@
-use crate::constants::{
-    EP_DEPOSIT_NAME, EP_GET_PURSE_NAME, EP_INIT_NAME, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
-};
 use alloc::vec;
 use casper_types::{CLType, EntryPoint, EntryPointAccess, EntryPointType, Parameter};
+use contract_utils::constants::{
+    EP_DEPOSIT_NAME, EP_GET_PURSE_NAME, EP_INIT_NAME, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
+};
 
 pub fn init() -> EntryPoint {
     EntryPoint::new(
