@@ -72,6 +72,10 @@
             '';
           };
 
+          git-mock = pkgs.writeShellScriptBin "git" ''
+            echo "got ya"
+          '';
+
           kairosNodeAttrs = {
             src = lib.cleanSourceWith {
               src = craneLib.path ./.;
@@ -95,7 +99,7 @@
                 )
               ;
             };
-            nativeBuildInputs = with pkgs; [ pkg-config ];
+            nativeBuildInputs = with pkgs; [ pkg-config git-mock ];
 
             buildInputs = with pkgs; [
               openssl.dev
