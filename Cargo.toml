@@ -16,3 +16,8 @@ name = "kairos"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+
+[patch.crates-io]
+casper-client = { git = "https://github.com/casper-ecosystem/casper-client-rs" }
+casper-hashing = { git = "https://github.com/casper-network/casper-node", branch = "dev" }
+casper-types = { git = "https://github.com/casper-network/casper-node", branch = "dev" }
