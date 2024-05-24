@@ -529,6 +529,42 @@ dependencies = [
 ]
 
 [[package]]
+name = "casper-event-standard"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a3a1bdb142b4bfcdceec757422b2e292f446b72ce3613f881eb694f3925ef10"
+dependencies = [
+ "casper-contract",
+ "casper-event-standard-macro",
+ "casper-types 4.0.1",
+]
+
+[[package]]
+name = "casper-event-standard-macro"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "485810e6c8387863a92e9b81e4e66ce290e2c96c0ad8ec4352e95128aa88900e"
+dependencies = [
+ "proc-macro2 1.0.83",
+ "quote 1.0.36",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "casper-event-toolkit"
+version = "0.1.1"
+source = "git+https://github.com/marijanp/casper-event-toolkit#b06396e1042f8a67795c50d42d69e61dcd96f83d"
+dependencies = [
+ "casper-client",
+ "casper-event-standard",
+ "casper-hashing 3.0.0",
+ "casper-types 4.0.1",
+ "hex",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "casper-execution-engine"
 version = "7.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -837,6 +873,14 @@ name = "const_panic"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6051f239ecec86fde3410901ab7860d458d160371533842974fc61f96d15879b"
+
+[[package]]
+name = "contract-utils"
+version = "0.1.0"
+dependencies = [
+ "casper-event-standard",
+ "casper-types 3.0.0",
+]
 
 [[package]]
 name = "cookie"
@@ -2034,7 +2078,11 @@ dependencies = [
  "axum-extra",
  "axum-test",
  "casper-client",
+ "casper-deploy-notifier",
+ "casper-event-standard",
+ "casper-event-toolkit",
  "casper-types 4.0.1",
+ "contract-utils",
  "dotenvy",
  "hex",
  "kairos-test-utils",

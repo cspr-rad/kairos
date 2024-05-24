@@ -9,6 +9,7 @@ members = [
   "kairos-tx",
   "kairos-test-utils",
   "demo-contract-tests",
+  "kairos-contracts/demo-contract/contract-utils"
 ]
 
 [workspace.package]

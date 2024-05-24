@@ -1,11 +1,19 @@
 pub mod config;
 pub mod errors;
+pub mod on_deploy;
 pub mod routes;
 pub mod state;
 
 mod utils;
 
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::mpsc;
+
+use casper_deploy_notifier::DeployNotifier;
+use casper_event_toolkit::fetcher::Fetcher;
+use casper_event_toolkit::metadata::CesMetadataRef;
+use casper_event_toolkit::rpc::client::CasperClient;
 
 use axum::Router;
 use axum_extra::routing::RouterExt;
@@ -47,7 +55,56 @@ pub async fn run(config: ServerConfig) {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: config.clone(),
     });
-    let app = app_router(state);
+    let app = app_router(Arc::clone(&state));
+
+    // deploy notifier
+    let (tx, mut rx) = mpsc::channel(100);
+    let mut deploy_notifier = DeployNotifier::new(config.casper_rpc.as_str());
+
+    tokio::spawn(async move {
+        loop {
+            if let Err(e) = deploy_notifier.connect().await {
+                tracing::error!("Unable to connect: {:?}", e);
+                continue;
+            }
+
+            if let Err(e) = deploy_notifier.run(tx.clone()).await {
+                eprintln!("Error while listening to deployment events: {:?}", e);
+            }
+
+            // Connection can sometimes be lost, so we retry after a delay.
+            eprintln!("Retrying in 5 seconds...",);
+            tokio::time::sleep(Duration::from_secs(5)).await;
+        }
+    });
+
+    // deploy listener/ callback
+    tokio::spawn(async move {
+        let casper_client = CasperClient::new(state.server_config.casper_rpc.as_str());
+        let metadata = CesMetadataRef::fetch_metadata(
+            &casper_client,
+            &state.server_config.kairos_demo_contract_hash,
+        )
+        .await
+        .expect("Failed to fetch the demo contracts event metadata");
+        let fetcher = Fetcher {
+            client: CasperClient::default_mainnet(),
+            ces_metadata: metadata,
+        };
+        let schemas = fetcher
+            .fetch_schema()
+            .await
+            .expect("Failed to fetch the demo contracts event schema");
+        while let Some(notification) = rx.recv().await {
+            on_deploy::on_deploy_notification(
+                &fetcher,
+                &schemas,
+                Arc::clone(&state),
+                &notification,
+            )
+            .await;
+        }
+    });
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())

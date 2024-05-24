@@ -34,7 +34,11 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
+casper-deploy-notifier = { path = "../casper-deploy-notifier" }
+contract-utils = { path = "../kairos-contracts/demo-contract/contract-utils" }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
+casper-event-toolkit = { git = "https://github.com/marijanp/casper-event-toolkit" }
+casper-event-standard = "0.5"
 sha2 = "0.10"
 reqwest = "0.12"
 
