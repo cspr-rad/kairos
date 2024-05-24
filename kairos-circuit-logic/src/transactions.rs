@@ -75,7 +75,7 @@ pub mod arbitrary {
     use super::*;
     use crate::account_trie::{Account, AccountTrie};
 
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
     pub enum TxnExpectedResult {
         Success,
         Failure,
@@ -106,14 +106,9 @@ pub mod arbitrary {
 
         fn arbitrary_with(args: Self::Parameters) -> Self::Strategy {
             (any::<(sample::Index, sample::Index, sample::Index)>())
-                .prop_filter_map(
-                    "Can't make valid deposit on this account, overflow, no funds, etc..",
-                    move |(sender, recipient, amount)| {
-                        args.random_deposit(sender, recipient, amount)
-                            .ok()
-                            .map(RandomL1Deposit)
-                    },
-                )
+                .prop_map(move |(sender, recipient, amount)| {
+                    RandomL1Deposit(args.random_deposit(sender, recipient, amount))
+                })
                 .boxed()
         }
     }
@@ -180,6 +175,47 @@ pub mod arbitrary {
                 .into_iter()
                 .map(|batch| batch.transactions.into_iter().map(|txn| txn.txns).collect())
                 .collect()
+        }
+    }
+
+    impl Arbitrary for KairosTransaction {
+        type Parameters = AccountsState;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(args: Self::Parameters) -> Self::Strategy {
+            (any::<(sample::Index, sample::Index, sample::Index, sample::Index)>())
+                .prop_filter_map(
+                    "Can't make valid transaction",
+                    move |(kind, sender, recipient, amount)| match kind.index(3) {
+                        0 => {
+                            if let (txn, TxnExpectedResult::Success) =
+                                args.random_transfer(sender, recipient, amount)
+                            {
+                                Some(KairosTransaction::Transfer(txn))
+                            } else {
+                                None
+                            }
+                        }
+                        1 => {
+                            let (txn, result) = args.random_withdraw(sender, amount);
+                            if result == TxnExpectedResult::Success {
+                                Some(KairosTransaction::Withdraw(txn))
+                            } else {
+                                None
+                            }
+                        }
+                        2 => {
+                            let (txn, result) = args.random_deposit(sender, recipient, amount);
+                            if result == TxnExpectedResult::Success {
+                                Some(KairosTransaction::Deposit(txn))
+                            } else {
+                                None
+                            }
+                        }
+                        _ => unreachable!(),
+                    },
+                )
+                .boxed()
         }
     }
 
@@ -251,7 +287,7 @@ pub mod arbitrary {
             sender: sample::Index,
             recipient: sample::Index,
             amount_sampler: sample::Index,
-        ) -> Result<(L1Deposit, TxnExpectedResult), TestCaseError> {
+        ) -> (L1Deposit, TxnExpectedResult) {
             let sender = self.shared.l1.borrow().sample_keys(sender);
             let recipient = self
                 .shared
@@ -268,13 +304,13 @@ pub mod arbitrary {
                 .expect("sender does not have an l1 account in AccountsState");
 
             let amount = if *l1_balance == 0 {
-                return Ok((
+                return (
                     L1Deposit {
                         recipient,
                         amount: 0,
                     },
                     TxnExpectedResult::Failure,
-                ));
+                );
             } else {
                 amount_sampler.index(*l1_balance as usize) as u64
             };
@@ -295,7 +331,7 @@ pub mod arbitrary {
                     *l1_balance = l1_bal;
                     l2_account.balance = l2_bal;
 
-                    Ok((L1Deposit { recipient, amount }, TxnExpectedResult::Success))
+                    (L1Deposit { recipient, amount }, TxnExpectedResult::Success)
                 }
                 _ => {
                     unreachable!("For now I am not testing the case where the deposit fails");

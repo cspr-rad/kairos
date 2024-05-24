@@ -356,12 +356,10 @@ pub mod test_logic {
 
         #[test_strategy::proptest(ProptestConfig::default(), cases = 100)]
         fn proptest_prove_batches(
-            #[strategy(any::<AccountsState>().prop_flat_map(|a| any_with::<TestBatchSequence>(a)))]
-            batches: TestBatchSequence,
+            #[strategy(any::<AccountsState>().prop_flat_map(|a| proptest::collection::vec(proptest::collection::vec(any_with::<KairosTransaction>(a), 1..=10), 1..=10)))]
+            batches: Vec<Vec<KairosTransaction>>,
         ) {
-            test_prove_batch(batches.into_vec(), |proof_inputs| {
-                proof_inputs.run_batch_proof_logic()
-            })
+            test_prove_batch(batches, |proof_inputs| proof_inputs.run_batch_proof_logic())
         }
     }
 }
