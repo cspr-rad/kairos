@@ -6,6 +6,7 @@ members = [
   "demo-contract/malicious-session",
   "demo-contract/deposit-session",
   "demo-contract/contract",
+  "demo-contract/contract-utils"
 ]
 
 [workspace.package]

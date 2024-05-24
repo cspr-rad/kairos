@@ -1,0 +1,9 @@
+[package]
+name = "contract-utils"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+casper-types = { version = "3", default-features = false }
+casper-event-standard = { version = "0.5.0", default-features = false }
