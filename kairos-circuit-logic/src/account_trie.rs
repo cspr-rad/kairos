@@ -104,9 +104,11 @@ impl<S: Store<Account>> AccountTrie<S> {
 
         let mut sender_account = self.txn.entry(&sender_hash)?;
 
-        let sender_account = sender_account
-            .get_mut()
-            .ok_or("sender does not have an account")?;
+        let sender_account = sender_account.get_mut().ok_or_else(|| {
+            format!(
+                "sender does not have an account, sender: `{sender:?}`, sender_hash: `{sender_hash:?}`"
+            )
+        })?;
 
         if sender_account.pubkey != *sender {
             return Err(("hash collision detected on sender account").into());
@@ -259,12 +261,11 @@ pub mod test_logic {
     use kairos_trie::{stored::memory_db::MemoryDb, DigestHasher};
 
     pub fn test_prove_batch(
+        mut prior_root_hash: TrieRoot<NodeHash>,
+        db: Rc<MemoryDb<Account>>,
         batches: Vec<Vec<KairosTransaction>>,
         proving_hook: impl Fn(ProofInputs) -> Result<ProofOutputs, String>,
     ) {
-        let db = Rc::new(MemoryDb::<Account>::empty());
-        let mut prior_root_hash = TrieRoot::default();
-
         for batch in batches.into_iter() {
             let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash)
                 .expect("Failed to create account trie");
@@ -300,7 +301,7 @@ pub mod test_logic {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::transactions::arbitrary::{AccountsState, RandomBatches};
+        use crate::transactions::arbitrary::RandomBatches;
 
         use proptest::prelude::*;
 
@@ -351,19 +352,23 @@ pub mod test_logic {
                 ],
             ];
 
-            test_prove_batch(batches, |proof_inputs| proof_inputs.run_batch_proof_logic())
+            test_prove_batch(
+                TrieRoot::Empty,
+                Rc::new(MemoryDb::<Account>::empty()),
+                batches,
+                |proof_inputs| proof_inputs.run_batch_proof_logic(),
+            )
         }
 
-        #[test_strategy::proptest(ProptestConfig::default(), cases = 100)]
+        #[test_strategy::proptest(ProptestConfig::default(), cases = 200)]
         fn proptest_prove_batches(
-            #[strategy(AccountsState::arbitrary().prop_ind_flat_map2(|a| RandomBatches::arbitrary_with(a)))]
-            args: (AccountsState, RandomBatches),
+            #[any(max_batch_size = 100, max_batch_count = 2)] args: RandomBatches,
         ) {
-            let batches = args.1.filter_success();
+            let batches = args.filter_success();
 
             proptest::prop_assume!(!batches.is_empty());
 
-            test_prove_batch(dbg!(batches), |proof_inputs| {
+            test_prove_batch(args.initial_trie, args.trie_db, batches, |proof_inputs| {
                 proof_inputs.run_batch_proof_logic()
             })
         }

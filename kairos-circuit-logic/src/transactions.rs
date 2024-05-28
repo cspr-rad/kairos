@@ -65,10 +65,11 @@ pub struct Withdraw {
 
 #[cfg(any(test, feature = "arbitrary"))]
 pub mod arbitrary {
+    use core::fmt::Debug;
     use std::{collections::HashMap, fmt, ops::Deref, rc::Rc};
 
     use kairos_trie::{stored::memory_db::MemoryDb, DigestHasher, KeyHash, NodeHash, TrieRoot};
-    use proptest::{collection::vec as prop_vec, prelude::*, sample};
+    use proptest::{collection as prop, num::u32, prelude::*, sample};
     use sha2::{digest::FixedOutputReset, Digest, Sha256};
     use test_strategy::Arbitrary;
 
@@ -81,10 +82,32 @@ pub mod arbitrary {
         Failure,
     }
 
+    #[derive(Debug, Clone, Copy)]
+    pub struct RandomBatchesConfig {
+        pub max_batch_size: u32,
+        pub max_batch_count: u32,
+        pub max_initial_l1_accounts: u32,
+        pub max_initial_l2_accounts: u32,
+    }
+
+    impl Default for RandomBatchesConfig {
+        fn default() -> Self {
+            Self {
+                max_batch_size: 100,
+                max_batch_count: 10,
+                max_initial_l1_accounts: 10,
+                max_initial_l2_accounts: 1000,
+            }
+        }
+    }
+
     #[derive(Debug, Clone)]
     pub struct RandomBatches {
+        pub initial_trie: TrieRoot<NodeHash>,
+        pub trie_db: Rc<MemoryDb<Account>>,
+        pub initial_state: AccountsState,
+        pub final_state: AccountsState,
         pub batches: Vec<Vec<(KairosTransaction, TxnExpectedResult)>>,
-        pub initial_trie: (TrieRoot<NodeHash>, Rc<MemoryDb<Account>>),
     }
 
     impl RandomBatches {
@@ -109,60 +132,72 @@ pub mod arbitrary {
     }
 
     impl Arbitrary for RandomBatches {
-        type Parameters = AccountsState;
+        type Parameters = RandomBatchesConfig;
         type Strategy = BoxedStrategy<Self>;
 
-        fn arbitrary_with(accounts_state: AccountsState) -> Self::Strategy {
-            prop_vec(
-                prop_vec(
-                    (0..3, any::<(sample::Index, sample::Index, sample::Index)>()),
-                    1..10,
-                ),
-                1..10,
-            )
-            .prop_map(move |seed| {
-                let accounts_state = &mut accounts_state.clone();
+        fn arbitrary_with(config: Self::Parameters) -> Self::Strategy {
+            AccountsState::arbitrary_with(config)
+                .prop_flat_map(move |initial_state| {
+                    prop::vec(
+                        prop::vec(
+                            (0..3, any::<(sample::Index, sample::Index, sample::Index)>()),
+                            1..config.max_batch_size as usize,
+                        ),
+                        1..config.max_batch_count as usize,
+                    )
+                    .prop_map(move |seed| {
+                        let mut accounts_state = initial_state.clone();
 
-                let batches = seed
-                    .into_iter()
-                    .map(|batch| {
-                        batch
+                        let batches = seed
                             .into_iter()
-                            .map(|(kind, (sender, recipient, amount))| match kind {
-                                0 => {
-                                    let (txn, res) =
-                                        accounts_state.random_transfer(sender, recipient, amount);
-                                    (KairosTransaction::Transfer(txn), res)
-                                }
-                                1 => {
-                                    let (txn, res) = accounts_state.random_withdraw(sender, amount);
-                                    (KairosTransaction::Withdraw(txn), res)
-                                }
-                                2 => {
-                                    let (txn, res) =
-                                        accounts_state.random_deposit(sender, recipient, amount);
-                                    (KairosTransaction::Deposit(txn), res)
-                                }
-                                _ => unreachable!(),
+                            .map(|batch| {
+                                batch
+                                    .into_iter()
+                                    .map(|(kind, (sender, recipient, amount))| match kind {
+                                        0 => {
+                                            let (txn, res) = accounts_state
+                                                .random_transfer(sender, recipient, amount);
+                                            (KairosTransaction::Transfer(txn), res)
+                                        }
+                                        1 => {
+                                            let (txn, res) =
+                                                accounts_state.random_withdraw(sender, amount);
+                                            (KairosTransaction::Withdraw(txn), res)
+                                        }
+                                        2 => {
+                                            let (txn, res) = accounts_state
+                                                .random_deposit(sender, recipient, amount);
+                                            (KairosTransaction::Deposit(txn), res)
+                                        }
+                                        _ => unreachable!(),
+                                    })
+                                    .collect::<Vec<_>>()
                             })
-                            .collect::<Vec<_>>()
-                    })
-                    .collect::<Vec<_>>();
+                            .collect::<Vec<_>>();
 
-                Self {
-                    batches,
-                    initial_trie: accounts_state.build_trie(),
-                }
-            })
-            .boxed()
+                        let (initial_trie, trie_db) = initial_state.build_trie();
+                        Self {
+                            batches,
+                            initial_trie,
+                            trie_db,
+                            initial_state: initial_state.clone(),
+                            final_state: accounts_state,
+                        }
+                    })
+                    .boxed()
+                })
+                .boxed()
         }
     }
 
     /// A test model for the state of the accounts on both L1 and L2.
     /// This is used to generate random valid transactions.
     #[derive(Clone, Arbitrary)]
+    #[arbitrary(args = RandomBatchesConfig)]
     pub struct AccountsState {
+        #[any(*args)]
         pub l1: Accounts<u64>,
+        #[any(*args)]
         pub l2: Accounts<Account>,
     }
 
@@ -194,7 +229,7 @@ pub mod arbitrary {
                 hasher.update(public_key.as_slice());
                 let key = &KeyHash::from_bytes(&hasher.finalize_fixed_reset().into());
 
-                account_trie.txn.insert(dbg!(key), account.clone()).unwrap();
+                account_trie.txn.insert(key, account.clone()).unwrap();
             }
 
             let root = account_trie.txn.commit(&mut DigestHasher(hasher)).unwrap();
@@ -297,7 +332,7 @@ pub mod arbitrary {
                     TxnExpectedResult::Failure,
                 );
             } else {
-                dbg!(amount.index(sender_balance as usize) as u64 + 1)
+                amount.index(sender_balance as usize) as u64 + 1
             };
 
             let signed_transfer = |public_key: PublicKey, recipient: PublicKey| Signed {
@@ -310,12 +345,12 @@ pub mod arbitrary {
                 sender_balance.checked_sub(amount),
                 recipient_balance.checked_add(amount),
             ) {
-                (Some(new_sender_bal), Some(new_recipient_bal)) => {
+                (Some(_), Some(_)) => {
                     let sender_account = self.l2.accounts.get_mut(&sender).unwrap();
-                    sender_account.balance = new_sender_bal;
+                    sender_account.balance -= amount;
                     sender_account.nonce += 1;
 
-                    self.l2.accounts.get_mut(&recipient).unwrap().balance = new_recipient_bal;
+                    self.l2.accounts.get_mut(&recipient).unwrap().balance += amount;
 
                     (
                         signed_transfer(sender, recipient),
@@ -344,7 +379,7 @@ pub mod arbitrary {
             let sender_balance = sender_account.balance;
             let nonce = sender_account.nonce;
 
-            let l1_balance = self.l1.accounts.entry(sender.clone()).or_insert(0);
+            let l1_balance = self.l1.get_mut_or_insert_with(sender.clone(), || 0);
 
             // This not exact but is used to control the frequency of insufficient balance errors
             let amount = if sender_balance == 0 {
@@ -385,18 +420,18 @@ pub mod arbitrary {
     }
 
     #[derive(Debug, Clone)]
-    pub struct Accounts<A> {
+    pub struct Accounts<A: Debug> {
         pub pub_keys: Vec<Rc<PublicKey>>,
         pub accounts: HashMap<Rc<PublicKey>, A>,
     }
 
-    impl<A> Default for Accounts<A> {
+    impl<A: Debug> Default for Accounts<A> {
         fn default() -> Self {
             Self::new()
         }
     }
 
-    impl<A> Accounts<A> {
+    impl<A: Debug> Accounts<A> {
         pub fn new() -> Self {
             Accounts {
                 pub_keys: Vec::new(),
@@ -405,54 +440,79 @@ pub mod arbitrary {
         }
 
         pub fn sample_keys(&self, sampler: sample::Index) -> Rc<PublicKey> {
-            self.pub_keys[sampler.index(self.pub_keys.len())].clone()
+            self.pub_keys[sampler.index(self.len())].clone()
+        }
+
+        pub fn len(&self) -> usize {
+            self.accounts.len()
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.accounts.is_empty()
+        }
+
+        pub fn get_mut_or_insert_with(
+            &mut self,
+            key: Rc<PublicKey>,
+            default: impl FnOnce() -> A,
+        ) -> &mut A {
+            self.pub_keys.push(key.clone());
+            self.accounts.entry(key).or_insert_with(default)
         }
     }
 
     impl Arbitrary for Accounts<u64> {
-        type Parameters = ();
+        type Parameters = RandomBatchesConfig;
         type Strategy = BoxedStrategy<Self>;
 
-        fn arbitrary_with(_args: ()) -> Self::Strategy {
-            (prop_vec((any::<Rc<PublicKey>>(), 1..10u64), 1..2))
-                .prop_flat_map(|accounts| {
-                    Just(Accounts {
-                        pub_keys: accounts.iter().map(|(pk, _)| pk.clone()).collect(),
-                        accounts: accounts.into_iter().collect(),
-                    })
-                    .boxed()
+        fn arbitrary_with(config: Self::Parameters) -> Self::Strategy {
+            (prop::hash_map(
+                any::<Rc<PublicKey>>(),
+                1..10u64,
+                1..config.max_initial_l1_accounts as usize,
+            ))
+            .prop_flat_map(|accounts| {
+                Just(Accounts {
+                    pub_keys: accounts.keys().cloned().collect(),
+                    accounts,
                 })
                 .boxed()
+            })
+            .boxed()
         }
     }
 
     impl Arbitrary for Accounts<Account> {
-        type Parameters = ();
+        type Parameters = RandomBatchesConfig;
         type Strategy = BoxedStrategy<Self>;
 
-        fn arbitrary_with(_args: ()) -> Self::Strategy {
-            (prop_vec((any::<Rc<PublicKey>>(), 1..10u64, 0..100u64), 1..2))
-                .prop_flat_map(|accounts| {
-                    Just(Accounts {
-                        pub_keys: accounts.iter().map(|(pk, _, _)| pk.clone()).collect(),
-                        accounts: accounts
-                            .into_iter()
-                            .map(|(public_key, balance, nonce)| {
-                                let pubkey = (*public_key).clone();
-                                (
-                                    public_key,
-                                    Account {
-                                        pubkey,
-                                        balance,
-                                        nonce,
-                                    },
-                                )
-                            })
-                            .collect(),
-                    })
-                    .boxed()
+        fn arbitrary_with(config: Self::Parameters) -> Self::Strategy {
+            (prop::hash_map(
+                any::<Rc<PublicKey>>(),
+                (1..10u64, 0..100u64),
+                1..config.max_initial_l2_accounts as usize,
+            ))
+            .prop_flat_map(|accounts| {
+                Just(Accounts {
+                    pub_keys: accounts.keys().cloned().collect(),
+                    accounts: accounts
+                        .into_iter()
+                        .map(|(public_key, (balance, nonce))| {
+                            let pubkey = (*public_key).clone();
+                            (
+                                public_key,
+                                Account {
+                                    pubkey,
+                                    balance,
+                                    nonce,
+                                },
+                            )
+                        })
+                        .collect(),
                 })
                 .boxed()
+            })
+            .boxed()
         }
     }
 }
