@@ -16,7 +16,7 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
-    let network = cctl::CCTLNetwork::run().await.unwrap();
+    let network = cctl::CCTLNetwork::run(Option::None).await.unwrap();
     let node = network
         .nodes
         .first()
@@ -26,7 +26,9 @@ async fn deposit_successful_with_ed25519() {
     let kairos = kairos::Kairos::run(node_url).await.unwrap();
 
     tokio::task::spawn_blocking(move || {
-        let depositor_secret_key_path = network.assets_dir.join("users/user-1/secret_key.pem");
+        let depositor_secret_key_path = network
+            .working_dir
+            .join("assets/users/user-1/secret_key.pem");
 
         let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
         cmd.arg("--kairos-server-address")

@@ -55,7 +55,7 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
-    let network = CCTLNetwork::run().await.unwrap();
+    let network = CCTLNetwork::run(Option::None).await.unwrap();
     let node = network
         .nodes
         .first()
@@ -65,11 +65,17 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
 
     let server = new_test_app_with_casper_node(&casper_node_url);
 
-    let sender_secret_key_file = network.assets_dir.join("users/user-1/secret_key.pem");
+    let sender_secret_key_file = network
+        .working_dir
+        .join("assets/users/user-1/secret_key.pem");
     let sender_secret_key = SecretKey::from_file(sender_secret_key_file).unwrap();
 
-    let recipient_public_key_hex =
-        std::fs::read_to_string(network.assets_dir.join("users/user-2/public_key_hex")).unwrap();
+    let recipient_public_key_hex = std::fs::read_to_string(
+        network
+            .working_dir
+            .join("assets/users/user-2/public_key_hex"),
+    )
+    .unwrap();
     let recipient = PublicKey::from_hex(recipient_public_key_hex).unwrap();
 
     // DeployBuilder::build, calls Deploy::new, which calls Deploy::sign
