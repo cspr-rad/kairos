@@ -166,11 +166,7 @@ mod tests {
 
     #[test_strategy::proptest(ProptestConfig::default(), cases = 1)]
     fn proptest_prove_batches(
-        #[any(
-            max_batch_size = 5,,
-            max_batch_count = 3,
-            max_initial_l2_accounts = 30,
-        )]
+        #[any(max_batch_size = 5, max_batch_count = 3, max_initial_l2_accounts = 30)]
         args: RandomBatches,
     ) {
         cfg_disable_dev_mode_feature();
