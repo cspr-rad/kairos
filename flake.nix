@@ -45,8 +45,34 @@
       ];
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
-          rustToolchain = inputs'.fenix.packages.stable.toolchain;
+          rustToolchain = with inputs'.fenix.packages; combine [
+            latest.toolchain
+            targets.wasm32-unknown-unknown.latest.rust-std
+          ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
+
+          kairosContractsAttrs = {
+            src = lib.cleanSourceWith {
+              src = craneLib.path ./kairos-contracts;
+              filter = path: type: craneLib.filterCargoSources path type;
+            };
+            cargoExtraArgs = "--target wasm32-unknown-unknown";
+            nativeBuildInputs = [ pkgs.binaryen ];
+            doCheck = false;
+            # Append "-optimized" to wasm files, to make the tests pass
+            postInstall = ''
+              directory="$out/bin/"
+              for file in "$directory"*.wasm; do
+                if [ -e "$file" ]; then
+                  # Extract the file name without extension
+                  filename=$(basename "$file" .wasm)
+                  # Append "-optimized" to the filename and add back the .wasm extension
+                  new_filename="$directory$filename-optimized.wasm"
+                  wasm-opt --strip-debug --signext-lowering "$file" -o "$new_filename"
+                fi
+              done
+            '';
+          };
 
           kairosNodeAttrs = {
             src = lib.fileset.toSource {
@@ -55,6 +81,7 @@
                 ./Cargo.toml
                 ./Cargo.lock
                 ./casper-deploy-notifier
+                ./demo-contract-tests
                 ./kairos-cli
                 ./kairos-crypto
                 ./kairos-server
@@ -63,6 +90,7 @@
                 ./kairos-prover/kairos-circuit-logic
               ];
             };
+
             nativeBuildInputs = with pkgs; [ pkg-config ];
             buildInputs = with pkgs; [
               openssl.dev
@@ -74,6 +102,9 @@
             checkInputs = [
               inputs'.csprpkgs.packages.cctl
             ];
+
+            PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
+
             meta.mainProgram = "kairos-server";
           };
         in
@@ -81,6 +112,7 @@
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             inputsFrom = [ self'.packages.kairos ];
           };
 
@@ -91,6 +123,7 @@
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+              doCheck = false; # we don't need to check here, since the checks.coverage output runs the tests.
             });
 
             kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
@@ -113,6 +146,14 @@
 
             kairos-docs = craneLib.cargoDoc (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
+            });
+
+            kairos-contracts-deps = craneLib.buildPackage (kairosContractsAttrs // {
+              pname = "kairos-contracts";
+            });
+
+            kairos-contracts = craneLib.buildPackage (kairosContractsAttrs // {
+              cargoArtifacts = self'.packages.kairos-contracts-deps;
             });
           };
 
@@ -142,6 +183,16 @@
               # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
               # FIXME --ignore RUSTSEC-2024-0013 ignores libgit2-sys 0.14.2+1.5.1 vulnerability caused by introducing casper-client 2.0.0
               cargoAuditExtraArgs = "--ignore yanked --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
+            };
+
+            kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
+              cargoArtifacts = self'.packages.kairos-contracts-deps;
+              cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+            });
+
+            kairos-contracts-audit = craneLib.cargoAudit {
+              inherit (kairosContractsAttrs) src;
+              advisory-db = inputs.advisory-db;
             };
           };
 

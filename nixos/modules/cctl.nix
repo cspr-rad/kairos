@@ -42,21 +42,31 @@ in
     systemd.services.cctl =
       {
         description = "cctl";
-        documentation = [ "A collection of bash applications to work with a local casper-node network, turned to a systemd service." ];
+        documentation = [ "" ];
         wantedBy = [ "multi-user.target" ];
         after = [ "network-online.target" ];
         requires = [ "network-online.target" ];
         environment = {
           RUST_LOG = cfg.logLevel;
         };
-        serviceConfig = mkMerge [
-          {
-            ExecStart = ''${lib.getExe cfg.package}'';
-            Type = "notify";
-            Restart = "always";
-            DynamicUser = true;
-          }
-        ];
+        serviceConfig =
+          let
+            stateDirectory = "cctl";
+            workingDirectory = "/var/lib/${stateDirectory}";
+          in
+          mkMerge [
+            {
+              ExecStart = ''${lib.getExe cfg.package} --working-dir ${workingDirectory}'';
+              Type = "notify";
+              Restart = "always";
+              DynamicUser = true;
+              StateDirectory = "cctl";
+              WorkingDirectory = workingDirectory;
+              ReadWritePaths = [
+                workingDirectory
+              ];
+            }
+          ];
       };
   };
 }

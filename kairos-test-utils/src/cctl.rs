@@ -5,7 +5,7 @@ use casper_client::{get_node_status, rpcs::results::ReactorState, Error, JsonRpc
 use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::Command;
-use tempfile::{tempdir, TempDir};
+use tempfile::tempdir;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum NodeState {
@@ -30,15 +30,20 @@ pub struct CasperNode {
 }
 
 pub struct CCTLNetwork {
-    pub working_dir: TempDir,
-    pub assets_dir: PathBuf,
+    pub working_dir: PathBuf,
     pub nodes: Vec<CasperNode>,
 }
 
 impl CCTLNetwork {
-    pub async fn run() -> Result<CCTLNetwork, io::Error> {
-        let working_dir = tempdir()?;
-        let assets_dir = working_dir.path().join("assets");
+    pub async fn run(working_dir: Option<PathBuf>) -> Result<CCTLNetwork, io::Error> {
+        let working_dir = working_dir
+            .map(|dir| {
+                std::fs::create_dir_all(&dir)
+                    .expect("Failed to create the provided working directory");
+                dir
+            })
+            .unwrap_or(tempdir()?.into_path());
+        let assets_dir = working_dir.join("assets");
 
         let output = Command::new("cctl-infra-net-setup")
             .env("CCTL_ASSETS", &assets_dir)
@@ -111,18 +116,23 @@ impl CCTLNetwork {
         .await
         .expect("Waiting for network to pass genesis failed");
 
-        Ok(CCTLNetwork {
-            working_dir,
-            assets_dir,
-            nodes,
-        })
+        tracing::info!("Waiting for block 1");
+        let output = Command::new("cctl-chain-await-until-block-n")
+            .env("CCTL_ASSETS", &assets_dir)
+            .arg("height=1")
+            .output()
+            .expect("Waiting for network to start processing blocks failed");
+        let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
+        tracing::info!("{}", output);
+
+        Ok(CCTLNetwork { working_dir, nodes })
     }
 }
 
 impl Drop for CCTLNetwork {
     fn drop(&mut self) {
         let output = Command::new("cctl-infra-net-stop")
-            .env("CCTL_ASSETS", &self.assets_dir)
+            .env("CCTL_ASSETS", &self.working_dir.join("assets"))
             .output()
             .expect("Failed to stop the network");
         io::stdout().write_all(&output.stdout).unwrap();
@@ -133,11 +143,10 @@ impl Drop for CCTLNetwork {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
-        let network = CCTLNetwork::run().await.unwrap();
+        let network = CCTLNetwork::run(Option::None).await.unwrap();
         for node in &network.nodes {
             if node.state == NodeState::Running {
                 let node_status = get_node_status(

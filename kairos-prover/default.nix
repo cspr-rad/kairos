@@ -33,7 +33,7 @@
         buildInputs = with pkgs; [
           openssl.dev
         ] ++ lib.optionals stdenv.isDarwin [
-          darwin.libiconv
+          libiconv
           darwin.apple_sdk.frameworks.SystemConfiguration
         ];
         cargoVendorDir = inputs.crane.lib.${system}.vendorMultipleCargoDeps {

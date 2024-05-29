@@ -30,7 +30,7 @@ in
             ./tests/end-to-end.nix
             {
               inherit mkKairosHostConfig;
-              inherit (self.packages.${pkgs.system}) kairos;
+              inherit (self.packages.${pkgs.system}) kairos kairos-contracts;
               cctlModule = self.nixosModules.cctl;
               inherit (inputs.csprpkgs.packages.${pkgs.system}) casper-client-rs;
             };
