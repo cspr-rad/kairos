@@ -35,6 +35,7 @@
         ] ++ lib.optionals stdenv.isDarwin [
           libiconv
           darwin.apple_sdk.frameworks.SystemConfiguration
+          darwin.apple_sdk.frameworks.Metal
         ];
         cargoVendorDir = inputs.crane.lib.${system}.vendorMultipleCargoDeps {
           inherit (craneLib.findCargoFiles src) cargoConfigs;
@@ -63,7 +64,7 @@
         inputsFrom = [ self.packages.${system}.kairos-prover ];
         # I cannot install Metal via Nix, so you need to follow the standard xcode metal installation instructions
         nativeBuildInputs = [
-          # inputs'.risc0pkgs.packages.r0vm
+          inputs'.risc0pkgs.packages.r0vm
         ] ++ lib.optionals pkgs.stdenv.isDarwin (with pkgs.darwin.apple_sdk.frameworks; [ pkgs.darwin.libiconv Metal SystemConfiguration ]);
       };
       packages = {
