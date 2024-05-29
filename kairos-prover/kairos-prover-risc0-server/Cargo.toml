@@ -18,7 +18,7 @@ risc0-zkvm = "=0.21.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
-kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde"], default-features = false }
+kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"], default-features = false }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", features = ["serde"] }
 
 tokio = { version = "1", features = ["rt-multi-thread", "tracing", "macros"] }
@@ -36,23 +36,23 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1.0"
 
 [dev-dependencies]
-kairos-circuit-logic = { path = "../../kairos-circuit-logic", features = ["serde", "test-logic", "arbitrary" ], default-features = false }
+kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde", "test-logic", "arbitrary" ], default-features = false }
 test-strategy = { version = "0.3" }
 proptest = { version = "1" }
 # These crates are needed for the build-std feature, that is due to the Nix
 # sandbox and because cargo dependencies need to be vendored before the build
 # starts. Cargo fetches these dependencies impurely.
-# allocator-api2 = "=0.2.16"
-# compiler_builtins = "*"
-# dlmalloc = "=0.2.6"
-# fortanix-sgx-abi = "0.5.0"
-# getopts = "=0.2.21"
-# hermit-abi = "0.3.9"
-# r-efi = "4.3.0"
-# r-efi-alloc = "1.0.0"
-# rustc-demangle = "0.1.23"
-# unwinding = "0.2.1"
-# wasi = "=0.11.0"
+#allocator-api2 = "=0.2.16"
+#compiler_builtins = "*"
+#dlmalloc = "=0.2.6"
+#fortanix-sgx-abi = "0.5.0"
+#getopts = "=0.2.21"
+#hermit-abi = "0.3.9"
+#r-efi = "4.3.0"
+#r-efi-alloc = "1.0.0"
+#rustc-demangle = "0.1.23"
+#unwinding = "0.2.1"
+#wasi = "=0.11.0"
 
 [target.'cfg(windows)'.dev-dependencies]
 # dlmalloc wants windows-sys 0.52.0

@@ -19,7 +19,7 @@ clap = { version = "4.5", features = ["derive", "deprecated"] }
 hex = "0.4"
 thiserror = "1"
 kairos-crypto = { path = "../kairos-crypto", features = ["fs"] }
-kairos-tx = { path = "../kairos-tx" }
+kairos-tx = { path = "../kairos-prover/kairos-tx" }
 kairos-server = { path = "../kairos-server" }
 reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde_json = "1.0"

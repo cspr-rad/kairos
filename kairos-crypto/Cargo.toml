@@ -15,7 +15,7 @@ fs = ["casper-types/std"] # TODO: Change `std` -> `std-fs-io` in the future vers
 [dependencies]
 hex = "0.4"
 thiserror = "1"
-kairos-tx = { path = "../kairos-tx", optional = true }
+kairos-tx = { path = "../kairos-prover/kairos-tx", optional = true }
 
 # Casper signer implementation.
 casper-types = { version = "4", optional = true }
