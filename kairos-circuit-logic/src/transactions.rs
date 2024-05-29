@@ -65,11 +65,11 @@ pub struct Withdraw {
 
 #[cfg(any(test, feature = "arbitrary"))]
 pub mod arbitrary {
-    use core::fmt::Debug;
+    use core::{fmt::Debug, ops::RangeInclusive};
     use std::{collections::HashMap, fmt, ops::Deref, rc::Rc};
 
     use kairos_trie::{stored::memory_db::MemoryDb, DigestHasher, KeyHash, NodeHash, TrieRoot};
-    use proptest::{collection as prop, num::u32, prelude::*, sample};
+    use proptest::{collection as prop, prelude::*, sample};
     use sha2::{digest::FixedOutputReset, Digest, Sha256};
     use test_strategy::Arbitrary;
 
@@ -82,21 +82,21 @@ pub mod arbitrary {
         Failure,
     }
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone)]
     pub struct RandomBatchesConfig {
-        pub max_batch_size: u32,
-        pub max_batch_count: u32,
-        pub max_initial_l1_accounts: u32,
-        pub max_initial_l2_accounts: u32,
+        pub batch_size: RangeInclusive<usize>,
+        pub batch_count: RangeInclusive<usize>,
+        pub initial_l1_accounts: RangeInclusive<usize>,
+        pub initial_l2_accounts: RangeInclusive<usize>,
     }
 
     impl Default for RandomBatchesConfig {
         fn default() -> Self {
             Self {
-                max_batch_size: 100,
-                max_batch_count: 10,
-                max_initial_l1_accounts: 10,
-                max_initial_l2_accounts: 1000,
+                batch_size: 1..=100,
+                batch_count: 1..=10,
+                initial_l1_accounts: 1..=10,
+                initial_l2_accounts: 1..=1000,
             }
         }
     }
@@ -136,14 +136,14 @@ pub mod arbitrary {
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with(config: Self::Parameters) -> Self::Strategy {
-            AccountsState::arbitrary_with(config)
+            AccountsState::arbitrary_with(config.clone())
                 .prop_flat_map(move |initial_state| {
                     prop::vec(
                         prop::vec(
                             (0..3, any::<(sample::Index, sample::Index, sample::Index)>()),
-                            1..config.max_batch_size as usize,
+                            config.batch_size.clone(),
                         ),
-                        1..config.max_batch_count as usize,
+                        config.batch_count.clone(),
                     )
                     .prop_map(move |seed| {
                         let mut accounts_state = initial_state.clone();
@@ -195,9 +195,9 @@ pub mod arbitrary {
     #[derive(Clone, Arbitrary)]
     #[arbitrary(args = RandomBatchesConfig)]
     pub struct AccountsState {
-        #[any(*args)]
+        #[any(args.deref().clone())]
         pub l1: Accounts<u64>,
-        #[any(*args)]
+        #[any(args.deref().clone())]
         pub l2: Accounts<Account>,
     }
 
@@ -318,7 +318,6 @@ pub mod arbitrary {
                 .expect("recipient does not have an l2 account in AccountsState")
                 .balance;
 
-            // This not exact but is used to control the frequency of insufficient balance errors
             let amount = if sender_balance == 0 {
                 return (
                     Signed {
@@ -381,7 +380,6 @@ pub mod arbitrary {
 
             let l1_balance = self.l1.get_mut_or_insert_with(sender.clone(), || 0);
 
-            // This not exact but is used to control the frequency of insufficient balance errors
             let amount = if sender_balance == 0 {
                 return (
                     Signed {
@@ -467,16 +465,13 @@ pub mod arbitrary {
 
         fn arbitrary_with(config: Self::Parameters) -> Self::Strategy {
             (prop::hash_map(
-                any::<Rc<PublicKey>>(),
-                1..10u64,
-                1..config.max_initial_l1_accounts as usize,
+                any::<[u8; 32]>().prop_map(|pk| Rc::new(pk.into())),
+                1..100_000u64,
+                config.initial_l1_accounts.clone(),
             ))
-            .prop_flat_map(|accounts| {
-                Just(Accounts {
-                    pub_keys: accounts.keys().cloned().collect(),
-                    accounts,
-                })
-                .boxed()
+            .prop_map(|accounts| Accounts {
+                pub_keys: accounts.keys().cloned().collect(),
+                accounts,
             })
             .boxed()
         }
@@ -488,29 +483,26 @@ pub mod arbitrary {
 
         fn arbitrary_with(config: Self::Parameters) -> Self::Strategy {
             (prop::hash_map(
-                any::<Rc<PublicKey>>(),
+                any::<[u8; 32]>().prop_map(|pk| Rc::new(pk.into())),
                 (1..10u64, 0..100u64),
-                1..config.max_initial_l2_accounts as usize,
+                config.initial_l2_accounts.clone(),
             ))
-            .prop_flat_map(|accounts| {
-                Just(Accounts {
-                    pub_keys: accounts.keys().cloned().collect(),
-                    accounts: accounts
-                        .into_iter()
-                        .map(|(public_key, (balance, nonce))| {
-                            let pubkey = (*public_key).clone();
-                            (
-                                public_key,
-                                Account {
-                                    pubkey,
-                                    balance,
-                                    nonce,
-                                },
-                            )
-                        })
-                        .collect(),
-                })
-                .boxed()
+            .prop_map(|accounts| Accounts {
+                pub_keys: accounts.keys().cloned().collect(),
+                accounts: accounts
+                    .into_iter()
+                    .map(|(public_key, (balance, nonce))| {
+                        let pubkey = public_key.deref().clone();
+                        (
+                            public_key,
+                            Account {
+                                pubkey,
+                                balance,
+                                nonce,
+                            },
+                        )
+                    })
+                    .collect(),
             })
             .boxed()
         }

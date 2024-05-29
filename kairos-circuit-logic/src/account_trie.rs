@@ -360,13 +360,13 @@ pub mod test_logic {
             )
         }
 
-        #[test_strategy::proptest(ProptestConfig::default(), cases = 200)]
+        #[test_strategy::proptest(ProptestConfig::default(), cases = 50)]
         fn proptest_prove_batches(
-            #[any(max_batch_size = 100, max_batch_count = 2)] args: RandomBatches,
+            #[any(batch_size = 1..=1000, batch_count = 2..=10)] args: RandomBatches,
         ) {
             let batches = args.filter_success();
 
-            proptest::prop_assume!(!batches.is_empty());
+            proptest::prop_assume!(batches.len() >= 2);
 
             test_prove_batch(args.initial_trie, args.trie_db, batches, |proof_inputs| {
                 proof_inputs.run_batch_proof_logic()

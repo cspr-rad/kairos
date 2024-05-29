@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use axum::{http::StatusCode, Json};
 use axum_extra::routing::{RouterExt, TypedPath};
 use kairos_circuit_logic::{ProofInputs, ProofOutputs};
@@ -59,6 +61,8 @@ pub async fn prove_batch_route(
 fn prove_execution(
     proof_inputs: kairos_circuit_logic::ProofInputs,
 ) -> Result<(ProofOutputs, Receipt), String> {
+    let timestamp = Instant::now();
+
     let env = ExecutorEnv::builder()
         .write(&proof_inputs)
         .map_err(|e| format!("Error in ExecutorEnv builder write: {e}"))?
@@ -74,9 +78,15 @@ fn prove_execution(
         .decode()
         .map_err(|e| format!("Error in receipt journal decode: {e}"))?;
 
+    eprintln!("Proved batch: {}s", timestamp.elapsed().as_secs_f64());
+
+    let timestamp = Instant::now();
+
     receipt
         .verify(PROVE_BATCH_ID)
         .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
+
+    eprintln!("Verified batch: {}s", timestamp.elapsed().as_secs_f64());
 
     Ok((proof_outputs, receipt))
 }
@@ -89,7 +99,7 @@ pub fn cfg_disable_dev_mode_feature() {
 
 #[cfg(test)]
 mod tests {
-    use std::{rc::Rc, time::Instant};
+    use std::rc::Rc;
 
     use kairos_trie::{stored::memory_db::MemoryDb, TrieRoot};
     use proptest::prelude::*;
@@ -164,15 +174,15 @@ mod tests {
         );
     }
 
-    #[test_strategy::proptest(ProptestConfig::default(), cases = 1)]
+    #[test_strategy::proptest(ProptestConfig::default(), cases = 2)]
     fn proptest_prove_batches(
-        #[any(max_batch_size = 5, max_batch_count = 3, max_initial_l2_accounts = 30)]
+        #[any(batch_size = 1..=4, batch_count = 2..=4, initial_l2_accounts = 10_000..=100_000)]
         args: RandomBatches,
     ) {
         cfg_disable_dev_mode_feature();
         let batches = args.filter_success();
 
-        proptest::prop_assume!(!batches.is_empty());
+        proptest::prop_assume!(batches.len() >= 2);
 
         test_prove_batch(args.initial_trie, args.trie_db, batches, |proof_inputs| {
             eprintln!(
@@ -181,12 +191,8 @@ mod tests {
                 args.initial_state.l2.len()
             );
 
-            let timestamp = Instant::now();
             let (proof_outputs, _) =
                 crate::prove_execution(proof_inputs).expect("Failed to prove execution");
-
-            let elapsed = timestamp.elapsed().as_secs_f64();
-            eprintln!("Proved batch: {elapsed}s");
 
             Ok(proof_outputs)
         })
