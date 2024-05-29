@@ -118,7 +118,4 @@ mod tests {
                 .expect("Failed to prove execution"))
         });
     }
-
-    #[test_strategy::proptest(ProptestConfig::default(), cases = 1)]
-    fn proptest_prove_batches(#[any(AccountsState::new())] batches: TestBatchSequence) {}
 }
