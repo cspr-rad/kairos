@@ -63,7 +63,6 @@ in
               ExecStart = ''${lib.getExe cfg.package} --working-dir ${cfg.workingDirectory}'';
               Type = "notify";
               Restart = "always";
-              DynamicUser = true;
               User = "cctl";
               Group = "cctl";
               StateDirectory = builtins.baseNameOf cfg.workingDirectory;
