@@ -28,6 +28,14 @@ in
       '';
     };
 
+    workingDirectory = mkOption {
+      type = types.str;
+      default = "/var/lib/cctl";
+      description = ''
+        The working directory path where cctl will put its assets and resources.
+      '';
+    };
+
     logLevel = mkOption {
       type = types.str;
       default = "info";
@@ -50,20 +58,16 @@ in
           RUST_LOG = cfg.logLevel;
         };
         serviceConfig =
-          let
-            stateDirectory = "cctl";
-            workingDirectory = "/var/lib/${stateDirectory}";
-          in
           mkMerge [
             {
-              ExecStart = ''${lib.getExe cfg.package} --working-dir ${workingDirectory}'';
+              ExecStart = ''${lib.getExe cfg.package} --working-dir ${cfg.workingDirectory}'';
               Type = "notify";
               Restart = "always";
               DynamicUser = true;
-              StateDirectory = "cctl";
-              WorkingDirectory = workingDirectory;
+              StateDirectory = builtins.baseNameOf cfg.workingDirectory;
+              WorkingDirectory = cfg.workingDirectory;
               ReadWritePaths = [
-                workingDirectory
+                cfg.workingDirectory
               ];
             }
           ];
