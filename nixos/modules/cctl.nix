@@ -1,4 +1,4 @@
-{ lib, pkgs, config, ... }:
+{ lib, config, ... }:
 let
   inherit (lib)
     types
@@ -64,6 +64,8 @@ in
               Type = "notify";
               Restart = "always";
               DynamicUser = true;
+              User = "cctl";
+              Group = "cctl";
               StateDirectory = builtins.baseNameOf cfg.workingDirectory;
               WorkingDirectory = cfg.workingDirectory;
               ReadWritePaths = [
@@ -72,5 +74,29 @@ in
             }
           ];
       };
+
+    users.users.cctl = {
+      name = "cctl";
+      group = "cctl";
+      isSystemUser = true;
+    };
+    users.groups.cctl = { };
+
+    # Allows nginx to have read access to the working directory of cctl
+    users.users.${config.services.nginx.user}.extraGroups = [ "cctl" ];
+
+    # Since cctl is usually ran on the same machine as the application that is subject to be tested,
+    # we need to serve the generated users directory to make it available for client machines
+    # when testing
+    services.nginx = {
+      enable = true;
+      virtualHosts."${config.networking.hostName}".locations."/cctl/users/" = {
+        alias = "${cfg.workingDirectory}/assets/users/";
+        extraConfig = ''
+          autoindex on;
+          add_header Content-Type 'text/plain charset=UTF-8';
+        '';
+      };
+    };
   };
 }
