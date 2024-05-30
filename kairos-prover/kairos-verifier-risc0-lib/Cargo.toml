@@ -11,17 +11,3 @@ disable-dev-mode = [ "risc0-zkvm/disable-dev-mode" ]
 methods = { path = "../methods" }
 risc0-zkvm = { version = "=0.21.0", default-features = false }
 kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"], default-features = false }
-
-[target.'cfg(windows)'.dev-dependencies]
-# dlmalloc wants windows-sys 0.52.0
-# which in turn wants windows-targets 0.52.4
-# which in turn for whatever reason locks some
-# of the following targets to 0.52.5
-# and that causes the build to fail
-windows_aarch64_gnullvm = "=0.52.4"
-windows_aarch64_msvc = "=0.52.4"
-windows_i686_gnu = "=0.52.4"
-windows_i686_msvc = "=0.52.4"
-windows_x86_64_gnu = "=0.52.4"
-windows_x86_64_gnullvm = "=0.52.4"
-windows_x86_64_msvc = "=0.52.4"

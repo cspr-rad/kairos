@@ -8,6 +8,8 @@ use kairos_circuit_logic::{ProofInputs, ProofOutputs};
 // The ELF is used for proving and the ID is used for verification.
 use methods::{PROVE_BATCH_ELF, PROVE_BATCH_ID};
 use risc0_zkvm::{ExecutorEnv, Receipt};
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() {
@@ -78,7 +80,7 @@ fn prove_execution(
         .decode()
         .map_err(|e| format!("Error in receipt journal decode: {e}"))?;
 
-    eprintln!("Proved batch: {}s", timestamp.elapsed().as_secs_f64());
+    tracing::info!("Proved batch: {}s", timestamp.elapsed().as_secs_f64());
 
     let timestamp = Instant::now();
 
@@ -86,12 +88,20 @@ fn prove_execution(
         .verify(PROVE_BATCH_ID)
         .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
 
-    eprintln!("Verified batch: {}s", timestamp.elapsed().as_secs_f64());
+    tracing::info!("Verified batch: {}s", timestamp.elapsed().as_secs_f64());
 
     Ok((proof_outputs, receipt))
 }
 
-pub fn cfg_disable_dev_mode_feature() {
+pub fn test_setup() {
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(
+            EnvFilter::builder()
+                .with_default_directive(LevelFilter::INFO.into())
+                .from_env_lossy(),
+        )
+        .try_init();
+
     if cfg!(feature = "disable-dev-mode") {
         std::env::set_var("RISC0_DEV_MODE", "0");
     }
@@ -111,11 +121,11 @@ mod tests {
         },
     };
 
-    use crate::cfg_disable_dev_mode_feature;
+    use crate::test_setup;
 
     #[test]
     fn test_prove_simple_batches() {
-        cfg_disable_dev_mode_feature();
+        test_setup();
 
         let alice_public_key = "alice_public_key".as_bytes().to_vec();
         let bob_public_key = "bob_public_key".as_bytes().to_vec();
@@ -179,13 +189,13 @@ mod tests {
         #[any(batch_size = 1..=4, batch_count = 2..=4, initial_l2_accounts = 10_000..=100_000)]
         args: RandomBatches,
     ) {
-        cfg_disable_dev_mode_feature();
+        test_setup();
         let batches = args.filter_success();
 
         proptest::prop_assume!(batches.len() >= 2);
 
         test_prove_batch(args.initial_trie, args.trie_db, batches, |proof_inputs| {
-            eprintln!(
+            tracing::info!(
                 "Proving batch of size: {}, over trie of {} accounts.",
                 proof_inputs.transactions.len(),
                 args.initial_state.l2.len()

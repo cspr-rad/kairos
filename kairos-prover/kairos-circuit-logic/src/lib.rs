@@ -46,7 +46,7 @@ impl ProofInputs {
         let pre_batch_trie_root = trie.txn.calc_root_hash(hasher)?;
 
         let (deposits, withdrawals) = trie.apply_batch(
-            // Replace with Box<[T]>: IntoIterator once Rust 2024 is stable
+            // TODO Replace with Box<[T]>: IntoIterator once Rust 2024 is stable
             Vec::from(transactions).into_iter(),
         )?;
 
