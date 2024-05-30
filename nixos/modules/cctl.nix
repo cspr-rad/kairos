@@ -12,7 +12,7 @@ in
 {
   options.services.cctl = {
 
-    enable = mkEnableOption ("cctl");
+    enable = mkEnableOption "cctl";
 
     package = mkOption {
       type = types.package;
