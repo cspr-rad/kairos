@@ -8,7 +8,7 @@ use kairos_circuit_logic::ProofOutputs;
 use methods::PROVE_BATCH_ID;
 use risc0_zkvm::Receipt;
 
-pub fn verify_execution(receipt: Receipt) -> Result<ProofOutputs, String> {
+pub fn verify_execution(receipt: &Receipt) -> Result<ProofOutputs, String> {
     receipt
         .verify(PROVE_BATCH_ID)
         .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
