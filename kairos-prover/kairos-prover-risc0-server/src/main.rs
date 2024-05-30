@@ -184,7 +184,7 @@ mod tests {
         );
     }
 
-    #[test_strategy::proptest(ProptestConfig::default(), cases = 2)]
+    #[test_strategy::proptest(ProptestConfig::default(), cases = if cfg!(feature = "disable-dev-mode") { 2 } else { 40 })]
     fn proptest_prove_batches(
         #[any(batch_size = 1..=4, batch_count = 2..=4, initial_l2_accounts = 10_000..=100_000)]
         args: RandomBatches,

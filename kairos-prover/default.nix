@@ -45,6 +45,10 @@
             ./rust-std-Cargo.lock
           ];
         };
+
+        # Proving in CI is disabled because it takes too long.
+        # Proving is a test of risc0, not kairos anyway.
+        RISC0_DEV_MODE = 1;
         preBuild = ''
           # The vendored cargo sources will be placed into .cargo-home,
           # however it seems that since the risc0_build crate
