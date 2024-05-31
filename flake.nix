@@ -168,7 +168,8 @@
           };
 
           checks = {
-            lint = craneLib.cargoClippy (kairosNodeAttrs // {
+            kairos-lint = craneLib.cargoClippy (kairosNodeAttrs // {
+              pname = "kairos-lint";
               cargoArtifacts = self'.packages.kairos-deps;
               cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
@@ -194,6 +195,7 @@
             };
 
             kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
+              pname = "kairos-contract-lint";
               cargoArtifacts = self'.packages.kairos-contracts-deps;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });
