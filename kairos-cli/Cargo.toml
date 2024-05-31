@@ -19,8 +19,8 @@ cctl-tests = []
 
 [dependencies]
 casper-client = "2"
-casper-types = { version = "3", features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
-clap = { version = "4.5", features = ["derive", "deprecated"] }
+casper-types = { version = "4", features = ["std-fs-io"] }
+clap = { version = "4", features = ["derive", "deprecated"] }
 hex = "0.4"
 thiserror = "1"
 kairos-crypto = { path = "../kairos-crypto", features = ["fs"] }
