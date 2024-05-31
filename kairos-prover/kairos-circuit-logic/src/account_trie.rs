@@ -240,6 +240,8 @@ impl PortableHash for Account {
 }
 
 /// A utility function to hash multiple buffers reusing the same hasher.
+/// Note this function returns an array of hashes, one for each input item.
+/// `out[i] = hash(item[i])`
 fn hash_buffers<const N: usize, T: AsRef<[u8]>>(items: [T; N]) -> [KeyHash; N] {
     let mut out = [KeyHash([0; 8]); N];
     let mut hasher = Sha256::new();

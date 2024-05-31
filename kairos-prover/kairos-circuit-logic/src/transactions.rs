@@ -46,7 +46,6 @@ pub struct Transfer {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct L1Deposit {
     pub recipient: PublicKey,
-
     pub amount: u64,
 }
 
@@ -210,12 +209,6 @@ pub mod arbitrary {
             )?;
 
             writeln!(f, "AccountsState.l2.accounts: {:?}\n}}", self.l2.accounts)
-        }
-    }
-
-    impl Default for AccountsState {
-        fn default() -> Self {
-            unreachable!("AccountsState should always be created with AccountsState::new()");
         }
     }
 
