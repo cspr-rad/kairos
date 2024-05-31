@@ -70,6 +70,7 @@ pub async fn on_deploy_notification(
             .fetch_event(deposit_index, event_schemas)
             .await
             .expect("Failed to fetch the untyped deposit event");
+        // FIXME fetch proper nonce
         let nonce = rand::thread_rng().gen::<u64>();
         match untyped_event.name.as_str() {
             "Deposit" => {
