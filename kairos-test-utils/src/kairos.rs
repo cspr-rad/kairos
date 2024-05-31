@@ -25,6 +25,7 @@ impl Kairos {
         let config = kairos_server::config::ServerConfig {
             socket_addr,
             casper_rpc,
+            kairos_demo_contract_hash: "TODO dummy hash".to_string(),
         };
 
         let process_handle = tokio::spawn(async move {

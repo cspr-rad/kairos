@@ -92,6 +92,7 @@
                 ./kairos-server
                 ./kairos-test-utils
                 ./kairos-tx
+                ./kairos-contracts/demo-contract/contract-utils
               ];
             };
             nativeBuildInputs = with pkgs; [ pkg-config git-mock ];
