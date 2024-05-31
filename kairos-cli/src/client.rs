@@ -56,16 +56,13 @@ pub fn deposit(
     });
     let deposit_session =
         ExecutableDeployItem::new_module_bytes(deposit_session_wasm_bytes.into(), runtime_args! {});
-    let deploy = DeployBuilder::new(
-        env!("CASPER_CHAIN_NAME"),
-        deposit_session,
-        depositor_secret_key,
-    )
-    .with_standard_payment(amount)
-    .with_timestamp(Timestamp::now())
-    .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
-    .build()
-    .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
+    let deploy = DeployBuilder::new(env!("CASPER_CHAIN_NAME"), deposit_session)
+        .with_secret_key(depositor_secret_key)
+        .with_standard_payment(amount)
+        .with_timestamp(Timestamp::now())
+        .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
+        .build()
+        .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
 
     let client = blocking::Client::new();
     let url = base_url.join("/api/v1/deposit").unwrap();
