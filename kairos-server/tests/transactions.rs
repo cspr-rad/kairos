@@ -46,6 +46,7 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
         server_config: ServerConfig {
             socket_addr: "0.0.0.0:0".parse().unwrap(),
             casper_rpc: casper_node_url.clone(),
+            kairos_demo_contract_hash: "TODO fixup contract hash".to_string(),
         },
     });
 
@@ -86,8 +87,8 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
         Option::None,
         TransferTarget::PublicKey(recipient),
         Option::None,
-        &sender_secret_key,
     )
+    .with_secret_key(&sender_secret_key)
     .with_timestamp(Timestamp::now())
     .with_standard_payment(2_500_000_000u64)
     .build()
