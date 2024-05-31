@@ -37,3 +37,4 @@ assert_cmd = "2"
 predicates = "3"
 kairos-test-utils = { path = "../kairos-test-utils" }
 casper-client-hashing.workspace = true
+casper-hashing = "3"
