@@ -5,9 +5,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-casper-contract = { version = "4.0.0", default-features = false }
-casper-contract-no-std-helpers = { version = "0.1.0", "git" = "https://github.com/koxu1996/casper-contract-no-std-helpers"}
-casper-types = { version = "4.0.1", default-features = false }
+casper-contract.workspace = true
+casper-contract-no-std-helpers.workspace = true
+casper-types.workspace = true
 
 [[bin]]
 name = "malicious-reader"
