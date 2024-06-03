@@ -52,12 +52,14 @@
           ];
         };
 
+        RISC0_R0VM_PATH="${inputs'.risc0pkgs.packages.r0vm}/bin/r0vm";
+
         preCheck = ''
           # Proving in CI is disabled because it takes too long.
           # Proving is a test of risc0, not kairos anyway.
           export RISC0_DEV_MODE=1;
-          export RISC0_R0VM_PATH=${inputs'.risc0pkgs.packages.r0vm}/bin/r0vm
         '';
+
         # Proving in CI is disabled because it takes too long.
         # Proving is a test of risc0, not kairos anyway.
         preBuild = ''
