@@ -21,10 +21,16 @@
       };
 
       kairosProverAttrs = rec {
-        src = lib.cleanSourceWith {
-          src = craneLib.path ./.;
-          filter = craneLib.filterCargoSources;
+        src = lib.fileset.toSource {
+          root = ../.;
+          fileset = lib.fileset.unions [
+            ../kairos-prover
+            ../kairos-tx
+          ];
         };
+        cargoToml = ./Cargo.toml;
+        cargoLock = ./Cargo.lock;
+        sourceRoot = "source/kairos-prover";
         nativeBuildInputs = with pkgs; [
           pkg-config
           cargo-risczero

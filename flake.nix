@@ -86,7 +86,7 @@
                 ./kairos-crypto
                 ./kairos-server
                 ./kairos-test-utils
-                ./kairos-prover/kairos-tx
+                ./kairos-tx
                 ./kairos-prover/kairos-circuit-logic
               ];
             };

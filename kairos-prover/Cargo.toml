@@ -4,7 +4,6 @@ members = [
     "kairos-prover-risc0-server",
     "kairos-verifier-risc0-lib",
     "kairos-circuit-logic",
-    "kairos-tx",
     "methods",
 ]
 
