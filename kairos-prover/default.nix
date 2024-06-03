@@ -52,7 +52,7 @@
           ];
         };
 
-        RISC0_R0VM_PATH="${inputs'.risc0pkgs.packages.r0vm}/bin/r0vm";
+        RISC0_R0VM_PATH = "${inputs'.risc0pkgs.packages.r0vm}/bin/r0vm";
 
         preCheck = ''
           # Proving in CI is disabled because it takes too long.
