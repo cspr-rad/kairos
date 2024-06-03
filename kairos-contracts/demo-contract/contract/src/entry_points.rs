@@ -1,5 +1,5 @@
 use crate::constants::{
-    EP_DEPOSIT_NAME, EP_GET_PURSE_NAME, EP_INIT_NAME, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
+    EP_DEPOSIT_NAME, EP_GET_PURSE_NAME, EP_INIT_NAME, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE, RUNTIME_ARG_RECEIPT, EP_SUBMIT_NAME
 };
 use alloc::vec;
 use casper_types::{CLType, EntryPoint, EntryPointAccess, EntryPointType, Parameter};
@@ -34,5 +34,17 @@ pub fn deposit() -> EntryPoint {
         CLType::Unit,
         EntryPointAccess::Public,
         EntryPointType::Contract,
+    )
+}
+
+pub fn submit_batch() -> EntryPoint{
+    EntryPoint::new(
+        EP_SUBMIT_NAME,
+        vec![
+            Parameter::new(RUNTIME_ARG_RECEIPT, CLType::Any)
+        ],
+        CLType::Unit,
+        EntryPointAccess::Public,
+        EntryPointType::Contract
     )
 }

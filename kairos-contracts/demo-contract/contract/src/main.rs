@@ -23,6 +23,11 @@ use utils::errors::DepositError;
 use utils::events::Deposit;
 use utils::get_immediate_caller;
 
+
+use risc0_zkvm::Receipt;
+//use kairos_circuit_logic::ProofOutputs;
+use serde_json_wasm::from_slice;
+
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
 // rather than the installing account.
@@ -81,12 +86,33 @@ pub extern "C" fn deposit() {
     casper_event_standard::emit(new_deposit_record);
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Proof {
+    pub receipt: Receipt,
+    pub program_id: [u32;8],
+}
+
+#[no_mangle]
+pub extern "C" fn submit_batch(){
+    /*let proof_serialized: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
+    let proof: Proof = from_slice(&proof_serialized).unwrap();
+    match proof.receipt.verify(proof.program_id){
+        Ok(_) => {},
+        // replace ApiError with meaningful UserError
+        Err(_) => runtime::revert(ApiError::InvalidArgument)
+    };
+    let journal: ProofOutputs = serde_json_wasm::from_slice(&proof.receipt.journal.bytes).unwrap();
+    // todo: update root
+    // serde_json to serialize Avi's Trie Root*/
+}
+
 #[no_mangle]
 pub extern "C" fn call() {
     let entry_points = EntryPoints::from(vec![
         entry_points::init(),
         entry_points::get_purse(),
         entry_points::deposit(),
+        entry_points::submit_batch()
     ]);
 
     // this counter will be udpated by the entry point that processes / verifies batches
@@ -102,11 +128,12 @@ pub extern "C" fn call() {
         Some(KAIROS_CONTRACT_PACKAGE_HASH.to_string()),
         Some(KAIROS_CONTRACT_UREF.to_string()),
     );
+    
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_CONTRACT_HASH, contract_hash_key);
 
-    let init_args = runtime_args! {};
     // Call the init entry point of the newly installed contract
     // This will setup the deposit purse and initialize Event Schemas (CES)
+    let init_args = runtime_args! {};
     runtime::call_contract::<()>(contract_hash, "init", init_args);
 }
