@@ -53,9 +53,19 @@
 
           kairosContractsAttrs = {
             src = lib.cleanSourceWith {
-              src = craneLib.path ./kairos-contracts;
+              src = lib.fileset.toSource {
+                  root = ./.;
+                  fileset = lib.fileset.unions [
+                    ./kairos-contracts
+                    ./kairos-prover/kairos-circuit-logic
+                  ];
+                };
               filter = path: type: craneLib.filterCargoSources path type;
             };
+            cargoToml = ./kairos-contracts/Cargo.toml;
+            cargoLock = ./kairos-contracts/Cargo.lock;
+            sourceRoot = "source/kairos-contracts";
+
             cargoExtraArgs = "--target wasm32-unknown-unknown";
             nativeBuildInputs = [ pkgs.binaryen ];
             doCheck = false;
