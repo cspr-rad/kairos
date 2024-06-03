@@ -87,11 +87,11 @@
                 ./kairos-server
                 ./kairos-test-utils
                 ./kairos-tx
+                ./kairos-prover/kairos-circuit-logic
               ];
             };
 
             nativeBuildInputs = with pkgs; [ pkg-config ];
-
             buildInputs = with pkgs; [
               openssl.dev
             ] ++ lib.optionals stdenv.isDarwin [
@@ -165,7 +165,8 @@
 
             coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
-
+              # FIXME fix weird issue with rust-nightly and tarpaulin https://github.com/xd009642/tarpaulin/issues/1499
+              RUSTFLAGS = "-Cstrip=none";
               # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
               # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
               cargoTarpaulinExtraArgs = "--features=all-tests --skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
