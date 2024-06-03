@@ -8,7 +8,7 @@ license.workspace = true
 [features]
 default = []
 disable-dev-mode = [ "risc0-zkvm/disable-dev-mode" ]
-cuda = [ "risc0-zkvm/cuda", "disable-dev-mode" ]
+cuda = [ "risc0-zkvm/cuda",  "disable-dev-mode" ]
 metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
 
 [dependencies]
