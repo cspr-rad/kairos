@@ -2,7 +2,7 @@
 #![no_main]
 extern crate alloc;
 use alloc::string::ToString;
-use alloc::vec;
+use alloc::{vec, vec::Vec};
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
@@ -15,7 +15,7 @@ use casper_types::{
 mod constants;
 use constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
-    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
+    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE, RUNTIME_ARG_RECEIPT
 };
 mod entry_points;
 mod utils;
@@ -23,10 +23,9 @@ use utils::errors::DepositError;
 use utils::events::Deposit;
 use utils::get_immediate_caller;
 
-
 use risc0_zkvm::Receipt;
-//use kairos_circuit_logic::ProofOutputs;
 use serde_json_wasm::from_slice;
+use kairos_circuit_logic::ProofOutputs;
 
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
@@ -94,7 +93,7 @@ pub struct Proof {
 
 #[no_mangle]
 pub extern "C" fn submit_batch(){
-    /*let proof_serialized: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
+    let proof_serialized: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
     let proof: Proof = from_slice(&proof_serialized).unwrap();
     match proof.receipt.verify(proof.program_id){
         Ok(_) => {},
