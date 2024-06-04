@@ -6,6 +6,7 @@ pub mod state;
 
 mod utils;
 
+use backoff::{future::retry, Error, ExponentialBackoff};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::mpsc;
@@ -59,7 +60,7 @@ pub async fn run(config: ServerConfig) {
 
     // deploy notifier
     let (tx, mut rx) = mpsc::channel(100);
-    let mut deploy_notifier = DeployNotifier::new(config.casper_rpc.as_str());
+    let mut deploy_notifier = DeployNotifier::new(config.casper_sse.as_str());
 
     tokio::spawn(async move {
         loop {
@@ -81,20 +82,28 @@ pub async fn run(config: ServerConfig) {
     // deploy listener/ callback
     tokio::spawn(async move {
         let casper_client = CasperClient::new(state.server_config.casper_rpc.as_str());
-        let metadata = CesMetadataRef::fetch_metadata(
-            &casper_client,
-            &state.server_config.kairos_demo_contract_hash,
-        )
+        let metadata = retry(ExponentialBackoff::default(), || async {
+            CesMetadataRef::fetch_metadata(
+                &casper_client,
+                &state.server_config.kairos_demo_contract_hash,
+            )
+            .await
+            .map_err(Error::transient)
+        })
         .await
         .expect("Failed to fetch the demo contracts event metadata");
+
         let fetcher = Fetcher {
             client: CasperClient::default_mainnet(),
             ces_metadata: metadata,
         };
-        let schemas = fetcher
-            .fetch_schema()
-            .await
-            .expect("Failed to fetch the demo contracts event schema");
+
+        let schemas = retry(ExponentialBackoff::default(), || async {
+            fetcher.fetch_schema().await.map_err(Error::transient)
+        })
+        .await
+        .expect("Failed to fetch the demo contracts event schema");
+
         while let Some(notification) = rx.recv().await {
             on_deploy::on_deploy_notification(
                 &fetcher,

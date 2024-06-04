@@ -1879,6 +1879,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "axum-test",
+ "backoff",
  "casper-client",
  "casper-deploy-notifier",
  "casper-event-standard",

@@ -33,7 +33,7 @@ fn new_test_app() -> TestServer {
     new_test_app_with_casper_node(&Url::parse("http://0.0.0.0:0").unwrap())
 }
 
-fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
+fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
             .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "trace".into()))
@@ -45,7 +45,8 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: ServerConfig {
             socket_addr: "0.0.0.0:0".parse().unwrap(),
-            casper_rpc: casper_node_url.clone(),
+            casper_rpc: casper_rpc_url.clone(),
+            casper_sse: casper_sse_url.clone(),
             kairos_demo_contract_hash: "TODO fixup contract hash".to_string(),
         },
     });
@@ -61,10 +62,15 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
         .nodes
         .first()
         .expect("Expected at least one node after successful network run");
-    let casper_node_url =
+    let casper_rpc_url =
         Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_sse_url = Url::parse(&format!(
+        "http://localhost:{}/events/main",
+        node.port.sse_port
+    ))
+    .unwrap();
 
-    let server = new_test_app_with_casper_node(&casper_node_url);
+    let server = new_test_app_with_casper_node(&casper_rpc_url, &casper_sse_url);
 
     let sender_secret_key_file = network
         .working_dir

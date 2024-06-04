@@ -25,6 +25,7 @@ axum-extra = { version = "0.9", features = [
     "json-deserializer",
 ] }
 anyhow = "1"
+backoff = { version = "0.4", features = ["tokio", "futures"]}
 casper-client = "2"
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }

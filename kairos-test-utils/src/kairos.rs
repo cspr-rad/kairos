@@ -18,13 +18,14 @@ pub struct Kairos {
 }
 
 impl Kairos {
-    pub async fn run(casper_rpc: Url) -> Result<Kairos, io::Error> {
+    pub async fn run(casper_rpc: Url, casper_sse: Url) -> Result<Kairos, io::Error> {
         let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
         let config = kairos_server::config::ServerConfig {
             socket_addr,
             casper_rpc,
+            casper_sse,
             kairos_demo_contract_hash: "TODO dummy hash".to_string(),
         };
 
@@ -54,6 +55,7 @@ mod tests {
     #[tokio::test]
     async fn test_kairos_starts_and_terminates() {
         let dummy_rpc = Url::parse("http://127.0.0.1:11101/rpc").unwrap();
-        let _kairos = Kairos::run(dummy_rpc).await.unwrap();
+        let dummy_sse = Url::parse("http://127.0.0.1:11101/events/main").unwrap();
+        let _kairos = Kairos::run(dummy_rpc, dummy_sse).await.unwrap();
     }
 }
