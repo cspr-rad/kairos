@@ -2008,6 +2008,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "profiling"
+version = "0.1.0"
+dependencies = [
+ "kairos-circuit-logic",
+ "kairos-trie",
+ "methods",
+ "risc0-zkvm",
+ "serde",
+ "serde_json",
+ "tracing",
+ "tracing-subscriber 0.3.18",
+]
+
+[[package]]
 name = "proptest"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
