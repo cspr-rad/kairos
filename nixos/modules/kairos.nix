@@ -41,7 +41,15 @@ in
       type = types.str;
       example = "http://127.0.0.1:11101/rpc";
       description = ''
-        A casper node URL.
+        The casper node URL to the RPC endpoint.
+      '';
+    };
+
+    casperSseUrl = mkOption {
+      type = types.str;
+      example = "http://127.0.0.1:18101/events/main";
+      description = ''
+        The casper node URL to the SSE event endpoint.
       '';
     };
 
@@ -72,7 +80,8 @@ in
         environment = {
           RUST_LOG = cfg.logLevel;
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
-          KAIROS_SERVER_CASPER_RPC = "${cfg.casperRpcUrl}";
+          KAIROS_SERVER_CASPER_RPC = cfg.casperRpcUrl;
+          KAIROS_SERVER_CASPER_SSE = cfg.casperSseUrl;
         };
         serviceConfig = mkMerge [
           {
