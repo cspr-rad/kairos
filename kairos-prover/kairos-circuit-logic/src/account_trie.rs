@@ -50,12 +50,12 @@ impl<'s> AccountTrie<&'s Snapshot<Account>> {
 }
 
 impl<Db: 'static + DatabaseGet<Account>> AccountTrie<SnapshotBuilder<Db, Account>> {
-    pub fn new_try_from_db(db: Db, root_hash: TrieRoot<NodeHash>) -> Result<Self, TxnErr> {
-        Ok(Self {
+    pub fn new_try_from_db(db: Db, root_hash: TrieRoot<NodeHash>) -> Self {
+        Self {
             txn: kairos_trie::Transaction::from_snapshot_builder(
                 SnapshotBuilder::empty(db).with_trie_root_hash(root_hash),
             ),
-        })
+        }
     }
 }
 
@@ -91,14 +91,18 @@ impl<S: Store<Account>> AccountTrie<S> {
         ))
     }
 
-    /// Avoid calling this method with a transfer that will fail.
-    /// This method's prechecks may cause the Snapshot to bloat with unnecessary data if the transfer fails.
+    /// If `transfer` fails the `Transaction` may contain torn writes to the trie.
+    /// You must throw away the `Transaction` if it `transfer` fails.
     pub fn transfer(
         &mut self,
         sender: &PublicKey,
         transfer: &Transfer,
         nonce: u64,
     ) -> Result<(), TxnErr> {
+        if sender == &transfer.recipient {
+            return Err("Transfer Failed: sender and recipient are the same".into());
+        }
+
         let [sender_hash, recipient_hash] =
             hash_buffers([sender.as_slice(), transfer.recipient.as_slice()]);
 
@@ -110,9 +114,10 @@ impl<S: Store<Account>> AccountTrie<S> {
             )
         })?;
 
-        if sender_account.pubkey != *sender {
-            return Err(("hash collision detected on sender account").into());
-        }
+        // SECURITY ASUMPTION: see Account docs
+        // if sender_account.public_key != *sender {
+        //     return Err(("hash collision detected on sender account").into());
+        // }
 
         sender_account.check_nonce(nonce)?;
         sender_account.increment_nonce();
@@ -126,11 +131,12 @@ impl<S: Store<Account>> AccountTrie<S> {
         let recipient_account = self
             .txn
             .entry(&recipient_hash)?
-            .or_insert_with(|| Account::new(transfer.recipient.clone(), 0, 0));
+            .or_insert_with(|| Account::new(0, 0));
 
-        if recipient_account.pubkey != transfer.recipient {
-            return Err(("hash collision detected on recipient account").into());
-        }
+        // SECURITY ASUMPTION: see Account docs
+        // if recipient_account.public_key != transfer.recipient {
+        //     return Err(("hash collision detected on recipient account").into());
+        // }
 
         // Add the amount to the recipient's account
         recipient_account.balance = recipient_account
@@ -141,25 +147,25 @@ impl<S: Store<Account>> AccountTrie<S> {
         Ok(())
     }
 
+    /// If `deposit` fails the `Transaction` may contain torn writes to the trie.
+    /// You should throw away the `Transaction` if it `deposit` fails.
     pub fn deposit(&mut self, deposit: &L1Deposit) -> Result<(), TxnErr> {
         let [recipient_hash] = hash_buffers([deposit.recipient.as_slice()]);
 
-        let mut recipient_account = self.txn.entry(&recipient_hash)?;
+        // SECURITY ASUMPTION: see Account docs
+        // if recipient_account.public_key != deposit.recipient {
+        //     return Err(("hash collision detected on recipient account").into());
+        // }
 
-        let recipient_account = if let Some(recipient_account) = recipient_account.get_mut() {
-            if recipient_account.pubkey != deposit.recipient {
-                return Err(("hash collision detected on recipient account").into());
-            }
-
-            recipient_account
-        } else {
-            recipient_account.or_insert_with(|| Account::new(deposit.recipient.clone(), 0, 0))
-        };
+        let recipient_account = self
+            .txn
+            .entry(&recipient_hash)?
+            .or_insert_with(|| Account::new(0, 0));
 
         recipient_account.balance = recipient_account
             .balance
             .checked_add(deposit.amount)
-            .ok_or("recipient balance overflow")?;
+            .ok_or("Deposit Failed: recipient balance overflow")?;
 
         Ok(())
     }
@@ -176,11 +182,12 @@ impl<S: Store<Account>> AccountTrie<S> {
 
         let withdrawer_account = withdrawer_account
             .get_mut()
-            .ok_or("withdrawer does not have an account")?;
+            .ok_or("Withdraw Failed: withdrawer does not have an account")?;
 
-        if withdrawer_account.pubkey != *withdrawer {
-            return Err(("hash collision detected on withdrawer account").into());
-        }
+        // SECURITY ASUMPTION: see Account docs
+        // if withdrawer_account.public_key != *withdrawer {
+        //     return Err(("hash collision detected on withdrawer account").into());
+        // }
 
         withdrawer_account.check_nonce(nonce)?;
         withdrawer_account.increment_nonce();
@@ -188,29 +195,141 @@ impl<S: Store<Account>> AccountTrie<S> {
         withdrawer_account.balance = withdrawer_account
             .balance
             .checked_sub(withdraw.amount)
-            .ok_or("sender balance underflow")?;
+            .ok_or("Withdraw Failed: withdrawer has insufficient funds")?;
 
         Ok(())
     }
 }
 
+impl<Db: DatabaseGet<Account>> AccountTrie<SnapshotBuilder<Db, Account>> {
+    /// Check the preconditions for a transfer.
+    /// This method should only be used on the server when building `Snapshot`.
+    ///
+    /// Prechecking prevents the batch `Transaction` from containing torn writes
+    /// and Snapshot from bloating with unnecessary data.
+    ///
+    /// The `transfer` method also checks all of these conditions, excluding `amount == 0`.
+    /// However if `transfer` fails the `Transaction` may contain torn writes to the trie.
+    /// You must throw away the `Transaction` if it `transfer` fails.
+    pub fn precheck_transfer(
+        &self,
+        sender: &PublicKey,
+        transfer: &Transfer,
+        nonce: u64,
+    ) -> Result<(), TxnErr> {
+        if transfer.amount == 0 {
+            return Err("Transfer Failed: transfer amount is zero".into());
+        }
+
+        if sender == &transfer.recipient {
+            return Err("Transfer Failed: sender and recipient are the same".into());
+        }
+
+        let [sender_hash, recipient_hash] =
+            hash_buffers([sender.as_slice(), transfer.recipient.as_slice()]);
+
+        let sender_account = self
+            .txn
+            .get(&sender_hash)?
+            .ok_or("Transfer Failed: sender does not have an account")?;
+
+        // SECURITY ASUMPTION: see Account docs
+        // if sender_account.public_key != *sender {
+        //     return Err(("hash collision detected on sender account").into());
+        // }
+
+        sender_account.check_nonce(nonce)?;
+
+        if sender_account.balance < transfer.amount {
+            return Err("Transfer Failed: sender has insufficient funds".into());
+        }
+
+        if let Some(recipient_account) = self.txn.get(&recipient_hash)? {
+            recipient_account
+                .balance
+                .checked_add(transfer.amount)
+                .ok_or("Transfer Failed: recipient balance overflow")?;
+        }
+
+        Ok(())
+    }
+
+    /// Check the preconditions for a deposit.
+    /// This method should only be used on the server when building `Snapshot`.
+    pub fn precheck_deposit(&self, deposit: &L1Deposit) -> Result<(), TxnErr> {
+        if deposit.amount == 0 {
+            return Err("Deposit Failed: deposit amount is zero".into());
+        }
+
+        let [recipient_hash] = hash_buffers([deposit.recipient.as_slice()]);
+
+        // SECURITY ASUMPTION: see Account docs
+        // if recipient_account.public_key != deposit.recipient {
+        //     return Err(("hash collision detected on recipient account").into());
+        // }
+
+        if let Some(recipient_account) = self.txn.get_exclude_from_txn(&recipient_hash)? {
+            recipient_account
+                .balance
+                .checked_add(deposit.amount)
+                .ok_or("Deposit Failed: recipient balance overflow")?;
+        }
+
+        Ok(())
+    }
+
+    /// check the preconditions for a withdraw.
+    /// this method should only be used on the server when building `snapshot`.
+    pub fn precheck_withdraw(
+        &self,
+        withdrawer: &PublicKey,
+        withdraw: &Withdraw,
+        nonce: u64,
+    ) -> Result<(), TxnErr> {
+        if withdraw.amount == 0 {
+            return Err("Withdraw Failed: withdraw amount is zero".into());
+        }
+
+        let [withdrawer_hash] = hash_buffers([withdrawer.as_slice()]);
+
+        let withdrawer_account = self
+            .txn
+            .get(&withdrawer_hash)?
+            .ok_or("Withdraw Failed: withdrawer does not have an account")?;
+
+        // SECURITY ASUMPTION: see Account docs
+        // if withdrawer_account.public_key != *withdrawer {
+        //     return Err(("hash collision detected on withdrawer account").into());
+        // }
+
+        withdrawer_account.check_nonce(nonce)?;
+
+        if withdrawer_account.balance < withdraw.amount {
+            Err("Withdraw Failed: withdrawer has insufficient funds".into())
+        } else {
+            Ok(())
+        }
+    }
+}
+
+/// An account in the trie.
+/// Stores the balance and nonce owned by a public key.
+///
+/// SECURITY ASUMPTION: We assume that the sha256(public_key) will not collide with another public_key.
+/// We do not check the preimage of the hash is the same public_key that created the account.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Account {
-    pub pubkey: PublicKey,
+    // pub public_key: PublicKey,
     pub balance: u64,
-    // Start at 0. Each transfer or withdrawal's `nonce` must match the account's `nonce`.
-    // Each successful transfer or withdrawal increments the `nonce`.
+    /// Start at 0. Each transfer or withdrawal's `nonce` must match the account's `nonce`.
+    /// Each successful transfer or withdrawal increments the `nonce`.
     pub nonce: u64,
 }
 
 impl Account {
-    pub fn new(pubkey: PublicKey, balance: u64, nonce: u64) -> Self {
-        Self {
-            pubkey,
-            balance,
-            nonce,
-        }
+    pub fn new(balance: u64, nonce: u64) -> Self {
+        Self { balance, nonce }
     }
 
     pub fn check_nonce(&self, nonce: u64) -> Result<(), TxnErr> {
@@ -234,8 +353,9 @@ impl Account {
 
 impl PortableHash for Account {
     fn portable_hash<H: PortableUpdate>(&self, hasher: &mut H) {
-        self.pubkey.portable_hash(hasher);
-        self.balance.portable_hash(hasher);
+        let Self { balance, nonce } = self;
+        balance.portable_hash(hasher);
+        nonce.portable_hash(hasher);
     }
 }
 
@@ -269,8 +389,7 @@ pub mod test_logic {
         proving_hook: impl Fn(ProofInputs) -> Result<ProofOutputs, String>,
     ) {
         for batch in batches.into_iter() {
-            let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash)
-                .expect("Failed to create account trie");
+            let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash);
             account_trie
                 .apply_batch(batch.iter().cloned())
                 .expect("Failed to apply batch");

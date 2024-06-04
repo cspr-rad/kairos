@@ -5,7 +5,7 @@ use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use tracing::*;
 
-use kairos_circuit_logic::transactions::{Signed, Transaction, Withdraw};
+use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Withdraw};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::routes::PayloadBody;
@@ -42,10 +42,10 @@ pub async fn withdraw_handler(
     tracing::info!("queuing withdrawal transaction");
 
     state
-        .enqueue_transaction(Signed {
+        .enqueue_transaction(KairosTransaction::Withdraw(Signed {
             public_key,
             nonce,
-            transaction: Transaction::Withdraw(withdrawal),
-        })
+            transaction: withdrawal,
+        }))
         .await
 }

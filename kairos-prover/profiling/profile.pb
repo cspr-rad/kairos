@@ -1,348 +1,344 @@
 
 
  "
-á	
-‰		
-—ü
+²
+	
+ÿ	
+	¦		
+
+’	
+m
+
+€
 
-	
-É‚
-ÿó
+ş	
+ !"#$¶
+%&'()*l
++,’
 
-¼
+œ
+-./	
+‹
+%)*C
+01§	
+%2*‰		
+34®Á
+
+567®…D
+89:;ˆ›
+<=>?‘ÔX
+@ABCDEİ
+
+FGH±à
+IJ‹…
+
+KLMN¼
 
-‘Ú	
-ş6
+OPQRST‘Ú	
+UVWò
 
-
+UUVWü9
+UUUVWö
+%XXXY*Ø
+ZZZJü
+UUUUVW²4
+UUUUUVWØW
+UUUUUUVWŞ•
+	%XXXXXXY*À
+	UUUUUUUVW¬»
 
- !È%
-"Ÿ
+ZZZZZZZJ›‚
 
-#$%6
-&'()*¨
- !ø(
- !Ø/
-&'''()* 
-###$%Ø
- !¤N
-&''''()*À2
-""""ø
- !ö‚
-	"""""ğ#
-	#####$%à
-	 !Ôã
+%XXXXXXXY*š
 
- !ª’
- !å›
-""""""""ÖÏ
-&''''''''()*¨ÿ
- !ú†
- !ı¦
-""""""""""äñ
-##########$%°7
-&''''''''''()*¶ç
- !”¹
-"""""""""""À 
- !úº
-############$%š2
-&''''''''''''()*˜ï
-""""""""""""Øú
- !´¿
- !äÜ
-""""""""""""""ú¤
- !ªÉ
-###############$%Ğ2
- !ŒÖ
-+,,,,,,,,,,,,,,,,-./…
-0""""""""""""""""
-&1''''''''''''''''()*È
-2################$%
-&''''''''''''''''()* Ü
- !ÀÃ
-#################$%à!
- !Ì´
-+,,,,,,,,,,,,,,,,,,-./œÒ
-&1''''''''''''''''''()*Ğ»
-2##################$%Œ
-0""""""""""""""""""¢D
-""""""""""""""""""ä¤
-##################$%Ô
-&''''''''''''''''''()*°½
- !G
-###################$%Ò
-+,,,,,,,,,,,,,,,,,,,-./ıt
-0"""""""""""""""""""¤­
-2###################$%‚
-&1'''''''''''''''''''()*„‰
-"""""""""""""""""""•<
-&'''''''''''''''''''()*¸E
- !È
-""""""""""""""""""""ñ	
-+,,,,,,,,,,,,,,,,,,,,-./—2
-&1''''''''''''''''''''()*¸E
-0""""""""""""""""""""¡
-2####################$%Ò
-+,,,,,,,,,,,,,,,,,-./‚—
-&1'''''''''''''''''()*¸…
-2#################$%˜
-0"""""""""""""""""ÊO
-&'''''''''''''''''()*€ù
-"""""""""""""""""ä½
-""""""""""""""""±³
-################$%ø0
-+,,,,,,,,,,,,,,,-./‚
-0"""""""""""""""†
-2###############$%l
-&1'''''''''''''''()*Ğ
-&'''''''''''''''()*Àõ
-"""""""""""""""¶
-##############$%†3
-&''''''''''''''()*èû
-&'''''''''''''()*Àõ
-#############$%Ğ2
-"""""""""""""ô²
-&'''''''''''()*Èâ
-###########$%®1
-&'''''''''()*øğ
-"""""""""Ö§
-#########$%â)
-########$%–"
-"""""""Ì¥
-#######$%š
-&'''''''()*˜Û
+[\\\\\\\]^
+_ZZZZZZZJ‹
 
-""""""àG
-
-######$%À
-
-&''''''()*€Ê
-	&'''''()*€e
-####$%°
-"""ü
-##$%l
-&''()*Ğ
-""¾
-
-
-&(()*Ğ
-
-$$%l
-¾
-ö
-$$$%Ø
-&((()* 
-ø<
-ÌF
-ğ#
-ê¦
-	&(((((()*€Ê
-	àG
-	$$$$$$%À
-	æ²
-
-&((((((()*˜Û
-
- !
-"Ñ
-
-$$$$$$$%š
-
-ìİ
- !¶
+UUUUUUUUVWÔ»
+ZZZZZZZZJ¯Ô
+%XXXXXXXXY*–"
+[\\\\\\\\]^¶
 
-"‡
-$$$$$$$$%–"
-éË
-Ú
-&((((((((()*øğ
-$$$$$$$$$%â)
-›
-şø
-”­
-ò®
-&(((((((((((()*˜ï
- !ª)
-"ïo
-$$$$$$$$$$$$%š2
-úÌ
-ºĞ
-µê
- !î;
-"Ò¸
-”ß
-&((((((((((((((()*Àõ
-$$$$$$$$$$$$$$$%Ğ2
- !œ<
-"®t
-øè
-îÚ
-$$$$$$$$$$$$$$$$%ø0
-&(((((((((((((((()* Ü
-ˆâ
-ô
-$$$$$$$$$$$$$$$$$$%Ô
-+------------------./Ê¸
-0–3
-&1(((((((((((((((((()*Ğ»
-2$$$$$$$$$$$$$$$$$$%Œ
-Â€
-&(((((((((((((((((()*°½
-š5
-Ñ/
-œ
- !Ì
-"ñ	
-¶
-+--------------------./—2
-2$$$$$$$$$$$$$$$$$$$$%Ò
-&1(((((((((((((((((((()*¸E
-0¡
- !ä
+_ZZZZZZZZJÙ3
+UUUUUUUUUVWÚ
+`aaaaaaaaabc“
+[\\\\\\\\\]^¤0
+_ZZZZZZZZZJ«c
+UUUUUUUUUUVWşø
+`aaaaaaaaaabcØ¼
+%XXXXXXXXXXY*ê.
+[\\\\\\\\\\]^è'
+_ZZZZZZZZZZJóx
+ZZZZZZZZZZJ¿»
+UUUUUUUUUUUVW”­
+`aaaaaaaaaaabcÈâ
+[\\\\\\\\\\\]^öG
+_ZZZZZZZZZZZJÃ€
+ZZZZZZZZZZZJİÖ
+UUUUUUUUUUUUVW”„
+`aaaaaaaaaaaabc˜ï
+[\\\\\\\\\\\\]^ª)
+_ZZZZZZZZZZZZJµx
+UUUUUUUUUUUUUVW¾÷
+ZZZZZZZZZZZZZJ§Ö
+UUUUUUUUUUUUUUVWÒò
+[\\\\\\\\\\\\\\]^´D
+_ZZZZZZZZZZZZZZJë·
+`aaaaaaaaaaaaaabcèû
+UUUUUUUUUUUUUUUVWÂÅ
+ZZZZZZZZZZZZZZZJøè
+UUUUUUUUUUUUUUUUVWîÚ
+`aaaaaaaaaaaaaaaabc Ü
+ZZZZZZZZZZZZZZZZJšß
+deeeeeeeeeeeeeeeefgË
+`haaaaaaaaaaaaaaaabcÈ
+%iXXXXXXXXXXXXXXXXY*
+jZZZZZZZZZZZZZZZZJ
+%XXXXXXXXXXXXXXXXY*ø0
+[\\\\\\\\\\\\\\\\]^â*
+_ZZZZZZZZZZZZZZZZJ|
+UUUUUUUUUUUUUUUUUVWÂÙ
+ZZZZZZZZZZZZZZZZZJ˜Œ
+[\\\\\\\\\\\\\\\\\]^Ø)
+_ZZZZZZZZZZZZZZZZZJ´Š
+deeeeeeeeeeeeeeeeefgÔ°
+`haaaaaaaaaaaaaaaaabc¬ô
+jZZZZZZZZZZZZZZZZZJì$
+%iXXXXXXXXXXXXXXXXXY*˜
+UUUUUUUUUUUUUUUUUUVWÆ©
+deeeeeeeeeeeeeeeeeefgÁ
+`haaaaaaaaaaaaaaaaaabcĞ»
+jZZZZZZZZZZZZZZZZZZJ–3
+%iXXXXXXXXXXXXXXXXXXY*Œ
+`aaaaaaaaaaaaaaaaaabc°½
+%XXXXXXXXXXXXXXXXXXY*Ô
+[\\\\\\\\\\\\\\\\\\]^à
+_ZZZZZZZZZZZZZZZZZZJÂa
+ZZZZZZZZZZZZZZZZZZJÂ€
+UUUUUUUUUUUUUUUUUUUVWš5
+[\\\\\\\\\\\\\\\\\\\]^ä
 
-"À#
-+-------------------./åR
-&1((((((((((((((((((()*øw
-2$$$$$$$$$$$$$$$$$$$%‚
-0¹
-&((((((((((((((((((()*¸E
-$$$$$$$$$$$$$$$$$$$%Ò
- !à
-"üX
-+-----------------./ö…
-0ì$
-2$$$$$$$$$$$$$$$$$%˜
-&1((((((((((((((((()* ã
- !Ø)
-"î
-&((((((((((((((((()*€ù
-˜Œ
-$$$$$$$$$$$$$$$$$%à!
-+----------------./Ë
-0
-&1(((((((((((((((()*È
-2$$$$$$$$$$$$$$$$%
-šß
- !¨3
-"¥¯
-+---------------./È
-&1((((((((((((((()*Ğ
-2$$$$$$$$$$$$$$$%l
-0†
-&(((((((((((((()*èû
-$$$$$$$$$$$$$$%†3
-&((((((((((((()*¶Â
- !ÌL
-"„È
-§Ö
-$$$$$$$$$$$$$%–;
-ûó
-$$$$$$$$$$$%®1
-İÖ
-&((((((((((()*Èâ
- !Ş%
-"‰‰
-¿»
-&(((((((((()*Ø¼
-$$$$$$$$$$%ê.
- !è'
-"ÛV
- !Ò
-"“A
-&(((((((()*¨ÿ
+_ZZZZZZZZZZZZZZZZZZZJú
+deeeeeeeeeeeeeeeeeeefg“9
+jZZZZZZZZZZZZZZZZZZZJ¹
+`haaaaaaaaaaaaaaaaaaabcøw
+%iXXXXXXXXXXXXXXXXXXXY*‚
+ZZZZZZZZZZZZZZZZZZZJÑ/
+UUUUUUUUUUUUUUUUUUUUVWœ
+deeeeeeeeeeeeeeeeeeeefgİ:
+%iXXXXXXXXXXXXXXXXXXXXY*Ò
+jZZZZZZZZZZZZZZZZZZZZJ¡
+`haaaaaaaaaaaaaaaaaaaabc¸E
+[\\\\\\\\\\\\\\\\\\\\]^Ì
+_ZZZZZZZZZZZZZZZZZZZZJñ	
+ZZZZZZZZZZZZZZZZZZZZJ¶
+`aaaaaaaaaaaaaaaaaaabc¸E
+%XXXXXXXXXXXXXXXXXXXY*Ò
+`aaaaaaaaaaaaaaaaabc€ù
+%XXXXXXXXXXXXXXXXXY*à!
+`aaaaaaaaaaaaaaabcÀõ
+%XXXXXXXXXXXXXXXY*Ğ2
+[\\\\\\\\\\\\\\\]^œ<
+_ZZZZZZZZZZZZZZZJô|
+deeeeeeeeeeeeeeefg‚
+jZZZZZZZZZZZZZZZJ†
+`haaaaaaaaaaaaaaabcĞ
+%iXXXXXXXXXXXXXXXY*l
+%XXXXXXXXXXXXXXY*†3
+ZZZZZZZZZZZZZZJµê
+%XXXXXXXXXXXXXY*Ğ2
+`aaaaaaaaaaaaabcÌ†
+[\\\\\\\\\\\\\]^´*
+_ZZZZZZZZZZZZZJÔƒ
+%XXXXXXXXXXXXY*š2
+ZZZZZZZZZZZZJïâ
+%XXXXXXXXXXXY*®1
+%XXXXXXXXXY*â)
+ZZZZZZZZZJá–
+`aaaaaaaabc¨ÿ
 
-›‚
-$$$$$%à
-&((((()*€e
-$$$$%°
-&(((()*À2
-ø
-ü
+`aaaaaaabc˜Û
+	`aaaaaabc€Ê
+	ZZZZZZJàG
+ZZZZZJğ#
+%XXXXXY*à
+`aaaaabc€e
+%XXXXY*°
+`aaaabcÀ2
+ZZZZJø
+`aaabc 
+ZZJ¾
 
-&()*¨	
-$%6	
-%˜6	
-æ8	
-ö
-‘Ú	
-345´N
+%XXY*l
+`aabcĞ
 
-6Î
+ZJŸ
 
-789÷È>
-:;<=‚ˆ^
->?@ABCİ
-DEFGÎ£	
-HIJÜ	
+`abc¨	
+%XY*6
 
-KLMNè
-OPô	
-QRS£P
+`bc¨Ğ	
+[]^È%
 
-6ì	
-TUV×	
-TTUV"
+_JŸ
 
-TTTUVD
-TTTTUVÎ	
-TTTTTUVÖ
+[[]^² 
+
+%kkY*l
+`llbcĞ
+[[[]^8
+`lllbc 
+[[[[]^¤N
+____Jø
+`llllbcÀ2
+%kkkkY*°
+[[[[[]^ö‚
+%kkkkkY*à
+_____Jğ#
+`lllllbc€e
+[[[[[[]^Ôã
+	______JàG
+	[[[[[[[]^Øø
+
+[[[[[[[[]^ò¬
+`llllllllbc¨ÿ
+%kkkkkkkkY*–"
+[[[[[[[[[]^âä
+[[[[[[[[[[]^ò•
+__________Jğ‚
+%kkkkkkkkkkY*ê.
+`llllllllllbcØ¼
+[[[[[[[[[[[]^¸ì
+%kkkkkkkkkkkY*®1
+___________Jî†
+[[[[[[[[[[[[]^ªÿ
+%kkkkkkkkkkkkY*š2
+`llllllllllllbc„‰	
+____________Jğœ
+[[[[[[[[[[[[[]^û
+_____________JÏÿ
+[[[[[[[[[[[[[[]^Ô
+`llllllllllllllbcèû
+[[[[[[[[[[[[[[[]^ –
+dmmmmmmmmmmmmmmmfg‚
+%ikkkkkkkkkkkkkkkY*l
+`hlllllllllllllllbcĞ
+j_______________J†
+_______________Jµ
+`lllllllllllllllbcÌ†
+%kkkkkkkkkkkkkkkY*Ğ2
+[[[[[[[[[[[[[[[[]^€Å
+%kkkkkkkkkkkkkkkkY*ø0
+________________JÓˆ
+`llllllllllllllllbc Ü
+[[[[[[[[[[[[[[[[[]^ÀÃ
+dmmmmmmmmmmmmmmmmmfgš¹
+j_________________J¾>
+`hlllllllllllllllllbc¬ô
+%ikkkkkkkkkkkkkkkkkY*˜
+`lllllllllllllllllbc€ù
+_________________Jä½
+%kkkkkkkkkkkkkkkkkY*à!
+[[[[[[[[[[[[[[[[[[]^´’
+__________________Jä¤
+[[[[[[[[[[[[[[[[[[[]^’6
+`lllllllllllllllllllbc¸E
+___________________JÏ3
+dmmmmmmmmmmmmmmmmmmmfg‰†
+j___________________Jÿ
+%ikkkkkkkkkkkkkkkkkkkY*‚
+`hlllllllllllllllllllbcøw
+%kkkkkkkkkkkkkkkkkkkY*Ò
+[[[[[[[[[[[[[[[[[[[[]^Ô
+____________________Jñ	
+dmmmmmmmmmmmmmmmmmmmmfg—2
+`hllllllllllllllllllllbc¸E
+%ikkkkkkkkkkkkkkkkkkkkY*Ò
+j____________________J­
+`llllllllllllllllllbc°½
+%kkkkkkkkkkkkkkkkkkY*Ô
+dmmmmmmmmmmmmmmmmmmfgœÒ
+%ikkkkkkkkkkkkkkkkkkY*Œ
+j__________________J¢D
+`hllllllllllllllllllbcĞ»
+dmmmmmmmmmmmmmmmmfg…
+%ikkkkkkkkkkkkkkkkY*
+j________________J
+`hllllllllllllllllbcÈ
+______________J’Ç
+%kkkkkkkkkkkkkkY*†3
+`lllllllllllllbcÌ†
+%kkkkkkkkkkkkkY*Ğ2
+`lllllllllllbcÈâ
+`lllllllllbcøğ
+_________Jœ°
+%kkkkkkkkkY*â)
+________J¨é
+
+%kkkkkkkY*š
+
+_______J´ƒ
+
+`lllllllbc˜Û
+	`llllllbc€Ê
+	%kkkkkkY*À
+___Jü
+%kkkY*Ø
+__J¾
+
+`lbc¨	
+%kY*6	
+nop×	
+nnop"
+
+nnnopD
+nnnnopÎ	
+nnnnnopÖ
 
-TTTTTTUVÏ
-	TTTTTTTUVõ(
+nnnnnnop•
+	nnnnnnnopõ(
 
-TTTTTTTTUVŞ+
-TTTTTTTTTUVŒ%
-TTTTTTTTTTUVö.
-TTTTTTTTTTTUVñ&
-TTTTTTTTTTTTUV‡
-TTTTTTTTTTTTTUVÒ
-TTTTTTTTTTTTTTUVá
-TTTTTTTTTTTTTTTUVÉ
-TTTTTTTTTTTTTTTTUV²
-TTTTTTTTTTTTTTTTTUVˆ
-TTTTTTTTTTTTTTTTTTUV†
-TTTTTTTTTTTTTTTTTTTUV„
+nnnnnnnnopê<
+nnnnnnnnnopÆ
+nnnnnnnnnnop¼7
+nnnnnnnnnnnop«
+nnnnnnnnnnnnopÁ
+nnnnnnnnnnnnnop˜
+nnnnnnnnnnnnnnopÕ
+nnnnnnnnnnnnnnnopÕ
+nnnnnnnnnnnnnnnnop²
+nnnnnnnnnnnnnnnnnopÎ
+nnnnnnnnnnnnnnnnnnop†
+nnnnnnnnnnnnnnnnnnnop„	
+qrs–
 
-WXYÕŠ
-&Z)*ô³
+tuvwè
+xJº	
+yz{™d
 
-[%ñ5
+|J‚7	
+}~ˆ
+€‚İG
+ƒJì	
+%Y*˜6	
+JÂ,	
+KMNö
+OPQST‘Ú
+„…†ÕŠ
+%‡Y*ñ5
+ˆJÚ
+`‰bcô³
+Š‹Œ´N
+ƒJÎ
+à®
+ƒJ²6
+‘’ß	
 
-\Ú	
-]^_™
-
-KLMNÜ
-OPÌ
-
-&)*¨Ğ
-
-`ab¦·
-
-6²6
-cd²
-
-efg	
-hij¹		
-klm¦		
-n‹
-oC	
-pqr’
-
-stuvş	
-wxyz{¶
-|}~ol
-€n’
-‚ƒ„…m
-
-†‡ˆ‰Š
-O‹n€
-nœ€€°Ñ… €(8HP"À¡…"˜"à¡…"5"à¡…"˜"€€""€€"5"€€"˜"´­""´­"˜"	˜“„"ã"
-˜“„""˜“„"˜"ø‘€""ø‘€"ã"ø‘€""ø‘€"˜"¨Ñ…"š"¨Ñ…"ã"¨Ñ…""¨Ñ…"˜"øĞ…""øĞ…"	6"øĞ…"š"øĞ…"ã"øĞ…""øĞ…"˜"¨şƒ"
-j"¨şƒ""¨şƒ"˜"ø‘€"
-j"´İ„"]"´İ„"
-j" ´İ„""!´İ„"˜""ø‘€"]"#€€"]"$€€"
-j"%€€""&Ü¹…"""'Ü¹…"]"(Ü¹…"
-j")Ü¹…""*Ü¹…"˜"+ĞĞ„"Ö",ĞĞ„"]"-ĞĞ„"
-j".ĞĞ„""/ĞĞ„"˜"0ø‘€"Ö"1Ü¹…"Ö"2€€"Ö"3 š€"—"4 š€""5 š€"˜"6ø‘€"—"7ä°€""8ä°€""9ä°€"˜": …"Ï"; …""< …""= …"˜">Èª…" "?Èª…"W"@Èª…"`"AÈª…""BÈª…""CÈª…"˜"D°¤"¼"E°¤""F°¤""G°¤"˜"H¸Ç„"ë"I¸Ç„""J¸Ç„"˜"Kä•"¨"Lä•"ë"Mä•""Nä•"˜"Oø‘€"¨"Pø‘€"ë"Q” €"—"R” €""S” €"˜"T°½„""U°½„""V°½„"˜"WØ¿„"õ"XØ¿„""YØ¿„"˜"ZÜ¹…"õ"[€€"õ"\ø‘€"õ"]É„"ë"^É„""_É„"˜"`ä©€"—"aä©€""bä©€"˜"cÜò„"?"dÜò„"˜"e¼¢…"™"f¼¢…"?"g¼¢…"˜"h”ù„"ƒ"i”ù„"?"j”ù„"˜"kĞû„"¾"lĞû„"?"mĞû„"˜"nø‘€"?"o€€"?"pìŒ…"4"qìŒ…"?"rìŒ…"˜"sà‘…"è"tà‘…"4"uà‘…"?"và‘…"˜"wü˜…"e"xü˜…"è"yü˜…"4"zü˜…"?"{ü˜…"˜"|€€"e"}€€"è"~€€"4"ø‘€"e"€ø‘€"è"ø‘€"4"‚ì”…" Ø"ƒì”…"4"„ì”…"?"…ì”…"˜"†´–…"¨"‡´–…" Ø"ˆ´–…"4"‰´–…"?"Š´–…"˜"‹ø‘€" Ø* * * *	 *
- * * * *	 *
- * * * * * * *  *! "*# "*$ %*& '*( '*) **+ ,*- *.  */ 0*1 2*3 4*5 6*7 6* 8 '2 2cycles2count2unknown2__start2b/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/guest/mod.rs2risc0_zkvm::guest::env::init2b/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/guest/env.rs2memset2main21kairos_trie::transaction::Transaction<S,V>::entry2W/Users/avi/.cargo/git/checkouts/kairos-trie-bfe67921ad605dab/de793f6/src/transaction.rs2memcpy2memcmp2g/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/compiler_builtins-0.1.109/src/macros.rs2,compiler_builtins::mem::impls::compare_bytes2j/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/compiler_builtins-0.1.109/src/mem/impls.rs2compiler_builtins::mem::memcmp2h/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/compiler_builtins-0.1.109/src/mem/mod.rs2?kairos_trie::transaction::Transaction<S,V>::calc_root_hash_node2^<kairos_trie::stored::merkle::Snapshot<V> as kairos_trie::stored::Store<V>>::calc_subtree_hash2Y/Users/avi/.cargo/git/checkouts/kairos-trie-bfe67921ad605dab/de793f6/src/stored/merkle.rs2sha2::sha256::compress2562]/Users/avi/.cargo/git/checkouts/rustcrypto-hashes-c85f622e3013fd16/7fd6900/sha2/src/sha256.rs23kairos_trie::transaction::nodes::Leaf<V>::hash_leaf2]/Users/avi/.cargo/git/checkouts/kairos-trie-bfe67921ad605dab/de793f6/src/transaction/nodes.rs2b<mut risc0_zkvm::serde::serializer::Serializer<W> as serde::ser::SerializeStruct>::serialize_field2i/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/serde/serializer.rs2—<kairos_circuit_logic::_::<impl serde::de::Deserialize for kairos_circuit_logic::ProofInputs>::deserialize::__Visitor as serde::de::Visitor>::visit_seq2K/Users/avi/Code/Casper/kairos/kairos-prover/kairos-circuit-logic/src/lib.rs2[<risc0_zkvm::guest::env::FdReader as risc0_zkvm::serde::deserializer::WordRead>::read_words2sys_alloc_aligned2i/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-platform-0.21.0/src/syscall.rs2[<risc0_zkvm_platform::rust_rt::BumpPointerAlloc as core::alloc::global::GlobalAlloc>::alloc2i/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-platform-0.21.0/src/rust_rt.rs2__rust_alloc2"serde::de::SeqAccess::next_element2[/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.203/src/de/mod.rs2%alloc::raw_vec::RawVec<T,A>::grow_one2|/nix/store/yipifwq82wmfrq60y3l9wm9wpalc02in-rust-nightly-latest-2024-05-15/lib/rustlib/src/rust/library/alloc/src/raw_vec.rs2alloc::raw_vec::finish_grow2˜core::ptr::drop_in_place<kairos_trie::transaction::nodes::Branch<kairos_trie::transaction::nodes::NodeRef<kairos_circuit_logic::account_trie::Account>>>2{/nix/store/yipifwq82wmfrq60y3l9wm9wpalc02in-rust-nightly-latest-2024-05-15/lib/rustlib/src/rust/library/core/src/ptr/mod.rs20kairos_circuit_logic::account_trie::hash_buffers2T/Users/avi/Code/Casper/kairos/kairos-prover/kairos-circuit-logic/src/account_trie.rs2 risc0_zkvm::guest::env::finalize2sys_halt2ˆ<risc0_zkp::core::hash::sha::rust_crypto::Sha256VarCore<S> as digest::core_api::VariableOutputCore>::finalize_variable_core::{{closure}}2q/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkp-0.21.0/src/core/hash/sha/rust_crypto.rs2U<risc0_zkvm::receipt_claim::MaybePruned<T> as risc0_binfmt::hash::Digestible>::digest2f/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/receipt_claim.rs2!risc0_binfmt::hash::tagged_struct2_/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-binfmt-0.21.0/src/hash.rs2P<risc0_zkvm::guest::sha::Impl as risc0_zkp::core::hash::sha::Sha256>::hash_bytes2b/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/guest/sha.rs2'risc0_zkvm::guest::sha::copy_and_update2;alloc::raw_vec::RawVec<T,A>::reserve::do_reserve_and_handle
+tuvwÜ
+xJ’€€ÜÏ… €(8HP"ìŸ…"˜"ˆñ„"?"ˆñ„"˜"À÷„"ƒ"À÷„"?"À÷„"˜"üù„"¾"üù„"?"	üù„"˜"
+˜‹…"4"˜‹…"?"˜‹…"˜"˜“…"Ø"˜“…"4"˜“…"?"˜“…"˜"à”…"¨"à”…"Ø"à”…"4"à”…"?"à”…"˜"ø‘€""ø‘€"¨"ø‘€"Ø"ø‘€"4"ø‘€"?"ø‘€"˜"Œ…"	è"Œ…"4"Œ…"?"Œ…"˜" ¨—…"
+e"!¨—…"	è""¨—…"4"#¨—…"?"$¨—…"˜"%€€""&€€"
+e"'€€"	è"(€€"4")€€"?"*€€"˜"+ø‘€"
+e",ø‘€"	è"-è …"™".è …"?"/è …"˜"0Œ …"5"1Œ …"˜"2€€"5"3´­""4´­"˜"5ä°€""6ä°€""7ä°€"˜"8°¤"¼"9°¤"":°¤"";°¤"˜"<¼…"Ï"=¼…"">¼…""?¼…"˜"@ô¨…" "Aô¨…"W"Bô¨…"`"Cô¨…""Dô¨…""Eô¨…"˜"Fü‘„"ã"Gü‘„""Hü‘„"˜"Iø‘€"ã"Jø‘€""KÔÏ…"š"LÔÏ…"ã"MÔÏ…""NÔÏ…"˜"O¤Ï…""P¤Ï…"6"Q¤Ï…"š"R¤Ï…"ã"S¤Ï…""T¤Ï…"˜"U´É„"j"V´É„""W´É„"˜"X€€"j"Y€€""Zø‘€"j"[Ôüƒ"]"\Ôüƒ"j"]Ôüƒ""^Ôüƒ"˜"_ø‘€"]"`ˆ¸…"""aˆ¸…"j"bˆ¸…""cˆ¸…"˜"d¤Ş„"Ö"e¤Ş„"j"f¤Ş„""g¤Ş„"˜"hˆ¸…"Ö"i€€"Ö"jø‘€"Ö"k€€"]"lˆ¸…"]"m¤Ş„"]"n”¼„""o”¼„""p”¼„"˜"qœÆ„"ë"rœÆ„""sœÆ„"˜"tä•"¨"uä•"ë"vä•""wä•"˜"xø‘€"ë"yä©…"`"zä©…""{ä©…"˜"|ø‘€"`"}¸óƒ" ""~¸óƒ""¸óƒ"˜"€” €"!—"” €""‚” €"˜"ƒø‘€"!—"„¼¾„""õ"…¼¾„""†¼¾„"˜"‡€€""õ"ˆø‘€""õ"‰ˆ¸…""õ"Š š€"!—"‹ š€""Œ š€"˜"ä©€"!—"ä©€""ä©€"˜"ôÇ„"ë"‘ôÇ„""’ôÇ„"˜* * * 	*
+ * * * * *	 *
+ * * * * * * * * *  !*" !*# $*% &*' (*) **+ $*, -*. /*0 1*2 3*4 *5 !* 6 -*!7 8*"9 :2 2cycles2count2unknown2__start2b/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/guest/mod.rs2 risc0_zkvm::guest::env::finalize2b/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/guest/env.rs2ˆ<risc0_zkp::core::hash::sha::rust_crypto::Sha256VarCore<S> as digest::core_api::VariableOutputCore>::finalize_variable_core::{{closure}}2q/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkp-0.21.0/src/core/hash/sha/rust_crypto.rs2U<risc0_zkvm::receipt_claim::MaybePruned<T> as risc0_binfmt::hash::Digestible>::digest2f/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/receipt_claim.rs2!risc0_binfmt::hash::tagged_struct2_/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-binfmt-0.21.0/src/hash.rs2;alloc::raw_vec::RawVec<T,A>::reserve::do_reserve_and_handle2|/nix/store/yipifwq82wmfrq60y3l9wm9wpalc02in-rust-nightly-latest-2024-05-15/lib/rustlib/src/rust/library/alloc/src/raw_vec.rs2alloc::raw_vec::finish_grow2memcpy2P<risc0_zkvm::guest::sha::Impl as risc0_zkp::core::hash::sha::Sha256>::hash_bytes2b/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/guest/sha.rs2'risc0_zkvm::guest::sha::copy_and_update2memset2sys_halt2i/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-platform-0.21.0/src/syscall.rs2risc0_zkvm::guest::env::init2main2—<kairos_circuit_logic::_::<impl serde::de::Deserialize for kairos_circuit_logic::ProofInputs>::deserialize::__Visitor as serde::de::Visitor>::visit_seq2K/Users/avi/Code/Casper/kairos/kairos-prover/kairos-circuit-logic/src/lib.rs2"serde::de::SeqAccess::next_element2[/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.203/src/de/mod.rs2[<risc0_zkvm::guest::env::FdReader as risc0_zkvm::serde::deserializer::WordRead>::read_words2sys_alloc_aligned2[<risc0_zkvm_platform::rust_rt::BumpPointerAlloc as core::alloc::global::GlobalAlloc>::alloc2i/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-platform-0.21.0/src/rust_rt.rs2__rust_alloc21kairos_trie::transaction::Transaction<S,V>::entry2W/Users/avi/.cargo/git/checkouts/kairos-trie-bfe67921ad605dab/de793f6/src/transaction.rs2memcmp2g/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/compiler_builtins-0.1.109/src/macros.rs2,compiler_builtins::mem::impls::compare_bytes2j/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/compiler_builtins-0.1.109/src/mem/impls.rs2compiler_builtins::mem::memcmp2h/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/compiler_builtins-0.1.109/src/mem/mod.rs2?kairos_trie::transaction::Transaction<S,V>::calc_root_hash_node2^<kairos_trie::stored::merkle::Snapshot<V> as kairos_trie::stored::Store<V>>::calc_subtree_hash2Y/Users/avi/.cargo/git/checkouts/kairos-trie-bfe67921ad605dab/de793f6/src/stored/merkle.rs2sha2::sha256::compress2562]/Users/avi/.cargo/git/checkouts/rustcrypto-hashes-c85f622e3013fd16/7fd6900/sha2/src/sha256.rs23kairos_trie::transaction::nodes::Leaf<V>::hash_leaf2]/Users/avi/.cargo/git/checkouts/kairos-trie-bfe67921ad605dab/de793f6/src/transaction/nodes.rs2˜core::ptr::drop_in_place<kairos_trie::transaction::nodes::Branch<kairos_trie::transaction::nodes::NodeRef<kairos_circuit_logic::account_trie::Account>>>2{/nix/store/yipifwq82wmfrq60y3l9wm9wpalc02in-rust-nightly-latest-2024-05-15/lib/rustlib/src/rust/library/core/src/ptr/mod.rs2%alloc::raw_vec::RawVec<T,A>::grow_one2__rust_realloc27kairos_trie::stored::merkle::Snapshot<V>::root_node_idx2b<mut risc0_zkvm::serde::serializer::Serializer<W> as serde::ser::SerializeStruct>::serialize_field2i/Users/avi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/risc0-zkvm-0.21.0/src/serde/serializer.rs20kairos_circuit_logic::account_trie::hash_buffers2T/Users/avi/Code/Casper/kairos/kairos-prover/kairos-circuit-logic/src/account_trie.rs

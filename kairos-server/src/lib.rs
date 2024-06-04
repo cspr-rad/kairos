@@ -15,6 +15,7 @@ pub use errors::AppErr;
 use crate::config::ServerConfig;
 use crate::state::BatchStateManager;
 
+/// TODO: support secp256k1
 type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 

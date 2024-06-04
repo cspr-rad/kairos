@@ -5,7 +5,7 @@ use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use tracing::instrument;
 
-use kairos_circuit_logic::transactions::{Signed, Transaction, Transfer};
+use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Transfer};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::{routes::PayloadBody, state::BatchStateManager, AppErr};
@@ -40,10 +40,10 @@ pub async fn transfer_handler(
     tracing::info!("queuing transaction for trie update");
 
     state
-        .enqueue_transaction(Signed {
+        .enqueue_transaction(KairosTransaction::Transfer(Signed {
             public_key,
             nonce,
-            transaction: Transaction::Transfer(transfer),
-        })
+            transaction: transfer,
+        }))
         .await
 }
