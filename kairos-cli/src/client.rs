@@ -1,6 +1,6 @@
 use casper_client::types::DeployHash;
 use casper_client::types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp};
-use casper_types::{crypto::SecretKey, runtime_args, Key, RuntimeArgs, U512};
+use casper_client_types::{crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs, U512};
 use reqwest::{blocking, Url};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -46,7 +46,7 @@ impl From<reqwest::Error> for KairosClientError {
 pub fn deposit<A: Into<U512>>(
     base_url: &Url,
     depositor_secret_key: &SecretKey,
-    contract_hash: &str,
+    contract_hash: &ContractHash,
     amount: A,
 ) -> Result<DeployHash, KairosClientError> {
     // TODO
@@ -58,24 +58,20 @@ pub fn deposit<A: Into<U512>>(
             deposit_session_wasm_path, err
         )
     });
-    let contract_hash = Key::from_formatted_str(contract_hash).map_err(|err| {
-        panic!(
-            "Failed to parse the contract hash {}: {}",
-            contract_hash, err
-        )
-    });
     let deposit_session = ExecutableDeployItem::new_module_bytes(
         deposit_session_wasm_bytes.into(),
-        runtime_args! { "demo_contract" =>  contract_hash, "amount" => amount.into() },
+        runtime_args! { "demo_contract" => *contract_hash, "amount" => amount.into() },
     );
-    let deploy = DeployBuilder::new(env!("CASPER_CHAIN_NAME"), deposit_session)
-        .with_secret_key(depositor_secret_key)
-        // max amount allowed to be used on gas fees
-        .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT)
-        .with_timestamp(Timestamp::now())
-        .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
-        .build()
-        .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
+    let deploy = DeployBuilder::new(
+        env!("CASPER_CHAIN_NAME"),
+        deposit_session,
+        &depositor_secret_key,
+    )
+    .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT) // max amount allowed to be used on gas fees
+    .with_timestamp(Timestamp::now())
+    .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
+    .build()
+    .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
 
     let client = blocking::Client::new();
     let url = base_url.join("/api/v1/deposit").unwrap();

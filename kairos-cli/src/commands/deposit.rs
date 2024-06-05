@@ -2,9 +2,12 @@ use crate::client;
 use crate::common::args::{AmountArg, ContractHashArg, PrivateKeyPathArg};
 use crate::error::CliError;
 
-use casper_client_types::crypto::SecretKey;
+use casper_client_types::{crypto::SecretKey, ContractHash};
 use clap::Parser;
+use hex::FromHex;
 use reqwest::Url;
+
+use kairos_crypto::error::CryptoError;
 
 #[derive(Parser, Debug)]
 pub struct Args {
@@ -20,9 +23,13 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     let contract_hash = args.contract_hash.field;
     let amount: u64 = args.amount.field;
     let path = args.private_key_path.field;
-    let depositor_secret_key = SecretKey::from_file(&path)
-        .map_err(|err| panic!("Failed to read secret key from file {:?}: {}", path, err))
-        .unwrap();
+    let depositor_secret_key =
+        SecretKey::from_file(&path).map_err(|err| CryptoError::FailedToParseKey {
+            error: err.to_string(),
+        })?;
+
+    let contract_hash_bytes = <[u8; 32]>::from_hex(contract_hash)?;
+    let contract_hash = ContractHash::new(contract_hash_bytes);
 
     client::deposit(
         &kairos_server_address,
