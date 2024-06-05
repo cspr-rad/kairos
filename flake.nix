@@ -97,6 +97,7 @@
               inputs'.csprpkgs.packages.cctl
             ];
 
+            CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
 
             meta.mainProgram = "kairos-server";
@@ -106,8 +107,10 @@
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             inputsFrom = [ self'.packages.kairos ];
+            packages = [ inputs'.csprpkgs.packages.cctl ];
           };
 
           packages = {

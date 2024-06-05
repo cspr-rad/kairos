@@ -1,9 +1,8 @@
+use reqwest::Url;
 use std::net::SocketAddr;
 use std::{fmt, str::FromStr};
 
-use reqwest::Url;
-
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ServerConfig {
     pub socket_addr: SocketAddr,
     pub casper_rpc: Url,

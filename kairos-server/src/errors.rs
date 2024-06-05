@@ -75,3 +75,12 @@ impl From<kairos_trie::TrieError> for AppErr {
         }
     }
 }
+
+impl From<casper_client::Error> for AppErr {
+    fn from(error: casper_client::Error) -> Self {
+        Self {
+            error: anyhow::Error::msg(error.to_string()),
+            status: Some(StatusCode::INTERNAL_SERVER_ERROR),
+        }
+    }
+}
