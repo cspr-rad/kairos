@@ -25,12 +25,6 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    risc0pkgs.url = "github:cspr-rad/risc0pkgs";
-    # FIXME: We don't want to follow our nixpkgs revision
-    # to avoid rebuilding the r0vm over and over again
-    # whenever we update nixpkgs, while we are not using
-    # it yet in kairos-prover
-    # risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
     csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
     csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };

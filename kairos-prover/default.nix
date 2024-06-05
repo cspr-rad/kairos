@@ -52,7 +52,7 @@
           ];
         };
 
-        RISC0_R0VM_PATH = "${inputs'.risc0pkgs.packages.r0vm}/bin/r0vm";
+        RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
 
         preCheck = ''
           # Proving in CI is disabled because it takes too long.
@@ -71,19 +71,15 @@
           mv .cargo-home/config.toml .cargo/config.toml
           export RISC0_RUST_SRC=${rustToolchain}/lib/rustlib/src/rust;
         '';
-        checkInputs = [ inputs'.risc0pkgs.packages.r0vm ];
+        checkInputs = [ pkgs.r0vm ];
       };
     in
     {
       devShells.risczero = pkgs.mkShell {
         RISC0_RUST_SRC = "${rustToolchain}/lib/rustlib/src/rust";
         RISC0_DEV_MODE = 1;
-        RISC0_R0VM_PATH = "${inputs'.risc0pkgs.packages.r0vm}/bin/r0vm";
+        RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
         inputsFrom = [ self.packages.${system}.kairos-prover ];
-        # I cannot install Metal via Nix, so you need to follow the standard xcode metal installation instructions
-        nativeBuildInputs = [
-          inputs'.risc0pkgs.packages.r0vm
-        ];
       };
       packages = {
         kairos-prover-deps = craneLib.buildDepsOnly (kairosProverAttrs // {
