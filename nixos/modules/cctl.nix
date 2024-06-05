@@ -1,4 +1,4 @@
-{ lib, config, ... }:
+{ pkgs, lib, config, ... }:
 let
   inherit (lib)
     types
@@ -8,6 +8,61 @@ let
     mkEnableOption
     ;
   cfg = config.services.cctl;
+
+  casperNodeAddress = "http://127.0.0.1:${builtins.toString cfg.port}";
+  deployedContractsDirectory = cfg.workingDirectory + "/contracts";
+  deployedContractDestination = deployedContractsDirectory + "/${builtins.baseNameOf cfg.contract}";
+  # TODO implement this in kairos-test-utils
+  deployContractScript = pkgs.writeShellApplication {
+    name = "deploy-contract";
+    runtimeInputs = [ cfg.casper-client-package pkgs.jq ];
+    text = ''
+      echo "Deploying contract ${builtins.baseNameOf cfg.contract}"
+      DEPLOY_HASH=$(casper-client put-deploy \
+        --node-address ${casperNodeAddress} \
+        --chain-name cspr-dev-cctl \
+        --secret-key ${cfg.workingDirectory}/assets/users/user-1/secret_key.pem \
+        --payment-amount 5000000000000  \
+        --session-path ${cfg.contract} | jq -r ".result.deploy_hash")
+      echo "Waiting for successful execution of deploy"
+      max_retries=10
+      retry_count=0
+      while [[ $retry_count -lt $max_retries ]]; do
+        EXECUTION_RESULTS=$(casper-client get-deploy \
+          --node-address ${casperNodeAddress} \
+          "$DEPLOY_HASH" | jq -r ".result.execution_results")
+        if ! echo "$EXECUTION_RESULTS" | jq -e . >/dev/null 2>&1; then
+          echo "Invalid JSON received:"
+          echo "$EXECUTION_RESULTS"
+          exit 1
+        fi
+        # TODO this should check for a success
+        # An empty list indicates that the deploy was not processed yet, so we retry
+        if [[ "$EXECUTION_RESULTS" != "[]" ]]; then
+          break
+        fi
+        ((retry_count++)) || true
+        echo "retrying: $retry_count/$max_retries"
+        sleep 3
+      done
+      echo "Fetching the state root hash"
+      STATE_ROOT_HASH=$(casper-client get-state-root-hash \
+        --node-address ${casperNodeAddress} | jq -r ".result.state_root_hash")
+      ACCOUNT_HASH=$(casper-client account-address \
+        --public-key ${cfg.workingDirectory}/assets/users/user-1/public_key.pem)
+      echo "Fetching the contract hash"
+      CONTRACT_HASH_KEY=$(casper-client query-global-state \
+          --node-address ${casperNodeAddress} \
+          --state-root-hash "$STATE_ROOT_HASH" \
+          --key "$ACCOUNT_HASH" | jq -r ".result.stored_value.Account.named_keys[0].key")
+          # -q "kairos-contract-hash"
+          # TODO discuss this -q "l1-event-contract-hash" # | jq -r ".result.stored_value.ContractPackage.versions[0].contract_hash")
+          # the place in global storage where the contract hash is stored
+      mkdir -p ${deployedContractsDirectory}
+      touch ${deployedContractDestination}
+      echo "$CONTRACT_HASH_KEY" > ${deployedContractDestination}
+    '';
+  };
 in
 {
   options.services.cctl = {
@@ -15,6 +70,10 @@ in
     enable = mkEnableOption "cctl";
 
     package = mkOption {
+      type = types.package;
+    };
+
+    casper-client-package = mkOption {
       type = types.package;
     };
 
@@ -29,7 +88,7 @@ in
     };
 
     workingDirectory = mkOption {
-      type = types.str;
+      type = types.path;
       default = "/var/lib/cctl";
       description = ''
         The working directory path where cctl will put its assets and resources.
@@ -43,6 +102,15 @@ in
         The log-level that should be used.
       '';
     };
+
+    contract = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        The contract that should be deployed once the network is up and ready.
+      '';
+    };
+
   };
 
   config = mkIf cfg.enable {
@@ -62,7 +130,7 @@ in
             {
               ExecStart = ''${lib.getExe cfg.package} --working-dir ${cfg.workingDirectory}'';
               Type = "notify";
-              Restart = "always";
+              Restart = "no";
               User = "cctl";
               Group = "cctl";
               StateDirectory = builtins.baseNameOf cfg.workingDirectory;
@@ -71,6 +139,7 @@ in
                 cfg.workingDirectory
               ];
             }
+            (lib.optionalAttrs (!builtins.isNull cfg.contract) { ExecStartPost = lib.getExe deployContractScript; })
           ];
       };
 
@@ -89,13 +158,23 @@ in
     # when testing
     services.nginx = {
       enable = true;
-      virtualHosts."${config.networking.hostName}".locations."/cctl/users/" = {
-        alias = "${cfg.workingDirectory}/assets/users/";
-        extraConfig = ''
-          autoindex on;
-          add_header Content-Type 'text/plain charset=UTF-8';
-        '';
-      };
+      virtualHosts."${config.networking.hostName}".locations = {
+        "/cctl/users/" = {
+          alias = "${cfg.workingDirectory}/assets/users/";
+          extraConfig = ''
+            autoindex on;
+            add_header Content-Type 'text/plain charset=UTF-8';
+          '';
+        };
+      } // (lib.optionalAttrs (!builtins.isNull cfg.contract) {
+        "/cctl/contracts/" = {
+          alias = "${deployedContractsDirectory}/";
+          extraConfig = ''
+            autoindex on;
+            add_header Content-Type 'text/plain charset=UTF-8';
+          '';
+        };
+      });
     };
   };
 }
