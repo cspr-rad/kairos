@@ -53,6 +53,15 @@ in
       '';
     };
 
+    demoContractHash = mkOption {
+      type = types.str;
+      example = "TODO put a contract hash here";
+      description = ''
+        The hash of the deployed demo contract.
+        Use an empty string when testing with cctl.
+      '';
+    };
+
     logLevel = mkOption {
       type = types.enum [
         "error"
@@ -82,12 +91,14 @@ in
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
           KAIROS_SERVER_CASPER_RPC = cfg.casperRpcUrl;
           KAIROS_SERVER_CASPER_SSE = cfg.casperSseUrl;
+          KAIROS_SERVER_DEMO_CONTRACT_HASH = cfg.demoContractHash;
         };
         serviceConfig = mkMerge [
           {
             ExecStart = ''${lib.getExe cfg.package}'';
             Restart = "always";
             DynamicUser = true;
+            ConfigurationDirectory = "kairos";
           }
         ];
       };
