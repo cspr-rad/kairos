@@ -19,3 +19,8 @@ pub struct NonceArg {
     #[arg(id = "nonce", long, short, value_name = "NUM")]
     pub val: u64,
 }
+
+pub struct ContractHashArg {
+    #[arg(id = "contract-hash", long, short = 'h', value_name = "CONTRACT_HASH")]
+    pub field: String,
+}
