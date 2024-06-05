@@ -3,12 +3,12 @@ mod trie;
 
 use std::{sync::Arc, thread::JoinHandle};
 
-use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 use tokio::sync::mpsc;
 
-use self::transactions::{Signed, Transaction};
 pub use self::trie::TrieStateThreadMsg;
 use crate::config::ServerConfig;
+use kairos_circuit_logic::transactions::{Signed, Transaction};
+use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
 pub type ServerState = Arc<ServerStateInner>;
 

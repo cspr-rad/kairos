@@ -2059,6 +2059,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "kairos-circuit-logic"
+version = "0.1.0"
+dependencies = [
+ "kairos-trie",
+ "kairos-tx",
+ "proptest",
+ "serde",
+ "sha2 0.10.8",
+ "test-strategy",
+]
+
+[[package]]
 name = "kairos-cli"
 version = "0.1.0"
 dependencies = [
@@ -2102,6 +2114,7 @@ dependencies = [
  "casper-types 3.0.0",
  "dotenvy",
  "hex",
+ "kairos-circuit-logic",
  "kairos-test-utils",
  "kairos-trie",
  "kairos-tx",
@@ -2142,6 +2155,7 @@ dependencies = [
  "bumpalo",
  "digest 0.10.7",
  "ouroboros",
+ "serde",
 ]
 
 [[package]]
@@ -2971,9 +2985,9 @@ dependencies = [
 
 [[package]]
 name = "rasn"
-version = "0.12.5"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf9b0d03fbc7d2dcfdd35086c43ce30ac5ff62ed7eff4397e4f4f2995a2b0e2a"
+checksum = "39df916fdbba892afb9a7e91f4117c58ba36b14a236aa45bfa12fcf623641051"
 dependencies = [
  "arrayvec",
  "bitvec 1.0.1",
@@ -2994,9 +3008,9 @@ dependencies = [
 
 [[package]]
 name = "rasn-derive"
-version = "0.12.5"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbaf7105cd254b632f4732fbcc243ce750cef87d8335826125ef6df5733b5a0c"
+checksum = "7e81213825a788a1afeab661c7ecdbaf55c06cefca003a4f1dd14d1d9d854d55"
 dependencies = [
  "either",
  "itertools 0.10.5",
@@ -3603,6 +3617,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
+name = "structmeta"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78ad9e09554f0456d67a69c1584c9798ba733a5b50349a6c0d0948710523922d"
+dependencies = [
+ "proc-macro2 1.0.81",
+ "quote 1.0.36",
+ "structmeta-derive",
+ "syn 2.0.60",
+]
+
+[[package]]
+name = "structmeta-derive"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a60bcaff7397072dca0017d1db428e30d5002e00b6847703e2e42005c95fbe00"
+dependencies = [
+ "proc-macro2 1.0.81",
+ "quote 1.0.36",
+ "syn 2.0.60",
+]
+
+[[package]]
 name = "strum"
 version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3738,6 +3775,18 @@ name = "termtree"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3369f5ac52d5eb6ab48c6b4ffdc8efbcad6b89c765749064ba298f2c68a16a76"
+
+[[package]]
+name = "test-strategy"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b8361c808554228ad09bfed70f5c823caf8a3450b6881cc3a38eb57e8c08c1d9"
+dependencies = [
+ "proc-macro2 1.0.81",
+ "quote 1.0.36",
+ "structmeta",
+ "syn 2.0.60",
+]
 
 [[package]]
 name = "thiserror"

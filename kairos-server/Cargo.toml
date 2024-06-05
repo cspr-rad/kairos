@@ -34,6 +34,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
+kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1"] }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
 sha2 = "0.10"
 reqwest = "0.12"
