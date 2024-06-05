@@ -1,11 +1,14 @@
 use casper_client::types::DeployHash;
 use casper_client::types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp};
-use casper_types::{crypto::SecretKey, runtime_args, RuntimeArgs};
+use casper_types::{crypto::SecretKey, runtime_args, Key, RuntimeArgs, U512};
 use reqwest::{blocking, Url};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fs;
 use std::path::Path;
+
+// max amount allowed to be used on gas fees
+pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum KairosClientError {
@@ -40,10 +43,11 @@ impl From<reqwest::Error> for KairosClientError {
     }
 }
 
-pub fn deposit(
+pub fn deposit<A: Into<U512>>(
     base_url: &Url,
     depositor_secret_key: &SecretKey,
-    amount: u64,
+    contract_hash: &str,
+    amount: A,
 ) -> Result<DeployHash, KairosClientError> {
     let deposit_session_wasm_path =
         Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
@@ -53,11 +57,20 @@ pub fn deposit(
             deposit_session_wasm_path, err
         )
     });
-    let deposit_session =
-        ExecutableDeployItem::new_module_bytes(deposit_session_wasm_bytes.into(), runtime_args! {});
+    let contract_hash = Key::from_formatted_str(contract_hash).map_err(|err| {
+        panic!(
+            "Failed to parse the contract hash {}: {}",
+            contract_hash, err
+        )
+    });
+    let deposit_session = ExecutableDeployItem::new_module_bytes(
+        deposit_session_wasm_bytes.into(),
+        runtime_args! { "demo_contract" =>  contract_hash, "amount" => amount.into() },
+    );
     let deploy = DeployBuilder::new(env!("CASPER_CHAIN_NAME"), deposit_session)
         .with_secret_key(depositor_secret_key)
-        .with_standard_payment(amount)
+        // max amount allowed to be used on gas fees
+        .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT)
         .with_timestamp(Timestamp::now())
         .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
         .build()
