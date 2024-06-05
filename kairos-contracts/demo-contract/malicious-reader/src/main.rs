@@ -4,7 +4,7 @@
     and calling transfer_from_purse_to_purse
 */
 
-#![no_std]
+
 #![no_main]
 use casper_contract::contract_api::{account, runtime, system};
 use casper_types::{URef, U512};
