@@ -230,7 +230,7 @@ impl<Db: DatabaseGet<Account>> AccountTrie<SnapshotBuilder<Db, Account>> {
 
         let sender_account = self
             .txn
-            .get(&sender_hash)?
+            .get_exclude_from_txn(&sender_hash)?
             .ok_or("Transfer Failed: sender does not have an account")?;
 
         // SECURITY ASUMPTION: see Account docs
@@ -244,7 +244,7 @@ impl<Db: DatabaseGet<Account>> AccountTrie<SnapshotBuilder<Db, Account>> {
             return Err("Transfer Failed: sender has insufficient funds".into());
         }
 
-        if let Some(recipient_account) = self.txn.get(&recipient_hash)? {
+        if let Some(recipient_account) = self.txn.get_exclude_from_txn(&recipient_hash)? {
             recipient_account
                 .balance
                 .checked_add(transfer.amount)
@@ -294,7 +294,7 @@ impl<Db: DatabaseGet<Account>> AccountTrie<SnapshotBuilder<Db, Account>> {
 
         let withdrawer_account = self
             .txn
-            .get(&withdrawer_hash)?
+            .get_exclude_from_txn(&withdrawer_hash)?
             .ok_or("Withdraw Failed: withdrawer does not have an account")?;
 
         // SECURITY ASUMPTION: see Account docs
