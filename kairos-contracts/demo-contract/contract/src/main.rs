@@ -89,7 +89,7 @@ pub extern "C" fn call() {
     ]);
 
     // this counter will be udpated by the entry point that processes / verifies batches
-    let last_processed_deposit_counter = storage::new_uref(0u64);
+    let last_processed_deposit_counter = storage::new_uref(0u32);
     let named_keys = NamedKeys::from([(
         KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),
         last_processed_deposit_counter.into(),
