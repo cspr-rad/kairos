@@ -321,6 +321,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "bincode"
+version = "1.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "bit-set"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -447,7 +456,7 @@ dependencies = [
  "async-trait",
  "base16",
  "base64 0.13.1",
- "casper-hashing",
+ "casper-hashing 2.0.0",
  "casper-types 3.0.0",
  "clap",
  "clap_complete",
@@ -478,11 +487,11 @@ dependencies = [
 
 [[package]]
 name = "casper-contract"
-version = "3.0.0"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4243fe64dad13cfbc610a11b72587f5cebcc7578db057be19a8a67d75d64f947"
+checksum = "d42901eb5b09bb79e7d7403642e70983ccac0f4812edf1de77d978abea5f3299"
 dependencies = [
- "casper-types 3.0.0",
+ "casper-types 4.0.1",
  "hex_fmt",
 ]
 
@@ -503,20 +512,20 @@ dependencies = [
 
 [[package]]
 name = "casper-event-standard"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ed45e66b669318d85741db80cc99f3b2b679bffe0f560466d2deb392b37e03a"
+checksum = "4a3a1bdb142b4bfcdceec757422b2e292f446b72ce3613f881eb694f3925ef10"
 dependencies = [
  "casper-contract",
  "casper-event-standard-macro",
- "casper-types 3.0.0",
+ "casper-types 4.0.1",
 ]
 
 [[package]]
 name = "casper-event-standard-macro"
-version = "0.4.1"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae75de0e6c2fba6be7967fa7d2b0734bf0914ab47979fae4b5bc262f8bf53730"
+checksum = "485810e6c8387863a92e9b81e4e66ce290e2c96c0ad8ec4352e95128aa88900e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -525,14 +534,17 @@ dependencies = [
 
 [[package]]
 name = "casper-event-toolkit"
-version = "0.1.1"
-source = "git+https://github.com/koxu1996/casper-event-toolkit.git#fdfcc2105b524d2f7d2a557c45363822f19a01e0"
+version = "0.1.3"
+source = "git+https://github.com/koxu1996/casper-event-toolkit.git#360dbe1db29fd4575fadf06dbcb7b7c9ddc741ca"
 dependencies = [
+ "bincode",
  "casper-client",
  "casper-event-standard",
- "casper-hashing",
+ "casper-hashing 2.0.0",
+ "casper-hashing 3.0.0",
  "casper-types 3.0.0",
  "hex",
+ "serde",
  "thiserror",
  "tokio",
 ]
@@ -546,6 +558,26 @@ dependencies = [
  "base16",
  "blake2",
  "casper-types 3.0.0",
+ "datasize",
+ "hex",
+ "hex-buffer-serde 0.3.0",
+ "hex_fmt",
+ "itertools 0.10.5",
+ "once_cell",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "casper-hashing"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c29b63e179d67da0c6b32c1b84bad5480f5f4bfd1b2d7f88390c85f92e87ae0"
+dependencies = [
+ "base16",
+ "blake2",
+ "casper-types 4.0.1",
  "datasize",
  "hex",
  "hex-buffer-serde 0.3.0",
@@ -601,6 +633,7 @@ dependencies = [
  "base64 0.13.1",
  "bitflags 1.3.2",
  "blake2",
+ "datasize",
  "derp",
  "ed25519-dalek 2.1.1",
  "getrandom",
