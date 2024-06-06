@@ -100,7 +100,8 @@ dependencies = [
 [[package]]
 name = "casper-types"
 version = "4.0.1"
-source = "git+https://github.com/casper-network/casper-node?branch=dev#e4e700e4dbbb14f4e0732c4444d978f821003775"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e01525b7bbae90fe9de3f1def6ffe05052a94ed7d14b1c2b38baec81eeec31b"
 dependencies = [
  "base16",
  "base64",
