@@ -39,3 +39,4 @@ predicates = "3"
 kairos-test-utils = { path = "../kairos-test-utils" }
 casper-client-hashing.workspace = true
 casper-hashing.workspace = true
+casper-client-hashing.workspace = true

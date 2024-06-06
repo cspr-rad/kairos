@@ -42,6 +42,8 @@ async fn deposit_successful_with_ed25519() {
         cmd.arg("--kairos-server-address")
             .arg(kairos.url.as_str())
             .arg("deposit")
+            .arg("--contract-hash")
+            .arg("000000000000000000000000000000000000")
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
@@ -108,6 +110,8 @@ fn deposit_invalid_amount() {
 
     let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
     cmd.arg("deposit")
+        .arg("--contract-hash")
+        .arg("000000000000000000000000000000000000")
         .arg("--amount")
         .arg("foo") // Invalid amount
         .arg("--private-key")
@@ -123,6 +127,8 @@ fn deposit_invalid_private_key_path() {
 
     let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
     cmd.arg("deposit")
+        .arg("--contract-hash")
+        .arg("000000000000000000000000000000000000")
         .arg("--amount")
         .arg("123")
         .arg("--private-key")
@@ -138,13 +144,15 @@ fn deposit_invalid_private_key_content() {
 
     let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
     cmd.arg("deposit")
+        .arg("--contract-hash")
+        .arg("000000000000000000000000000000000000")
         .arg("--amount")
         .arg("123")
         .arg("--private-key")
         .arg(secret_key_path);
-    cmd.assert().failure().stderr(predicates::str::contains(
-        "Failed to read secret key from file",
-    ));
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("cryptography error"));
 }
 
 #[test]
