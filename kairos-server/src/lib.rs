@@ -43,12 +43,12 @@ pub async fn run_l1_sync(config: ServerConfig, batch_service: Arc<BatchStateMana
     // TODO: Replace interval with SSE trigger.
     let l1_sync_service = Arc::new(L1SyncService::new(batch_service).await);
     tokio::spawn(async move {
-        if let Err(e) = l1_sync_service
+        let _ = l1_sync_service
             .initialize(config.casper_rpc.to_string(), config.casper_contract_hash)
             .await
-        {
-            panic!("Event manager failed to initialize: {}", e);
-        }
+            .map_err(|e| {
+                panic!("Event manager failed to initialize: {}", e);
+            });
         l1_sync::interval_trigger::run(l1_sync_service).await;
     });
 }
