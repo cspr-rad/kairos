@@ -36,7 +36,10 @@ fn new_test_app() -> TestServer {
 fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
-            .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info,kairos_server=trace".into()))
+            .with(
+                EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| "info,kairos_server=trace".into()),
+            )
             .with(tracing_subscriber::fmt::layer())
             .init();
     });
