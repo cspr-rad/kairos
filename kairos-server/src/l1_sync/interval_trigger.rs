@@ -11,10 +11,8 @@ pub async fn run(sync_service: Arc<L1SyncService>) {
         interval.tick().await;
 
         tracing::debug!("Triggering periodic L1 sync");
-        let result = sync_service.trigger_sync().await;
-
-        if let Err(e) = result {
+        let _ = sync_service.trigger_sync().await.map_err(|e| {
             tracing::error!("Unable to trigger sync: {}", e);
-        }
+        });
     }
 }
