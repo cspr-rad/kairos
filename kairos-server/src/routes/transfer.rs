@@ -24,10 +24,8 @@ pub async fn transfer_handler(
     let transfer: Transfer = match signing_payload.body {
         TransactionBody::Transfer(transfer) => transfer.try_into().context("decoding transfer")?,
         _ => {
-            return Err(AppErr::set_status(
-                anyhow!("invalid transaction type"),
-                StatusCode::BAD_REQUEST,
-            ))
+            return Err(AppErr::new(anyhow!("invalid transaction type"))
+                .set_status(StatusCode::BAD_REQUEST))
         }
     };
     let public_key = body.public_key;

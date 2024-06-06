@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use anyhow::anyhow;
+use reqwest::StatusCode;
 
 use crate::{state::trie::Database, AppErr};
 use kairos_circuit_logic::{
@@ -30,7 +31,10 @@ impl BatchState<SnapshotBuilder<Rc<Database>, Account>> {
             KairosTransaction::Transfer(ref transfer) => {
                 self.account_trie
                     .precheck_transfer(&transfer.public_key, &transfer.transaction, transfer.nonce)
-                    .map_err(|err| anyhow!("transfer precheck caught: {err}"))?;
+                    .map_err(|err| {
+                        AppErr::new(anyhow!("transfer precheck caught: {err}"))
+                            .set_status(StatusCode::CONFLICT)
+                    })?;
 
                 let _ = self
                     .account_trie
@@ -40,7 +44,10 @@ impl BatchState<SnapshotBuilder<Rc<Database>, Account>> {
             KairosTransaction::Withdraw(ref withdraw) => {
                 self.account_trie
                     .precheck_withdraw(&withdraw.public_key, &withdraw.transaction, withdraw.nonce)
-                    .map_err(|err| anyhow!("withdraw precheck caught: {err}"))?;
+                    .map_err(|err| {
+                        AppErr::new(anyhow!("withdraw precheck caught: {err}"))
+                            .set_status(StatusCode::CONFLICT)
+                    })?;
 
                 let _ = self
                     .account_trie
@@ -49,9 +56,10 @@ impl BatchState<SnapshotBuilder<Rc<Database>, Account>> {
             }
 
             KairosTransaction::Deposit(ref deposit) => {
-                self.account_trie
-                    .precheck_deposit(deposit)
-                    .map_err(|err| anyhow!("deposit precheck caught: {err}"))?;
+                self.account_trie.precheck_deposit(deposit).map_err(|err| {
+                    AppErr::new(anyhow!("deposit precheck caught: {err}"))
+                        .set_status(StatusCode::CONFLICT)
+                })?;
 
                 let _ = self
                     .account_trie

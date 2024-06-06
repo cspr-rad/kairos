@@ -28,10 +28,8 @@ pub async fn withdraw_handler(
             Withdraw::try_from(withdrawal).context("decoding withdrawal")?
         }
         _ => {
-            return Err(AppErr::set_status(
-                anyhow!("invalid transaction type"),
-                StatusCode::BAD_REQUEST,
-            ))
+            return Err(AppErr::new(anyhow!("invalid transaction type"))
+                .set_status(StatusCode::BAD_REQUEST))
         }
     };
     let public_key = body.public_key;

@@ -21,6 +21,7 @@ use kairos_trie::{
 
 pub type Database = MemoryDb<Account>;
 
+#[derive(Debug)]
 pub enum TrieStateThreadMsg {
     Transaction(KairosTransaction, oneshot::Sender<Result<(), AppErr>>),
     Commit(oneshot::Sender<Result<BatchOutput, AppErr>>),
@@ -47,6 +48,7 @@ pub fn spawn_state_thread(
         let mut state = TrieState::new(db, batch_root);
 
         while let Some(msg) = queue.blocking_recv() {
+            tracing::trace!("Trie State Thread received message: {:?}", msg);
             match msg {
                 TrieStateThreadMsg::Transaction(txn, responder) => {
                     let res = state.batch_state.execute_transaction(txn);
