@@ -73,11 +73,12 @@ async fn run_event_manager(
 ) {
     tracing::debug!("Event manager running and waiting for commands");
     while let Some(command) = rx.recv().await {
-        match handle_command(command, event_manager.clone()).await {
-            Ok(()) => {}
-            Err(L1SyncError::UnexpectedError(e)) => panic!("Unrecoverable error: {}", e),
-            Err(e) => tracing::error!("Transient error: {}", e),
-        }
+        let _ = handle_command(command, event_manager.clone())
+            .await
+            .map_err(|e| match e {
+                L1SyncError::UnexpectedError(e) => panic!("Unrecoverable error: {}", e),
+                _ => tracing::error!("Transient error: {}", e),
+            });
     }
 }
 
