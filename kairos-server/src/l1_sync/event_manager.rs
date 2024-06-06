@@ -59,7 +59,7 @@ impl EventManager {
             let schemas = self.schemas.as_ref().unwrap(); // Assuming schemas are already loaded
             let num_events = fetcher.fetch_events_count().await?;
             for i in self.next_event_id..num_events {
-                let event = fetcher.fetch_event(i.into(), schemas).await?;
+                let event = fetcher.fetch_event(i, schemas).await?;
                 tracing::debug!("Event {} fetched: {:?}.", i, event);
 
                 // TODO: Parse full transaction data from event, then push it to Data Availability layer.
