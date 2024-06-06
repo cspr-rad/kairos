@@ -22,8 +22,7 @@ impl ServerConfig {
                 <[u8; 32]>::from_hex(&contract_hash_string).map_err(|err| {
                     panic!(
                         "Failed to decode kairos-demo-contract-hash {}: {}",
-                        contract_hash_string,
-                        err
+                        contract_hash_string, err
                     )
                 })
             })

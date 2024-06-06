@@ -2,44 +2,70 @@ use crate::state::{
     transactions::{Deposit, Signed, Transaction},
     ServerState,
 };
+
+use anyhow::{anyhow, Result};
 use rand::Rng;
 use reqwest::Url;
 
-use casper_client::{query_global_state, types::StoredValue, JsonRpcId, Verbosity};
+use casper_client::{
+    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
+};
 use casper_deploy_notifier::types::Notification;
-use casper_event_standard::casper_types::{bytesrepr::FromBytes, CLTyped, HashAddr, Key};
+use casper_event_standard::casper_types::{bytesrepr::FromBytes, ContractHash, Key};
 use casper_event_standard::Schemas;
 use casper_event_toolkit::fetcher::Fetcher;
-use contract_utils;
+use casper_event_toolkit::rpc::compat::key_to_client_types;
 
-async fn query_deposit_contract_value<T: CLTyped + FromBytes>(
+use contract_utils::constants::KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER;
+
+async fn get_last_deposit_counter(
     casper_node_rpc_url: &Url,
-    contract_hash: &HashAddr,
-    key: &str,
-) -> T {
+    contract_hash: &ContractHash,
+) -> Result<u32> {
     let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
+    let state_root_hash = get_state_root_hash(
+        expected_rpc_id.clone(),
+        casper_node_rpc_url.as_str(),
+        Verbosity::High,
+        Option::None,
+    )
+    .await
+    .map_err(Into::<anyhow::Error>::into)
+    .and_then(|response| {
+        if response.id == expected_rpc_id {
+            response
+                .result
+                .state_root_hash
+                .ok_or(anyhow!("No state root hash present in response"))
+        } else {
+            Err(anyhow!("JSON RPC Id missmatch"))
+        }
+    })?;
+
+    let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
+    let contract_hash_key = key_to_client_types(&Key::Hash(contract_hash.value()))?;
     query_global_state(
         expected_rpc_id.clone(),
         casper_node_rpc_url.as_str(),
         Verbosity::High,
-        None, // fetches recent blocks state root hash
-        Key::Hash(*contract_hash),
-        vec![key.to_string()],
+        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash), // fetches recent blocks state root hash
+        contract_hash_key,
+        vec![KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string()],
     )
     .await
-    .map(|response| {
+    .map_err(Into::<anyhow::Error>::into)
+    .and_then(|response| {
         if response.id == expected_rpc_id {
             match response.result.stored_value {
-                StoredValue::CLValue(value) => value
+                StoredValue::CLValue(last_deposit_counter) => last_deposit_counter
                     .into_t()
-                    .expect("Failed to convert from CLValue to desired type"),
-                _ => panic!("Unexpected result type, type is not a CLValue"),
+                    .map_err(|err| anyhow!("Failed to convert from CLValue to u32: {}", err)),
+                _ => Err(anyhow!("Unexpected result type, type is not a CLValue")),
             }
         } else {
-            panic!("JSON RPC Id missmatch");
+            Err(anyhow!("JSON RPC Id missmatch"))
         }
     })
-    .expect("Failed to query global state")
 }
 
 pub async fn on_deploy_notification(
@@ -48,24 +74,19 @@ pub async fn on_deploy_notification(
     state: ServerState,
     notification: &Notification,
 ) {
-    let demo_contract_hash = HashAddr::try_from(
-        hex::decode(&state.server_config.kairos_demo_contract_hash)
-            .expect("Failed to decode the kairos demo contract hash from hex"),
-    )
-    .expect("Failed to parse the kairos demo contract hash");
-
     let last_unprocessed_deposit_index = event_fetcher
         .fetch_events_count()
         .await
         .expect("Failed to fetch the last unprocessed deposit index");
-    let last_processed_deposit_index: u64 = query_deposit_contract_value(
+    // FIXME in demo-contract to u32
+    let last_processed_deposit_index: u32 = get_last_deposit_counter(
         &state.server_config.casper_rpc,
-        &demo_contract_hash,
-        contract_utils::constants::KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER,
+        &state.server_config.kairos_demo_contract_hash,
     )
-    .await;
+    .await
+    .expect("Failed to fetch the index for the last processed deposit");
 
-    for deposit_index in last_processed_deposit_index..(last_unprocessed_deposit_index as u64) {
+    for deposit_index in (last_processed_deposit_index + 1)..=last_unprocessed_deposit_index {
         let untyped_event = event_fetcher
             .fetch_event(deposit_index, event_schemas)
             .await

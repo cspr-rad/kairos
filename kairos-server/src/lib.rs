@@ -85,7 +85,10 @@ pub async fn run(config: ServerConfig) {
         let metadata = retry(ExponentialBackoff::default(), || async {
             CesMetadataRef::fetch_metadata(
                 &casper_client,
-                &state.server_config.kairos_demo_contract_hash.to_formatted_string(),
+                &state
+                    .server_config
+                    .kairos_demo_contract_hash
+                    .to_formatted_string(),
             )
             .await
             .map_err(Error::transient)
