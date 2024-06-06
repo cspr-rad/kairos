@@ -15,7 +15,7 @@ let
   # TODO implement this in kairos-test-utils
   deployContractScript = pkgs.writeShellApplication {
     name = "deploy-contract";
-    runtimeInputs = [ cfg.casper-client-package pkgs.jq ];
+    runtimeInputs = [ cfg.casper-client-package pkgs.jq pkgs.gawk ];
     text = ''
       echo "Deploying contract ${builtins.baseNameOf cfg.contract}"
       DEPLOY_HASH=$(casper-client put-deploy \
@@ -51,16 +51,15 @@ let
       ACCOUNT_HASH=$(casper-client account-address \
         --public-key ${cfg.workingDirectory}/assets/users/user-1/public_key.pem)
       echo "Fetching the contract hash"
-      CONTRACT_HASH_KEY=$(casper-client query-global-state \
+      CONTRACT_HASH=$(casper-client query-global-state \
           --node-address ${casperNodeAddress} \
           --state-root-hash "$STATE_ROOT_HASH" \
-          --key "$ACCOUNT_HASH" | jq -r ".result.stored_value.Account.named_keys[0].key")
-          # -q "kairos-contract-hash"
-          # TODO discuss this -q "l1-event-contract-hash" # | jq -r ".result.stored_value.ContractPackage.versions[0].contract_hash")
-          # the place in global storage where the contract hash is stored
+          --key "$ACCOUNT_HASH" \
+          --query-path "kairos_contract_package_hash" | jq -r ".result.stored_value.ContractPackage.versions[0].contract_hash" | awk -F"-" '{print $2}')
+          # --query_path "$KAIROS_CONTRACT_PACKAGE_HASH"
       mkdir -p ${deployedContractsDirectory}
       touch ${deployedContractDestination}
-      echo "$CONTRACT_HASH_KEY" > ${deployedContractDestination}
+      echo "$CONTRACT_HASH" > ${deployedContractDestination}
     '';
   };
 in
