@@ -3,7 +3,7 @@ use reqwest::Url;
 use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
-use casper_hashing::Digest;
+use casper_client_hashing::Digest;
 use kairos_test_utils::{cctl, kairos};
 
 // Helper function to get the path to a fixture file

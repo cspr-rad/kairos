@@ -26,7 +26,7 @@ axum-extra = { version = "0.9", features = [
     "json-deserializer",
 ] }
 anyhow = "1"
-casper-client = "2"
+casper-client.workspace = true
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -44,4 +44,4 @@ reqwest = "0.12"
 proptest = "1"
 axum-test = "14"
 kairos-test-utils = { path = "../kairos-test-utils" }
-casper-types = "3"
+casper-client-types.workspace = true

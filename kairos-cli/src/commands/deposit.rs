@@ -2,7 +2,7 @@ use crate::client;
 use crate::common::args::{AmountArg, PrivateKeyPathArg};
 use crate::error::CliError;
 
-use casper_types::crypto::SecretKey;
+use casper_client_types::crypto::SecretKey;
 use clap::Parser;
 use reqwest::Url;
 
