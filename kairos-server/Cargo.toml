@@ -11,6 +11,11 @@ name = "kairos-server"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+all-tests = ["cctl-tests", "deposit-mock"]
+cctl-tests = []
+deposit-mock = []
+
 [dependencies]
 dotenvy = "0.15"
 axum = { version = "0.7", features = ["tracing"] }
@@ -20,6 +25,8 @@ axum-extra = { version = "0.9", features = [
     "json-deserializer",
 ] }
 anyhow = "1"
+casper-client = "2"
+rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full", "tracing", "macros"] }
@@ -35,3 +42,5 @@ reqwest = "0.12"
 [dev-dependencies]
 proptest = "1"
 axum-test = "14"
+kairos-test-utils = { path = "../kairos-test-utils" }
+casper-types = "3"

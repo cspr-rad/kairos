@@ -22,7 +22,13 @@ in
           pkgs.callPackage
             ./tests/verify-host-configuration.nix
             {
-              hostConfiguration = mkKairosHostConfig "kairos-host";
+              hostConfiguration = {
+                imports = [
+                  (mkKairosHostConfig "kairos-host")
+                ];
+                # A placeholder URL to make the test pass
+                services.kairos.casperRpcUrl = "http://localhost:11101/rpc";
+              };
               verifyServices = [ "kairos.service" ];
             };
         kairos-end-to-end-test =
