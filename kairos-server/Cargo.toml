@@ -48,3 +48,4 @@ reqwest = "0.12"
 proptest = "1"
 axum-test = "14"
 kairos-test-utils = { path = "../kairos-test-utils" }
+casper-client-types.workspace = true

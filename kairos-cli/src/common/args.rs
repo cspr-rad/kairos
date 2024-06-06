@@ -16,6 +16,6 @@ pub struct PrivateKeyPathArg {
 
 #[derive(Args, Debug)]
 pub struct ContractHashArg {
-    #[arg(id = "contract-hash", long, short = 'h', value_name = "CONTRACT_HASH")]
+    #[arg(id = "contract-hash", long, short = 'c', value_name = "CONTRACT_HASH")]
     pub field: String,
 }

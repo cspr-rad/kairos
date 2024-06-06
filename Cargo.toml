@@ -22,6 +22,7 @@ license = "MIT OR Apache-2.0"
 casper-client = "2.0"
 casper-types = "4.0"
 casper-client-types = { package = "casper-types", version = "3.0" }
+casper-client-hashing = { package = "casper-hashing", version = "2.0" }
 casper-hashing = "3.0"
 casper-event-standard = "0.5"
 casper-event-toolkit = { git = "https://github.com/koxu1996/casper-event-toolkit", branch = "test" }

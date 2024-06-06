@@ -6,10 +6,11 @@ use casper_client::{
     types::{DeployBuilder, Timestamp},
     TransferTarget,
 };
-use casper_types::{
+use casper_client_types::{
     crypto::{PublicKey, SecretKey},
     AsymmetricType,
 };
+use casper_types::ContractHash;
 use kairos_server::{
     config::ServerConfig,
     routes::deposit::DepositPath,
@@ -30,7 +31,8 @@ static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 
 #[cfg(feature = "deposit-mock")]
 fn new_test_app() -> TestServer {
-    new_test_app_with_casper_node(&Url::parse("http://0.0.0.0:0").unwrap())
+    let dummy_url = Url::parse("http://0.0.0.0:0").unwrap();
+    new_test_app_with_casper_node(&dummy_url, &dummy_url)
 }
 
 fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
@@ -47,7 +49,7 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
             socket_addr: "0.0.0.0:0".parse().unwrap(),
             casper_rpc: casper_rpc_url.clone(),
             casper_sse: casper_sse_url.clone(),
-            kairos_demo_contract_hash: "TODO fixup contract hash".to_string(),
+            kairos_demo_contract_hash: ContractHash::default(),
         },
     });
 
@@ -93,8 +95,8 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
         Option::None,
         TransferTarget::PublicKey(recipient),
         Option::None,
+        &sender_secret_key,
     )
-    .with_secret_key(&sender_secret_key)
     .with_timestamp(Timestamp::now())
     .with_standard_payment(2_500_000_000u64)
     .build()

@@ -2117,6 +2117,7 @@ version = "0.1.0"
 dependencies = [
  "assert_cmd",
  "casper-client",
+ "casper-hashing 2.0.0",
  "casper-hashing 3.0.0",
  "casper-types 3.0.0",
  "clap",
@@ -2156,6 +2157,7 @@ dependencies = [
  "casper-deploy-notifier",
  "casper-event-standard",
  "casper-event-toolkit",
+ "casper-types 3.0.0",
  "casper-types 4.0.1",
  "contract-utils",
  "dotenvy",
