@@ -18,21 +18,21 @@ all-tests = ["cctl-tests"]
 cctl-tests = []
 
 [dependencies]
-casper-client = "2"
-casper-types = { version = "4", features = ["std-fs-io"] }
+casper-client.workspace = true
+casper-client-types = { workspace = true, features = ["std"] }
 clap = { version = "4", features = ["derive", "deprecated"] }
 hex = "0.4"
-thiserror = "1"
 kairos-crypto = { path = "../kairos-crypto", features = ["fs"] }
 kairos-tx = { path = "../kairos-tx" }
 kairos-server = { path = "../kairos-server" }
 reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde_json = "1.0"
 serde = "1.0"
+thiserror = "1"
 
 [dev-dependencies]
-tokio = { version = "1" }
+tokio = "1"
 assert_cmd = "2"
 predicates = "3"
 kairos-test-utils = { path = "../kairos-test-utils" }
-casper-hashing = "3"
+casper-hashing.workspace = true

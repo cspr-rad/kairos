@@ -18,4 +18,4 @@ thiserror = "1"
 kairos-tx = { path = "../kairos-tx", optional = true }
 
 # Casper signer implementation.
-casper-types = { version = "4", optional = true }
+casper-types = { workspace = true, optional = true }

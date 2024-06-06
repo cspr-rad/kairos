@@ -26,7 +26,10 @@ axum-extra = { version = "0.9", features = [
 ] }
 anyhow = "1"
 backoff = { version = "0.4", features = ["tokio", "futures"]}
-casper-client = "2"
+casper-client.workspace = true
+casper-deploy-notifier = { path = "../casper-deploy-notifier" }
+casper-event-standard.workspace = true
+casper-event-toolkit.workspace = true
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -35,11 +38,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
-casper-deploy-notifier = { path = "../casper-deploy-notifier" }
 contract-utils = { path = "../kairos-contracts/demo-contract/contract-utils" }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
-casper-event-toolkit = { git = "https://github.com/marijanp/casper-event-toolkit" }
-casper-event-standard = "0.5"
 sha2 = "0.10"
 reqwest = "0.12"
 
@@ -47,4 +47,4 @@ reqwest = "0.12"
 proptest = "1"
 axum-test = "14"
 kairos-test-utils = { path = "../kairos-test-utils" }
-casper-types = "4"
+casper-types.workspace = true
