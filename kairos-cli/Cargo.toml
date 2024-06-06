@@ -23,13 +23,14 @@ casper-types = { version = "4", features = ["std-fs-io"] }
 clap = { version = "4", features = ["derive", "deprecated"] }
 hex = "0.4"
 thiserror = "1"
-kairos-crypto = { path = "../kairos-crypto", features = ["std"] }
+kairos-crypto = { path = "../kairos-crypto", features = [ "std", "fs" ] }
 kairos-tx = { path = "../kairos-tx" }
 kairos-server = { path = "../kairos-server" }
 axum-extra = { version = "0.9", features = [ "typed-routing" ] }
 reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde_json = "1.0"
 serde = "1.0"
+thiserror = "1"
 
 [dev-dependencies]
 tokio = "1"
@@ -37,4 +38,4 @@ assert_cmd = "2"
 predicates = "3"
 kairos-test-utils = { path = "../kairos-test-utils" }
 casper-client-hashing.workspace = true
-casper-hashing = "3"
+casper-hashing.workspace = true
