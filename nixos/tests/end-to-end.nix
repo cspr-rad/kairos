@@ -57,7 +57,7 @@ nixosTest {
         serviceConfig.ExecStart = lib.mkForce (writeShellScript "start-kairos" ''
           # Deploy the demo contract and export the environment variable
           # such that the kairos-server gets configured accordingly
-          export KAIROS_SERVER_DEMO_CONTRACT_HASH=${serverContractsDirectory}
+          export KAIROS_SERVER_DEMO_CONTRACT_HASH=$(cat ${serverContractsDirectory}/demo-contract-optimized.wasm)
           ${lib.getExe kairos}
         '');
       };

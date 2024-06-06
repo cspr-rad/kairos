@@ -1,5 +1,6 @@
 use backoff::future::retry;
 use backoff::ExponentialBackoff;
+use casper_types::ContractHash;
 use reqwest::Url;
 use std::io;
 use std::net::{SocketAddr, TcpListener};
@@ -26,7 +27,7 @@ impl Kairos {
             socket_addr,
             casper_rpc,
             casper_sse,
-            kairos_demo_contract_hash: "TODO dummy hash".to_string(),
+            kairos_demo_contract_hash: ContractHash::default(),
         };
 
         let process_handle = tokio::spawn(async move {

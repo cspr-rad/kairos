@@ -2181,6 +2181,7 @@ dependencies = [
  "anyhow",
  "backoff",
  "casper-client",
+ "casper-types 4.0.1",
  "clap",
  "kairos-server",
  "nom",
