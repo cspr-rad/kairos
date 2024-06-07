@@ -55,29 +55,32 @@ impl EventManager {
     pub async fn process_new_events(&mut self) -> Result<(), L1SyncError> {
         tracing::info!("Looking for new events");
 
-        if let Some(fetcher) = &self.fetcher {
-            let schemas = self.schemas.as_ref().unwrap(); // Assuming schemas are already loaded
-            let num_events = fetcher.fetch_events_count().await?;
-            for i in self.next_event_id..num_events {
-                let event = fetcher.fetch_event(i, schemas).await?;
-                tracing::debug!("Event {} fetched: {:?}.", i, event);
+        // Ensure fetcher and schemas are initialized
+        let fetcher = self.fetcher.as_ref().ok_or_else(|| {
+            L1SyncError::InitializationError("Fetcher not initialized".to_string())
+        })?;
+        let schemas = self.schemas.as_ref().ok_or_else(|| {
+            L1SyncError::InitializationError("Schemas not initialized".to_string())
+        })?;
 
-                // TODO: Parse full transaction data from event, then push it to Data Availability layer.
+        let num_events = fetcher.fetch_events_count().await?;
+        for i in self.next_event_id..num_events {
+            let event = fetcher.fetch_event(i, schemas).await?;
+            tracing::debug!("Event {} fetched: {:?}.", i, event);
 
-                // TODO: Once we have ASN transaction, it should be converted and pushed into batch.
-                let txn = Signed {
-                    public_key: "cafebabe".into(),
-                    nonce: 0,
-                    transaction: Transaction::Deposit(Deposit { amount: 100 }),
-                };
-                self.batch_service
-                    .enqueue_transaction(txn)
-                    .await
-                    .map_err(|e| {
-                        L1SyncError::UnexpectedError(format!("unable to batch tx: {}", e))
-                    })?;
-                self.next_event_id = i + 1;
-            }
+            // TODO: Parse full transaction data from event, then push it to Data Availability layer.
+
+            // TODO: Once we have ASN transaction, it should be converted and pushed into batch.
+            let txn = Signed {
+                public_key: "cafebabe".into(),
+                nonce: 0,
+                transaction: Transaction::Deposit(Deposit { amount: 100 }),
+            };
+            self.batch_service
+                .enqueue_transaction(txn)
+                .await
+                .map_err(|e| L1SyncError::UnexpectedError(format!("unable to batch tx: {}", e)))?;
+            self.next_event_id = i + 1;
         }
 
         Ok(())
