@@ -5,7 +5,7 @@ use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
 
 use crate::state::ServerStateInner;
-use kairos_circuit_logic::transactions::{Deposit, Signed, Transaction};
+use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
 
 use super::error::L1SyncError;
 
@@ -71,11 +71,11 @@ impl EventManager {
             // TODO: Parse full transaction data from event, then push it to Data Availability layer.
 
             // TODO: Once we have ASN transaction, it should be converted and pushed into batch.
-            let txn = Signed {
-                public_key: "cafebabe".into(),
-                nonce: 0,
-                transaction: Transaction::Deposit(Deposit { amount: 100 }),
-            };
+            let recipient: Vec<u8> = "cafebabe".into();
+            let txn = KairosTransaction::Deposit(L1Deposit {
+                amount: 100,
+                recipient,
+            });
             self.server_state
                 .batch_state_manager
                 .enqueue_transaction(txn)
