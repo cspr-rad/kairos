@@ -35,6 +35,7 @@ mod error {
     use super::*;
     use core::fmt::{Debug, Display};
 
+    #[allow(dead_code)]
     pub trait Error: Debug + Display {
         fn source(&self) -> Option<&(dyn Error + 'static)> {
             None

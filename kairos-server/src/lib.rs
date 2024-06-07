@@ -17,6 +17,7 @@ use crate::config::ServerConfig;
 use crate::l1_sync::service::L1SyncService;
 use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 
+/// TODO: support secp256k1
 type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 
