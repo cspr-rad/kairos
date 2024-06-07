@@ -20,6 +20,7 @@ pub struct NonceArg {
     pub val: u64,
 }
 
+#[derive(Args, Debug)]
 pub struct ContractHashArg {
     #[arg(id = "contract-hash", long, short = 'c', value_name = "CONTRACT_HASH")]
     pub field: String,

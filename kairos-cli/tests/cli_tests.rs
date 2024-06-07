@@ -1,5 +1,6 @@
 use assert_cmd::Command;
 use reqwest::Url;
+use std::fs;
 use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
@@ -25,11 +26,6 @@ async fn deposit_successful_with_ed25519() {
         .expect("Expected at least one node after successful network run");
     let casper_rpc_url =
         Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
-    let casper_sse_url = Url::parse(&format!(
-        "http://localhost:{}/events/main",
-        node.port.sse_port
-    ))
-    .unwrap();
 
     let kairos = kairos::Kairos::run(casper_rpc_url, None).await.unwrap();
 
@@ -43,7 +39,6 @@ async fn deposit_successful_with_ed25519() {
             .arg(kairos.url.as_str())
             .arg("deposit")
             .arg("--contract-hash")
-            .arg("000000000000000000000000000000000000")
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
