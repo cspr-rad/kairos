@@ -1,0 +1,16 @@
+[package]
+name = "malicious-reader"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+casper-contract = { version = "4.0.0", default-features = false }
+casper-types = { version = "4.0.1", default-features = false }
+
+[[bin]]
+name = "malicious-reader"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false

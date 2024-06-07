@@ -1,0 +1,20 @@
+[package]
+name = "deposit-session"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+casper-contract = { version = "4.0.0", default-features = false }
+casper-types = { version = "4.0.1", default-features = false }
+
+[[bin]]
+name = "deposit-session"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false
+
+[profile.release]
+codegen-units = 1
+lto = true

@@ -6,11 +6,9 @@ use std::{
 use sha2::Sha256;
 use tokio::sync::{mpsc, oneshot};
 
-use super::transactions::{
-    batch_state::{Account, BatchState},
-    Signed, Transaction,
-};
+use super::transactions::batch_state::{Account, BatchState};
 use crate::AppErr;
+use kairos_circuit_logic::transactions::{Signed, Transaction};
 use kairos_trie::{
     stored::{
         memory_db::MemoryDb,
