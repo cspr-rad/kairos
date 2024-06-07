@@ -36,7 +36,10 @@ fn new_test_app() -> TestServer {
 fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
-            .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "trace".into()))
+            .with(
+                EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| "info,kairos_server=trace".into()),
+            )
             .with(tracing_subscriber::fmt::layer())
             .init();
     });
@@ -103,12 +106,13 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
 #[tokio::test]
 #[cfg(feature = "deposit-mock")]
 async fn test_deposit_withdraw() {
+    use kairos_circuit_logic::transactions::L1Deposit;
+
     let server = new_test_app();
 
-    let deposit = PayloadBody {
-        public_key: "alice_key".into(),
-        payload: SigningPayload::new_deposit(100).try_into().unwrap(),
-        signature: vec![],
+    let deposit = L1Deposit {
+        recipient: "alice_key".into(),
+        amount: 100,
     };
 
     // no arguments
@@ -186,16 +190,16 @@ async fn test_deposit_withdraw() {
 #[tokio::test]
 #[cfg(feature = "deposit-mock")]
 async fn test_deposit_transfer_withdraw() {
+    use kairos_circuit_logic::transactions::L1Deposit;
+
     let server = new_test_app();
 
     // deposit
     server
         .post(MockDepositPath.to_uri().path())
-        .json(&PayloadBody {
-            public_key: "alice_key".into(),
-            // deposit's don't have a defined nonce
-            payload: SigningPayload::new_deposit(100).try_into().unwrap(),
-            signature: vec![],
+        .json(&L1Deposit {
+            recipient: "alice_key".into(),
+            amount: 100,
         })
         .await
         .assert_status_success();
@@ -230,16 +234,16 @@ async fn test_deposit_transfer_withdraw() {
 #[tokio::test]
 #[cfg(feature = "deposit-mock")]
 async fn test_deposit_transfer_to_self_withdraw() {
+    use kairos_circuit_logic::transactions::L1Deposit;
+
     let server = new_test_app();
 
     // deposit
     server
         .post(MockDepositPath.to_uri().path())
-        .json(&PayloadBody {
-            public_key: "alice_key".into(),
-            // deposit's don't have a defined nonce
-            payload: SigningPayload::new_deposit(1000).try_into().unwrap(),
-            signature: vec![],
+        .json(&L1Deposit {
+            recipient: "alice_key".into(),
+            amount: 1000,
         })
         .await
         .assert_status_success();
@@ -255,14 +259,14 @@ async fn test_deposit_transfer_to_self_withdraw() {
             signature: vec![],
         })
         .await
-        .assert_status_success();
+        .assert_status_failure();
 
     // withdraw
     server
         .post(WithdrawPath.to_uri().path())
         .json(&PayloadBody {
             public_key: "alice_key".into(),
-            payload: SigningPayload::new(1, Withdrawal::new(1000))
+            payload: SigningPayload::new(0, Withdrawal::new(1000))
                 .try_into()
                 .unwrap(),
             signature: vec![],

@@ -5,6 +5,7 @@ members = [
     "kairos-verifier-risc0-lib",
     "kairos-circuit-logic",
     "methods",
+    "profiling",
 ]
 
 [workspace.package]
