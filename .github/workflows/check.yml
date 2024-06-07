@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, macos-14 ]
+        os: [ macos-14 ]
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
@@ -51,14 +51,22 @@ jobs:
         with:
           path: coverage-result/cobertura.xml
           minimum_coverage: 60
+      
+      - name: kairos-contracts x86_64-linux
+        if: matrix.os == 'ubuntu-latest'
+        run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-contracts
+
+      - name: kairos-contracts x86_64-darwin
+        if: matrix.os == 'macos-latest'
+        run: nix build -L --no-link --show-trace .#packages.x86_64-darwin.kairos-contracts
+
+      - name: kairos-contracts aarch64-darwin
+        if: matrix.os == 'macos-14'
+        run: nix build -L --no-link --show-trace .#packages.aarch64-darwin.kairos-contracts
 
       - name: kairos x86_64-linux
         if: matrix.os == 'ubuntu-latest'
         run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos
-
-      - name: kairos x86_64-darwin
-        if: matrix.os == 'macos-latest'
-        run: nix build -L --no-link --show-trace .#packages.x86_64-darwin.kairos
 
       - name: kairos aarch64-darwin
         if: matrix.os == 'macos-14'
@@ -68,20 +76,12 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-tx-no-std
 
-      - name: kairos-tx-no-std x86_64-darwin
-        if: matrix.os == 'macos-latest'
-        run: nix build -L --no-link --show-trace .#packages.x86_64-darwin.kairos-tx-no-std
-
       - name: kairos-tx-no-std aarch64-darwin
         if: matrix.os == 'macos-14'
         run: nix build -L --no-link --show-trace .#packages.aarch64-darwin.kairos-tx-no-std
       - name: kairos-prover x86_64-linux
         if: matrix.os == 'ubuntu-latest'
         run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-prover
-
-      - name: kairos-prover x86_64-darwin
-        if: matrix.os == 'macos-latest'
-        run: nix build -L --no-link --show-trace .#packages.x86_64-darwin.kairos-prover
 
       - name: kairos-prover aarch64-darwin
         if: matrix.os == 'macos-14'

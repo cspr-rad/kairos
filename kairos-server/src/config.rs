@@ -1,7 +1,6 @@
+use reqwest::Url;
 use std::net::SocketAddr;
 use std::{fmt, str::FromStr};
-
-use reqwest::Url;
 
 #[derive(Clone, Debug)]
 pub struct ServerConfig {

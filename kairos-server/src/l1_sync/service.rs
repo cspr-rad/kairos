@@ -1,4 +1,4 @@
-use crate::state::BatchStateManager;
+use crate::state::ServerStateInner;
 
 use super::error::L1SyncError;
 use super::event_manager::EventManager;
@@ -16,15 +16,15 @@ pub enum SyncCommand {
 pub struct L1SyncService {
     command_sender: Option<mpsc::Sender<SyncCommand>>,
     //event_manager_handle: Option<tokio::task::JoinHandle<()>>,
-    batch_service: Arc<BatchStateManager>,
+    server_state: Arc<ServerStateInner>,
 }
 
 impl L1SyncService {
-    pub fn new(batch_service: Arc<BatchStateManager>) -> Self {
+    pub fn new(server_state: Arc<ServerStateInner>) -> Self {
         L1SyncService {
             command_sender: None,
             //event_manager_handle: None,
-            batch_service,
+            server_state,
         }
     }
 
@@ -33,7 +33,7 @@ impl L1SyncService {
         rpc_url: String,
         contract_hash: String,
     ) -> Result<(), L1SyncError> {
-        let mut event_manager = EventManager::new(self.batch_service.clone());
+        let mut event_manager = EventManager::new(self.server_state.clone());
         event_manager.initialize(&rpc_url, &contract_hash).await?;
 
         let (tx, rx) = mpsc::channel(32);

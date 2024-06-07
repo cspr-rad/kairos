@@ -19,9 +19,9 @@ pub struct Kairos {
 
 impl Kairos {
     pub async fn run(casper_rpc: Url) -> Result<Kairos, io::Error> {
-        let socket_addr = TcpListener::bind("127.0.0.1:0")?.local_addr()?;
+        let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
-        let url = Url::parse(&format!("http://127.0.0.1:{}", port)).unwrap();
+        let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
         let casper_contract_hash = String::from("cafebabe");
         let config = kairos_server::config::ServerConfig {
             socket_addr,

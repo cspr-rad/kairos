@@ -6,8 +6,10 @@ members = [
   "kairos-cli",
   "kairos-crypto",
   "kairos-server",
-  "kairos-tx",
   "kairos-test-utils",
+  "kairos-tx",
+  "kairos-prover/kairos-circuit-logic",
+  "demo-contract-tests",
 ]
 
 [workspace.package]

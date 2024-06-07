@@ -4,8 +4,8 @@ use casper_event_toolkit::fetcher::{Fetcher, Schemas};
 use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
 
-use crate::state::transactions::{Deposit, Signed, Transaction};
-use crate::state::BatchStateManager;
+use crate::state::ServerStateInner;
+use kairos_circuit_logic::transactions::{Deposit, Signed, Transaction};
 
 use super::error::L1SyncError;
 
@@ -13,16 +13,16 @@ pub struct EventManager {
     next_event_id: u32,
     fetcher: Option<Fetcher>,
     schemas: Option<Schemas>,
-    batch_service: Arc<BatchStateManager>,
+    server_state: Arc<ServerStateInner>,
 }
 
 impl EventManager {
-    pub fn new(batch_service: Arc<BatchStateManager>) -> Self {
+    pub fn new(server_state: Arc<ServerStateInner>) -> Self {
         EventManager {
             next_event_id: 0,
             fetcher: None,
             schemas: None,
-            batch_service,
+            server_state,
         }
     }
 
@@ -76,7 +76,8 @@ impl EventManager {
                 nonce: 0,
                 transaction: Transaction::Deposit(Deposit { amount: 100 }),
             };
-            self.batch_service
+            self.server_state
+                .batch_state_manager
                 .enqueue_transaction(txn)
                 .await
                 .map_err(|e| L1SyncError::UnexpectedError(format!("unable to batch tx: {}", e)))?;

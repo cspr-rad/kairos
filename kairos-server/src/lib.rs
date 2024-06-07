@@ -15,12 +15,13 @@ pub use errors::AppErr;
 
 use crate::config::ServerConfig;
 use crate::l1_sync::service::L1SyncService;
-use crate::state::BatchStateManager;
+use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 
 type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 
-pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
+#[cfg(not(feature = "deposit-mock"))]
+pub fn app_router(state: ServerState) -> Router {
     Router::new()
         .typed_post(routes::deposit_handler)
         .typed_post(routes::withdraw_handler)
@@ -28,7 +29,17 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
         .with_state(state)
 }
 
-pub async fn run_l1_sync(config: ServerConfig, batch_service: Arc<BatchStateManager>) {
+#[cfg(feature = "deposit-mock")]
+pub fn app_router(state: ServerState) -> Router {
+    Router::new()
+        .typed_post(routes::deposit_handler)
+        .typed_post(routes::withdraw_handler)
+        .typed_post(routes::transfer_handler)
+        .typed_post(routes::deposit_mock_handler)
+        .with_state(state)
+}
+
+pub async fn run_l1_sync(config: ServerConfig, server_state: Arc<ServerStateInner>) {
     // Make sure real contract hash was provided.
     if config.casper_contract_hash
         == "0000000000000000000000000000000000000000000000000000000000000000"
@@ -40,7 +51,7 @@ pub async fn run_l1_sync(config: ServerConfig, batch_service: Arc<BatchStateMana
     }
 
     // Initialize L1 synchronizer.
-    let mut l1_sync_service = L1SyncService::new(batch_service);
+    let mut l1_sync_service = L1SyncService::new(server_state);
     let _ = l1_sync_service
         .initialize(config.casper_rpc.to_string(), config.casper_contract_hash)
         .await
@@ -56,16 +67,19 @@ pub async fn run_l1_sync(config: ServerConfig, batch_service: Arc<BatchStateMana
 }
 
 pub async fn run(config: ServerConfig) {
-    let state = BatchStateManager::new_empty();
-
-    run_l1_sync(config.clone(), state.clone()).await;
-
-    let app = app_router(state);
-
     let listener = tokio::net::TcpListener::bind(config.socket_addr)
         .await
         .unwrap_or_else(|err| panic!("Failed to bind to address {}: {}", config.socket_addr, err));
     tracing::info!("listening on `{}`", listener.local_addr().unwrap());
+
+    let state = Arc::new(ServerStateInner {
+        batch_state_manager: BatchStateManager::new_empty(),
+        server_config: config.clone(),
+    });
+
+    run_l1_sync(config.clone(), state.clone()).await;
+
+    let app = app_router(state);
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
