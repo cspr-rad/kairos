@@ -1,5 +1,6 @@
 use assert_cmd::Command;
 use reqwest::Url;
+use std::fs;
 use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
@@ -16,7 +17,16 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
-    let network = cctl::CCTLNetwork::run(Option::None).await.unwrap();
+    let contract_wasm_path =
+        PathBuf::from(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
+    let hash_name = "kairos_contract_package_hash";
+    let contract_to_deploy = cctl::DeployableContract {
+        hash_name: hash_name.to_string(),
+        path: contract_wasm_path,
+    };
+    let network = cctl::CCTLNetwork::run(Option::None, Option::Some(contract_to_deploy))
+        .await
+        .unwrap();
     let node = network
         .nodes
         .first()
@@ -28,6 +38,9 @@ async fn deposit_successful_with_ed25519() {
         node.port.sse_port
     ))
     .unwrap();
+
+    let contract_hash_path = network.working_dir.join("contracts").join(hash_name);
+    let contract_hash_string = fs::read_to_string(contract_hash_path).unwrap();
 
     let kairos = kairos::Kairos::run(casper_rpc_url, casper_sse_url)
         .await
@@ -43,7 +56,7 @@ async fn deposit_successful_with_ed25519() {
             .arg(kairos.url.as_str())
             .arg("deposit")
             .arg("--contract-hash")
-            .arg("000000000000000000000000000000000000")
+            .arg(contract_hash_string)
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
