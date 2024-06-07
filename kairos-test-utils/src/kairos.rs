@@ -22,7 +22,8 @@ impl Kairos {
         let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
-        let casper_contract_hash = String::from("cafebabe");
+        let casper_contract_hash =
+            String::from("0000000000000000000000000000000000000000000000000000000000000000");
         let config = kairos_server::config::ServerConfig {
             socket_addr,
             casper_rpc,
