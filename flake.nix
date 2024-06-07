@@ -191,7 +191,9 @@
               inherit (kairosNodeAttrs) src;
               advisory-db = inputs.advisory-db;
               # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
-              cargoAuditExtraArgs = "--ignore yanked --deny warnings";
+              # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
+              # FIXME --ignore RUSTSEC-2024-0013 Memory corruption, denial of service, and arbitrary code execution in libgit2
+              cargoAuditExtraArgs = "--ignore yanked --deny warnings --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
             };
 
             kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
