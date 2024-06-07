@@ -9,47 +9,50 @@ use tokio::sync::oneshot;
 use std::sync::Arc;
 
 pub enum SyncCommand {
-    Initialize(String, String, oneshot::Sender<()>),
     TriggerSync(oneshot::Sender<()>),
+    // NOTE: More commands can be here.
 }
 
 pub struct L1SyncService {
-    command_sender: mpsc::Sender<SyncCommand>,
-    //event_manager_handle: JoinHandle<()>,
+    command_sender: Option<mpsc::Sender<SyncCommand>>,
+    //event_manager_handle: Option<tokio::task::JoinHandle<()>>,
+    batch_service: Arc<BatchStateManager>,
 }
 
 impl L1SyncService {
-    pub async fn new(batch_service: Arc<BatchStateManager>) -> Self {
-        let (tx, rx) = mpsc::channel(32);
-        let event_manager = EventManager::new(batch_service.clone());
-
-        let _handle = tokio::spawn(async move {
-            run_event_manager(rx, event_manager).await;
-        });
-
-        L1SyncService { command_sender: tx }
+    pub fn new(batch_service: Arc<BatchStateManager>) -> Self {
+        L1SyncService {
+            command_sender: None,
+            //event_manager_handle: None,
+            batch_service,
+        }
     }
 
     pub async fn initialize(
-        &self,
+        &mut self,
         rpc_url: String,
         contract_hash: String,
     ) -> Result<(), L1SyncError> {
-        let (tx, rx) = oneshot::channel();
-        self.command_sender
-            .send(SyncCommand::Initialize(rpc_url, contract_hash, tx))
-            .await
-            .map_err(|e| L1SyncError::BrokenChannel(format!("Unable to send initialize: {}", e)))?;
-        rx.await.map_err(|e| {
-            L1SyncError::BrokenChannel(format!("Unable to receive initialize ack: {}", e))
-        })?;
+        let mut event_manager = EventManager::new(self.batch_service.clone());
+        event_manager.initialize(&rpc_url, &contract_hash).await?;
+
+        let (tx, rx) = mpsc::channel(32);
+        self.command_sender = Some(tx);
+        let _handle = tokio::spawn(async move {
+            run_event_manager(rx, event_manager).await;
+        });
+        //self.event_manager_handle = Some(handle);
 
         Ok(())
     }
 
     pub async fn trigger_sync(&self) -> Result<(), L1SyncError> {
+        let command_sender = self.command_sender.as_ref().ok_or_else(|| {
+            L1SyncError::InitializationError("Command sender not available".to_string())
+        })?;
+
         let (tx, rx) = oneshot::channel();
-        self.command_sender
+        command_sender
             .send(SyncCommand::TriggerSync(tx))
             .await
             .map_err(|e| L1SyncError::BrokenChannel(format!("Unable to send trigger: {}", e)))?;
@@ -79,10 +82,6 @@ async fn handle_command(
     event_manager: &mut EventManager,
 ) -> Result<(), L1SyncError> {
     match command {
-        SyncCommand::Initialize(rpc_url, contract_hash, completion_ack) => {
-            event_manager.initialize(&rpc_url, &contract_hash).await?;
-            let _ = completion_ack.send(());
-        }
         SyncCommand::TriggerSync(completion_ack) => {
             event_manager.process_new_events().await?;
             let _ = completion_ack.send(());
