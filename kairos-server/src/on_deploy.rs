@@ -1,7 +1,4 @@
-use crate::state::{
-    transactions::{Deposit, Signed, Transaction},
-    ServerState,
-};
+use crate::state::ServerState;
 
 use anyhow::{anyhow, Result};
 use rand::Rng;
@@ -15,8 +12,8 @@ use casper_event_standard::casper_types::{bytesrepr::FromBytes, ContractHash, Ke
 use casper_event_standard::Schemas;
 use casper_event_toolkit::fetcher::Fetcher;
 use casper_event_toolkit::rpc::compat::key_to_client_types;
-
 use contract_utils::constants::KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER;
+use kairos_circuit_logic::transactions::{Deposit, Signed, Transaction};
 
 async fn get_last_deposit_counter(
     casper_node_rpc_url: &Url,

@@ -2,18 +2,15 @@
 // If you want to try std support, also update the guest Cargo.toml file
 #![no_std] // std support is experimental
 
+use kairos_circuit_logic::ProofInputs;
 use risc0_zkvm::guest::env;
 
 risc0_zkvm::guest::entry!(main);
 
 fn main() {
-    // TODO: Implement your guest code here
+    let proof_inputs: ProofInputs = env::read();
 
-    // read the input
-    let input: u32 = env::read();
+    let output = proof_inputs.run_batch_proof_logic().unwrap();
 
-    // TODO: do something with the input
-
-    // write public output to the journal
-    env::commit(&input);
+    env::commit(&output);
 }

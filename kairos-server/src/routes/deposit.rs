@@ -4,13 +4,12 @@ use axum_extra::routing::TypedPath;
 use rand::Rng;
 use tracing::*;
 
+use crate::{state::ServerState, AppErr};
 use casper_client::{
     put_deploy,
     types::{Deploy, DeployHash},
     JsonRpcId,
 };
-
-use crate::{state::ServerState, AppErr};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
 #[typed_path("/api/v1/deposit")]
