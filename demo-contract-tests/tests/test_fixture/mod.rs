@@ -7,6 +7,7 @@ use casper_engine_test_support::{
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{
     account::AccountHash,
+    bytesrepr::Bytes,
     crypto::{PublicKey, SecretKey},
     runtime_args,
     system::{handle_payment::ARG_TARGET, mint::ARG_ID},
@@ -134,6 +135,22 @@ impl TestContext {
             session_args,
         );
         self.builder.expect_failure();
+    }
+    pub fn submit_proof_to_contract(&mut self, sender: AccountHash, proof_serialized: Vec<u8>) {
+        let session_args = runtime_args! {
+            "risc0_receipt" => Bytes::from(proof_serialized),
+        };
+        let submit_batch_request = ExecuteRequestBuilder::contract_call_by_hash(
+            sender,
+            self.contract_hash,
+            "submit_batch",
+            session_args,
+        )
+        .build();
+        self.builder
+            .exec(submit_batch_request)
+            .commit()
+            .expect_success();
     }
 }
 

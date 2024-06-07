@@ -9,5 +9,12 @@ casper-engine-test-support = { version = "7.0.0", default-features = false }
 casper-execution-engine = { version = "7.0.0", default-features = false }
 casper-contract = { version = "4.0.0", default-features = false }
 casper-types = { version = "4.0.1", default-features = false }
+risc0-zkvm = {version="=0.21.0", default-features=false, features=["prove"]}
+serde = {version="1", default-features=false, features=["derive"]}
+kairos-trie = {git="https://github.com/cspr-rad/kairos-trie", default-features=false, features=["serde"]}
+kairos-circuit-logic = {path="../kairos-prover/kairos-circuit-logic", features=["serde"]}
+methods = {path="../kairos-prover/methods"}
+serde-json-wasm = "1"
 rand = "0.8"
 wasm-opt = "0.116"
+sha2 = {version = "0.10", default-features = false}

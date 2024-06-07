@@ -54,12 +54,12 @@
           kairosContractsAttrs = {
             src = lib.cleanSourceWith {
               src = lib.fileset.toSource {
-                  root = ./.;
-                  fileset = lib.fileset.unions [
-                    ./kairos-contracts
-                    ./kairos-prover/kairos-circuit-logic
-                  ];
-                };
+                root = ./.;
+                fileset = lib.fileset.unions [
+                  ./kairos-contracts
+                  ./kairos-prover/kairos-circuit-logic
+                ];
+              };
               filter = path: type: craneLib.filterCargoSources path type;
             };
             cargoToml = ./kairos-contracts/Cargo.toml;

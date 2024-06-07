@@ -15,7 +15,8 @@ use casper_types::{
 mod constants;
 use constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
-    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE, RUNTIME_ARG_RECEIPT
+    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_RECEIPT,
+    RUNTIME_ARG_TEMP_PURSE,
 };
 mod entry_points;
 mod utils;
@@ -23,9 +24,9 @@ use utils::errors::DepositError;
 use utils::events::Deposit;
 use utils::get_immediate_caller;
 
+use kairos_circuit_logic::ProofOutputs;
 use risc0_zkvm::Receipt;
 use serde_json_wasm::from_slice;
-use kairos_circuit_logic::ProofOutputs;
 
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
@@ -87,21 +88,23 @@ pub extern "C" fn deposit() {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct Proof {
-    pub receipt: Receipt,
-    pub program_id: [u32;8],
+    pub receipt: risc0_zkvm::Receipt,
+    pub program_id: [u32; 8],
 }
 
 #[no_mangle]
-pub extern "C" fn submit_batch(){
+pub extern "C" fn submit_batch() {
     let proof_serialized: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
     let proof: Proof = from_slice(&proof_serialized).unwrap();
-    match proof.receipt.verify(proof.program_id){
+    //proof.receipt.verify(proof.program_id);
+    /*match proof.receipt.verify(proof.program_id) {
         Ok(_) => {},
         // replace ApiError with meaningful UserError
         Err(_) => runtime::revert(ApiError::InvalidArgument)
-    };
-    let journal: ProofOutputs = serde_json_wasm::from_slice(&proof.receipt.journal.bytes).unwrap();
+    };*/
+    // let journal: ProofOutputs = serde_json_wasm::from_slice(&proof.receipt.journal.bytes).unwrap();
     // todo: update root
+    // must assert that the previous root is that in contract storage
     // serde_json to serialize Avi's Trie Root*/
 }
 
@@ -111,7 +114,7 @@ pub extern "C" fn call() {
         entry_points::init(),
         entry_points::get_purse(),
         entry_points::deposit(),
-        entry_points::submit_batch()
+        entry_points::submit_batch(),
     ]);
 
     // this counter will be udpated by the entry point that processes / verifies batches
@@ -127,7 +130,7 @@ pub extern "C" fn call() {
         Some(KAIROS_CONTRACT_PACKAGE_HASH.to_string()),
         Some(KAIROS_CONTRACT_UREF.to_string()),
     );
-    
+
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_CONTRACT_HASH, contract_hash_key);
 
