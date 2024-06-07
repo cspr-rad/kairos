@@ -24,7 +24,7 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     let amount: u64 = args.amount.field;
     let path = args.private_key_path.field;
     let depositor_secret_key =
-        SecretKey::from_file(&path).map_err(|err| CryptoError::FailedToParseKey {
+        SecretKey::from_file(path).map_err(|err| CryptoError::FailedToParseKey {
             error: err.to_string(),
         })?;
 

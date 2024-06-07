@@ -64,7 +64,7 @@ pub fn deposit<A: Into<U512>>(
     let deploy = DeployBuilder::new(
         env!("CASPER_CHAIN_NAME"),
         deposit_session,
-        &depositor_secret_key,
+        depositor_secret_key,
     )
     .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT) // max amount allowed to be used on gas fees
     .with_timestamp(Timestamp::now())
