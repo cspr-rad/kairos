@@ -28,23 +28,17 @@ pub fn app_router(state: Arc<state::BatchStateManager>) -> Router {
         .with_state(state)
 }
 
-pub async fn run_l1_sync(config: ServerConfig, batch_service: Arc<BatchStateManager>) {
-    // Make sure real contract hash was provided.
-    if config.casper_contract_hash
-        == "0000000000000000000000000000000000000000000000000000000000000000"
-    {
-        tracing::warn!(
-            "Casper contract hash not configured, L1 synchronization will NOT be enabled."
-        );
-        return;
-    }
-
+pub async fn run_l1_sync(
+    casper_rpc_url: String,
+    casper_contract_hash: String,
+    batch_service: Arc<BatchStateManager>,
+) {
     // Run layer 1 synchronization.
     // TODO: Replace interval with SSE trigger.
     let l1_sync_service = Arc::new(L1SyncService::new(batch_service).await);
     tokio::spawn(async move {
         let _ = l1_sync_service
-            .initialize(config.casper_rpc.to_string(), config.casper_contract_hash)
+            .initialize(casper_rpc_url, casper_contract_hash)
             .await
             .map_err(|e| {
                 panic!("Event manager failed to initialize: {}", e);
@@ -56,7 +50,16 @@ pub async fn run_l1_sync(config: ServerConfig, batch_service: Arc<BatchStateMana
 pub async fn run(config: ServerConfig) {
     let state = BatchStateManager::new_empty();
 
-    run_l1_sync(config.clone(), state.clone()).await;
+    match config.casper_contract_hash.0 {
+        None => {
+            tracing::warn!(
+                "Casper contract hash not configured, L1 synchronization will NOT be enabled."
+            );
+        }
+        Some(contract_hash) => {
+            run_l1_sync(config.casper_rpc.to_string(), contract_hash, state.clone()).await;
+        }
+    }
 
     let app = app_router(state);
 
