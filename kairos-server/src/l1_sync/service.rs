@@ -84,7 +84,9 @@ async fn handle_command(
     match command {
         SyncCommand::TriggerSync(completion_ack) => {
             event_manager.process_new_events().await?;
-            let _ = completion_ack.send(());
+            completion_ack
+                .send(())
+                .map_err(|_| L1SyncError::BrokenChannel("Sender dropped".to_string()))?;
         }
     }
 
