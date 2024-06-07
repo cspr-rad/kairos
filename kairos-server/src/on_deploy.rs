@@ -13,7 +13,7 @@ use casper_event_standard::Schemas;
 use casper_event_toolkit::fetcher::Fetcher;
 use casper_event_toolkit::rpc::compat::key_to_client_types;
 use contract_utils::constants::KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER;
-use kairos_circuit_logic::transactions::{Deposit, Signed, Transaction};
+use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
 
 async fn get_last_deposit_counter(
     casper_node_rpc_url: &Url,
@@ -88,8 +88,6 @@ pub async fn on_deploy_notification(
             .fetch_event(deposit_index, event_schemas)
             .await
             .expect("Failed to fetch the untyped deposit event");
-        // FIXME fetch proper nonce
-        let nonce = rand::thread_rng().gen::<u64>();
         match untyped_event.name.as_str() {
             "Deposit" => {
                 let data = untyped_event
@@ -99,13 +97,10 @@ pub async fn on_deploy_notification(
                     .expect("Failed to parse deposit event from bytes");
                 state
                     .batch_state_manager
-                    .enqueue_transaction(Signed {
-                        public_key: notification.public_key.clone().into_bytes(),
-                        nonce,
-                        transaction: Transaction::Deposit(Deposit {
-                            amount: deposit.amount,
-                        }),
-                    })
+                    .enqueue_transaction(KairosTransaction::Deposit(L1Deposit {
+                        recipient: notification.public_key.clone().into_bytes(),
+                        amount: deposit.amount,
+                    }))
                     .await
                     .expect("Failed to enque deposit");
             }

@@ -3,7 +3,7 @@ use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use tracing::*;
 
-use kairos_circuit_logic::transactions::{Signed, Transaction, Withdraw};
+use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Withdraw};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::routes::PayloadBody;
@@ -28,10 +28,8 @@ pub async fn withdraw_handler(
             Withdraw::try_from(withdrawal).context("decoding withdrawal")?
         }
         _ => {
-            return Err(AppErr::set_status(
-                anyhow!("invalid transaction type"),
-                StatusCode::BAD_REQUEST,
-            ))
+            return Err(AppErr::new(anyhow!("invalid transaction type"))
+                .set_status(StatusCode::BAD_REQUEST))
         }
     };
     let public_key = body.public_key;
@@ -41,10 +39,10 @@ pub async fn withdraw_handler(
 
     state
         .batch_state_manager
-        .enqueue_transaction(Signed {
+        .enqueue_transaction(KairosTransaction::Withdraw(Signed {
             public_key,
             nonce,
-            transaction: Transaction::Withdraw(withdrawal),
-        })
+            transaction: withdrawal,
+        }))
         .await
 }
