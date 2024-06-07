@@ -3,7 +3,7 @@ use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use tracing::instrument;
 
-use kairos_circuit_logic::transactions::{Signed, Transaction, Transfer};
+use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Transfer};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::{routes::PayloadBody, state::ServerState, AppErr};
@@ -24,10 +24,8 @@ pub async fn transfer_handler(
     let transfer: Transfer = match signing_payload.body {
         TransactionBody::Transfer(transfer) => transfer.try_into().context("decoding transfer")?,
         _ => {
-            return Err(AppErr::set_status(
-                anyhow!("invalid transaction type"),
-                StatusCode::BAD_REQUEST,
-            ))
+            return Err(AppErr::new(anyhow!("invalid transaction type"))
+                .set_status(StatusCode::BAD_REQUEST))
         }
     };
     let public_key = body.public_key;
@@ -39,10 +37,10 @@ pub async fn transfer_handler(
 
     state
         .batch_state_manager
-        .enqueue_transaction(Signed {
+        .enqueue_transaction(KairosTransaction::Transfer(Signed {
             public_key,
             nonce,
-            transaction: Transaction::Transfer(transfer),
-        })
+            transaction: transfer,
+        }))
         .await
 }

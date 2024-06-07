@@ -1,18 +1,10 @@
-use alloc::vec::Vec;
+use alloc::{str, vec::Vec};
 
 #[cfg(feature = "asn1")]
 use kairos_tx::{asn, error::TxError};
 
 pub type PublicKey = Vec<u8>;
 
-/// TODO remove this with future PR
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Transaction {
-    Transfer(Transfer),
-    Deposit(Deposit),
-    Withdraw(Withdraw),
-}
 /// Transfer is between L2 accounts, entirely executed on L2.
 /// Withdraw is initiated on L2 and executed on the L1.
 /// Deposit comes from the L1, and is executed first on L1 and then on L2.
@@ -46,13 +38,6 @@ pub struct Transfer {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct L1Deposit {
     pub recipient: PublicKey,
-    pub amount: u64,
-}
-
-/// TODO remove this struct
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Deposit {
     pub amount: u64,
 }
 
@@ -215,7 +200,7 @@ pub mod arbitrary {
     impl AccountsState {
         pub fn build_trie(&self) -> (TrieRoot<NodeHash>, Rc<MemoryDb<Account>>) {
             let mut account_trie =
-                AccountTrie::new_try_from_db(Rc::new(MemoryDb::empty()), TrieRoot::Empty).unwrap();
+                AccountTrie::new_try_from_db(Rc::new(MemoryDb::empty()), TrieRoot::Empty);
 
             let mut hasher = Sha256::new();
             for (public_key, account) in self.l2.accounts.iter() {
@@ -239,7 +224,7 @@ pub mod arbitrary {
             amount_sampler: sample::Index,
         ) -> (L1Deposit, TxnExpectedResult) {
             let sender = self.l1.sample_keys(sender);
-            let recipient = self.l2.sample_keys(recipient).deref().clone();
+            let recipient = self.l2.sample_keys(recipient).to_vec();
 
             let l1_balance = self
                 .l1
@@ -293,8 +278,8 @@ pub mod arbitrary {
             recipient: sample::Index,
             amount: sample::Index,
         ) -> (Signed<Transfer>, TxnExpectedResult) {
-            let sender = self.l2.sample_keys(sender).deref().clone();
-            let recipient = self.l2.sample_keys(recipient).deref().clone();
+            let sender = self.l2.sample_keys(sender);
+            let recipient = self.l2.sample_keys(recipient);
 
             let sender_account = self
                 .l2
@@ -311,13 +296,13 @@ pub mod arbitrary {
                 .expect("recipient does not have an l2 account in AccountsState")
                 .balance;
 
-            let amount = if sender_balance == 0 {
+            let amount = if sender_balance == 0 || sender == recipient {
                 return (
                     Signed {
-                        public_key: sender.clone(),
+                        public_key: sender.to_vec(),
                         nonce,
                         transaction: Transfer {
-                            recipient: recipient.clone(),
+                            recipient: recipient.to_vec(),
                             amount: 0,
                         },
                     },
@@ -327,10 +312,13 @@ pub mod arbitrary {
                 amount.index(sender_balance as usize) as u64 + 1
             };
 
-            let signed_transfer = |public_key: PublicKey, recipient: PublicKey| Signed {
-                public_key,
+            let signed_transfer = |public_key: Rc<PublicKey>, recipient: Rc<PublicKey>| Signed {
+                public_key: public_key.to_vec(),
                 nonce,
-                transaction: Transfer { recipient, amount },
+                transaction: Transfer {
+                    recipient: recipient.to_vec(),
+                    amount,
+                },
             };
 
             match (
@@ -376,7 +364,7 @@ pub mod arbitrary {
             let amount = if sender_balance == 0 {
                 return (
                     Signed {
-                        public_key: sender.deref().clone(),
+                        public_key: sender.to_vec(),
                         nonce,
                         transaction: Withdraw { amount: 0 },
                     },
@@ -386,8 +374,8 @@ pub mod arbitrary {
                 amount.index(sender_balance as usize) as u64 + 1
             };
 
-            let signed_withdraw = |public_key: PublicKey| Signed {
-                public_key,
+            let signed_withdraw = |public_key: Rc<PublicKey>| Signed {
+                public_key: public_key.to_vec(),
                 nonce,
                 transaction: Withdraw { amount },
             };
@@ -403,9 +391,9 @@ pub mod arbitrary {
 
                     *l1_balance = new_recipient_bal;
 
-                    (signed_withdraw(sender.to_vec()), TxnExpectedResult::Success)
+                    (signed_withdraw(sender), TxnExpectedResult::Success)
                 }
-                _ => (signed_withdraw(sender.to_vec()), TxnExpectedResult::Failure),
+                _ => (signed_withdraw(sender), TxnExpectedResult::Failure),
             }
         }
     }
@@ -458,7 +446,7 @@ pub mod arbitrary {
 
         fn arbitrary_with(config: Self::Parameters) -> Self::Strategy {
             (prop::hash_map(
-                any::<[u8; 32]>().prop_map(|pk| Rc::new(pk.into())),
+                any::<[u8; 32]>().prop_map(|key| Rc::new(key.to_vec())),
                 1..100_000u64,
                 config.initial_l1_accounts.clone(),
             ))
@@ -476,7 +464,7 @@ pub mod arbitrary {
 
         fn arbitrary_with(config: Self::Parameters) -> Self::Strategy {
             (prop::hash_map(
-                any::<[u8; 32]>().prop_map(|pk| Rc::new(pk.into())),
+                any::<[u8; 32]>().prop_map(|key| Rc::new(key.to_vec())),
                 (1..10u64, 0..100u64),
                 config.initial_l2_accounts.clone(),
             ))
@@ -484,17 +472,7 @@ pub mod arbitrary {
                 pub_keys: accounts.keys().cloned().collect(),
                 accounts: accounts
                     .into_iter()
-                    .map(|(public_key, (balance, nonce))| {
-                        let pubkey = public_key.deref().clone();
-                        (
-                            public_key,
-                            Account {
-                                pubkey,
-                                balance,
-                                nonce,
-                            },
-                        )
-                    })
+                    .map(|(public_key, (balance, nonce))| (public_key, Account { balance, nonce }))
                     .collect(),
             })
             .boxed()
@@ -509,16 +487,6 @@ impl TryFrom<asn::Transfer> for Transfer {
         Ok(Transfer {
             recipient: transfer.recipient.into(),
             amount: transfer.amount.try_into()?,
-        })
-    }
-}
-
-#[cfg(feature = "asn1")]
-impl TryFrom<asn::Deposit> for Deposit {
-    type Error = TxError;
-    fn try_from(deposit: asn::Deposit) -> Result<Self, Self::Error> {
-        Ok(Deposit {
-            amount: deposit.amount.try_into()?,
         })
     }
 }

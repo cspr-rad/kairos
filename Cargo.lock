@@ -2150,7 +2150,7 @@ dependencies = [
 [[package]]
 name = "kairos-trie"
 version = "0.1.0"
-source = "git+https://github.com/cspr-rad/kairos-trie#760a4b7a72334c737fe6b4a40f82ae0e1c35bcb3"
+source = "git+https://github.com/cspr-rad/kairos-trie#e420f655aced04c2e1f2ce690ded9a9db7df44bb"
 dependencies = [
  "bumpalo",
  "digest 0.10.7",

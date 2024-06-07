@@ -7,7 +7,7 @@ use tokio::sync::mpsc;
 
 pub use self::trie::TrieStateThreadMsg;
 use crate::config::ServerConfig;
-use kairos_circuit_logic::transactions::{Signed, Transaction};
+use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
 pub type ServerState = Arc<ServerStateInner>;
@@ -50,7 +50,7 @@ impl BatchStateManager {
         Self::new(MemoryDb::empty(), TrieRoot::default())
     }
 
-    pub async fn enqueue_transaction(&self, txn: Signed<Transaction>) -> Result<(), crate::AppErr> {
+    pub async fn enqueue_transaction(&self, txn: KairosTransaction) -> Result<(), crate::AppErr> {
         let (msg, response) = TrieStateThreadMsg::transaction(txn);
 
         self.queued_transactions
