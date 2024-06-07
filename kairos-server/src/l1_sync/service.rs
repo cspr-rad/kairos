@@ -15,6 +15,7 @@ pub enum SyncCommand {
 
 pub struct L1SyncService {
     command_sender: mpsc::Sender<SyncCommand>,
+    //event_manager_handle: JoinHandle<()>,
 }
 
 impl L1SyncService {
@@ -22,7 +23,7 @@ impl L1SyncService {
         let (tx, rx) = mpsc::channel(32);
         let event_manager = EventManager::new(batch_service.clone());
 
-        tokio::spawn(async move {
+        let _handle = tokio::spawn(async move {
             run_event_manager(rx, event_manager).await;
         });
 
