@@ -25,7 +25,7 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    cctl.url = "github:casper-network/cctl/fix-macos";
+    cctl.url = "github:casper-network/cctl/947c34b991e37476db82ccfa2bd7c0312c1a91d7";
     csprpkgs.follows = "cctl/csprpkgs";
   };
 
