@@ -23,6 +23,7 @@ use utils::errors::DepositError;
 use utils::events::Deposit;
 use utils::get_immediate_caller;
 
+#[allow(clippy::single_component_path_imports)]
 #[allow(unused)]
 use casper_contract_no_std_helpers;
 

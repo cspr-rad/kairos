@@ -9,6 +9,7 @@
 use casper_contract::contract_api::{account, runtime, system};
 use casper_types::{URef, U512};
 
+#[allow(clippy::single_component_path_imports)]
 #[allow(unused)]
 use casper_contract_no_std_helpers;
 
