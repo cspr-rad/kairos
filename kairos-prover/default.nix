@@ -2,7 +2,7 @@
 {
   perSystem = { self', inputs', system, pkgs, lib, ... }:
     let
-      rustToolchain = inputs'.fenix.packages.latest.toolchain;
+      rustToolchain = inputs'.fenix.packages.stable.toolchain;
       craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
       rustup-mock = pkgs.writeShellApplication {
