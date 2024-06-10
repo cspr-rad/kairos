@@ -10,6 +10,7 @@ members = [
   "kairos-tx",
   "kairos-prover/kairos-circuit-logic",
   "demo-contract-tests",
+  # this is to be removed once the chainspec behaves as expected
   "temp-e2e-test"
 ]
 

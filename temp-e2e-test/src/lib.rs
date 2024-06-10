@@ -1,3 +1,4 @@
+// this is to be removed once the chainspec behaves as expected
 use casper_types::{bytesrepr::Bytes, runtime_args, ContractHash, RuntimeArgs, SecretKey};
 use casper_client::{types::{DeployBuilder, ExecutableDeployItem}};
 
