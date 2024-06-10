@@ -9,6 +9,9 @@
 use casper_contract::contract_api::{account, runtime, system};
 use casper_types::{URef, U512};
 
+#[allow(unused)]
+use casper_contract_no_std_helpers;
+
 #[no_mangle]
 pub extern "C" fn call() {
     let amount: U512 = runtime::get_named_arg("amount");

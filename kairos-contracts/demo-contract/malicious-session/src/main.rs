@@ -9,6 +9,9 @@
 use casper_contract::contract_api::{account, runtime, system};
 use casper_types::{runtime_args, ContractHash, RuntimeArgs, URef, U512};
 
+#[allow(unused)]
+use casper_contract_no_std_helpers;
+
 #[no_mangle]
 pub extern "C" fn call() {
     let contract_hash: ContractHash = runtime::get_named_arg("demo_contract");
