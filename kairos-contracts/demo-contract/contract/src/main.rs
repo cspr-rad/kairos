@@ -28,6 +28,8 @@ use kairos_circuit_logic::ProofOutputs;
 use risc0_zkvm::Receipt;
 use serde_json_wasm::from_slice;
 
+use kairos_trie::{TrieRoot, NodeHash};
+
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
 // rather than the installing account.
@@ -96,16 +98,27 @@ pub struct Proof {
 pub extern "C" fn submit_batch() {
     let proof_serialized: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
     let proof: Proof = from_slice(&proof_serialized).unwrap();
-    //proof.receipt.verify(proof.program_id);
-    /*match proof.receipt.verify(proof.program_id) {
+    match proof.receipt.verify(proof.program_id) {
         Ok(_) => {},
         // replace ApiError with meaningful UserError
-        Err(_) => runtime::revert(ApiError::InvalidArgument)
-    };*/
-    // let journal: ProofOutputs = serde_json_wasm::from_slice(&proof.receipt.journal.bytes).unwrap();
-    // todo: update root
-    // must assert that the previous root is that in contract storage
-    // serde_json to serialize Avi's Trie Root*/
+        Err(_) => runtime::revert(ApiError::User(0u16))
+    };
+    // extract the proof outputs from the journal / deserialize the receipt journal
+    /*let journal: ProofOutputs = serde_json_wasm::from_slice(&proof.receipt.journal.bytes).unwrap();
+
+    // todo: check that the deposits are unique
+
+    // get the current root from contract storage
+    let trie_root_uref: URef = runtime::get_key("trie_root_uref").unwrap().into_uref().unwrap();
+    let trie_root: TrieRoot<NodeHash> = storage::read(trie_root_uref).unwrap_or_revert().unwrap();
+    // revert if the previous root of the proof doesn't match the current root
+    if &trie_root != &journal.pre_batch_trie_root{
+        runtime::revert(ApiError::User(1u16))
+    };
+    // store the new root under the contract URef
+    storage::write(trie_root_uref, journal.post_batch_trie_root);*/
+
+    // todo: update sliding window
 }
 
 #[no_mangle]
@@ -118,10 +131,15 @@ pub extern "C" fn call() {
     ]);
 
     // this counter will be udpated by the entry point that processes / verifies batches
-    let last_processed_deposit_counter = storage::new_uref(0u64);
+    let last_processed_deposit_counter_uref: URef = storage::new_uref(0u64);
+
+    //let empty_trie_root: TrieRoot<NodeHash> = TrieRoot::Empty;
+    //let trie_root_uref: URef = storage::new_uref(empty_trie_root);
+
     let named_keys = NamedKeys::from([(
         KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),
-        last_processed_deposit_counter.into(),
+        last_processed_deposit_counter_uref.into(),
+        //trie_root_uref.into()
     )]);
 
     let (contract_hash, _) = storage::new_locked_contract(

@@ -1,14 +1,13 @@
 [package]
-name = "demo-contract-tests"
+name = "temp-e2e-test"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
-[dev-dependencies]
-casper-engine-test-support = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
-casper-execution-engine = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
-casper-contract = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
-casper-types = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
+[dependencies]
+casper-client = "2.0.0"
+casper-types = "3.0.0"
+
 risc0-zkvm = {version="=0.21.0", default-features=false, features=["prove"]}
 serde = {version="1", default-features=false, features=["derive"]}
 kairos-trie = {git="https://github.com/cspr-rad/kairos-trie", default-features=false, features=["serde"]}
@@ -18,3 +17,4 @@ serde-json-wasm = "1"
 rand = "0.8"
 wasm-opt = "0.116"
 sha2 = {version = "0.10", default-features = false}
+tokio = {version="1.36.0", features=["full"]}

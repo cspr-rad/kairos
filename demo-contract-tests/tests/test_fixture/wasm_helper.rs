@@ -3,7 +3,7 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn get_wasm_directory() -> PathBuf {
+pub fn get_wasm_directory() -> (PathBuf, PathBuf) {
     // Environment variable or default path.
     let base_path = if let Ok(custom_path) = env::var("PATH_TO_WASM_BINARIES") {
         PathBuf::from(custom_path)
@@ -17,6 +17,21 @@ pub fn get_wasm_directory() -> PathBuf {
                 .join("../kairos-contracts/target/wasm32-unknown-unknown/release/")
         }
     };
+
+
+    let base_path_session = if let Ok(custom_path) = env::var("PATH_TO_SESSION_BINARIES") {
+        PathBuf::from(custom_path)
+    } else {
+        let project_root = env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+        if cfg!(debug_assertions) {
+            PathBuf::from(project_root)
+                .join("../kairos-session-code/target/wasm32-unknown-unknown/debug/")
+        } else {
+            PathBuf::from(project_root)
+                .join("../kairos-session-code/target/wasm32-unknown-unknown/release/")
+        }
+    };
+
     if !base_path.exists() {
         let build_type = if cfg!(debug_assertions) {
             "debug"
@@ -26,10 +41,19 @@ pub fn get_wasm_directory() -> PathBuf {
         panic!("WASM directory does not exist: {}. Please build smart contracts at `./kairos-contracts` with `cargo build` for {}.", base_path.display(), build_type);
     }
 
+    if !base_path_session.exists() {
+        let build_type = if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        };
+        panic!("WASM directory does not exist: {}. Please build session code at `./kairos-session-code` with `cargo build` for {}.", base_path_session.display(), build_type);
+    }
+
     // Ensure all WASM files are optimized.
     optimize_files(&base_path).expect("Unable to optimize WASM files");
 
-    base_path
+    (base_path, base_path_session)
 }
 
 fn optimize_files(dir: &Path) -> Result<(), String> {

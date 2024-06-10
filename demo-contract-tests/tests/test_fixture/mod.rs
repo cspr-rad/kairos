@@ -36,7 +36,7 @@ impl TestContext {
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
         let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
-        let contract_path = get_wasm_directory().join("demo-contract-optimized.wasm");
+        let contract_path = get_wasm_directory().0.join("demo-contract-optimized.wasm");
         run_session_with_args(&mut builder, &contract_path, admin, runtime_args! {});
 
         let contract_hash = builder
@@ -84,7 +84,7 @@ impl TestContext {
     }
 
     pub fn deposit_succeeds(&mut self, depositor: AccountHash, amount: U512) {
-        let deposit_session_path = get_wasm_directory().join("deposit-session-optimized.wasm");
+        let deposit_session_path = get_wasm_directory().1.join("deposit-session-optimized.wasm");
         let session_args = runtime_args! {
             "amount" => amount,
             "demo_contract" => self.contract_hash
@@ -107,7 +107,7 @@ impl TestContext {
             "amount" => amount,
             "demo_contract" => self.contract_hash
         };
-        let malicious_session_path = get_wasm_directory().join("malicious-session-optimized.wasm");
+        let malicious_session_path = get_wasm_directory().1.join("malicious-session-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_session_path.as_path(),
@@ -127,7 +127,7 @@ impl TestContext {
             "purse_uref" => self.contract_purse
         };
         let malicious_reader_session_path =
-            get_wasm_directory().join("malicious-reader-optimized.wasm");
+            get_wasm_directory().1.join("malicious-reader-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_reader_session_path.as_path(),

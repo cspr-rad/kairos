@@ -5,12 +5,13 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-casper-contract = { version = "4.0.0", default-features = false, features=["no-std-helpers"]}
+casper-contract = { version = "4.0.0", default-features = false}
 casper-types = { version = "4.0.1", default-features = false}
 casper-event-standard = { version = "0.5.0", default-features=false}
 risc0-zkvm = {version="=0.21.0", default-features=false}
 kairos-circuit-logic = {path="../../../kairos-prover/kairos-circuit-logic", default-features=false, features=["serde"]}
 serde = {version="1", default-features=false, features=["derive"]}
+kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", default-features = false, features=["serde"] }
 serde-json-wasm = "1"
 
 [build]

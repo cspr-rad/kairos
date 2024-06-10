@@ -84,6 +84,38 @@
             '';
           };
 
+          kairosSessionCodeAttrs = {
+            src = lib.cleanSourceWith {
+              src = lib.fileset.toSource {
+                root = ./.;
+                fileset = lib.fileset.unions [
+                  ./kairos-session-code
+                ];
+              };
+              filter = path: type: craneLib.filterCargoSources path type;
+            };
+            cargoToml = ./kairos-session-code/Cargo.toml;
+            cargoLock = ./kairos-session-code/Cargo.lock;
+            sourceRoot = "source/kairos-session-code";
+
+            cargoExtraArgs = "--target wasm32-unknown-unknown";
+            nativeBuildInputs = [ pkgs.binaryen ];
+            doCheck = false;
+            # Append "-optimized" to wasm files, to make the tests pass
+            postInstall = ''
+              directory="$out/bin/"
+              for file in "$directory"*.wasm; do
+                if [ -e "$file" ]; then
+                  # Extract the file name without extension
+                  filename=$(basename "$file" .wasm)
+                  # Append "-optimized" to the filename and add back the .wasm extension
+                  new_filename="$directory$filename-optimized.wasm"
+                  wasm-opt --strip-debug --signext-lowering "$file" -o "$new_filename"
+                fi
+              done
+            '';
+          };
+
           kairosNodeAttrs = {
             src = lib.fileset.toSource {
               root = ./.;
@@ -114,6 +146,7 @@
             ];
 
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
+            PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
 
             meta.mainProgram = "kairos-server";
           };
@@ -123,6 +156,7 @@
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
+            PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
             inputsFrom = [ self'.packages.kairos ];
           };
 
@@ -164,6 +198,10 @@
 
             kairos-contracts = craneLib.buildPackage (kairosContractsAttrs // {
               cargoArtifacts = self'.packages.kairos-contracts-deps;
+            });
+
+            kairos-session-code = craneLib.buildPackage (kairosSessionCodeAttrs // {
+              pname = "kairos-session-code";
             });
           };
 
