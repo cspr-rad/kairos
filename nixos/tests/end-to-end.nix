@@ -45,7 +45,7 @@ nixosTest {
       services.kairos = {
         casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
         casperSseUrl = "http://127.0.0.1:18101/events/main";
-        demoContractHash = "";
+        demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
       };
 
       # We have to wait for cctl to deploy the contract to be able to obtain and export the contract hash

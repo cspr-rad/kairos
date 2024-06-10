@@ -24,6 +24,6 @@
 
   services.kairos = {
     enable = true;
-    demoContractHash = "";
+    demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
   };
 }
