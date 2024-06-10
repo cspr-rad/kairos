@@ -15,8 +15,8 @@ use casper_types::{
 mod constants;
 use constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
-    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_RECEIPT,
-    RUNTIME_ARG_TEMP_PURSE,
+    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_RECEIPT, 
+    RUNTIME_ARG_TEMP_PURSE, KAIROS_TRIE_ROOT
 };
 mod entry_points;
 mod utils;
@@ -104,20 +104,29 @@ pub extern "C" fn submit_batch() {
         Err(_) => runtime::revert(ApiError::User(0u16))
     };
     // extract the proof outputs from the journal / deserialize the receipt journal
-    /*let journal: ProofOutputs = serde_json_wasm::from_slice(&proof.receipt.journal.bytes).unwrap();
+    let journal: ProofOutputs = serde_json_wasm::from_slice(&proof.receipt.journal.bytes).unwrap();
 
     // todo: check that the deposits are unique
 
     // get the current root from contract storage
-    let trie_root_uref: URef = runtime::get_key("trie_root_uref").unwrap().into_uref().unwrap();
-    let trie_root: TrieRoot<NodeHash> = storage::read(trie_root_uref).unwrap_or_revert().unwrap();
+    let trie_root_uref: URef = runtime::get_key(KAIROS_TRIE_ROOT).unwrap_or_revert().into_uref().unwrap_or_revert_with(ApiError::User(3u16));
+    let trie_root: Option<[u8;32]> = storage::read(trie_root_uref).unwrap_or_revert().unwrap_or_revert_with(ApiError::User(4u16));
+    
+    // unwrap the trie roots
+    let prev_root_bytes: Option<[u8;32]> = match journal.pre_batch_trie_root{
+        TrieRoot::Node(node) => Some(node.bytes),
+        TrieRoot::Empty => None
+    };
+    let new_root_bytes: [u8;32] = match journal.post_batch_trie_root{
+        TrieRoot::Node(node) => node.bytes,
+        TrieRoot::Empty => runtime::revert(ApiError::User(2u16))
+    };
     // revert if the previous root of the proof doesn't match the current root
-    if &trie_root != &journal.pre_batch_trie_root{
+    if &trie_root != &prev_root_bytes{
         runtime::revert(ApiError::User(1u16))
     };
     // store the new root under the contract URef
-    storage::write(trie_root_uref, journal.post_batch_trie_root);*/
-
+    storage::write(trie_root_uref, Some(new_root_bytes));
     // todo: update sliding window
 }
 
@@ -133,13 +142,15 @@ pub extern "C" fn call() {
     // this counter will be udpated by the entry point that processes / verifies batches
     let last_processed_deposit_counter_uref: URef = storage::new_uref(0u64);
 
-    //let empty_trie_root: TrieRoot<NodeHash> = TrieRoot::Empty;
-    //let trie_root_uref: URef = storage::new_uref(empty_trie_root);
-
+    let empty_trie_root: Option<[u8;32]> = None;
+    let trie_root_uref: URef = storage::new_uref(empty_trie_root);
     let named_keys = NamedKeys::from([(
         KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),
         last_processed_deposit_counter_uref.into(),
-        //trie_root_uref.into()
+    ),
+    (
+        KAIROS_TRIE_ROOT.to_string(),
+        trie_root_uref.into()
     )]);
 
     let (contract_hash, _) = storage::new_locked_contract(
