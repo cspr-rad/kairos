@@ -117,8 +117,7 @@ mod tests {
         // the Trie is constructed from the current state of the DB.
         // keep in mind that the Trie, other than DeltaTree, stores Accounts
         // the entire DB state is used to construct a Snapshot for each proof.
-        let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash)
-            .expect("Failed to create account trie");
+        let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash);
         account_trie
             .apply_batch(batch.iter().cloned())
             .expect("Failed to apply batch");
