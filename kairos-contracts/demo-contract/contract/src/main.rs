@@ -23,6 +23,10 @@ use utils::errors::DepositError;
 use utils::events::Deposit;
 use utils::get_immediate_caller;
 
+#[allow(clippy::single_component_path_imports)]
+#[allow(unused)]
+use casper_contract_no_std_helpers;
+
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
 // rather than the installing account.
