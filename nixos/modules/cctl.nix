@@ -19,10 +19,6 @@ in
       type = types.package;
     };
 
-    casper-client-package = mkOption {
-      type = types.package;
-    };
-
     port = mkOption {
       type = types.port;
       default = 11101;

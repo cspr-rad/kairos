@@ -54,8 +54,6 @@ nixosTest {
         after = [ "network-online.target" "cctl.service" ];
         requires = [ "network-online.target" "cctl.service" ];
         serviceConfig.ExecStart = lib.mkForce (writeShellScript "start-kairos" ''
-          echo "GIGGI"
-          cat ${serverContractHashPath}
           export KAIROS_SERVER_DEMO_CONTRACT_HASH=$(cat ${serverContractHashPath})
           ${lib.getExe kairos}
         '');

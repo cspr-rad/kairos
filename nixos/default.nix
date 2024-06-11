@@ -54,7 +54,6 @@ in
         {
           imports = [ ./modules/cctl.nix ];
           services.cctl.package = self.packages.${pkgs.system}.cctld;
-          services.cctl.casper-client-package = inputs.csprpkgs.packages.${pkgs.system}.casper-client-rs;
         };
     };
   };

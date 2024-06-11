@@ -166,32 +166,6 @@ impl CCTLNetwork {
                     .unwrap(),
             )?
         }
-        // use tokio_stream::StreamExt;
-        //let deployed_contracts = vec![];
-
-        //let deploy_results: anyhow::Result<Vec<(String, ContractHash)>> =
-        //    tokio_stream::iter(contracts_to_deploy)
-        //        .map(async |contract| {
-        //            deploy_contract(
-        //                &casper_node_rpc_url,
-        //                &deployer_skey,
-        //                &deployer_pkey,
-        //                &contract,
-        //            )
-        //            .await
-        //        })
-        //        .collect()
-        //        .await;
-        //if !deploy_results.unwrap().is_empty() {
-        //    let contracts_dir = working_dir.join("contracts");
-        //    fs::create_dir_all(working_dir)?;
-        //    for (hash_name, contract_hash) in deploy_results.unwrap() {
-        //        fs::write(
-        //            contracts_dir.join(hash_name),
-        //            contract_hash.to_formatted_string(),
-        //        )?
-        //    }
-        //}
         Ok(CCTLNetwork { working_dir, nodes })
     }
 }
