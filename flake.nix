@@ -52,6 +52,7 @@
                 fileset = lib.fileset.unions [
                   ./kairos-contracts
                   ./kairos-prover/kairos-circuit-logic
+                  ./kairos-prover/kairos-verifier-risc0-lib
                 ];
               };
               filter = path: type: craneLib.filterCargoSources path type;

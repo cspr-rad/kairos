@@ -1701,7 +1701,6 @@ name = "kairos-verifier-risc0-lib"
 version = "0.1.0"
 dependencies = [
  "kairos-circuit-logic",
- "methods",
  "risc0-zkvm",
  "rkyv",
 ]
