@@ -14,45 +14,33 @@ pub enum SyncCommand {
 }
 
 pub struct L1SyncService {
-    command_sender: Option<mpsc::Sender<SyncCommand>>,
-    //event_manager_handle: Option<tokio::task::JoinHandle<()>>,
-    server_state: Arc<ServerStateInner>,
+    command_sender: mpsc::Sender<SyncCommand>,
+    //event_manager_handle: tokio::task::JoinHandle<()>,
 }
 
 impl L1SyncService {
-    pub fn new(server_state: Arc<ServerStateInner>) -> Self {
-        L1SyncService {
-            command_sender: None,
-            //event_manager_handle: None,
-            server_state,
-        }
-    }
-
-    pub async fn initialize(
-        &mut self,
+    pub async fn new(
         rpc_url: String,
         contract_hash: String,
-    ) -> Result<(), L1SyncError> {
+        server_state: Arc<ServerStateInner>,
+    ) -> Result<Self, L1SyncError> {
         let event_manager =
-            EventManager::new(&rpc_url, &contract_hash, self.server_state.clone()).await?;
+            EventManager::new(&rpc_url, &contract_hash, server_state.clone()).await?;
 
         let (tx, rx) = mpsc::channel(32);
-        self.command_sender = Some(tx);
         let _handle = tokio::spawn(async move {
             run_event_manager(rx, event_manager).await;
         });
-        //self.event_manager_handle = Some(handle);
 
-        Ok(())
+        Ok(L1SyncService {
+            command_sender: tx,
+            //event_manager_handle: _handle,
+        })
     }
 
     pub async fn trigger_sync(&self) -> Result<(), L1SyncError> {
-        let command_sender = self.command_sender.as_ref().ok_or_else(|| {
-            L1SyncError::InitializationError("Command sender not available".to_string())
-        })?;
-
         let (tx, rx) = oneshot::channel();
-        command_sender
+        self.command_sender
             .send(SyncCommand::TriggerSync(tx))
             .await
             .map_err(|e| L1SyncError::BrokenChannel(format!("Unable to send trigger: {}", e)))?;

@@ -52,13 +52,15 @@ pub async fn run_l1_sync(config: ServerConfig, server_state: Arc<ServerStateInne
     }
 
     // Initialize L1 synchronizer.
-    let mut l1_sync_service = L1SyncService::new(server_state);
-    let _ = l1_sync_service
-        .initialize(config.casper_rpc.to_string(), config.casper_contract_hash)
-        .await
-        .map_err(|e| {
-            panic!("Event manager failed to initialize: {}", e);
-        });
+    let l1_sync_service = L1SyncService::new(
+        config.casper_rpc.to_string(),
+        config.casper_contract_hash,
+        server_state,
+    )
+    .await
+    .unwrap_or_else(|e| {
+        panic!("Event manager failed to initialize: {}", e);
+    });
 
     // Run periodic synchronization.
     // TODO: Add additional SSE trigger.
