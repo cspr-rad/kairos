@@ -72,6 +72,13 @@ checksum = "d42901eb5b09bb79e7d7403642e70983ccac0f4812edf1de77d978abea5f3299"
 dependencies = [
  "casper-types",
  "hex_fmt",
+]
+
+[[package]]
+name = "casper-contract-no-std-helpers"
+version = "0.1.0"
+source = "git+https://github.com/koxu1996/casper-contract-no-std-helpers#8a389f3b94e0f950a5912548bdf7ef4c5d859127"
+dependencies = [
  "wee_alloc",
 ]
 
@@ -146,6 +153,7 @@ name = "contract"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
+ "casper-contract-no-std-helpers",
  "casper-event-standard",
  "casper-types",
 ]
@@ -230,6 +238,7 @@ name = "deposit-session"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
+ "casper-contract-no-std-helpers",
  "casper-types",
 ]
 
@@ -407,6 +416,7 @@ name = "malicious-reader"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
+ "casper-contract-no-std-helpers",
  "casper-types",
 ]
 
@@ -415,6 +425,7 @@ name = "malicious-session"
 version = "0.1.0"
 dependencies = [
  "casper-contract",
+ "casper-contract-no-std-helpers",
  "casper-types",
 ]
 
