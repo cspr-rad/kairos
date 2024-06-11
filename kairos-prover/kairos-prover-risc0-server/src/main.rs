@@ -82,18 +82,11 @@ fn prove_execution(
     }
     .map_err(|e| format!("Error in risc0_zkvm prove: {e}"))?;
 
-    let proof_outputs = receipt
-        .journal
-        .decode()
-        .map_err(|e| format!("Error in receipt journal decode: {e}"))?;
-
     tracing::info!("Proved batch: {}s", timestamp.elapsed().as_secs_f64());
 
     let timestamp = Instant::now();
 
-    receipt
-        .verify(PROVE_BATCH_ID)
-        .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
+    let proof_outputs = kairos_verifier_risc0_lib::verify_execution(&receipt, PROVE_BATCH_ID)?;
 
     tracing::info!("Verified batch: {}s", timestamp.elapsed().as_secs_f64());
 

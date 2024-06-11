@@ -5,18 +5,14 @@ use alloc::{format, string::String};
 
 use kairos_circuit_logic::ProofOutputs;
 
-use methods::PROVE_BATCH_ID;
 use risc0_zkvm::Receipt;
 
-pub fn verify_execution(receipt: &Receipt) -> Result<ProofOutputs, String> {
+pub fn verify_execution(receipt: &Receipt, program_id: [u32; 8]) -> Result<ProofOutputs, String> {
     receipt
-        .verify(PROVE_BATCH_ID)
+        .verify(program_id)
         .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
 
-    let proof_outputs: ProofOutputs = receipt
-        .journal
-        .decode()
-        .map_err(|e| format!("Error in risc0_zkvm decode: {e}"))?;
+    let proof_outputs = ProofOutputs::rkyv_deserialize(&receipt.journal.bytes)?;
 
     Ok(proof_outputs)
 }

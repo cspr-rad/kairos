@@ -413,6 +413,9 @@ pub mod test_logic {
                 withdrawals: _,
             } = proving_hook(proof_inputs).expect("Failed to prove execution");
 
+            let pre_batch_trie_root: TrieRoot<NodeHash> = pre_batch_trie_root.into();
+            let post_batch_trie_root: TrieRoot<NodeHash> = post_batch_trie_root.into();
+
             assert_eq!(pre_batch_trie_root, prior_root_hash);
             assert_eq!(post_batch_trie_root, new_root_hash);
             prior_root_hash = new_root_hash;

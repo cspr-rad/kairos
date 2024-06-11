@@ -3,18 +3,17 @@
 #![no_std] // std support is experimental
 
 use kairos_circuit_logic::ProofInputs;
-use risc0_zkvm::guest::env;
+use risc0_zkvm::{guest::env, serde::WordWrite};
 
 risc0_zkvm::guest::entry!(main);
-
-use serde_json_wasm::to_vec;
-extern crate alloc;
-use alloc::vec::Vec;
 
 fn main() {
     let proof_inputs: ProofInputs = env::read();
 
-    let output: Vec<u8> = to_vec(&proof_inputs.run_batch_proof_logic().unwrap()).unwrap();
+    let output = proof_inputs
+        .run_batch_proof_logic()
+        .unwrap()
+        .rkyv_serialize();
 
-    env::commit_slice(&output);
+    env::journal().write_padded_bytes(&output).unwrap();
 }
