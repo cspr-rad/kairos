@@ -1,15 +1,13 @@
-use std::sync::Arc;
-
 use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use tracing::*;
 
-use kairos_circuit_logic::transactions::{Signed, Transaction, Withdraw};
+use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Withdraw};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::routes::PayloadBody;
-use crate::state::BatchStateManager;
+use crate::state::ServerState;
 use crate::AppErr;
 
 #[derive(Debug, TypedPath)]
@@ -19,7 +17,7 @@ pub struct WithdrawPath;
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn withdraw_handler(
     _: WithdrawPath,
-    State(state): State<Arc<BatchStateManager>>,
+    State(state): State<ServerState>,
     Json(body): Json<PayloadBody>,
 ) -> Result<(), AppErr> {
     tracing::info!("parsing transaction data");
@@ -30,10 +28,8 @@ pub async fn withdraw_handler(
             Withdraw::try_from(withdrawal).context("decoding withdrawal")?
         }
         _ => {
-            return Err(AppErr::set_status(
-                anyhow!("invalid transaction type"),
-                StatusCode::BAD_REQUEST,
-            ))
+            return Err(AppErr::new(anyhow!("invalid transaction type"))
+                .set_status(StatusCode::BAD_REQUEST))
         }
     };
     let public_key = body.public_key;
@@ -42,10 +38,11 @@ pub async fn withdraw_handler(
     tracing::info!("queuing withdrawal transaction");
 
     state
-        .enqueue_transaction(Signed {
+        .batch_state_manager
+        .enqueue_transaction(KairosTransaction::Withdraw(Signed {
             public_key,
             nonce,
-            transaction: Transaction::Withdraw(withdrawal),
-        })
+            transaction: withdrawal,
+        }))
         .await
 }

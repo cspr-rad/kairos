@@ -1,14 +1,12 @@
-use std::sync::Arc;
-
 use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
 use axum_extra::routing::TypedPath;
 use tracing::instrument;
 
-use kairos_circuit_logic::transactions::{Signed, Transaction, Transfer};
+use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Transfer};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
-use crate::{routes::PayloadBody, state::BatchStateManager, AppErr};
+use crate::{routes::PayloadBody, state::ServerState, AppErr};
 
 #[derive(TypedPath)]
 #[typed_path("/api/v1/transfer")]
@@ -17,7 +15,7 @@ pub struct TransferPath;
 #[instrument(level = "trace", skip(state), ret)]
 pub async fn transfer_handler(
     _: TransferPath,
-    State(state): State<Arc<BatchStateManager>>,
+    State(state): State<ServerState>,
     Json(body): Json<PayloadBody>,
 ) -> Result<(), AppErr> {
     tracing::info!("parsing transaction data");
@@ -26,10 +24,8 @@ pub async fn transfer_handler(
     let transfer: Transfer = match signing_payload.body {
         TransactionBody::Transfer(transfer) => transfer.try_into().context("decoding transfer")?,
         _ => {
-            return Err(AppErr::set_status(
-                anyhow!("invalid transaction type"),
-                StatusCode::BAD_REQUEST,
-            ))
+            return Err(AppErr::new(anyhow!("invalid transaction type"))
+                .set_status(StatusCode::BAD_REQUEST))
         }
     };
     let public_key = body.public_key;
@@ -40,10 +36,11 @@ pub async fn transfer_handler(
     tracing::info!("queuing transaction for trie update");
 
     state
-        .enqueue_transaction(Signed {
+        .batch_state_manager
+        .enqueue_transaction(KairosTransaction::Transfer(Signed {
             public_key,
             nonce,
-            transaction: Transaction::Transfer(transfer),
-        })
+            transaction: transfer,
+        }))
         .await
 }

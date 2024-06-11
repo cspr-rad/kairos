@@ -13,8 +13,13 @@ license.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+all-tests = ["cctl-tests"]
+cctl-tests = []
+
 [dependencies]
-casper-types = { version = "4.0.1", features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
+casper-client = "2"
+casper-types = { version = "3", features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
 clap = { version = "4.5", features = ["derive", "deprecated"] }
 hex = "0.4"
 thiserror = "1"
@@ -30,3 +35,4 @@ tokio = { version = "1" }
 assert_cmd = "2"
 predicates = "3"
 kairos-test-utils = { path = "../kairos-test-utils" }
+casper-hashing = "2"

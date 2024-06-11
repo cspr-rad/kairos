@@ -25,12 +25,6 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    risc0pkgs.url = "github:cspr-rad/risc0pkgs";
-    # FIXME: We don't want to follow our nixpkgs revision
-    # to avoid rebuilding the r0vm over and over again
-    # whenever we update nixpkgs, while we are not using
-    # it yet in kairos-prover
-    # risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
     csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
     csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
   };
@@ -145,6 +139,7 @@
               inputs'.csprpkgs.packages.cctl
             ];
 
+            CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
 
@@ -155,9 +150,11 @@
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
             inputsFrom = [ self'.packages.kairos ];
+            packages = [ inputs'.csprpkgs.packages.cctl ];
           };
 
           packages = {
@@ -167,7 +164,6 @@
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
-              doCheck = false; # we don't need to check here, since the checks.coverage output runs the tests.
             });
 
             kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
@@ -211,18 +207,18 @@
               cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
 
-            coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
-              cargoArtifacts = self'.packages.kairos-deps;
-              # FIXME fix weird issue with rust-nightly and tarpaulin https://github.com/xd009642/tarpaulin/issues/1499
-              RUSTFLAGS = "-Cstrip=none";
-              # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
-              # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
-              cargoTarpaulinExtraArgs = "--features=all-tests --skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
-              # For some reason cargoTarpaulin runs the tests in the buildPhase
-              buildInputs = kairosNodeAttrs.buildInputs ++ [
-                inputs'.csprpkgs.packages.cctl
-              ];
-            });
+            #coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
+            #  cargoArtifacts = self'.packages.kairos-deps;
+            #  # FIXME fix weird issue with rust-nightly and tarpaulin https://github.com/xd009642/tarpaulin/issues/1499
+            #  RUSTFLAGS = "-Cstrip=none";
+            #  # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
+            #  # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
+            #  cargoTarpaulinExtraArgs = "--features=all-tests --skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
+            #  # For some reason cargoTarpaulin runs the tests in the buildPhase
+            #  buildInputs = kairosNodeAttrs.buildInputs ++ [
+            #    inputs'.csprpkgs.packages.cctl
+            #  ];
+            #});
 
             audit = craneLib.cargoAudit {
               inherit (kairosNodeAttrs) src;
