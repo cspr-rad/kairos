@@ -1,12 +1,12 @@
 pub mod transactions;
 mod trie;
 
-use std::{sync::Arc, thread::JoinHandle};
+use std::{sync::Arc, thread};
 
-use tokio::sync::mpsc;
+use tokio::{sync::mpsc, task};
 
 pub use self::trie::TrieStateThreadMsg;
-use crate::config::ServerConfig;
+use crate::config::{BatchConfig, ServerConfig};
 use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
@@ -26,7 +26,8 @@ pub struct ServerStateInner {
 /// via a oneshot channel in each `TrieStateThreadMsg`.
 #[derive(Debug)]
 pub struct BatchStateManager {
-    pub trie_thread: JoinHandle<()>,
+    pub trie_thread: thread::JoinHandle<()>,
+    pub batch_output_handler: task::JoinHandle<()>,
     pub queued_transactions: mpsc::Sender<TrieStateThreadMsg>,
 }
 
@@ -34,20 +35,27 @@ impl BatchStateManager {
     /// Create a new `BatchStateManager` with the given `db` and `batch_root`.
     /// `batch_root` and it's descendants must be in the `db`.
     /// This method spawns the trie state thread, it should be called only once.
-    pub fn new(db: trie::Database, batch_root: TrieRoot<NodeHash>) -> Self {
-        let (queued_transactions, receiver) = mpsc::channel(1000);
-        let trie_thread = trie::spawn_state_thread(receiver, db, batch_root);
+    pub fn new(config: BatchConfig, db: trie::Database, batch_root: TrieRoot<NodeHash>) -> Self {
+        let (queued_transactions, txn_receiver) = mpsc::channel(1000);
+        // This queue provides back pressure to the trie thread.
+        let (batch_sender, mut batch_rec) = mpsc::channel(10);
+        let trie_thread =
+            trie::spawn_state_thread(config, txn_receiver, batch_sender, db, batch_root);
+
+        let batch_output_handler =
+            tokio::spawn(async move { while let Some(batch_output) = batch_rec.recv().await {} });
 
         Self {
             trie_thread,
+            batch_output_handler,
             queued_transactions,
         }
     }
 
     /// Create a new `BatchStateManager` with an empty `MemoryDb` and an empty `TrieRoot`.
     /// This is useful for testing.
-    pub fn new_empty() -> Self {
-        Self::new(MemoryDb::empty(), TrieRoot::default())
+    pub fn new_empty(config: BatchConfig) -> Self {
+        Self::new(config, MemoryDb::empty(), TrieRoot::default())
     }
 
     pub async fn enqueue_transaction(&self, txn: KairosTransaction) -> Result<(), crate::AppErr> {

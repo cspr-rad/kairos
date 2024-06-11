@@ -5,6 +5,8 @@ use std::io;
 use std::net::{SocketAddr, TcpListener};
 use tokio::net::TcpStream;
 
+use kairos_server::config::{BatchConfig, ServerConfig};
+
 async fn wait_for_port(address: &SocketAddr) -> Result<(), io::Error> {
     retry(ExponentialBackoff::default(), || async {
         Ok(TcpStream::connect(address).await.map(|_| ())?)
@@ -22,9 +24,13 @@ impl Kairos {
         let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
-        let config = kairos_server::config::ServerConfig {
+        let config = ServerConfig {
             socket_addr,
             casper_rpc,
+            batch_config: BatchConfig {
+                max_batch_size: None,
+                max_batch_duration: None,
+            },
         };
 
         let process_handle = tokio::spawn(async move {

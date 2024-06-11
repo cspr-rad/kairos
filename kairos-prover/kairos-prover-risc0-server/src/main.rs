@@ -9,14 +9,18 @@ use kairos_circuit_logic::{ProofInputs, ProofOutputs};
 use methods::{PROVE_BATCH_ELF, PROVE_BATCH_ID};
 use risc0_zkvm::{ExecutorEnv, Prover, Receipt};
 use tracing::level_filters::LevelFilter;
-use tracing_subscriber::EnvFilter;
+use tracing_subscriber::{prelude::*, EnvFilter};
 
 #[tokio::main]
 async fn main() {
     let _ = dotenvy::dotenv();
     // Initialize tracing. In order to view logs, run `RUST_LOG=info cargo run`
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::filter::EnvFilter::from_default_env())
+    tracing_subscriber::registry()
+        .with(
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "info,kairos_prover_risc0_server=info".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
         .init();
 
     let socket_addr = std::env::var("KAIROS_PROVER_SERVER_SOCKET_ADDR")
