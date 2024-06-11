@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 casper-contract.workspace = true
+casper-contract-no-std-helpers.workspace = true
 casper-types.workspace = true
 
 [[bin]]

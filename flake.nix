@@ -40,8 +40,8 @@
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
           rustToolchain = with inputs'.fenix.packages; combine [
-            latest.toolchain
-            targets.wasm32-unknown-unknown.latest.rust-std
+            stable.toolchain
+            targets.wasm32-unknown-unknown.stable.rust-std
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
@@ -51,7 +51,8 @@
               filter = path: type: craneLib.filterCargoSources path type;
             };
             cargoExtraArgs = "--target wasm32-unknown-unknown";
-            nativeBuildInputs = [ pkgs.binaryen ];
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+            nativeBuildInputs = [ pkgs.binaryen pkgs.lld ];
             doCheck = false;
             # Append "-optimized" to wasm files, to make the tests pass
             postInstall = ''
@@ -109,7 +110,8 @@
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
-            inputsFrom = [ self'.packages.kairos ];
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+            inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
           };
 
           packages = {

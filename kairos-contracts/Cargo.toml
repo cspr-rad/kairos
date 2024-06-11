@@ -16,6 +16,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-casper-contract = { version = "4.0", default-features = false, features = ["no-std-helpers"] }
+casper-contract = { version = "4.0", default-features = false }
+casper-contract-no-std-helpers = { version = "0.1.0", "git" = "https://github.com/koxu1996/casper-contract-no-std-helpers"}
 casper-types = { version = "4.0", default-features = false }
 casper-event-standard = { version = "0.5", default-features = false }
