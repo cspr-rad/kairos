@@ -33,8 +33,8 @@ impl L1SyncService {
         rpc_url: String,
         contract_hash: String,
     ) -> Result<(), L1SyncError> {
-        let mut event_manager = EventManager::new(self.server_state.clone());
-        event_manager.initialize(&rpc_url, &contract_hash).await?;
+        let event_manager =
+            EventManager::new(&rpc_url, &contract_hash, self.server_state.clone()).await?;
 
         let (tx, rx) = mpsc::channel(32);
         self.command_sender = Some(tx);
