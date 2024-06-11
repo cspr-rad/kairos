@@ -156,7 +156,7 @@ mod tests {
             program_id: PROVE_BATCH_ID,
         }
     }
-    
+
     #[derive(serde::Serialize, serde::Deserialize)]
     pub struct Proof {
         pub receipt: risc0_zkvm::Receipt,

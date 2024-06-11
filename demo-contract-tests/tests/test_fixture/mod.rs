@@ -84,7 +84,9 @@ impl TestContext {
     }
 
     pub fn deposit_succeeds(&mut self, depositor: AccountHash, amount: U512) {
-        let deposit_session_path = get_wasm_directory().1.join("deposit-session-optimized.wasm");
+        let deposit_session_path = get_wasm_directory()
+            .1
+            .join("deposit-session-optimized.wasm");
         let session_args = runtime_args! {
             "amount" => amount,
             "demo_contract" => self.contract_hash
@@ -107,7 +109,9 @@ impl TestContext {
             "amount" => amount,
             "demo_contract" => self.contract_hash
         };
-        let malicious_session_path = get_wasm_directory().1.join("malicious-session-optimized.wasm");
+        let malicious_session_path = get_wasm_directory()
+            .1
+            .join("malicious-session-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_session_path.as_path(),
@@ -126,8 +130,9 @@ impl TestContext {
             "demo_contract" => self.contract_hash,
             "purse_uref" => self.contract_purse
         };
-        let malicious_reader_session_path =
-            get_wasm_directory().1.join("malicious-reader-optimized.wasm");
+        let malicious_reader_session_path = get_wasm_directory()
+            .1
+            .join("malicious-reader-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_reader_session_path.as_path(),

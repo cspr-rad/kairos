@@ -18,7 +18,6 @@ pub fn get_wasm_directory() -> (PathBuf, PathBuf) {
         }
     };
 
-
     let base_path_session = if let Ok(custom_path) = env::var("PATH_TO_SESSION_BINARIES") {
         PathBuf::from(custom_path)
     } else {
