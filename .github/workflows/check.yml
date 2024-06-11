@@ -51,7 +51,7 @@ jobs:
         with:
           path: coverage-result/cobertura.xml
           minimum_coverage: 60
-      
+
       - name: kairos-contracts x86_64-linux
         if: matrix.os == 'ubuntu-latest'
         run: nix build -L --no-link --show-trace .#packages.x86_64-linux.kairos-contracts

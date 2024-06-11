@@ -25,8 +25,8 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
-    csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
+    cctl.url = "github:casper-network/cctl/947c34b991e37476db82ccfa2bd7c0312c1a91d7";
+    csprpkgs.follows = "cctl/csprpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
@@ -40,8 +40,8 @@
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
           rustToolchain = with inputs'.fenix.packages; combine [
-            latest.toolchain
-            targets.wasm32-unknown-unknown.latest.rust-std
+            stable.toolchain
+            targets.wasm32-unknown-unknown.stable.rust-std
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
@@ -94,7 +94,8 @@
             sourceRoot = "source/kairos-session-code";
 
             cargoExtraArgs = "--target wasm32-unknown-unknown";
-            nativeBuildInputs = [ pkgs.binaryen ];
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+            nativeBuildInputs = [ pkgs.binaryen pkgs.lld ];
             doCheck = false;
             # Append "-optimized" to wasm files, to make the tests pass
             postInstall = ''
@@ -137,7 +138,7 @@
               darwin.apple_sdk.frameworks.SystemConfiguration
             ];
             checkInputs = [
-              inputs'.csprpkgs.packages.cctl
+              inputs'.cctl.packages.cctl
             ];
 
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
@@ -155,7 +156,6 @@
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
             inputsFrom = [ self'.packages.kairos ];
-            packages = [ inputs'.csprpkgs.packages.cctl ];
           };
 
           packages = {
@@ -180,7 +180,7 @@
               ''
                 mkdir -p $out/bin
                 makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
-                  --set PATH ${pkgs.lib.makeBinPath [inputs'.csprpkgs.packages.cctl ]}
+                  --set PATH ${pkgs.lib.makeBinPath [inputs'.cctl.packages.cctl ]}
               '';
 
             default = self'.packages.kairos;
