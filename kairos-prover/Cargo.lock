@@ -1862,8 +1862,7 @@ dependencies = [
 name = "methods"
 version = "0.1.0"
 dependencies = [
- "dotenvy",
- "hex",
+ "kairos-verifier-risc0-lib",
  "risc0-build",
 ]
 

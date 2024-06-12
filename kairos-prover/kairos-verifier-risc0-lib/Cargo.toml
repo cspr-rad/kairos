@@ -5,9 +5,12 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [features]
+default = ["verifier"]
+verifier = ["dep:risc0-zkvm", "dep:kairos-circuit-logic", "dep:rkyv"]
 disable-dev-mode = [ "risc0-zkvm/disable-dev-mode" ]
 
+
 [dependencies]
-risc0-zkvm = { version = "=0.21.0", default-features = false }
-kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"], default-features = false }
-rkyv = { version = "0.7", default-features = false, features = ["size_32", "archive_le", "alloc", "validation"] }
+risc0-zkvm = { version = "=0.21.0", default-features = false, optional = true }
+kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"], default-features = false, optional = true }
+rkyv = { version = "0.7", default-features = false, features = ["size_32", "archive_le", "alloc", "validation"], optional = true }
