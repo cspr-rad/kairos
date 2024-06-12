@@ -40,11 +40,10 @@ pub fn app_router(state: ServerState) -> Router {
         .with_state(state)
 }
 
-pub async fn run_l1_sync(config: ServerConfig, server_state: Arc<ServerStateInner>) {
-    // Make sure real contract hash was provided.
-    if config.casper_contract_hash
-        == "0000000000000000000000000000000000000000000000000000000000000000"
-    {
+pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {
+    // Extra check: make sure the default dummy value of contract hash was changed.
+    let contract_hash = server_state.server_config.casper_contract_hash.as_str();
+    if contract_hash == "0000000000000000000000000000000000000000000000000000000000000000" {
         tracing::warn!(
             "Casper contract hash not configured, L1 synchronization will NOT be enabled."
         );
@@ -74,7 +73,7 @@ pub async fn run(config: ServerConfig) {
         server_config: config.clone(),
     });
 
-    run_l1_sync(config.clone(), state.clone()).await;
+    run_l1_sync(state.clone()).await;
 
     let app = app_router(state);
 
