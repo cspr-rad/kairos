@@ -17,13 +17,11 @@ pub struct EventManager {
 }
 
 impl EventManager {
-    pub async fn new(
-        contract_hash: &str,
-        server_state: Arc<ServerStateInner>,
-    ) -> Result<Self, L1SyncError> {
+    pub async fn new(server_state: Arc<ServerStateInner>) -> Result<Self, L1SyncError> {
         tracing::info!("Initializing event manager");
 
         let rpc_url = server_state.server_config.casper_rpc.as_str();
+        let contract_hash = server_state.server_config.casper_contract_hash.as_str();
         let client = CasperClient::new(rpc_url);
         let metadata = CesMetadataRef::fetch_metadata(&client, contract_hash).await?;
         tracing::debug!("Metadata fetched successfully");

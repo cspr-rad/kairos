@@ -19,11 +19,8 @@ pub struct L1SyncService {
 }
 
 impl L1SyncService {
-    pub async fn new(
-        contract_hash: String,
-        server_state: Arc<ServerStateInner>,
-    ) -> Result<Self, L1SyncError> {
-        let event_manager = EventManager::new(&contract_hash, server_state.clone()).await?;
+    pub async fn new(server_state: Arc<ServerStateInner>) -> Result<Self, L1SyncError> {
+        let event_manager = EventManager::new(server_state.clone()).await?;
 
         let (tx, rx) = mpsc::channel(32);
         let _handle = tokio::spawn(async move {
