@@ -1862,6 +1862,8 @@ dependencies = [
 name = "methods"
 version = "0.1.0"
 dependencies = [
+ "dotenvy",
+ "hex",
  "risc0-build",
 ]
 

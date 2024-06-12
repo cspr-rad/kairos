@@ -77,8 +77,11 @@ fn prove_execution(
         (true, false) => risc0_zkvm::LocalProver::new("local metal").prove(env, PROVE_BATCH_ELF),
         #[cfg(feature = "metal")]
         (false, true) => risc0_zkvm::LocalProver::new("local cuda").prove(env, PROVE_BATCH_ELF),
-        _ => risc0_zkvm::ExternalProver::new("ipc r0vm", env!("RISC0_R0VM_PATH"))
-            .prove(env, PROVE_BATCH_ELF),
+        _ => risc0_zkvm::ExternalProver::new(
+            "ipc r0vm",
+            option_env!("RISC0_R0VM_PATH").unwrap_or("r0vm"),
+        )
+        .prove(env, PROVE_BATCH_ELF),
     }
     .map_err(|e| format!("Error in risc0_zkvm prove: {e}"))?;
 
