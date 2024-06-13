@@ -3,7 +3,7 @@ use crate::error::CliError;
 
 use kairos_crypto::error::CryptoError;
 use kairos_crypto::implementations::Signer;
-use kairos_crypto::SignerCore;
+use kairos_crypto::SignerFsExtension;
 
 use clap::Parser;
 

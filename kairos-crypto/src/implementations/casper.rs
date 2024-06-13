@@ -13,38 +13,6 @@ pub struct Signer {
 }
 
 impl SignerCore for Signer {
-    #[cfg(feature = "fs")]
-    fn from_private_key_file<P: AsRef<Path>>(file: P) -> Result<Self, CryptoError>
-    where
-        Self: Sized,
-    {
-        let private_key =
-            SecretKey::from_file(file).map_err(|e| CryptoError::FailedToParseKey {
-                error: e.to_string(),
-            })?;
-        let public_key = PublicKey::from(&private_key);
-
-        Ok(Self {
-            private_key: Some(private_key),
-            public_key,
-        })
-    }
-
-    fn from_public_key<T: AsRef<[u8]>>(bytes: T) -> Result<Self, CryptoError>
-    where
-        Self: Sized,
-    {
-        let (public_key, _remainder) = casper_types::PublicKey::from_bytes(bytes.as_ref())
-            .map_err(|_e| CryptoError::Deserialization {
-                context: "public key",
-            })?;
-
-        Ok(Self {
-            private_key: None,
-            public_key,
-        })
-    }
-
     fn sign<T: AsRef<[u8]>>(&self, data: T) -> Result<Vec<u8>, CryptoError> {
         let private_key = self
             .private_key
@@ -134,13 +102,50 @@ impl SignerCore for Signer {
     }
 }
 
+#[cfg(feature = "fs")]
+impl crate::SignerFsExtension for Signer {
+    fn from_private_key_file<P: AsRef<Path>>(file: P) -> Result<Self, CryptoError>
+    where
+        Self: Sized,
+    {
+        let private_key =
+            SecretKey::from_file(file).map_err(|e| CryptoError::FailedToParseKey {
+                error: e.to_string(),
+            })?;
+        let public_key = PublicKey::from(&private_key);
+
+        Ok(Self {
+            private_key: Some(private_key),
+            public_key,
+        })
+    }
+
+    fn from_public_key<T: AsRef<[u8]>>(bytes: T) -> Result<Self, CryptoError>
+    where
+        Self: Sized,
+    {
+        let (public_key, _remainder) = casper_types::PublicKey::from_bytes(bytes.as_ref())
+            .map_err(|_e| CryptoError::Deserialization {
+                context: "public key",
+            })?;
+
+        Ok(Self {
+            private_key: None,
+            public_key,
+        })
+    }
+}
+
 #[cfg(test)]
+#[cfg(feature = "fs")]
 mod tests {
     use super::*;
+    use crate::SignerFsExtension;
 
     #[test]
     fn test_casper_ed25519_public_key() {
         // This public key has a 01 prefix indicating Ed25519.
+
         let bytes =
             hex::decode("01c377281132044bd3278b039925eeb3efdb9d99dd5f46d9ec6a764add34581af7")
                 .unwrap();

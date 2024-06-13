@@ -5,6 +5,7 @@ use crate::utils::parse_hex_string;
 use kairos_crypto::error::CryptoError;
 use kairos_crypto::implementations::Signer;
 use kairos_crypto::SignerCore;
+use kairos_crypto::SignerFsExtension;
 
 use clap::Parser;
 
