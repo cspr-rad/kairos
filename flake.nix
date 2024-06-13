@@ -95,7 +95,7 @@
 
             cargoExtraArgs = "--target wasm32-unknown-unknown";
             CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
-            nativeBuildInputs = [ pkgs.binaryen pkgs.lld ];
+            nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools ];
             doCheck = false;
             # Append "-optimized" to wasm files, to make the tests pass
             postInstall = ''
@@ -130,7 +130,7 @@
               ];
             };
 
-            nativeBuildInputs = with pkgs; [ pkg-config ];
+            nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools ];
             buildInputs = with pkgs; [
               openssl.dev
             ] ++ lib.optionals stdenv.isDarwin [
