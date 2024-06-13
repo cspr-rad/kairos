@@ -11,7 +11,7 @@ casper-types = { version = "4.0.1", default-features = false }
 casper-event-standard = { version = "0.5.0", default-features = false }
 contract-utils = { path = "../contract-utils" }
 kairos-tx = { path = "../../../kairos-tx", default-features = false }
-kairos-crypto = { path = "../../../kairos-crypto" }
+kairos-crypto-tmp = { package = "kairos-crypto", git = "https://github.com/cspr-rad/kairos", branch = "feature/kairos-crypto-improvements", default-features = false, features = ["crypto-casper", "tx"] } # TODO: Switch to `path = "../../../kairos-crypto"` once PR #123 is merged.
 
 [build]
 target = "wasm32-unknown-unknown"
