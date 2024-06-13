@@ -1352,10 +1352,8 @@ dependencies = [
  "casper-engine-test-support",
  "casper-execution-engine",
  "casper-types 4.0.1 (git+https://github.com/jonas089/casper-node?branch=kairos-demo-chainspec)",
- "kairos-circuit-logic",
- "kairos-trie",
+ "kairos-verifier-risc0-lib",
  "rand 0.8.5",
- "risc0-zkvm",
  "serde",
  "serde-json-wasm",
  "sha2 0.10.8",
@@ -2620,6 +2618,15 @@ dependencies = [
  "num-traits",
  "rasn",
  "sha2 0.10.8",
+]
+
+[[package]]
+name = "kairos-verifier-risc0-lib"
+version = "0.1.0"
+dependencies = [
+ "kairos-circuit-logic",
+ "risc0-zkvm",
+ "rkyv",
 ]
 
 [[package]]
