@@ -131,7 +131,7 @@
               ];
             };
 
-            nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools ];
+            nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools pkgs.pkg-config ];
             buildInputs = with pkgs; [
               openssl.dev
             ] ++ lib.optionals stdenv.isDarwin [
