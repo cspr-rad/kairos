@@ -224,14 +224,15 @@
             #  ];
             #});
 
-            audit = craneLib.cargoAudit {
-              inherit (kairosNodeAttrs) src;
-              advisory-db = inputs.advisory-db;
-              # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
-              # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
-              # FIXME --ignore RUSTSEC-2024-0013 ignores libgit2-sys 0.14.2+1.5.1 vulnerability caused by introducing casper-client 2.0.0
-              cargoAuditExtraArgs = "--ignore yanked --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
-            };
+            # See https://github.com/cspr-rad/kairos/security/dependabot for this functionality
+            # audit = craneLib.cargoAudit {
+            #   inherit (kairosNodeAttrs) src;
+            #   advisory-db = inputs.advisory-db;
+            #   # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
+            #   # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
+            #   # FIXME --ignore RUSTSEC-2024-0013 ignores libgit2-sys 0.14.2+1.5.1 vulnerability caused by introducing casper-client 2.0.0
+            #   cargoAuditExtraArgs = "--ignore yanked --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
+            # };
 
             kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
               cargoArtifacts = self'.packages.kairos-contracts-deps;
