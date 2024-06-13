@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
+use casper_event_toolkit::casper_types::bytesrepr::FromBytes;
 use casper_event_toolkit::fetcher::{Fetcher, Schemas};
 use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
+use contract_utils::Deposit;
 
 use crate::state::ServerStateInner;
 use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
@@ -50,19 +52,35 @@ impl EventManager {
             let event = self.fetcher.fetch_event(i, &self.schemas).await?;
             tracing::debug!("Event {} fetched: {:?}.", i, event);
 
-            // TODO: Parse full transaction data from event, then push it to Data Availability layer.
+            let event_bytes = event.to_ces_bytes()?;
 
-            // TODO: Once we have ASN transaction, it should be converted and pushed into batch.
-            let recipient: Vec<u8> = "cafebabe".into();
-            let txn = KairosTransaction::Deposit(L1Deposit {
-                amount: 100,
-                recipient,
-            });
-            self.server_state
-                .batch_state_manager
-                .enqueue_transaction(txn)
-                .await
-                .map_err(|e| L1SyncError::UnexpectedError(format!("unable to batch tx: {}", e)))?;
+            // (koxu1996) NOTE: I think we should rather use full transaction data (ASN) for events,
+            // parse them here with `kairos-tx` and then push to Data Availability layer.
+
+            match event.name.as_str() {
+                "Deposit" => {
+                    // Parse simplified deposit data.
+                    let (deposit, _) = Deposit::from_bytes(&event_bytes)
+                        .expect("Failed to parse deposit event from bytes");
+
+                    let amount = deposit.amount;
+                    let recipient: Vec<u8> = "cafebabe".into(); // CAUTION: Using mocked recipient, as event does NOT contain depositor's public key.
+                    let txn = KairosTransaction::Deposit(L1Deposit { amount, recipient });
+
+                    // Push deposit to trie.
+                    self.server_state
+                        .batch_state_manager
+                        .enqueue_transaction(txn)
+                        .await
+                        .map_err(|e| {
+                            L1SyncError::UnexpectedError(format!("unable to batch tx: {}", e))
+                        })?;
+                }
+                name => {
+                    tracing::error!("Unrecognized event {}", name);
+                }
+            }
+
             self.next_event_id = i + 1;
         }
 
