@@ -44,7 +44,7 @@ pub async fn withdraw_handler(
         nonce,
         transaction: withdrawal,
     });
-    let _ = db::insert(state.pool.clone(), withdrawal.clone()).await;
+    db::insert(state.pool.clone(), withdrawal.clone()).await?;
     state
         .batch_state_manager
         .enqueue_transaction(withdrawal)
