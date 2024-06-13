@@ -24,4 +24,17 @@ pub mod verifier {
 
         Ok(proof_outputs)
     }
+
+    pub fn verify_execution_of_any_program(
+        receipt: &Receipt,
+        image_id: [u32; 8],
+    ) -> Result<ProofOutputs, String> {
+        receipt
+            .verify(image_id)
+            .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
+
+        let proof_outputs = ProofOutputs::rkyv_deserialize(&receipt.journal.bytes)?;
+
+        Ok(proof_outputs)
+    }
 }
