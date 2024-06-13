@@ -240,7 +240,7 @@
             });
 
             kairos-session-lint = craneLib.cargoClippy (kairosSessionCodeAttrs // {
-              cargoArtifacts = self'.packages.kairos-contracts-deps;
+              cargoArtifacts = self'.packages.kairos-session-deps;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });
 
@@ -252,7 +252,7 @@
           #     # FIXME --ignore RUSTSEC-2022-0054 wee_alloc is Unmaintained caused by introducing casper-contract
           #     cargoAuditExtraArgs = "--ignore yanked --deny warnings --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2022-0054";
           #   };
-          # };
+          };
 
           treefmt = {
             projectRootFile = ".git/config";
