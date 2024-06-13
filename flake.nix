@@ -108,9 +108,10 @@
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
-            inputsFrom = [ self'.packages.kairos ];
+            inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
           };
 
           packages = {
