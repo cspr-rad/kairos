@@ -83,6 +83,7 @@
                 ./kairos-test-utils
                 ./kairos-tx
                 ./kairos-prover/kairos-circuit-logic
+                ./kairos-contracts/demo-contract/contract-utils
               ];
             };
 
@@ -110,7 +111,8 @@
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
-            inputsFrom = [ self'.packages.kairos ];
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+            inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
           };
 
           packages = {
