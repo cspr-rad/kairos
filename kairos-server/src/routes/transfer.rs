@@ -4,6 +4,7 @@ use axum_extra::routing::TypedPath;
 use tracing::instrument;
 
 use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Transfer};
+use kairos_data::transaction as db;
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::{routes::PayloadBody, state::ServerState, AppErr};
@@ -35,12 +36,14 @@ pub async fn transfer_handler(
 
     tracing::info!("queuing transaction for trie update");
 
+    let transfer = KairosTransaction::Transfer(Signed {
+        public_key,
+        nonce,
+        transaction: transfer,
+    });
+    let _ = db::insert(state.pool.clone(), transfer.clone()).await;
     state
         .batch_state_manager
-        .enqueue_transaction(KairosTransaction::Transfer(Signed {
-            public_key,
-            nonce,
-            transaction: transfer,
-        }))
+        .enqueue_transaction(transfer)
         .await
 }

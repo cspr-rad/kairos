@@ -3,6 +3,7 @@ use axum_extra::routing::TypedPath;
 use tracing::*;
 
 use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
+use kairos_data::transaction as db;
 
 use crate::{state::ServerState, AppErr};
 
@@ -18,8 +19,7 @@ pub async fn deposit_mock_handler(
 ) -> Result<(), AppErr> {
     tracing::info!("parsing transaction data");
 
-    state
-        .batch_state_manager
-        .enqueue_transaction(KairosTransaction::Deposit(deposit))
-        .await
+    let deposit = KairosTransaction::Deposit(deposit);
+    let _ = db::insert(state.pool.clone(), deposit.clone()).await;
+    state.batch_state_manager.enqueue_transaction(deposit).await
 }

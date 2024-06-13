@@ -1,6 +1,7 @@
 pub mod deposit;
 #[cfg(feature = "deposit-mock")]
 pub mod deposit_mock;
+pub mod fetch;
 pub mod transfer;
 pub mod withdraw;
 

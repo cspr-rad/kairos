@@ -137,6 +137,7 @@
                 ./demo-contract-tests
                 ./kairos-cli
                 ./kairos-crypto
+                ./kairos-data
                 ./kairos-server
                 ./kairos-test-utils
                 ./kairos-tx
@@ -149,6 +150,7 @@
             nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools pkgs.pkg-config ];
             buildInputs = with pkgs; [
               openssl.dev
+              postgresql.lib
             ] ++ lib.optionals stdenv.isDarwin [
               libiconv
               darwin.apple_sdk.frameworks.Security

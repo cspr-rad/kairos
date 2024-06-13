@@ -4,6 +4,7 @@ use axum_extra::routing::TypedPath;
 use tracing::*;
 
 use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Withdraw};
+use kairos_data::transaction as db;
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
 use crate::routes::PayloadBody;
@@ -37,12 +38,14 @@ pub async fn withdraw_handler(
 
     tracing::info!("queuing withdrawal transaction");
 
+    let withdrawal = KairosTransaction::Withdraw(Signed {
+        public_key,
+        nonce,
+        transaction: withdrawal,
+    });
+    let _ = db::insert(state.pool.clone(), withdrawal.clone()).await;
     state
         .batch_state_manager
-        .enqueue_transaction(KairosTransaction::Withdraw(Signed {
-            public_key,
-            nonce,
-            transaction: withdrawal,
-        }))
+        .enqueue_transaction(withdrawal)
         .await
 }
