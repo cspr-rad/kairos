@@ -14,14 +14,6 @@ pub trait SignerCore {
         signature_bytes: U,
     ) -> Result<(), CryptoError>;
 
-    #[cfg(feature = "tx")]
-    fn verify_tx(&self, tx: kairos_tx::asn::Transaction) -> Result<(), CryptoError>;
-    #[cfg(feature = "tx")]
-    fn sign_tx_payload(
-        &self,
-        payload: kairos_tx::asn::SigningPayload,
-    ) -> Result<kairos_tx::asn::Transaction, CryptoError>;
-
     fn to_public_key(&self) -> Result<Vec<u8>, CryptoError>;
 }
 
@@ -33,4 +25,14 @@ pub trait SignerFsExtension: SignerCore {
     fn from_public_key<T: AsRef<[u8]>>(bytes: T) -> Result<Self, CryptoError>
     where
         Self: Sized;
+}
+
+#[cfg(feature = "tx")]
+pub trait SignerTxExtension: SignerCore {
+    fn verify_tx(&self, tx: kairos_tx::asn::Transaction) -> Result<(), CryptoError>;
+
+    fn sign_tx_payload(
+        &self,
+        payload: kairos_tx::asn::SigningPayload,
+    ) -> Result<kairos_tx::asn::Transaction, CryptoError>;
 }
