@@ -62,7 +62,8 @@
             sourceRoot = "source/kairos-contracts";
 
             cargoExtraArgs = "--target wasm32-unknown-unknown";
-            nativeBuildInputs = [ pkgs.binaryen ];
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+            nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools ];
             doCheck = false;
             # Append "-optimized" to wasm files, to make the tests pass
             postInstall = ''
