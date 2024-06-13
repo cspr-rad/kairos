@@ -5,14 +5,14 @@ use casper_types::{crypto, PublicKey, SecretKey, Signature};
 use std::path::Path;
 
 use crate::CryptoError;
-use crate::CryptoSigner;
+use crate::SignerCore;
 
 pub struct Signer {
     private_key: Option<SecretKey>,
     public_key: PublicKey,
 }
 
-impl CryptoSigner for Signer {
+impl SignerCore for Signer {
     #[cfg(feature = "fs")]
     fn from_private_key_file<P: AsRef<Path>>(file: P) -> Result<Self, CryptoError>
     where

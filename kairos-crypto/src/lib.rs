@@ -6,7 +6,7 @@ use std::path::Path;
 
 use error::CryptoError;
 
-pub trait CryptoSigner {
+pub trait SignerCore {
     #[cfg(feature = "fs")]
     fn from_private_key_file<P: AsRef<Path>>(file: P) -> Result<Self, CryptoError>
     where
