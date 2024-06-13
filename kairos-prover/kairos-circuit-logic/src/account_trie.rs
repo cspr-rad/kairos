@@ -386,9 +386,9 @@ pub mod test_logic {
         mut prior_root_hash: TrieRoot<NodeHash>,
         db: Rc<MemoryDb<Account>>,
         batches: Vec<Vec<KairosTransaction>>,
-        proving_hook: impl Fn(ProofInputs) -> Result<ProofOutputs, String>,
+        proving_hook: impl Fn((usize, ProofInputs)) -> Result<ProofOutputs, String>,
     ) {
-        for batch in batches.into_iter() {
+        for (batch_number, batch) in batches.into_iter().enumerate() {
             let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash);
             account_trie
                 .apply_batch(batch.iter().cloned())
@@ -411,7 +411,7 @@ pub mod test_logic {
                 post_batch_trie_root,
                 deposits: _,
                 withdrawals: _,
-            } = proving_hook(proof_inputs).expect("Failed to prove execution");
+            } = proving_hook((batch_number, proof_inputs)).expect("Failed to prove execution");
 
             let pre_batch_trie_root: TrieRoot<NodeHash> = pre_batch_trie_root.into();
             let post_batch_trie_root: TrieRoot<NodeHash> = post_batch_trie_root.into();
@@ -480,7 +480,7 @@ pub mod test_logic {
                 TrieRoot::Empty,
                 Rc::new(MemoryDb::<Account>::empty()),
                 batches,
-                |proof_inputs| proof_inputs.run_batch_proof_logic(),
+                |(_, proof_inputs)| proof_inputs.run_batch_proof_logic(),
             )
         }
 
@@ -492,9 +492,12 @@ pub mod test_logic {
 
             proptest::prop_assume!(batches.len() >= 2);
 
-            test_prove_batch(args.initial_trie, args.trie_db, batches, |proof_inputs| {
-                proof_inputs.run_batch_proof_logic()
-            })
+            test_prove_batch(
+                args.initial_trie,
+                args.trie_db,
+                batches,
+                |(_, proof_inputs)| proof_inputs.run_batch_proof_logic(),
+            )
         }
     }
 }

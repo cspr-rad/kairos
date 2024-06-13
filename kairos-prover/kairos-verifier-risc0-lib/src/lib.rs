@@ -11,9 +11,9 @@ pub mod verifier {
 
     use alloc::{format, string::String};
 
-    use kairos_circuit_logic::ProofOutputs;
+    pub use kairos_circuit_logic::ProofOutputs;
 
-    use risc0_zkvm::Receipt;
+    pub use risc0_zkvm::Receipt;
 
     pub fn verify_execution(receipt: &Receipt) -> Result<ProofOutputs, String> {
         receipt

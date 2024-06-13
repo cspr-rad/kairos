@@ -179,10 +179,21 @@ mod tests {
             TrieRoot::Empty,
             Rc::new(MemoryDb::<Account>::empty()),
             batches,
-            |proof_inputs| {
-                Ok(crate::prove_execution(proof_inputs)
-                    .map(|(proof_outputs, _)| proof_outputs)
-                    .expect("Failed to prove execution"))
+            |(batch_num, proof_inputs)| {
+                let (proof_outputs, receipt) =
+                    crate::prove_execution(proof_inputs).expect("Failed to prove execution");
+
+                if cfg!(feature = "write-test-proofs") {
+                    let proof_file = std::fs::File::create(format!(
+                        "test_prove_simple_batches_{batch_num}.json"
+                    ))
+                    .expect("Failed to create proof file");
+
+                    serde_json::to_writer(proof_file, &receipt)
+                        .expect("Failed to write proof file");
+                };
+
+                Ok(proof_outputs)
             },
         );
     }
@@ -197,35 +208,41 @@ mod tests {
 
         proptest::prop_assume!(batches.len() >= 2);
 
-        test_prove_batch(args.initial_trie, args.trie_db, batches, |proof_inputs| {
-            tracing::info!(
-                "Proving batch of size: {}, over trie of {} accounts.",
-                proof_inputs.transactions.len(),
-                args.initial_state.l2.len()
-            );
-
-            let (proof_outputs, receipt) =
-                crate::prove_execution(proof_inputs).expect("Failed to prove execution");
-
-            if cfg!(feature = "write-test-proofs") {
-                use std::hash::{DefaultHasher, Hasher};
-
-                let mut hasher = DefaultHasher::new();
-                hasher.write(&receipt.journal.bytes);
-                let journal_hash = hasher.finish();
-
-                let proof_path = format!(
-                    "proptest_prove_batches-proof-journal-{:x}.json",
-                    journal_hash
+        test_prove_batch(
+            args.initial_trie,
+            args.trie_db,
+            batches,
+            |(_, proof_inputs)| {
+                tracing::info!(
+                    "Proving batch of size: {}, over trie of {} accounts.",
+                    proof_inputs.transactions.len(),
+                    args.initial_state.l2.len()
                 );
 
-                let proof_file =
-                    std::fs::File::create(proof_path).expect("Failed to create proof file");
+                let (proof_outputs, receipt) =
+                    crate::prove_execution(proof_inputs).expect("Failed to prove execution");
 
-                serde_json::to_writer(proof_file, &receipt).expect("Failed to write proof file");
-            }
+                if cfg!(feature = "write-test-proofs") {
+                    use std::hash::{DefaultHasher, Hasher};
 
-            Ok(proof_outputs)
-        })
+                    let mut hasher = DefaultHasher::new();
+                    hasher.write(&receipt.journal.bytes);
+                    let journal_hash = hasher.finish();
+
+                    let proof_path = format!(
+                        "proptest_prove_batches-proof-journal-{:x}.json",
+                        journal_hash
+                    );
+
+                    let proof_file =
+                        std::fs::File::create(proof_path).expect("Failed to create proof file");
+
+                    serde_json::to_writer(proof_file, &receipt)
+                        .expect("Failed to write proof file");
+                }
+
+                Ok(proof_outputs)
+            },
+        )
     }
 }
