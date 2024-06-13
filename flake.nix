@@ -126,6 +126,7 @@
                 ./kairos-test-utils
                 ./kairos-tx
                 ./kairos-prover/kairos-circuit-logic
+                ./kairos-prover/kairos-verifier-risc0-lib
               ];
             };
 
