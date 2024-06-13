@@ -4,6 +4,11 @@ use casper_types::{crypto, PublicKey, SecretKey, Signature};
 #[cfg(feature = "fs")]
 use std::path::Path;
 
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::{string::ToString, vec::Vec};
+
 use crate::CryptoError;
 use crate::SignerCore;
 

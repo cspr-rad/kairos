@@ -1,8 +1,15 @@
+#![cfg_attr(all(not(feature = "std"), not(feature = "fs"), not(test)), no_std)]
+
 pub mod error;
 pub mod implementations;
 
 #[cfg(feature = "fs")]
 use std::path::Path;
+
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use error::CryptoError;
 
