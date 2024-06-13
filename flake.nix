@@ -200,6 +200,10 @@
               cargoArtifacts = self'.packages.kairos-contracts-deps;
             });
 
+            kairos-session-code-deps = craneLib.buildPackage (kairosSessionCodeAttrs // {
+              pname = "kairos-session-code-deps";
+            });
+
             kairos-session-code = craneLib.buildPackage (kairosSessionCodeAttrs // {
               pname = "kairos-session-code";
             });
@@ -239,8 +243,8 @@
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });
 
-            kairos-session-lint = craneLib.cargoClippy (kairosSessionCodeAttrs // {
-              cargoArtifacts = self'.packages.kairos-session-deps;
+            kairos-session-code-lint = craneLib.cargoClippy (kairosSessionCodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-session-code-deps;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });
 
