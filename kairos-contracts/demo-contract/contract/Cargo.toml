@@ -9,6 +9,7 @@ casper-contract = { version = "4.0.0", default-features = false }
 casper-contract-no-std-helpers = { version = "0.1.0", "git" = "https://github.com/koxu1996/casper-contract-no-std-helpers"}
 casper-types = { version = "4.0.1", default-features = false }
 casper-event-standard = { version = "0.5.0", default-features = false }
+contract-utils = { path = "../contract-utils" }
 
 [build]
 target = "wasm32-unknown-unknown"
