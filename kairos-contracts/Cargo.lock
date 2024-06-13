@@ -418,7 +418,6 @@ dependencies = [
  "casper-event-standard",
  "casper-types",
  "kairos-circuit-logic",
- "kairos-trie",
  "kairos-verifier-risc0-lib",
  "risc0-zkvm",
  "serde",

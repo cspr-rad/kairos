@@ -10,11 +10,10 @@ casper-engine-test-support = { git = "https://github.com/jonas089/casper-node", 
 casper-execution-engine = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
 casper-contract = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
 casper-types = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
-risc0-zkvm = {version="=0.21.0", default-features=false, features=["prove"]}
+risc0-zkvm = {version="=0.21.0", default-features=false}
 serde = {version="1", default-features=false, features=["derive"]}
 kairos-trie = {git="https://github.com/cspr-rad/kairos-trie", default-features=false, features=["serde"]}
 kairos-circuit-logic = {path="../kairos-prover/kairos-circuit-logic", features=["serde"]}
-methods = {path="../kairos-prover/methods"}
 serde-json-wasm = "1"
 rand = "0.8"
 wasm-opt = "0.116"

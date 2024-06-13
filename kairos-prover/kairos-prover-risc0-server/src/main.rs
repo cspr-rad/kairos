@@ -189,7 +189,7 @@ mod tests {
 
     #[test_strategy::proptest(ProptestConfig::default(), cases = if cfg!(feature = "disable-dev-mode") { 2 } else { 40 })]
     fn proptest_prove_batches(
-        #[any(batch_size = 1..=4, batch_count = 2..=4, initial_l2_accounts = 10_000..=100_000)]
+        #[any(batch_size = 5..=10, batch_count = 2..=4, initial_l2_accounts = 10_000..=100_000)]
         args: RandomBatches,
     ) {
         test_setup();
@@ -204,8 +204,26 @@ mod tests {
                 args.initial_state.l2.len()
             );
 
-            let (proof_outputs, _) =
+            let (proof_outputs, receipt) =
                 crate::prove_execution(proof_inputs).expect("Failed to prove execution");
+
+            if cfg!(feature = "write-test-proofs") {
+                use std::hash::{DefaultHasher, Hasher};
+
+                let mut hasher = DefaultHasher::new();
+                hasher.write(&receipt.journal.bytes);
+                let journal_hash = hasher.finish();
+
+                let proof_path = format!(
+                    "proptest_prove_batches-proof-journal-{:x}.json",
+                    journal_hash
+                );
+
+                let proof_file =
+                    std::fs::File::create(proof_path).expect("Failed to create proof file");
+
+                serde_json::to_writer(proof_file, &receipt).expect("Failed to write proof file");
+            }
 
             Ok(proof_outputs)
         })

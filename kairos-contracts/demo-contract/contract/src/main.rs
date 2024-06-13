@@ -8,6 +8,7 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_event_standard::Schemas;
+use casper_types::bytesrepr::Bytes;
 use casper_types::{
     contracts::NamedKeys, runtime_args, AccessRights, ApiError, CLValue, EntryPoints, Key,
     RuntimeArgs, URef, U512,
@@ -20,12 +21,12 @@ use constants::{
 };
 mod entry_points;
 mod utils;
+use risc0_zkvm::Receipt;
 use utils::errors::DepositError;
 use utils::events::Deposit;
 use utils::get_immediate_caller;
 
 use kairos_circuit_logic::ProofOutputs;
-use serde_json_wasm::from_slice;
 
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
@@ -85,23 +86,22 @@ pub extern "C" fn deposit() {
     casper_event_standard::emit(new_deposit_record);
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct Proof {
-    pub receipt: risc0_zkvm::Receipt,
-    pub program_id: [u32; 8],
-}
-
 #[no_mangle]
 pub extern "C" fn submit_batch() {
-    let proof_serialized: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
-    let proof: Proof = from_slice(&proof_serialized).unwrap();
-    match proof.receipt.verify(proof.program_id) {
-        Ok(_) => {}
-        // replace ApiError with meaningful UserError
-        Err(_) => runtime::revert(ApiError::User(0u16)),
+    let receipt_serialized: Bytes = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
+    let Ok(receipt): Result<Receipt, _> = serde_json_wasm::from_slice(&receipt_serialized) else {
+        runtime::revert(ApiError::User(0u16));
     };
-    // extract the proof outputs from the journal / deserialize the receipt journal
-    let journal = ProofOutputs::rkyv_deserialize(&proof.receipt.journal.bytes).unwrap();
+
+    let Ok(ProofOutputs {
+        pre_batch_trie_root,
+        post_batch_trie_root,
+        deposits: _,    // TODO: implement deposits
+        withdrawals: _, // TODO: implement withdrawals
+    }) = kairos_verifier_risc0_lib::verifier::verify_execution(&receipt)
+    else {
+        runtime::revert(ApiError::User(1u16));
+    };
 
     // todo: check that the deposits are unique
 
@@ -109,17 +109,17 @@ pub extern "C" fn submit_batch() {
     let trie_root_uref: URef = runtime::get_key(KAIROS_TRIE_ROOT)
         .unwrap_or_revert()
         .into_uref()
-        .unwrap_or_revert_with(ApiError::User(3u16));
+        .unwrap_or_revert_with(ApiError::User(2u16));
     let trie_root: Option<[u8; 32]> = storage::read(trie_root_uref)
         .unwrap_or_revert()
-        .unwrap_or_revert_with(ApiError::User(4u16));
+        .unwrap_or_revert_with(ApiError::User(3u16));
 
     // revert if the previous root of the proof doesn't match the current root
-    if trie_root != journal.pre_batch_trie_root {
-        runtime::revert(ApiError::User(1u16))
+    if trie_root != pre_batch_trie_root {
+        runtime::revert(ApiError::User(4u16))
     };
     // store the new root under the contract URef
-    storage::write(trie_root_uref, journal.post_batch_trie_root);
+    storage::write(trie_root_uref, post_batch_trie_root);
     // todo: update sliding window
 }
 

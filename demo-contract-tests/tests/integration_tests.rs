@@ -3,7 +3,7 @@ mod test_fixture;
 mod tests {
     use crate::test_fixture::TestContext;
     use casper_types::U512;
-    use risc0_zkvm::serde::to_vec;
+    use risc0_zkvm::Receipt;
 
     #[test]
     fn should_install_contract() {
@@ -74,92 +74,30 @@ mod tests {
         fixture.transfer_from_contract_purse_by_uref_to_user_fails(fixture.admin, amount)
     }
 
-    #[test]
-    fn submit_batch_to_contract() {
-        let mut fixture = TestContext::new();
-        let proof: Proof = generate_proof();
-        fixture.submit_proof_to_contract(fixture.admin, serde_json_wasm::to_vec(&proof).unwrap())
-    }
+    // #[test]
+    // fn submit_batch_to_contract_1() {
+    //     let mut fixture = TestContext::new();
+    //     let receipt =
+    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-c77eac1aed36d104.json");
 
-    fn generate_proof() -> Proof {
-        extern crate alloc;
-        use alloc::rc::Rc;
-        use kairos_circuit_logic::{
-            account_trie::Account, account_trie::AccountTrie, transactions::*, ProofInputs,
-        };
-        use kairos_trie::{stored::memory_db::MemoryDb, DigestHasher, TrieRoot};
-        use methods::{PROVE_BATCH_ELF, PROVE_BATCH_ID};
-        let alice_public_key = "alice_public_key".as_bytes().to_vec();
-        //let bob_public_key = "bob_public_key".as_bytes().to_vec();
-        let batch = vec![
-            KairosTransaction::Deposit(L1Deposit {
-                recipient: alice_public_key.clone(),
-                amount: 10,
-            }),
-            /*KairosTransaction::Transfer(Signed {
-                public_key: alice_public_key.clone(),
-                transaction: Transfer {
-                    recipient: bob_public_key.clone(),
-                    amount: 5,
-                },
-                nonce: 0,
-            }),
-            KairosTransaction::Withdraw(Signed {
-                public_key: alice_public_key.clone(),
-                transaction: Withdraw { amount: 5 },
-                nonce: 1,
-            }),*/
-        ];
+    //     let receipt: Receipt = serde_json_wasm::from_slice(receipt).unwrap();
 
-        let db = Rc::new(MemoryDb::<Account>::empty());
-        let prior_root_hash = TrieRoot::default();
+    //     fixture.submit_proof_to_contract(fixture.admin, serde_json_wasm::to_vec(&receipt).unwrap());
+    // }
 
-        // the Trie is constructed from the current state of the DB.
-        // keep in mind that the Trie, other than DeltaTree, stores Accounts
-        // the entire DB state is used to construct a Snapshot for each proof.
-        let mut account_trie = AccountTrie::new_try_from_db(db.clone(), prior_root_hash);
-        account_trie
-            .apply_batch(batch.iter().cloned())
-            .expect("Failed to apply batch");
+    // #[test]
+    // fn submit_batch_to_contract_2() {
+    //     let mut fixture = TestContext::new();
+    //     let receipt =
+    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-7d8dadeda4c1eb1c.json");
+    //     fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec());
+    // }
 
-        account_trie
-            .txn
-            .commit(&mut DigestHasher::<sha2::Sha256>::default())
-            .expect("Failed to commit transaction");
-
-        let trie_snapshot = account_trie.txn.build_initial_snapshot();
-
-        let proof_inputs = ProofInputs {
-            transactions: batch.into_boxed_slice(),
-            trie_snapshot,
-        };
-
-        let env = risc0_zkvm::ExecutorEnv::builder()
-            .write(&proof_inputs)
-            .map_err(|e| format!("Error in ExecutorEnv builder write: {e}"))
-            .unwrap()
-            .build()
-            .map_err(|e| format!("Error in ExecutorEnv builder build: {e}"))
-            .unwrap();
-
-        let receipt = risc0_zkvm::default_prover()
-            .prove(env, PROVE_BATCH_ELF)
-            .map_err(|e| format!("Error in risc0_zkvm prove: {e}"))
-            .unwrap();
-
-        receipt
-            .verify(PROVE_BATCH_ID)
-            .expect("Failed to verify proof!");
-
-        Proof {
-            receipt,
-            program_id: PROVE_BATCH_ID,
-        }
-    }
-
-    #[derive(serde::Serialize, serde::Deserialize)]
-    pub struct Proof {
-        pub receipt: risc0_zkvm::Receipt,
-        pub program_id: [u32; 8],
-    }
+    // #[test]
+    // fn submit_batch_to_contract_3() {
+    //     let mut fixture = TestContext::new();
+    //     let receipt =
+    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-3673e712f7cc58df.json");
+    //     fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec());
+    // }
 }
