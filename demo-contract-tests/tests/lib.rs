@@ -1,3 +1,1 @@
-pub mod test_fixture {
-    pub mod utils;
-}
+pub mod test_fixture;

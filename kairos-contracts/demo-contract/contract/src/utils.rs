@@ -1,9 +1,6 @@
 use alloc::vec::Vec;
-/*
-    The utilities found in this file were scraped from other Casper contracts,
-    mainly cep-78 and cep-18.
-    This file is not necessarily due for review, unless breaking changes are suspected.
-*/
+// Utilities copied from cep-78 and cep-18 implementation.
+
 use casper_contract::contract_api::runtime;
 use casper_types::bytesrepr::FromBytes;
 use casper_types::{account::AccountHash, system::CallStackElement, Key, U512};
@@ -11,7 +8,6 @@ use casper_types::{account::AccountHash, system::CallStackElement, Key, U512};
 use kairos_crypto::CryptoSigner;
 
 pub mod errors;
-pub mod events;
 use errors::DepositError;
 
 /// Wrap the immediate caller as a Key and return it

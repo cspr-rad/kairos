@@ -1,6 +1,6 @@
 /*
     This session code emulates an attack where a user tries to transfer funds
-    out of the deposit contract's purse, by passing the deposit contract purse as a runtime argument
+    out of the contract's purse, by passing the contract purse as a runtime argument
     and calling transfer_from_purse_to_purse
 */
 
@@ -8,6 +8,10 @@
 #![no_main]
 use casper_contract::contract_api::{account, runtime, system};
 use casper_types::{URef, U512};
+
+#[allow(clippy::single_component_path_imports)]
+#[allow(unused)]
+use casper_contract_no_std_helpers;
 
 #[no_mangle]
 pub extern "C" fn call() {

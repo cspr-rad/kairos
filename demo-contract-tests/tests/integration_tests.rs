@@ -2,63 +2,75 @@ mod test_fixture;
 #[cfg(test)]
 mod tests {
     use crate::test_fixture::TestContext;
-    use casper_types::{account::AccountHash, U512};
+    use casper_types::U512;
 
     #[test]
-    fn should_install_deposit_contract() {
-        let mut fixture: TestContext = TestContext::new();
-        fixture.install_demo_contract(fixture.account_1);
-    }
-
-    fn setup() -> (TestContext, AccountHash, AccountHash) {
-        let fixture: TestContext = TestContext::new();
-        let installer = fixture.account_1;
-        let user = fixture.account_2;
-        (fixture, installer, user)
+    fn should_install_contract() {
+        let _fixture = TestContext::new();
     }
 
     #[test]
-    fn deposit_into_purse() {
-        let deposit_amount: U512 = U512::from(100000000000u64);
-        let (mut fixture, installer, user) = setup();
-        fixture.install_demo_contract(installer);
+    fn test_deposit_succeeds() {
+        let mut fixture = TestContext::new();
 
-        let user_purse_uref = fixture.get_account_purse_uref(user);
-        let user_balance_before = fixture.builder.get_purse_balance(user_purse_uref);
+        let user = fixture.create_funded_user();
+        let user_balance_before = fixture.get_user_balance(user);
 
-        let contract_balance_before = fixture.get_contract_purse_balance(installer);
+        // check that the contract balance is zero before depositing
+        let deposit_amount = U512::from(100000000000u64);
+        let contract_balance_before = fixture.get_contract_balance();
         assert_eq!(contract_balance_before, U512::zero());
 
-        fixture.run_deposit_session(deposit_amount, installer, user);
+        // user_1 deposits the deposit_amount
+        fixture.deposit_succeeds(user, deposit_amount);
 
-        let contract_balance_after = fixture.get_contract_purse_balance(installer);
+        // the contract balance should afterward equal to the deposit_amount
+        let contract_balance_after = fixture.get_contract_balance();
         assert_eq!(contract_balance_after, deposit_amount);
 
-        let user_balance_after = fixture.builder.get_purse_balance(user_purse_uref);
+        let user_balance_after = fixture.get_user_balance(user);
         assert!(user_balance_after <= user_balance_before - deposit_amount);
     }
 
-    // see malicious-session
     #[test]
-    fn run_malicious_session() {
-        let (mut fixture, installer, user) = setup();
-        fixture.install_demo_contract(installer);
-        fixture.run_deposit_session(U512::from(100000000000u64), installer, user);
-        fixture.run_malicious_session(fixture.account_2, U512::from(100000000000u64), installer);
+    fn test_transfer_from_contract_purse_to_user_fails() {
+        let mut fixture = TestContext::new();
+
+        let user = fixture.create_funded_user();
+        let amount = U512::from(100000000000u64);
+        fixture.deposit_succeeds(user, amount);
+
+        fixture.transfer_from_contract_purse_to_user_fails(user, amount)
     }
 
-    // see malicious-reader
     #[test]
-    fn run_malicious_reader() {
-        let (mut fixture, installer, user) = setup();
-        fixture.install_demo_contract(installer);
-        fixture.run_deposit_session(U512::from(100000000000u64), installer, user);
-        let deposit_purse_uref = fixture.get_contract_purse_uref(installer);
-        fixture.run_malicious_reader_session(
-            fixture.account_2,
-            U512::from(100000000000u64),
-            installer,
-            deposit_purse_uref,
-        );
+    fn test_transfer_from_contract_purse_to_admin_fails() {
+        let mut fixture = TestContext::new();
+
+        let user = fixture.create_funded_user();
+        let amount = U512::from(100000000000u64);
+        fixture.deposit_succeeds(user, amount);
+
+        fixture.transfer_from_contract_purse_to_user_fails(fixture.admin, amount)
+    }
+
+    #[test]
+    fn test_transfer_from_contract_purse_by_uref_to_user_should_fails() {
+        let mut fixture = TestContext::new();
+        let user = fixture.create_funded_user();
+        let amount = U512::from(100000000000u64);
+        fixture.deposit_succeeds(user, amount);
+
+        fixture.transfer_from_contract_purse_by_uref_to_user_fails(user, amount)
+    }
+
+    #[test]
+    fn test_transfer_from_contract_purse_by_uref_to_admin_should_fails() {
+        let mut fixture = TestContext::new();
+        let user = fixture.create_funded_user();
+        let amount = U512::from(100000000000u64);
+        fixture.deposit_succeeds(user, amount);
+
+        fixture.transfer_from_contract_purse_by_uref_to_user_fails(fixture.admin, amount)
     }
 }

@@ -3,9 +3,10 @@ use anyhow::anyhow;
 use backoff::{backoff::Constant, future::retry};
 use casper_client::{get_node_status, rpcs::results::ReactorState, Error, JsonRpcId, Verbosity};
 use std::io::{self, Write};
+use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
-use tempfile::{tempdir, TempDir};
+use tempfile::tempdir;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum NodeState {
@@ -30,18 +31,30 @@ pub struct CasperNode {
 }
 
 pub struct CCTLNetwork {
-    pub working_dir: TempDir,
-    pub assets_dir: PathBuf,
+    pub working_dir: PathBuf,
     pub nodes: Vec<CasperNode>,
 }
 
 impl CCTLNetwork {
-    pub async fn run() -> Result<CCTLNetwork, io::Error> {
-        let working_dir = tempdir()?;
-        let assets_dir = working_dir.path().join("assets");
+    pub async fn run(
+        working_dir: Option<PathBuf>,
+        chainspec_path: Option<&Path>,
+    ) -> Result<CCTLNetwork, io::Error> {
+        let working_dir = working_dir
+            .map(|dir| {
+                std::fs::create_dir_all(&dir)
+                    .expect("Failed to create the provided working directory");
+                dir
+            })
+            .unwrap_or(tempdir()?.into_path());
+        let assets_dir = working_dir.join("assets");
 
+        let setup_args = chainspec_path.map_or(vec![], |chainspec_path| {
+            vec!["chainspec", chainspec_path.to_str().unwrap()]
+        });
         let output = Command::new("cctl-infra-net-setup")
             .env("CCTL_ASSETS", &assets_dir)
+            .args(setup_args)
             .output()
             .expect("Failed to setup network configuration");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
@@ -120,18 +133,14 @@ impl CCTLNetwork {
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
         tracing::info!("{}", output);
 
-        Ok(CCTLNetwork {
-            working_dir,
-            assets_dir,
-            nodes,
-        })
+        Ok(CCTLNetwork { working_dir, nodes })
     }
 }
 
 impl Drop for CCTLNetwork {
     fn drop(&mut self) {
         let output = Command::new("cctl-infra-net-stop")
-            .env("CCTL_ASSETS", &self.assets_dir)
+            .env("CCTL_ASSETS", &self.working_dir.join("assets"))
             .output()
             .expect("Failed to stop the network");
         io::stdout().write_all(&output.stdout).unwrap();
@@ -145,7 +154,7 @@ mod tests {
     #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
-        let network = CCTLNetwork::run().await.unwrap();
+        let network = CCTLNetwork::run(Option::None, Option::None).await.unwrap();
         for node in &network.nodes {
             if node.state == NodeState::Running {
                 let node_status = get_node_status(

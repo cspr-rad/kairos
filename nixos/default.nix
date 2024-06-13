@@ -22,7 +22,13 @@ in
           pkgs.callPackage
             ./tests/verify-host-configuration.nix
             {
-              hostConfiguration = mkKairosHostConfig "kairos-host";
+              hostConfiguration = {
+                imports = [
+                  (mkKairosHostConfig "kairos-host")
+                ];
+                # A placeholder URL to make the test pass
+                services.kairos.casperRpcUrl = "http://localhost:11101/rpc";
+              };
               verifyServices = [ "kairos.service" ];
             };
         kairos-end-to-end-test =
@@ -30,7 +36,7 @@ in
             ./tests/end-to-end.nix
             {
               inherit mkKairosHostConfig;
-              inherit (self.packages.${pkgs.system}) kairos;
+              inherit (self.packages.${pkgs.system}) kairos kairos-contracts;
               cctlModule = self.nixosModules.cctl;
               inherit (inputs.csprpkgs.packages.${pkgs.system}) casper-client-rs;
             };

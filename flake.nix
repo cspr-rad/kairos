@@ -25,12 +25,8 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    # Pin to a revision with working risc0 build
-    risc0pkgs.url = "github:cspr-rad/risc0pkgs/7acff27ce7116777cc7f5a162efa9b599808ed97";
-    # FIXME once we are able to build with upstream rustc we should uncomment this
-    #risc0pkgs.inputs.nixpkgs.follows = "nixpkgs";
-    csprpkgs.url = "github:cspr-rad/csprpkgs/add-cctl";
-    csprpkgs.inputs.nixpkgs.follows = "nixpkgs";
+    cctl.url = "github:casper-network/cctl/947c34b991e37476db82ccfa2bd7c0312c1a91d7";
+    csprpkgs.follows = "cctl/csprpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
@@ -44,8 +40,8 @@
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
           rustToolchain = with inputs'.fenix.packages; combine [
-            latest.toolchain
-            targets.wasm32-unknown-unknown.latest.rust-std
+            stable.toolchain
+            targets.wasm32-unknown-unknown.stable.rust-std
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
@@ -55,7 +51,8 @@
               filter = path: type: craneLib.filterCargoSources path type;
             };
             cargoExtraArgs = "--target wasm32-unknown-unknown";
-            nativeBuildInputs = [ pkgs.binaryen ];
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+            nativeBuildInputs = [ pkgs.binaryen pkgs.lld ];
             doCheck = false;
             # Append "-optimized" to wasm files, to make the tests pass
             postInstall = ''
@@ -73,31 +70,23 @@
           };
 
           kairosNodeAttrs = {
-            src = lib.cleanSourceWith {
-              src = craneLib.path ./.;
-              filter = path: type:
-                (builtins.any (includePath: lib.hasInfix includePath path) [
-                  "/casper-deploy-notifier"
-                  "/kairos-cli"
-                  "/kairos-crypto"
-                  "/kairos-server"
-                  "/kairos-test-utils"
-                  "/kairos-l1-utils"
-                  "/kairos-contracts"
-                  "/demo-contract-tests"
-                  "/kairos-tx"
-                  "/Cargo.toml"
-                  "/Cargo.lock"
-                ]) && (
-                  # Allow static files.
-                  (lib.hasInfix "/tests/fixtures/" path) ||
-                  # Default filter (from crane) for .rs files.
-                  (craneLib.filterCargoSources path type)
-                )
-              ;
+            src = lib.fileset.toSource {
+              root = ./.;
+              fileset = lib.fileset.unions [
+                ./Cargo.toml
+                ./Cargo.lock
+                ./casper-deploy-notifier
+                ./demo-contract-tests
+                ./kairos-cli
+                ./kairos-crypto
+                ./kairos-server
+                ./kairos-test-utils
+                ./kairos-tx
+                ./kairos-prover/kairos-circuit-logic
+              ];
             };
-            nativeBuildInputs = with pkgs; [ pkg-config ];
 
+            nativeBuildInputs = with pkgs; [ pkg-config ];
             buildInputs = with pkgs; [
               openssl.dev
             ] ++ lib.optionals stdenv.isDarwin [
@@ -106,9 +95,10 @@
               darwin.apple_sdk.frameworks.SystemConfiguration
             ];
             checkInputs = [
-              inputs'.csprpkgs.packages.cctl
+              inputs'.cctl.packages.cctl
             ];
 
+            CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
 
             meta.mainProgram = "kairos-server";
@@ -118,6 +108,7 @@
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+            CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             inputsFrom = [ self'.packages.kairos ];
           };
@@ -144,7 +135,7 @@
               ''
                 mkdir -p $out/bin
                 makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
-                  --set PATH ${pkgs.lib.makeBinPath [inputs'.csprpkgs.packages.cctl ]}
+                  --set PATH ${pkgs.lib.makeBinPath [inputs'.cctl.packages.cctl ]}
               '';
 
             default = self'.packages.kairos;
@@ -168,17 +159,18 @@
               cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
 
-            coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
-              cargoArtifacts = self'.packages.kairos-deps;
-
-              # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
-              # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
-              cargoTarpaulinExtraArgs = "--features=all-tests --skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
-              # For some reason cargoTarpaulin runs the tests in the buildPhase
-              buildInputs = kairosNodeAttrs.buildInputs ++ [
-                inputs'.csprpkgs.packages.cctl
-              ];
-            });
+            #coverage-report = craneLib.cargoTarpaulin (kairosNodeAttrs // {
+            #  cargoArtifacts = self'.packages.kairos-deps;
+            #  # FIXME fix weird issue with rust-nightly and tarpaulin https://github.com/xd009642/tarpaulin/issues/1499
+            #  RUSTFLAGS = "-Cstrip=none";
+            #  # Default values from https://crane.dev/API.html?highlight=tarpau#cranelibcargotarpaulin
+            #  # --avoid-cfg-tarpaulin fixes nom/bitvec issue https://github.com/xd009642/tarpaulin/issues/756#issuecomment-838769320
+            #  cargoTarpaulinExtraArgs = "--features=all-tests --skip-clean --out xml --output-dir $out --avoid-cfg-tarpaulin";
+            #  # For some reason cargoTarpaulin runs the tests in the buildPhase
+            #  buildInputs = kairosNodeAttrs.buildInputs ++ [
+            #    inputs'.csprpkgs.packages.cctl
+            #  ];
+            #});
 
             audit = craneLib.cargoAudit {
               inherit (kairosNodeAttrs) src;
@@ -197,6 +189,10 @@
             kairos-contracts-audit = craneLib.cargoAudit {
               inherit (kairosContractsAttrs) src;
               advisory-db = inputs.advisory-db;
+              # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
+              # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
+              # FIXME --ignore RUSTSEC-2022-0054 wee_alloc is Unmaintained caused by introducing casper-contract
+              cargoAuditExtraArgs = "--ignore yanked --deny warnings --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2022-0054";
             };
           };
 

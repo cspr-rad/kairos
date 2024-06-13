@@ -15,10 +15,16 @@ pub struct AppErr {
 }
 
 impl AppErr {
-    pub fn set_status(err: impl Into<Self>, status: StatusCode) -> Self {
-        let mut err = err.into();
-        err.status = Some(status);
-        err
+    pub fn new(error: impl Into<anyhow::Error>) -> Self {
+        Self {
+            error: error.into(),
+            status: None,
+        }
+    }
+
+    pub fn set_status(mut self, status: StatusCode) -> Self {
+        self.status = Some(status);
+        self
     }
 }
 
@@ -69,6 +75,15 @@ impl From<anyhow::Error> for AppErr {
 
 impl From<kairos_trie::TrieError> for AppErr {
     fn from(error: kairos_trie::TrieError) -> Self {
+        Self {
+            error: anyhow::Error::msg(error.to_string()),
+            status: Some(StatusCode::INTERNAL_SERVER_ERROR),
+        }
+    }
+}
+
+impl From<casper_client::Error> for AppErr {
+    fn from(error: casper_client::Error) -> Self {
         Self {
             error: anyhow::Error::msg(error.to_string()),
             status: Some(StatusCode::INTERNAL_SERVER_ERROR),

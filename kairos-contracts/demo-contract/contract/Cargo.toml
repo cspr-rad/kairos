@@ -5,13 +5,13 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-casper-contract = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6", features=["std", "test-support"]}
-casper-types = {git="https://github.com/cspr-rad/casper-node", branch="kairos-demo-1.5.6", default-features=false}
-casper-event-standard= {git="https://github.com/cspr-rad/casper-event-standard", branch="kairos-demo-1.5.6", default-features=false}
-base64 = { version = "0.20.0", default-features = false, features = ["alloc"] }
-bincode = "1.3.3"
-kairos-tx = { git = "https://github.com/cspr-rad/kairos.git", branch = "main" } # TODO: Switch to `path` after contract PR merge/rebase.
-kairos-crypto = { git = "https://github.com/cspr-rad/kairos.git", branch = "main" } # TODO: Switch to `path` after contract PR merge/rebase.
+casper-contract = { version = "4.0.0", default-features = false }
+casper-contract-no-std-helpers = { version = "0.1.0", "git" = "https://github.com/koxu1996/casper-contract-no-std-helpers"}
+casper-types = { version = "4.0.1", default-features = false }
+casper-event-standard = { version = "0.5.0", default-features = false }
+contract-utils = { path = "../contract-utils" }
+kairos-tx = { path = "../../../kairos-tx" }
+kairos-crypto = { path = "../../../kairos-crypto" }
 
 [build]
 target = "wasm32-unknown-unknown"

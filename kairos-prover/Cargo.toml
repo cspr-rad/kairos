@@ -1,7 +1,11 @@
 [workspace]
+resolver = "2"
 members = [
-    "host",
+    "kairos-prover-risc0-server",
+    "kairos-verifier-risc0-lib",
+    "kairos-circuit-logic",
     "methods",
+    "profiling",
 ]
 
 [workspace.package]
@@ -14,12 +18,10 @@ license = "MIT OR Apache-2.0"
 [profile.dev]
 opt-level = 3
 
-[profile.dev.build-override]
-opt-level = 3
-
 [profile.release]
-debug = 1
+debug = 0
 lto = true
-
-[profile.release.build-override]
 opt-level = 3
+
+[patch.crates-io]
+sha2 = { git = "https://github.com/risc0/RustCrypto-hashes", tag = "sha2-v0.10.6-risczero.0" }
