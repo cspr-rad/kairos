@@ -17,6 +17,8 @@ use crate::config::ServerConfig;
 use crate::l1_sync::service::L1SyncService;
 use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 
+use kairos_data::new as new_pool;
+
 /// TODO: support secp256k1
 type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
@@ -71,6 +73,7 @@ pub async fn run(config: ServerConfig) {
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(config.batch_config.clone()),
         server_config: config.clone(),
+        pool: new_pool(&config.db_addr).await.expect("Failed to connect to database"),
     });
 
     run_l1_sync(state.clone()).await;
