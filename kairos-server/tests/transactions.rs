@@ -52,6 +52,7 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
             casper_rpc: casper_node_url.clone(),
             db_addr: "postgres://kairos:kairos@localhost/kairos".to_string(),
         },
+        pool: tokio::runtime::Runtime::new().unwrap().block_on(async {new_pool("postgres://kairos:kairos@localhost/kairos").await.unwrap()}),
     });
 
     TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()
