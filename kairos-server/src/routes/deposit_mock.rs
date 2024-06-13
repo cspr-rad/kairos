@@ -20,7 +20,7 @@ pub async fn deposit_mock_handler(
     tracing::info!("parsing transaction data");
 
     let deposit = KairosTransaction::Deposit(deposit);
-    let _ = db::insert(state.pool.clone(), deposit.clone()).await;
+    db::insert(state.pool.clone(), deposit.clone()).await?;
     state
         .batch_state_manager
         .enqueue_transaction(deposit)
