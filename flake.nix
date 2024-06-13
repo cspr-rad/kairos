@@ -239,6 +239,10 @@
             kairos-contracts-audit = craneLib.cargoAudit {
               inherit (kairosContractsAttrs) src;
               advisory-db = inputs.advisory-db;
+              # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
+              # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
+              # FIXME --ignore RUSTSEC-2022-0054 wee_alloc is Unmaintained caused by introducing casper-contract
+              cargoAuditExtraArgs = "--ignore yanked --deny warnings --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2022-0054";
             };
           };
 
