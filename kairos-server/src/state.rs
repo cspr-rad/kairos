@@ -10,12 +10,14 @@ use crate::config::ServerConfig;
 use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
+use kairos_data::Pool;
+
 pub type ServerState = Arc<ServerStateInner>;
 
-#[derive(Debug)]
 pub struct ServerStateInner {
     pub batch_state_manager: BatchStateManager,
     pub server_config: ServerConfig,
+    pub pool: Pool,
 }
 
 /// The `BatchStateManager` is a piece of Axum state.

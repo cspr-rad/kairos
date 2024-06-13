@@ -90,3 +90,12 @@ impl From<casper_client::Error> for AppErr {
         }
     }
 }
+
+impl From<kairos_data::errors::DBError> for AppErr {
+    fn from(error: kairos_data::errors::DBError) -> Self {
+        Self {
+            error: anyhow::Error::msg(error.to_string()),
+            status: Some(StatusCode::INTERNAL_SERVER_ERROR),
+        }
+    }
+}
