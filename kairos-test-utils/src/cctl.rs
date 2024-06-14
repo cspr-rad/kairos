@@ -50,7 +50,7 @@ impl CCTLNetwork {
         let assets_dir = working_dir.join("assets");
 
         let setup_args = chainspec_path.map_or(vec![], |chainspec_path| {
-            vec!["chainspec", chainspec_path.to_str().unwrap()]
+            vec!["--chainspec", chainspec_path.to_str().unwrap()]
         });
         let output = Command::new("cctl-infra-net-setup")
             .env("CCTL_ASSETS", &assets_dir)
