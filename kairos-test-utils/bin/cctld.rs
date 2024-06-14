@@ -8,12 +8,13 @@ use tokio::signal;
 pub struct Cli {
     #[arg(short, long)]
     pub working_dir: Option<PathBuf>,
+    pub chainspec_path: Option<PathBuf>,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
-    let _network = cctl::CCTLNetwork::run(cli.working_dir)
+    let _network = cctl::CCTLNetwork::run(cli.working_dir, cli.chainspec_path.as_deref())
         .await
         .expect("An error occured while starting the CCTL network");
 
