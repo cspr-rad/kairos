@@ -1,4 +1,4 @@
-{ lib, config, ... }:
+{ lib, config, pkgs, ... }:
 let
   inherit (lib)
     types
@@ -6,6 +6,9 @@ let
     mkIf
     mkMerge
     mkEnableOption
+    escapeShellArgs
+    optionals
+    optionalAttrs
     ;
   cfg = config.services.cctl;
 in
@@ -36,6 +39,14 @@ in
       '';
     };
 
+    chainspec = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        The path to a chainspec.toml.
+      '';
+    };
+
     logLevel = mkOption {
       type = types.str;
       default = "info";
@@ -48,6 +59,17 @@ in
   config = mkIf cfg.enable {
 
     systemd.services.cctl =
+      let
+        writeableChainspec = "${cfg.workingDirectory}/chainspec.toml";
+        args = escapeShellArgs ([
+          "--working-dir"
+          cfg.workingDirectory
+        ]
+        ++ optionals (!builtins.isNull cfg.chainspec) [
+          "--chainspec-path"
+          cfg.chainspec
+        ]);
+      in
       {
         description = "cctl";
         documentation = [ "" ];
@@ -59,10 +81,13 @@ in
         };
         serviceConfig =
           mkMerge [
+            (optionalAttrs (!builtins.isNull cfg.chainspec) {
+              ExecStartPre = "${pkgs.coreutils}/bin/cp --no-preserve=mode ${cfg.chainspec} ${writeableChainspec}";
+            })
             {
-              ExecStart = ''${lib.getExe cfg.package} --working-dir ${cfg.workingDirectory}'';
+              ExecStart = "${lib.getExe cfg.package} ${args}";
               Type = "notify";
-              Restart = "always";
+              Restart = "no";
               User = "cctl";
               Group = "cctl";
               StateDirectory = builtins.baseNameOf cfg.workingDirectory;
