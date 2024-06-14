@@ -4,8 +4,10 @@ use axum_extra::routing::TypedPath;
 use tracing::instrument;
 
 use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Transfer};
-use kairos_data::transaction as db;
 use kairos_tx::asn::{SigningPayload, TransactionBody};
+
+#[cfg(feature = "database")]
+use kairos_data::transaction as db;
 
 use crate::{routes::PayloadBody, state::ServerState, AppErr};
 
@@ -41,6 +43,7 @@ pub async fn transfer_handler(
         nonce,
         transaction: transfer,
     });
+    #[cfg(feature = "database")]
     db::insert(state.pool.clone(), transfer.clone()).await?;
     state
         .batch_state_manager

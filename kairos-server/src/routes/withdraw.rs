@@ -4,8 +4,10 @@ use axum_extra::routing::TypedPath;
 use tracing::*;
 
 use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Withdraw};
-use kairos_data::transaction as db;
 use kairos_tx::asn::{SigningPayload, TransactionBody};
+
+#[cfg(feature = "database")]
+use kairos_data::transaction as db;
 
 use crate::routes::PayloadBody;
 use crate::state::ServerState;
@@ -43,6 +45,7 @@ pub async fn withdraw_handler(
         nonce,
         transaction: withdrawal,
     });
+    #[cfg(feature = "database")]
     db::insert(state.pool.clone(), withdrawal.clone()).await?;
     state
         .batch_state_manager

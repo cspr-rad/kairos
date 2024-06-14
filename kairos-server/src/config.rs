@@ -16,6 +16,7 @@ pub struct ServerConfig {
     pub casper_sse: Url,
     pub kairos_demo_contract_hash: ContractHash,
     pub batch_config: BatchConfig,
+    #[cfg(feature = "database")]
     pub db_addr: String,
 }
 
@@ -48,8 +49,9 @@ impl ServerConfig {
                 })
             })
             .map(ContractHash::new)?;
-
+        #[cfg(feature = "database")]
         let db_addr = parse_env_as::<String>("KAIROS_SERVER_DB_ADDR")?;
+
         Ok(Self {
             secret_key_file,
             socket_addr,
@@ -57,6 +59,7 @@ impl ServerConfig {
             casper_sse,
             kairos_demo_contract_hash,
             batch_config,
+            #[cfg(feature = "database")]
             db_addr,
         })
     }
