@@ -2099,7 +2099,6 @@ dependencies = [
  "casper-types 4.0.1",
  "hex",
  "kairos-tx",
- "thiserror",
 ]
 
 [[package]]

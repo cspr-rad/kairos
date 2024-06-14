@@ -15,7 +15,6 @@ fs = ["casper-types/std"] # FUTURE: Change `casper-types/std` -> `casper-types/s
 
 [dependencies]
 hex = { version = "0.4", default-features = false }
-thiserror = "1"
 kairos-tx = { path = "../kairos-tx", optional = true }
 
 # Casper signer implementation.
