@@ -6,8 +6,11 @@ use std::path::Path;
 
 extern crate alloc;
 
+#[cfg(all(not(feature = "std"), any(feature = "fs", feature = "tx")))]
+use alloc::string::ToString;
+
 #[cfg(not(feature = "std"))]
-use alloc::{string::ToString, vec::Vec};
+use alloc::vec::Vec;
 
 use crate::CryptoError;
 use crate::SignerCore;
