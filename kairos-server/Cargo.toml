@@ -39,7 +39,7 @@ kairos-tx = { path = "../kairos-tx" }
 contract-utils = { path = "../kairos-contracts/demo-contract/contract-utils" }
 kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1"] }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
-kairos-data = { path = "../kairos-data", optional = true }
+kairos-data = { path = "../kairos-data", features = ["migrations"], optional = true }
 sha2 = "0.10"
 reqwest = { version = "0.12", features = ["json"] }
 casper-event-toolkit = { git = "https://github.com/koxu1996/casper-event-toolkit.git", version = "0.1.3" }
