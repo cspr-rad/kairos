@@ -15,7 +15,6 @@ use kairos_server::{
     routes::deposit::DepositPath,
     state::{BatchStateManager, ServerStateInner},
 };
-use kairos_data::new as new_pool;
 use kairos_test_utils::cctl::CCTLNetwork;
 use reqwest::Url;
 use tracing_subscriber::{prelude::*, EnvFilter};
