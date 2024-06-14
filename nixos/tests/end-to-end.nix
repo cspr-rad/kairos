@@ -4,6 +4,7 @@
 , testResources ? ../../kairos-cli/tests/fixtures
 , kairos-contracts
 , cctlModule
+, fetchurl
 , casper-client-rs
 }:
 nixosTest {
@@ -25,7 +26,13 @@ nixosTest {
       # allow HTTP for nixos-test environment
       services.nginx.virtualHosts.${config.networking.hostName}.forceSSL = lib.mkForce false;
 
-      services.cctl.enable = true;
+      services.cctl = {
+        enable = true;
+        chainspec = fetchurl {
+          url = "https://raw.githubusercontent.com/jonas089/casper-node/kairos-demo-chainspec/resources/local/config.toml";
+          hash = "sha256-iwJkUY1dG+qh2BGXuwgnALJ3fNCvarr9ELJAqvd7kUg=";
+        };
+      };
       services.kairos.casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
     };
 
