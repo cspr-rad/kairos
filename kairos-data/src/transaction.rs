@@ -2,6 +2,7 @@ use chrono::{Utc, NaiveDateTime};
 use diesel::prelude::*;
 use crate::schema::transactions;
 use serde::{Deserialize, Serialize};
+use bigdecimal::BigDecimal;
 use hex;
 
 use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Transfer, Withdraw, L1Deposit};
@@ -17,9 +18,9 @@ const WITHDRAW_TRX: i16 = 3;
 pub struct Transaction {
     pub timestamp: NaiveDateTime,
     pub public_key: String,
-    pub nonce: Option<i64>,
+    pub nonce: Option<BigDecimal>,
     pub trx: i16,
-    pub amount: i64,
+    pub amount: BigDecimal,
     pub recipient: Option<String>,
 }
 
@@ -52,10 +53,10 @@ pub async fn get(
                 query = query.filter(transactions::timestamp.le(max_timestamp));
             }
             if let Some(min_amount) = filter.min_amount {
-                query = query.filter(transactions::amount.ge(min_amount));
+                query = query.filter(transactions::amount.ge(BigDecimal::from(min_amount)));
             }
             if let Some(max_amount) = filter.max_amount {
-                query = query.filter(transactions::amount.le(max_amount));
+                query = query.filter(transactions::amount.le(BigDecimal::from(max_amount)));
             }
             if let Some(recipient) = filter.recipient {
                 query = query.filter(transactions::recipient.eq(recipient));
@@ -102,9 +103,9 @@ impl From<Signed<Transfer>> for Transaction {
         Transaction {
             timestamp: Utc::now().naive_utc(),
             public_key: hex::encode(&signed_transfer.public_key),
-            nonce: Some(signed_transfer.nonce as i64),
+            nonce: Some(BigDecimal::from(signed_transfer.nonce)),
             trx: TRANSFER_TRX,
-            amount: signed_transfer.transaction.amount as i64,
+            amount: BigDecimal::from(signed_transfer.transaction.amount),
             recipient: Some(hex::encode(&signed_transfer.transaction.recipient)),
         }
     }
@@ -115,9 +116,9 @@ impl From<Signed<Withdraw>> for Transaction {
         Transaction {
             timestamp: Utc::now().naive_utc(),
             public_key: hex::encode(&signed_withdraw.public_key),
-            nonce: Some(signed_withdraw.nonce as i64),
+            nonce: Some(BigDecimal::from(signed_withdraw.nonce)),
             trx: WITHDRAW_TRX,
-            amount: signed_withdraw.transaction.amount as i64,
+            amount: BigDecimal::from(signed_withdraw.transaction.amount),
             recipient: None,
         }
     }
@@ -130,7 +131,7 @@ impl From<L1Deposit> for Transaction {
             public_key: hex::encode(&deposit.recipient),
             nonce: None,
             trx: DEPOSIT_TRX,
-            amount: deposit.amount as i64,
+            amount: BigDecimal::from(deposit.amount),
             recipient: Some(hex::encode(&deposit.recipient)),
         }
     }
