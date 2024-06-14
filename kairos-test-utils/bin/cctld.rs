@@ -8,6 +8,7 @@ use tokio::signal;
 pub struct Cli {
     #[arg(short, long)]
     pub working_dir: Option<PathBuf>,
+    #[arg(short, long)]
     pub chainspec_path: Option<PathBuf>,
 }
 
