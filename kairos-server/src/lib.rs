@@ -15,6 +15,7 @@ pub use errors::AppErr;
 use crate::config::ServerConfig;
 use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 
+#[cfg(feature="database")]
 use kairos_data::new as new_pool;
 
 /// TODO: support secp256k1
@@ -49,6 +50,7 @@ pub async fn run(config: ServerConfig) {
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: config.clone(),
+        #[cfg(feature="database")]
         pool: new_pool(&config.db_addr).await.expect("Failed to connect to database"),
     });
     let app = app_router(state);

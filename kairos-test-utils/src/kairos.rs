@@ -22,11 +22,9 @@ impl Kairos {
         let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
-        let db_addr = "postgres://kairos:kairos@localhost/kairos".to_string();
         let config = kairos_server::config::ServerConfig {
             socket_addr,
             casper_rpc,
-            db_addr
         };
 
         let process_handle = tokio::spawn(async move {

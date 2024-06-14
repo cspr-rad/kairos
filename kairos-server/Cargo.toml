@@ -16,6 +16,7 @@ default = ["cctl-tests", "deposit-mock"]
 all-tests = ["cctl-tests", "deposit-mock"]
 cctl-tests = []
 deposit-mock = []
+database = ["kairos-data"]
 
 [dependencies]
 dotenvy = "0.15"
@@ -37,7 +38,7 @@ hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
 kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1"] }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
-kairos-data = { path = "../kairos-data" }
+kairos-data = { path = "../kairos-data", optional = true }
 sha2 = "0.10"
 reqwest = "0.12"
 chrono = "0.4.38"

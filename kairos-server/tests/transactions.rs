@@ -15,7 +15,6 @@ use kairos_server::{
     routes::deposit::DepositPath,
     state::{BatchStateManager, ServerStateInner},
 };
-use kairos_data::new as new_pool;
 use kairos_test_utils::cctl::CCTLNetwork;
 use reqwest::Url;
 use tracing_subscriber::{prelude::*, EnvFilter};
@@ -49,10 +48,8 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: ServerConfig {
             socket_addr: "0.0.0.0:0".parse().unwrap(),
-            casper_rpc: casper_node_url.clone(),
-            db_addr: "postgres://kairos:kairos@localhost/kairos".to_string(),
+            casper_rpc: casper_node_url.clone(),            
         },
-        pool: tokio::runtime::Runtime::new().unwrap().block_on(async {new_pool("postgres://kairos:kairos@localhost/kairos").await.unwrap()}),
     });
 
     TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()
