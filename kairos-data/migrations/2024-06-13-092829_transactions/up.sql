@@ -3,9 +3,9 @@
 CREATE TABLE transactions (
     "timestamp" timestamp DEFAULT CURRENT_TIMESTAMP,
     public_key varchar NOT NULL,
-    nonce bigint,
+    nonce numeric,
     trx smallint NOT NULL,
-    amount bigint NOT NULL,
+    amount numeric NOT NULL,
     recipient varchar,
     PRIMARY KEY ("timestamp", amount, public_key)
 );

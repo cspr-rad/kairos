@@ -4,9 +4,9 @@ diesel::table! {
     transactions (timestamp, amount, public_key) {
         timestamp -> Timestamp,
         public_key -> Varchar,
-        nonce -> Nullable<Int8>,
+        nonce -> Nullable<Numeric>,
         trx -> Int2,
-        amount -> Int8,
+        amount -> Numeric,
         recipient -> Nullable<Varchar>,
     }
 }
