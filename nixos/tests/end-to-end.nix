@@ -30,7 +30,7 @@ nixosTest {
         enable = true;
         chainspec = fetchurl {
           url = "https://raw.githubusercontent.com/cspr-rad/casper-node/kairos-testing-chainspec/resources/local/chainspec.toml.in";
-          hash = "";
+          hash = "sha256-LloO0pBv/tJaPDCg5lKDn+eb4VQwAnoA3vWVGj/Cufs=";
         };
       };
       services.kairos.casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
