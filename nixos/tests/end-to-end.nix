@@ -29,8 +29,8 @@ nixosTest {
       services.cctl = {
         enable = true;
         chainspec = fetchurl {
-          url = "https://raw.githubusercontent.com/jonas089/casper-node/kairos-demo-chainspec/resources/local/config.toml";
-          hash = "sha256-iwJkUY1dG+qh2BGXuwgnALJ3fNCvarr9ELJAqvd7kUg=";
+          url = "https://raw.githubusercontent.com/cspr-rad/casper-node/kairos-testing-chainspec/resources/local/chainspec.toml.in";
+          hash = "1yxrq8zim5gmvq07l0ihakhrprwzhd9fd81h7idd5zkgj390wnif";
         };
       };
       services.kairos.casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
