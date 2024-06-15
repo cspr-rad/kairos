@@ -16,7 +16,7 @@ use casper_types::{
 use contract_utils::constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
     KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, KAIROS_TRIE_ROOT, RUNTIME_ARG_AMOUNT,
-    RUNTIME_ARG_RECEIPT, RUNTIME_ARG_TEMP_PURSE,
+    RUNTIME_ARG_INITIAL_TRIE_ROOT, RUNTIME_ARG_RECEIPT, RUNTIME_ARG_TEMP_PURSE,
 };
 use contract_utils::Deposit;
 mod entry_points;
@@ -134,8 +134,9 @@ pub extern "C" fn call() {
     // this counter will be udpated by the entry point that processes / verifies batches
     let last_processed_deposit_counter_uref: URef = storage::new_uref(0u64);
 
-    let empty_trie_root: Option<[u8; 32]> = None;
-    let trie_root_uref: URef = storage::new_uref(empty_trie_root);
+    let initial_trie_root: Option<[u8; 32]> = runtime::get_named_arg(RUNTIME_ARG_INITIAL_TRIE_ROOT);
+
+    let trie_root_uref: URef = storage::new_uref(initial_trie_root);
     let named_keys = NamedKeys::from([
         (
             KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),

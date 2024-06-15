@@ -16,13 +16,7 @@ pub mod verifier {
     pub use risc0_zkvm::Receipt;
 
     pub fn verify_execution(receipt: &Receipt) -> Result<ProofOutputs, String> {
-        receipt
-            .verify(crate::BATCH_CIRCUIT_PROGRAM_HASH)
-            .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
-
-        let proof_outputs = ProofOutputs::rkyv_deserialize(&receipt.journal.bytes)?;
-
-        Ok(proof_outputs)
+        verify_execution_of_any_program(receipt, crate::BATCH_CIRCUIT_PROGRAM_HASH)
     }
 
     pub fn verify_execution_of_any_program(

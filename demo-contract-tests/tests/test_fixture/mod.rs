@@ -31,13 +31,18 @@ pub struct TestContext {
 }
 
 impl TestContext {
-    pub fn new() -> TestContext {
+    pub fn new(initial_trie_root: Option<[u8; 32]>) -> TestContext {
         let mut builder = InMemoryWasmTestBuilder::default();
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
         let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
         let contract_path = get_wasm_directory().0.join("demo-contract-optimized.wasm");
-        run_session_with_args(&mut builder, &contract_path, admin, runtime_args! {});
+        run_session_with_args(
+            &mut builder,
+            &contract_path,
+            admin,
+            runtime_args! {"initial_trie_root" => initial_trie_root },
+        );
 
         let contract_hash = builder
             .get_expected_account(admin)

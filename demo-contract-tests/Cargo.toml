@@ -6,10 +6,10 @@ license.workspace = true
 
 [dev-dependencies]
 # using a custom branch because it contains modifications to the chainspec that is pulled for integration tests
-casper-engine-test-support = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
-casper-execution-engine = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
-casper-contract = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
-casper-types = { git = "https://github.com/jonas089/casper-node", branch = "kairos-demo-chainspec", default-features=false }
+casper-engine-test-support = { git = "https://github.com/cspr-rad/casper-node", branch = "kairos-testing-chainspec", default-features=false }
+casper-execution-engine = { git = "https://github.com/cspr-rad/casper-node", branch = "kairos-testing-chainspec", default-features=false }
+casper-contract = { git = "https://github.com/cspr-rad/casper-node", branch = "kairos-testing-chainspec", default-features=false }
+casper-types = { git = "https://github.com/cspr-rad/casper-node", branch = "kairos-testing-chainspec", default-features=false }
 serde = {version="1", default-features=false, features=["derive"]}
 kairos-verifier-risc0-lib = {path="../kairos-prover/kairos-verifier-risc0-lib"}
 serde-json-wasm = "1"

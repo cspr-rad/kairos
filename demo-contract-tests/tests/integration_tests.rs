@@ -7,12 +7,12 @@ mod tests {
 
     #[test]
     fn should_install_contract() {
-        let _fixture = TestContext::new();
+        let _fixture = TestContext::new(None);
     }
 
     #[test]
     fn test_deposit_succeeds() {
-        let mut fixture = TestContext::new();
+        let mut fixture = TestContext::new(None);
 
         let user = fixture.create_funded_user();
         let user_balance_before = fixture.get_user_balance(user);
@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn test_transfer_from_contract_purse_to_user_fails() {
-        let mut fixture = TestContext::new();
+        let mut fixture = TestContext::new(None);
 
         let user = fixture.create_funded_user();
         let amount = U512::from(100000000000u64);
@@ -46,7 +46,7 @@ mod tests {
 
     #[test]
     fn test_transfer_from_contract_purse_to_admin_fails() {
-        let mut fixture = TestContext::new();
+        let mut fixture = TestContext::new(None);
 
         let user = fixture.create_funded_user();
         let amount = U512::from(100000000000u64);
@@ -57,7 +57,7 @@ mod tests {
 
     #[test]
     fn test_transfer_from_contract_purse_by_uref_to_user_fails() {
-        let mut fixture = TestContext::new();
+        let mut fixture = TestContext::new(None);
         let user = fixture.create_funded_user();
         let amount = U512::from(100000000000u64);
         fixture.deposit_succeeds(user, amount);
@@ -67,7 +67,7 @@ mod tests {
 
     #[test]
     fn test_transfer_from_contract_purse_by_uref_to_admin_fails() {
-        let mut fixture = TestContext::new();
+        let mut fixture = TestContext::new(None);
         let user = fixture.create_funded_user();
         let amount = U512::from(100000000000u64);
         fixture.deposit_succeeds(user, amount);
@@ -76,7 +76,6 @@ mod tests {
 
     #[test]
     fn submit_batch_to_contract_simple() {
-        let mut fixture = TestContext::new();
         let receipt0 = include_bytes!("testdata/test_prove_simple_batches_0.json");
         let receipt1 = include_bytes!("testdata/test_prove_simple_batches_1.json");
 
@@ -86,20 +85,23 @@ mod tests {
         assert_eq!(proof_outputs.pre_batch_trie_root, None);
         verify_execution(&serde_json_wasm::from_slice(receipt1).unwrap()).unwrap();
 
+        let mut fixture = TestContext::new(None);
         // submit proofs to contract
         fixture.submit_proof_to_contract(fixture.admin, receipt0.to_vec());
         fixture.submit_proof_to_contract(fixture.admin, receipt1.to_vec());
     }
 
-    // TODO all these more real batches use too much gas
-    // fn submit_batch_to_contract(receipt: &[u8]) {
-    //     let mut fixture = TestContext::new();
+    // TODO all these more real batches fail with code unreachable in the contract.
+    // They verify fine outside the contract, so I suspect they use too much gas.
+    #[allow(dead_code)]
+    fn submit_batch_to_contract(receipt: &[u8]) {
+        // precheck proofs before contract tests that are hard to debug
+        let proof_outputs =
+            verify_execution(&serde_json_wasm::from_slice(receipt).unwrap()).unwrap();
 
-    //     let receipt: Receipt = serde_json_wasm::from_slice(receipt).unwrap();
-    //     verify_execution(&receipt).unwrap();
-
-    //     fixture.submit_proof_to_contract(fixture.admin, serde_json_wasm::to_vec(&receipt).unwrap());
-    // }
+        let mut fixture = TestContext::new(proof_outputs.pre_batch_trie_root);
+        fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec())
+    }
 
     // #[test]
     // fn submit_batch_to_contract_1() {
