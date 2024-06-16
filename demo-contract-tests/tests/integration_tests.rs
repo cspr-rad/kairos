@@ -102,7 +102,6 @@ mod tests {
         let mut fixture = TestContext::new(proof_outputs.pre_batch_trie_root);
         fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec())
     }
-
     // #[test]
     // fn submit_batch_to_contract_1() {
     //     let receipt =
@@ -121,13 +120,12 @@ mod tests {
     //     fixture.submit_proof_to_contract(fixture.admin, serde_json_wasm::to_vec(&receipt).unwrap());
     // }
 
-    // #[test]
-    // fn submit_batch_to_contract_2() {
-    //     let mut fixture = TestContext::new();
-    //     let receipt =
-    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-7d8dadeda4c1eb1c.json");
-    //     fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec());
-    // }
+    #[test]
+    fn submit_batch_to_contract_2() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-7d8dadeda4c1eb1c.json");
+        submit_batch_to_contract(receipt);
+    }
 
     // #[test]
     // fn submit_batch_to_contract_3() {
