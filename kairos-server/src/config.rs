@@ -8,18 +8,21 @@ pub struct ServerConfig {
     pub socket_addr: SocketAddr,
     pub casper_rpc: Url,
     pub batch_config: BatchConfig,
+    pub proving_server: Url,
 }
 
 impl ServerConfig {
     pub fn from_env() -> Result<Self, String> {
         let socket_addr = parse_env_as::<SocketAddr>("KAIROS_SERVER_SOCKET_ADDR")?;
         let casper_rpc = parse_env_as::<Url>("KAIROS_SERVER_CASPER_RPC")?;
+        let proving_server = parse_env_as::<Url>("KAIROS_PROVER_SERVER_URL")?;
         let batch_config = BatchConfig::from_env()?;
 
         Ok(Self {
             socket_addr,
             casper_rpc,
             batch_config,
+            proving_server,
         })
     }
 }

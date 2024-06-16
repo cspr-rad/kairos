@@ -42,8 +42,26 @@ impl BatchStateManager {
         let trie_thread =
             trie::spawn_state_thread(config, txn_receiver, batch_sender, db, batch_root);
 
-        let batch_output_handler =
-            tokio::spawn(async move { while let Some(batch_output) = batch_rec.recv().await {} });
+        let batch_output_handler = tokio::spawn(async move {
+            while let Some(batch_output) = batch_rec.recv().await {
+                let res = reqwest::Client::new()
+                    .post("http://localhost:8080/batch")
+                    .json(&batch_output.proof_inputs)
+                    .send()
+                    .await
+                    .unwrap_or_else(|e| {
+                        tracing::error!("Could not send batch output to proving server: {}", e);
+                        panic!("Could not send batch output to proving server: {}", e);
+                    });
+
+                if res.status().is_success() {
+                    // TODO send the proof to layer 1
+                } else {
+                    tracing::error!("Proving server returned an error: {:?}", res);
+                    panic!("Proving server returned an error: {:?}", res);
+                }
+            }
+        });
 
         Self {
             trie_thread,

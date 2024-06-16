@@ -48,9 +48,11 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
         socket_addr: "0.0.0.0:0".parse().unwrap(),
         casper_rpc: casper_node_url.clone(),
         batch_config: BatchConfig {
-            max_batch_size: Some(3),
+            max_batch_size: None,
             max_batch_duration: None,
         },
+        // dummy proving server will never be called because of the batch_config
+        proving_server: Url::parse("http://127.0.0.1:7894").unwrap(),
     };
 
     let state = Arc::new(ServerStateInner {
