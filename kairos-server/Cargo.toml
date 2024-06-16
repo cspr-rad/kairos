@@ -38,7 +38,7 @@ kairos-tx = { path = "../kairos-tx" }
 kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1"] }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
 sha2 = "0.10"
-reqwest = "0.12"
+reqwest = { version = "0.12", features = ["json"] }
 
 [dev-dependencies]
 proptest = "1"
