@@ -39,6 +39,7 @@ impl CCTLNetwork {
     pub async fn run(
         working_dir: Option<PathBuf>,
         chainspec_path: Option<&Path>,
+        config_path: Option<&Path>,
     ) -> Result<CCTLNetwork, io::Error> {
         let working_dir = working_dir
             .map(|dir| {
@@ -49,12 +50,18 @@ impl CCTLNetwork {
             .unwrap_or(tempdir()?.into_path());
         let assets_dir = working_dir.join("assets");
 
-        let setup_args = chainspec_path.map_or(vec![], |chainspec_path| {
-            vec!["--chainspec", chainspec_path.to_str().unwrap()]
-        });
-        let output = Command::new("cctl-infra-net-setup")
-            .env("CCTL_ASSETS", &assets_dir)
-            .args(setup_args)
+        let mut setup_command = Command::new("cctl-infra-net-setup");
+        setup_command.env("CCTL_ASSETS", &assets_dir);
+
+        if let Some(chainspec_path) = chainspec_path {
+            setup_command.arg(format!("chainspec={}", chainspec_path.to_str().unwrap()));
+        };
+
+        if let Some(config_path) = config_path {
+            setup_command.arg(format!("config={}", config_path.to_str().unwrap()));
+        };
+
+        let output = setup_command
             .output()
             .expect("Failed to setup network configuration");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
@@ -154,7 +161,9 @@ mod tests {
     #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
-        let network = CCTLNetwork::run(Option::None, Option::None).await.unwrap();
+        let network = CCTLNetwork::run(Option::None, Option::None, Option::None)
+            .await
+            .unwrap();
         for node in &network.nodes {
             if node.state == NodeState::Running {
                 let node_status = get_node_status(
