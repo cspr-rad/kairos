@@ -23,7 +23,7 @@ pub async fn new(conn_str: &str) -> Result<Pool, errors::DBError> {
     #[cfg(feature = "migrations")]
     run_migrations(&conn_pool).await;
     let conn = conn_pool.get().await?;
-    let result = conn
+    let result = conn // do a quick query to test connection
         .interact(|conn| {
             let query = select("Hello world!".into_sql::<Text>());
             query.get_result::<String>(conn)

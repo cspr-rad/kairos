@@ -12,13 +12,13 @@ pub struct QueryTransactionsPayload {
     sender: Option<String>,
     min_timestamp: Option<String>,
     max_timestamp: Option<String>,
-    min_amount: Option<i64>,
+    min_amount: Option<Transaction>,
     max_amount: Option<i64>,
     recipient: Option<String>,
 }
 
 #[derive(TypedPath)]
-#[typed_path("/api/v1/query_transactions")]
+#[typed_path("/api/v1/transactions")]
 pub struct QueryTransactionsPath;
 
 #[instrument(level = "trace", skip(state), ret)]
@@ -40,7 +40,7 @@ pub async fn query_transactions_handler(
         recipient: payload.recipient,
     };
 
-    let transactions = get(state.pool.clone(), filter).await?;
+    let transactions = get(&state.pool, filter).await?;
 
     Ok(Json(transactions))
 }
