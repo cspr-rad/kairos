@@ -13,6 +13,7 @@ use casper_client_types::{
 use rand::Rng;
 use std::fs;
 use std::io::{self, Write};
+use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
 use tempfile::tempdir;
@@ -57,6 +58,7 @@ impl CCTLNetwork {
     pub async fn run(
         working_dir: Option<PathBuf>,
         contract_to_deploy: Option<DeployableContract>,
+        chainspec_path: Option<&Path>,
     ) -> anyhow::Result<CCTLNetwork> {
         let working_dir = working_dir
             .map(|dir| {
@@ -67,8 +69,12 @@ impl CCTLNetwork {
             .unwrap_or(tempdir()?.into_path());
         let assets_dir = working_dir.join("assets");
 
+        let setup_args = chainspec_path.map_or(vec![], |chainspec_path| {
+            vec!["chainspec", chainspec_path.to_str().unwrap()]
+        });
         let output = Command::new("cctl-infra-net-setup")
             .env("CCTL_ASSETS", &assets_dir)
+            .args(setup_args)
             .output()
             .expect("Failed to setup network configuration");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
@@ -347,7 +353,9 @@ mod tests {
     #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
-        let network = CCTLNetwork::run(Option::None, Option::None).await.unwrap();
+        let network = CCTLNetwork::run(Option::None, Option::None, Option::None)
+            .await
+            .unwrap();
         for node in &network.nodes {
             if node.state == NodeState::Running {
                 let node_status = get_node_status(
@@ -372,9 +380,10 @@ mod tests {
             hash_name: hash_name.to_string(),
             path: contract_wasm_path,
         };
-        let network = CCTLNetwork::run(Option::None, Option::Some(contract_to_deploy))
-            .await
-            .unwrap();
+        let network =
+            CCTLNetwork::run(Option::None, Option::Some(contract_to_deploy), Option::None)
+                .await
+                .unwrap();
         let expected_contract_hash_path = network.working_dir.join("contracts").join(hash_name);
         assert!(expected_contract_hash_path.exists());
 

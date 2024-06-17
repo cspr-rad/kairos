@@ -24,9 +24,10 @@ async fn deposit_successful_with_ed25519() {
         hash_name: hash_name.to_string(),
         path: contract_wasm_path,
     };
-    let network = cctl::CCTLNetwork::run(Option::None, Option::Some(contract_to_deploy))
-        .await
-        .unwrap();
+    let network =
+        cctl::CCTLNetwork::run(Option::None, Option::Some(contract_to_deploy), Option::None)
+            .await
+            .unwrap();
     let node = network
         .nodes
         .first()
