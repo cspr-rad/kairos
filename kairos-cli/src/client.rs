@@ -1,14 +1,18 @@
-use kairos_server::routes::PayloadBody;
-
+use casper_client::types::DeployHash;
+use casper_client::types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp};
+use casper_types::{crypto::SecretKey, runtime_args, RuntimeArgs};
 use reqwest::{blocking, Url};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::fs;
+use std::path::Path;
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum KairosClientError {
     ResponseError(String),
     ResponseErrorWithCode(u16, String),
     DecodeError(String),
+    CasperClientError(String),
     KairosServerError(String),
 }
 
@@ -36,22 +40,46 @@ impl From<reqwest::Error> for KairosClientError {
     }
 }
 
-pub fn submit_transaction_request(
+pub fn deposit(
     base_url: &Url,
-    deposit_request: &PayloadBody,
-) -> Result<(), KairosClientError> {
+    depositor_secret_key: &SecretKey,
+    amount: u64,
+) -> Result<DeployHash, KairosClientError> {
+    let deposit_session_wasm_path =
+        Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
+    let deposit_session_wasm_bytes = fs::read(&deposit_session_wasm_path).unwrap_or_else(|err| {
+        panic!(
+            "Failed to read the deposit session wasm as bytes from file: {:?}.\n{}",
+            deposit_session_wasm_path, err
+        )
+    });
+    let deposit_session =
+        ExecutableDeployItem::new_module_bytes(deposit_session_wasm_bytes.into(), runtime_args! {});
+    let deploy = DeployBuilder::new(
+        env!("CASPER_CHAIN_NAME"),
+        deposit_session,
+        depositor_secret_key,
+    )
+    .with_standard_payment(amount)
+    .with_timestamp(Timestamp::now())
+    .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
+    .build()
+    .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
+
     let client = blocking::Client::new();
     let url = base_url.join("/api/v1/deposit").unwrap();
     let response = client
         .post(url)
         .header("Content-Type", "application/json")
-        .json(deposit_request)
+        .json(&deploy)
         .send()
         .map_err(Into::<KairosClientError>::into)?;
     let status = response.status();
     if !status.is_success() {
         Err(KairosClientError::KairosServerError(status.to_string()))
     } else {
-        Ok(())
+        response
+            .json::<DeployHash>()
+            .map_err(Into::<KairosClientError>::into)
     }
 }

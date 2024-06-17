@@ -1,15 +1,15 @@
 [package]
 name = "kairos-tx"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
 
 [lib]
 
 [dependencies]
-num-traits = "0.2"
-rasn = { version = "0.12", default-features = false, features = ["macros"] }
-sha2 = "0.10"
+num-traits = { version = "0.2", default-features = false }
+rasn = { version = "0.15", default-features = false, features = ["macros"], git = "https://github.com/koxu1996/rasn", branch = "feature/real-no-std-compatibility" } # TODO: Remove `git` and `branch` once https://github.com/librasn/rasn/issues/262 is fixed.
+sha2 = { version = "0.10", default-features = false }
 
 [dev-dependencies]
 hex = "0.4"

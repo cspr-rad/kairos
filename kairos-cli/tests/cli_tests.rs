@@ -2,6 +2,10 @@ use assert_cmd::Command;
 use reqwest::Url;
 use std::path::PathBuf;
 
+use casper_client::types::DeployHash;
+use casper_hashing::Digest;
+use kairos_test_utils::{cctl, kairos};
+
 // Helper function to get the path to a fixture file
 fn fixture_path(relative_path: &str) -> PathBuf {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -10,14 +14,23 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 }
 
 #[tokio::test]
+#[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
-    let dummy_rpc = Url::parse("http://127.0.0.1:11101").unwrap();
-    let kairos = kairos_test_utils::kairos::Kairos::run(dummy_rpc)
+    let network = cctl::CCTLNetwork::run(Option::None, Option::None)
         .await
         .unwrap();
+    let node = network
+        .nodes
+        .first()
+        .expect("Expected at least one node after successful network run");
+    let node_url = Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+
+    let kairos = kairos::Kairos::run(node_url).await.unwrap();
 
     tokio::task::spawn_blocking(move || {
-        let secret_key_path = fixture_path("ed25519/secret_key.pem");
+        let depositor_secret_key_path = network
+            .working_dir
+            .join("assets/users/user-1/secret_key.pem");
 
         let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
         cmd.arg("--kairos-server-address")
@@ -26,8 +39,17 @@ async fn deposit_successful_with_ed25519() {
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
-            .arg(secret_key_path);
-        cmd.assert().success().stdout("ok\n");
+            .arg(depositor_secret_key_path);
+        cmd.assert()
+            .success()
+            .stdout(predicates::function::function(|stdout: &str| {
+                let raw_hash = stdout.trim_end();
+                DeployHash::new(
+                    Digest::from_hex(raw_hash)
+                        .expect("Failed to parse deploy hash after depositing"),
+                );
+                true
+            }));
     })
     .await
     .unwrap();
@@ -89,7 +111,7 @@ fn deposit_invalid_private_key_path() {
         .arg(secret_key_path);
     cmd.assert()
         .failure()
-        .stderr(predicates::str::contains("failed to parse private key"));
+        .stderr(predicates::str::contains("No such file or directory"));
 }
 
 #[test]
@@ -102,9 +124,9 @@ fn deposit_invalid_private_key_content() {
         .arg("123")
         .arg("--private-key")
         .arg(secret_key_path);
-    cmd.assert()
-        .failure()
-        .stderr(predicates::str::contains("failed to parse private key"));
+    cmd.assert().failure().stderr(predicates::str::contains(
+        "Failed to read secret key from file",
+    ));
 }
 
 #[test]

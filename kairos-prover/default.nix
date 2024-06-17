@@ -21,10 +21,16 @@
       };
 
       kairosProverAttrs = rec {
-        src = lib.cleanSourceWith {
-          src = craneLib.path ./.;
-          filter = craneLib.filterCargoSources;
+        src = lib.fileset.toSource {
+          root = ../.;
+          fileset = lib.fileset.unions [
+            ../kairos-prover
+            ../kairos-tx
+          ];
         };
+        cargoToml = ./Cargo.toml;
+        cargoLock = ./Cargo.lock;
+        sourceRoot = "source/kairos-prover";
         nativeBuildInputs = with pkgs; [
           pkg-config
           cargo-risczero
@@ -35,6 +41,7 @@
         ] ++ lib.optionals stdenv.isDarwin [
           libiconv
           darwin.apple_sdk.frameworks.SystemConfiguration
+          darwin.apple_sdk.frameworks.Metal
         ];
         cargoVendorDir = inputs.crane.lib.${system}.vendorMultipleCargoDeps {
           inherit (craneLib.findCargoFiles src) cargoConfigs;
@@ -44,6 +51,17 @@
             ./rust-std-Cargo.lock
           ];
         };
+
+        RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
+
+        preCheck = ''
+          # Proving in CI is disabled because it takes too long.
+          # Proving is a test of risc0, not kairos anyway.
+          export RISC0_DEV_MODE=1;
+        '';
+
+        # Proving in CI is disabled because it takes too long.
+        # Proving is a test of risc0, not kairos anyway.
         preBuild = ''
           # The vendored cargo sources will be placed into .cargo-home,
           # however it seems that since the risc0_build crate
@@ -53,17 +71,15 @@
           mv .cargo-home/config.toml .cargo/config.toml
           export RISC0_RUST_SRC=${rustToolchain}/lib/rustlib/src/rust;
         '';
+        checkInputs = [ pkgs.r0vm ];
       };
     in
     {
       devShells.risczero = pkgs.mkShell {
         RISC0_RUST_SRC = "${rustToolchain}/lib/rustlib/src/rust";
         RISC0_DEV_MODE = 1;
+        RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
         inputsFrom = [ self.packages.${system}.kairos-prover ];
-        # I cannot install Metal via Nix, so you need to follow the standard xcode metal installation instructions
-        nativeBuildInputs = [
-          inputs'.risc0pkgs.packages.r0vm
-        ];
       };
       packages = {
         kairos-prover-deps = craneLib.buildDepsOnly (kairosProverAttrs // {

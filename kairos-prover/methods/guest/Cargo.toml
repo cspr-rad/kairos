@@ -1,12 +1,24 @@
 [package]
-# TODO: Rename this package to change the method name from METHOD_NAME
-name = "method_name"
+name = "prove_batch"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
+
+[profile.release]
+debug = true
+opt-level = 3
+overflow-checks = false
+lto = true
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
 
 [workspace]
 
 [dependencies]
 # If you want to try (experimental) std support, add `features = [ "std" ]` to risc0-zkvm
-risc0-zkvm = { version = "=0.21.0", default-features = false}
+risc0-zkvm = { version = "=0.21.0", default-features = false }
+kairos-circuit-logic = { path = "../../kairos-circuit-logic", default-features = false, features = ["serde"] }
+
+[patch.crates-io]
+sha2 = { git = "https://github.com/risc0/RustCrypto-hashes", tag = "sha2-v0.10.6-risczero.0" }
