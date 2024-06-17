@@ -382,8 +382,7 @@ dependencies = [
 [[package]]
 name = "bitvec-nom2"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4863ce31b7ff8812568eaffe956024c824d845a1f9f08c329706166c357cae53"
+source = "git+https://github.com/koxu1996/nom-bitvec?branch=bugfix/disable-std-by-default#f7b806749f364bbe4332393f7ac20a57cd461692"
 dependencies = [
  "bitvec 1.0.1",
  "nom",
@@ -2029,12 +2028,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "jzon"
-version = "0.12.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17ab85f84ca42c5ec520e6f3c9966ba1fd62909ce260f8837e248857d2560509"
-
-[[package]]
 name = "k256"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2099,7 +2092,6 @@ dependencies = [
  "casper-types 4.0.1",
  "hex",
  "kairos-tx",
- "thiserror",
 ]
 
 [[package]]
@@ -2985,9 +2977,8 @@ dependencies = [
 
 [[package]]
 name = "rasn"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39df916fdbba892afb9a7e91f4117c58ba36b14a236aa45bfa12fcf623641051"
+version = "0.15.3"
+source = "git+https://github.com/koxu1996/rasn?branch=feature/real-no-std-compatibility#2dee5967f2b314a9ac66fa90b6b73dbaa1deeb36"
 dependencies = [
  "arrayvec",
  "bitvec 1.0.1",
@@ -2995,7 +2986,6 @@ dependencies = [
  "bytes",
  "chrono",
  "either",
- "jzon",
  "konst",
  "nom",
  "num-bigint",
@@ -3008,9 +2998,8 @@ dependencies = [
 
 [[package]]
 name = "rasn-derive"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e81213825a788a1afeab661c7ecdbaf55c06cefca003a4f1dd14d1d9d854d55"
+version = "0.15.3"
+source = "git+https://github.com/koxu1996/rasn?branch=feature/real-no-std-compatibility#2dee5967f2b314a9ac66fa90b6b73dbaa1deeb36"
 dependencies = [
  "either",
  "itertools 0.10.5",
@@ -3567,7 +3556,6 @@ version = "0.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4de37ad025c587a29e8f3f5605c00f70b98715ef90b9061a815b9e59e9042d6"
 dependencies = [
- "backtrace",
  "doc-comment",
  "snafu-derive",
 ]
