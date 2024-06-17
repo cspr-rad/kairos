@@ -42,7 +42,7 @@ in
       example = "http://127.0.0.1:7894";
       description = ''
         A proving server URL.
-        '';
+      '';
     };
 
     casperRpcUrl = mkOption {
