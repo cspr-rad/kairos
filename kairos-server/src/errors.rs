@@ -91,7 +91,7 @@ impl From<casper_client::Error> for AppErr {
     }
 }
 
-#[cfg(feature="database")]
+#[cfg(feature = "database")]
 impl From<kairos_data::errors::DBError> for AppErr {
     fn from(error: kairos_data::errors::DBError) -> Self {
         Self {

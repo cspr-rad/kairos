@@ -24,7 +24,7 @@ impl ServerConfig {
         Ok(Self {
             socket_addr,
             casper_rpc,
-            #[cfg(feature="database")]
+            #[cfg(feature = "database")]
             db_addr,
         })
     }

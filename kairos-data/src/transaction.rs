@@ -1,25 +1,31 @@
-use chrono::{Utc, NaiveDateTime};
-use diesel::prelude::*;
 use crate::schema::transactions;
-use serde::{Deserialize, Serialize};
 use bigdecimal::BigDecimal;
+use chrono::{NaiveDateTime, Utc};
+use diesel::prelude::*;
 use hex;
+use serde::{Deserialize, Serialize};
 
-use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Transfer, Withdraw, L1Deposit};
+use kairos_circuit_logic::transactions::{
+    KairosTransaction, L1Deposit, Signed, Transfer, Withdraw,
+};
 
-const TRANSFER_TRX: i16 = 1;
-const DEPOSIT_TRX: i16 = 2;
-const WITHDRAW_TRX: i16 = 3;
+#[derive(diesel_derive_enum::DbEnum, Debug, Serialize)]
+#[ExistingTypePath = "crate::schema::sql_types::Transaction"]
+pub enum Transaction {
+    Deposit,
+    Transfer,
+    Withdrawal,
+}
 
 #[derive(Queryable, Debug, Identifiable, Insertable, Serialize, Selectable)]
 #[diesel(primary_key(timestamp, amount, public_key))]
 #[diesel(table_name = transactions)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct Transaction {
+pub struct Transactions {
     pub timestamp: NaiveDateTime,
     pub public_key: String,
     pub nonce: Option<BigDecimal>,
-    pub trx: i16,
+    pub trx: Transaction,
     pub amount: BigDecimal,
     pub recipient: Option<String>,
 }
@@ -35,9 +41,9 @@ pub struct TransactionFilter {
 }
 
 pub async fn get(
-    pool: crate::Pool,
+    pool: &crate::Pool,
     filter: TransactionFilter,
-) -> Result<Vec<Transaction>, crate::errors::DBError> {
+) -> Result<Vec<Transactions>, crate::errors::DBError> {
     let conn = pool.get().await?;
     let res = conn
         .interact(move |conn| {
@@ -63,74 +69,73 @@ pub async fn get(
             }
 
             query
-                .select(Transaction::as_select())
+                .select(Transactions::as_select())
                 .limit(500)
-                .load::<Transaction>(conn)
+                .load::<Transactions>(conn)
         })
         .await??;
     Ok(res)
 }
 
-
 pub async fn insert(
     pool: crate::Pool,
     kairos_trx: KairosTransaction,
-) -> Result<Transaction, crate::errors::DBError> {
-    let trx = Transaction::from(kairos_trx);
+) -> Result<Transactions, crate::errors::DBError> {
+    let trx = Transactions::from(kairos_trx);
     let conn = pool.get().await?;
     let res = conn
         .interact(|conn| {
             diesel::insert_into(transactions::table)
                 .values(trx)
-                .get_result::<Transaction>(conn)
+                .get_result::<Transactions>(conn)
         })
         .await??;
     Ok(res)
 }
 
-impl From<KairosTransaction> for Transaction {
+impl From<KairosTransaction> for Transactions {
     fn from(tx: KairosTransaction) -> Self {
         match tx {
-            KairosTransaction::Transfer(signed_transfer) => Transaction::from(signed_transfer),
-            KairosTransaction::Withdraw(signed_withdraw) => Transaction::from(signed_withdraw),
-            KairosTransaction::Deposit(l1_deposit) => Transaction::from(l1_deposit),
+            KairosTransaction::Transfer(signed_transfer) => Transactions::from(signed_transfer),
+            KairosTransaction::Withdraw(signed_withdraw) => Transactions::from(signed_withdraw),
+            KairosTransaction::Deposit(l1_deposit) => Transactions::from(l1_deposit),
         }
     }
 }
 
-impl From<Signed<Transfer>> for Transaction {
+impl From<Signed<Transfer>> for Transactions {
     fn from(signed_transfer: Signed<Transfer>) -> Self {
-        Transaction {
+        Transactions {
             timestamp: Utc::now().naive_utc(),
             public_key: hex::encode(&signed_transfer.public_key),
             nonce: Some(BigDecimal::from(signed_transfer.nonce)),
-            trx: TRANSFER_TRX,
+            trx: Transaction::Transfer,
             amount: BigDecimal::from(signed_transfer.transaction.amount),
             recipient: Some(hex::encode(&signed_transfer.transaction.recipient)),
         }
     }
 }
 
-impl From<Signed<Withdraw>> for Transaction {
+impl From<Signed<Withdraw>> for Transactions {
     fn from(signed_withdraw: Signed<Withdraw>) -> Self {
-        Transaction {
+        Transactions {
             timestamp: Utc::now().naive_utc(),
             public_key: hex::encode(&signed_withdraw.public_key),
             nonce: Some(BigDecimal::from(signed_withdraw.nonce)),
-            trx: WITHDRAW_TRX,
+            trx: Transaction::Withdrawal,
             amount: BigDecimal::from(signed_withdraw.transaction.amount),
             recipient: None,
         }
     }
 }
 
-impl From<L1Deposit> for Transaction {
+impl From<L1Deposit> for Transactions {
     fn from(deposit: L1Deposit) -> Self {
-        Transaction {
+        Transactions {
             timestamp: Utc::now().naive_utc(),
             public_key: hex::encode(&deposit.recipient),
             nonce: None,
-            trx: DEPOSIT_TRX,
+            trx: Transaction::Deposit,
             amount: BigDecimal::from(deposit.amount),
             recipient: Some(hex::encode(&deposit.recipient)),
         }

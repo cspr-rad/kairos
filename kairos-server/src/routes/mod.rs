@@ -4,7 +4,7 @@ pub mod deposit_mock;
 pub mod transfer;
 pub mod withdraw;
 
-#[cfg(feature="database")]
+#[cfg(feature = "database")]
 pub mod fetch;
 
 pub use deposit::deposit_handler;
