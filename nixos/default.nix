@@ -29,7 +29,6 @@ in
                 ];
                 # A placeholder URL to make the test pass
                 services.kairos.casperRpcUrl = "http://localhost:11101/rpc";
-                services.kairos.provingServerUrl = "http://127.0.0.1:7894";
               };
               verifyServices = [ "kairos.service" ];
             };
