@@ -40,12 +40,14 @@ impl BatchStateManager {
         // This queue provides back pressure to the trie thread.
         let (batch_sender, mut batch_rec) = mpsc::channel(10);
         let trie_thread =
-            trie::spawn_state_thread(config, txn_receiver, batch_sender, db, batch_root);
+            trie::spawn_state_thread(config.clone(), txn_receiver, batch_sender, db, batch_root);
 
         let batch_output_handler = tokio::spawn(async move {
             while let Some(batch_output) = batch_rec.recv().await {
+                let prove_url = config.proving_server.join("prove").expect("Invalid URL");
+
                 let res = reqwest::Client::new()
-                    .post("http://localhost:8080/batch")
+                    .post(prove_url)
                     .json(&batch_output.proof_inputs)
                     .send()
                     .await

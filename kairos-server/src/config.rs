@@ -8,21 +8,18 @@ pub struct ServerConfig {
     pub socket_addr: SocketAddr,
     pub casper_rpc: Url,
     pub batch_config: BatchConfig,
-    pub proving_server: Url,
 }
 
 impl ServerConfig {
     pub fn from_env() -> Result<Self, String> {
         let socket_addr = parse_env_as::<SocketAddr>("KAIROS_SERVER_SOCKET_ADDR")?;
         let casper_rpc = parse_env_as::<Url>("KAIROS_SERVER_CASPER_RPC")?;
-        let proving_server = parse_env_as::<Url>("KAIROS_PROVER_SERVER_URL")?;
         let batch_config = BatchConfig::from_env()?;
 
         Ok(Self {
             socket_addr,
             casper_rpc,
             batch_config,
-            proving_server,
         })
     }
 }
@@ -35,6 +32,7 @@ pub struct BatchConfig {
     pub max_batch_size: Option<u64>,
     /// Set by the environment variable `KAIROS_SERVER_MAX_BATCH_SECONDS`.
     pub max_batch_duration: Option<Duration>,
+    pub proving_server: Url,
 }
 
 impl BatchConfig {
@@ -42,10 +40,12 @@ impl BatchConfig {
         let max_batch_size = parse_env_as_opt("KAIROS_SERVER_MAX_BATCH_SIZE")?;
         let max_batch_duration =
             parse_env_as_opt::<u64>("KAIROS_SERVER_MAX_BATCH_SECONDS")?.map(Duration::from_secs);
+        let proving_server = parse_env_as::<Url>("KAIROS_PROVER_SERVER_URL")?;
 
         Ok(Self {
             max_batch_size,
             max_batch_duration,
+            proving_server,
         })
     }
 }

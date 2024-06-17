@@ -32,12 +32,16 @@ impl Kairos {
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
 
+        let _ = dotenvy::dotenv();
         let mut config = ServerConfig::from_env().unwrap();
         config.casper_rpc = casper_rpc;
         config.socket_addr = socket_addr;
 
         let kairos_prover_server = match requires_proving_server {
-            true if reqwest::get(config.proving_server.clone()).await.is_err() => {
+            true if reqwest::get(config.batch_config.proving_server.clone())
+                .await
+                .is_err() =>
+            {
                 // Start the proving server if it's not providing any response.
                 // We don't care what the response is, we just want to know it's reachable.
                 let proving_server_bin = std::env::var("KAIROS_PROVER_SERVER_BIN").unwrap();
