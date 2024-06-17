@@ -37,6 +37,14 @@ in
       '';
     };
 
+    provingServerUrl = mkOption {
+      type = types.str;
+      example = "http://127.0.0.1:7894";
+      description = ''
+        A proving server URL.
+        '';
+    };
+
     casperRpcUrl = mkOption {
       type = types.str;
       example = "http://127.0.0.1:11101/rpc";
@@ -73,6 +81,7 @@ in
           RUST_LOG = cfg.logLevel;
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
           KAIROS_SERVER_CASPER_RPC = "${cfg.casperRpcUrl}";
+          KAIROS_PROVING_SERVER_URL = "${cfg.provingServerUrl}";
         };
         serviceConfig = mkMerge [
           {
