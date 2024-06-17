@@ -48,7 +48,7 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: ServerConfig {
             socket_addr: "0.0.0.0:0".parse().unwrap(),
-            casper_rpc: casper_node_url.clone(),            
+            casper_rpc: casper_node_url.clone(),
         },
     });
 

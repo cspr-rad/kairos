@@ -13,7 +13,7 @@ name = "kairos-server"
 
 [features]
 default = ["cctl-tests", "deposit-mock"]
-all-tests = ["cctl-tests", "deposit-mock"]
+all-tests = ["cctl-tests", "deposit-mock", "database"]
 cctl-tests = []
 deposit-mock = []
 database = ["kairos-data"]

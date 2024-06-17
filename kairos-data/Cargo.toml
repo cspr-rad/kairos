@@ -19,6 +19,7 @@ serde = "1.0.201"
 kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1"] }
 hex = "0.4.3"
 anyhow = "1.0.86"
+diesel-derive-enum = { version = "2.1.0", features = ["postgres"] }
 
 [features]
 migrations = ["diesel_migrations"]
