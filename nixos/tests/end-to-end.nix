@@ -29,11 +29,11 @@ nixosTest {
       services.cctl = {
         enable = true;
         chainspec = fetchurl {
-          url = "https://raw.githubusercontent.com/cspr-rad/casper-node/kairos-testing-chainspec/resources/local/chainspec.toml.in";
-          hash = "sha256-LloO0pBv/tJaPDCg5lKDn+eb4VQwAnoA3vWVGj/Cufs=";
+          url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/chainspec.toml.in";
+          hash = "sha256-b/6c5o3JXFlaTgTHxs8JepaHzjMG75knzlKKqRd/7pc=";
         };
         config = fetchurl {
-          url = "https://raw.githubusercontent.com/cspr-rad/casper-node/kairos-testing-chainspec/resources/local/config.toml";
+          url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/config.toml";
           hash = "sha256-ZuNbxw0nBjuONEZRK8Ru96zZQak4MEQ/eM1fA6esyCM=";
         };
       };
