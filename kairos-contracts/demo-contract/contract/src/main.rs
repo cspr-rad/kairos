@@ -21,9 +21,13 @@ use contract_utils::constants::{
 use contract_utils::Deposit;
 mod entry_points;
 mod utils;
-use risc0_zkvm::Receipt;
+use kairos_verifier_risc0_lib::verifier::Receipt;
 use utils::errors::DepositError;
 use utils::get_immediate_caller;
+
+#[allow(clippy::single_component_path_imports)]
+#[allow(unused)]
+use casper_contract_no_std_helpers;
 
 use kairos_circuit_logic::ProofOutputs;
 
