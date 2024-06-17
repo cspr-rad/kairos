@@ -128,6 +128,7 @@
                 ./kairos-tx
                 ./kairos-prover/kairos-circuit-logic
                 ./kairos-prover/kairos-verifier-risc0-lib
+                ./kairos-contracts/demo-contract/contract-utils
               ];
             };
 
@@ -173,6 +174,11 @@
             kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
               cargoExtraArgs = "-p kairos-tx --no-default-features";
+            });
+
+            kairos-crypto-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
+              cargoExtraArgs = "-p kairos-crypto --no-default-features --features crypto-casper,tx";
             });
 
             cctld = pkgs.runCommand "cctld-wrapped"
