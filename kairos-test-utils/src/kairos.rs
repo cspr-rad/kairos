@@ -5,7 +5,7 @@ use std::io;
 use std::net::{SocketAddr, TcpListener};
 use tokio::net::TcpStream;
 
-use kairos_server::config::ServerConfig;
+use kairos_server::config::{BatchConfig, ServerConfig};
 
 async fn wait_for_port(address: &SocketAddr) -> Result<(), io::Error> {
     retry(ExponentialBackoff::default(), || async {
@@ -21,26 +21,35 @@ pub struct Kairos {
 }
 
 impl Kairos {
-    /// If `requires_proving_server` is true, the proving server at `KAIROS_PROVER_SERVER_URL` will be used.
-    /// If no proving server is running, we will start the one at `KAIROS_PROVER_SERVER_BIN`.
-    /// This logic requires only one instance of `Kairos` with `requires_proving_server` set to true may be run at a time.
-    /// Keep this constraint in mind when writing tests.
-    ///
-    /// Allowing multiple proving servers would degrade proving performance beyond the point of being useful.
-    pub async fn run(casper_rpc: Url, requires_proving_server: bool) -> Result<Kairos, io::Error> {
+    /// If no proving server is running, we will start the one at `BatchConfig.proving_server`.
+    /// The caller should ensure that `BatchConfig.proving_server == KAIROS_PROVER_SERVER_URL`.
+    pub async fn run(
+        casper_rpc: Url,
+        proving_server_batch_config: Option<BatchConfig>,
+    ) -> Result<Kairos, io::Error> {
         let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
 
-        let _ = dotenvy::dotenv();
-        let mut config = ServerConfig::from_env().unwrap();
-        config.casper_rpc = casper_rpc;
-        config.socket_addr = socket_addr;
+        let batch_config = proving_server_batch_config
+            .clone()
+            .unwrap_or_else(|| BatchConfig {
+                max_batch_size: None,
+                max_batch_duration: None,
+                proving_server: Url::parse("http://127.0.0.1:7894").unwrap(),
+            });
 
-        let kairos_prover_server = match requires_proving_server {
-            true if reqwest::get(config.batch_config.proving_server.clone())
-                .await
-                .is_err() =>
+        let config = ServerConfig {
+            casper_rpc,
+            socket_addr,
+            batch_config,
+        };
+
+        let kairos_prover_server = match proving_server_batch_config {
+            Some(batch_config)
+                if reqwest::get(batch_config.proving_server.clone())
+                    .await
+                    .is_err() =>
             {
                 // Start the proving server if it's not providing any response.
                 // We don't care what the response is, we just want to know it's reachable.
@@ -104,6 +113,6 @@ mod tests {
     #[tokio::test]
     async fn test_kairos_starts_and_terminates() {
         let dummy_rpc = Url::parse("http://127.0.0.1:11101/rpc").unwrap();
-        let _kairos = Kairos::run(dummy_rpc, false).await.unwrap();
+        let _kairos = Kairos::run(dummy_rpc, None).await.unwrap();
     }
 }
