@@ -15,7 +15,7 @@ panic = "abort"
 codegen-units = 1
 
 [build-dependencies]
-risc0-build = "=0.21.0"
+risc0-build = "=1.0.1"
 
 [package.metadata.risc0]
 methods = ["guest"]
