@@ -466,7 +466,7 @@ dependencies = [
  "contract-utils",
  "kairos-circuit-logic",
  "kairos-verifier-risc0-lib",
- "risc0-zkvm",
+ "risc0-zkvm 0.21.0",
  "serde",
  "serde-json-wasm",
 ]
@@ -856,6 +856,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
+name = "hex-literal"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fe2267d4ed49bc07b63801559be28c718ea06c4738b7a03c94df7386d2cde46"
+
+[[package]]
 name = "hex_fmt"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -954,7 +960,7 @@ name = "kairos-verifier-risc0-lib"
 version = "0.1.0"
 dependencies = [
  "kairos-circuit-logic",
- "risc0-zkvm",
+ "risc0-zkvm 1.0.1",
  "rkyv",
 ]
 
@@ -1288,8 +1294,22 @@ checksum = "2ae2939426c60756f910352184716a3538748208c9e11ade4a507db3b2757157"
 dependencies = [
  "anyhow",
  "elf",
- "risc0-zkp",
- "risc0-zkvm-platform",
+ "risc0-zkp 0.21.0",
+ "risc0-zkvm-platform 0.21.0",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "risc0-binfmt"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a33ca13e8e2fe08fc283accbb08fcbabbfdd27acf88dddc9b39654d0e487b15"
+dependencies = [
+ "anyhow",
+ "elf",
+ "risc0-zkp 1.0.1",
+ "risc0-zkvm-platform 1.0.1",
  "serde",
  "tracing",
 ]
@@ -1303,8 +1323,22 @@ dependencies = [
  "anyhow",
  "bytemuck",
  "hex",
- "risc0-core",
- "risc0-zkp",
+ "risc0-core 0.21.0",
+ "risc0-zkp 0.21.0",
+ "tracing",
+]
+
+[[package]]
+name = "risc0-circuit-recursion"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c12ea07079420272e5705baea6a0756b21c0dadeca7ed34a7866eb9c073b9a0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "hex",
+ "risc0-core 1.0.1",
+ "risc0-zkp 1.0.1",
  "tracing",
 ]
 
@@ -1315,9 +1349,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "31440989146b342a7d37c15079c9568c69b7f988f3b789f422c7d4ed76526ddb"
 dependencies = [
  "anyhow",
- "risc0-core",
- "risc0-zkp",
- "risc0-zkvm-platform",
+ "risc0-core 0.21.0",
+ "risc0-zkp 0.21.0",
+ "risc0-zkvm-platform 0.21.0",
+ "tracing",
+]
+
+[[package]]
+name = "risc0-circuit-rv32im"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ef57b3afe8e59bec6f535c49c99dc7cd3fda7e93254fd499e5469ec17fec1d0"
+dependencies = [
+ "anyhow",
+ "risc0-binfmt 1.0.1",
+ "risc0-core 1.0.1",
+ "risc0-zkp 1.0.1",
+ "risc0-zkvm-platform 1.0.1",
+ "serde",
  "tracing",
 ]
 
@@ -1326,6 +1375,16 @@ name = "risc0-core"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02e0cbd09d03c23b572b66cd96a56143adb22bf895aca89c1a153ccebedaa0b4"
+dependencies = [
+ "bytemuck",
+ "rand_core 0.6.4",
+]
+
+[[package]]
+name = "risc0-core"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f43b7bd8b9adb8bed7eaecfa5c152b6c676c4512aea1120d2cdc5fbbca4b2ffb"
 dependencies = [
  "bytemuck",
  "rand_core 0.6.4",
@@ -1344,7 +1403,26 @@ dependencies = [
  "hex",
  "num-bigint",
  "num-derive 0.4.2",
- "risc0-zkp",
+ "risc0-zkp 0.21.0",
+ "serde",
+]
+
+[[package]]
+name = "risc0-groth16"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e275963cd541e1bc9b94f36e23e85b87798a96e04fdf7b013500c08b949a8c9"
+dependencies = [
+ "anyhow",
+ "ark-bn254",
+ "ark-ec",
+ "ark-groth16",
+ "ark-serialize",
+ "bytemuck",
+ "hex",
+ "num-bigint",
+ "risc0-binfmt 1.0.1",
+ "risc0-zkp 1.0.1",
  "serde",
 ]
 
@@ -1361,8 +1439,30 @@ dependencies = [
  "hex",
  "paste",
  "rand_core 0.6.4",
- "risc0-core",
- "risc0-zkvm-platform",
+ "risc0-core 0.21.0",
+ "risc0-zkvm-platform 0.21.0",
+ "serde",
+ "sha2 0.10.8",
+ "tracing",
+]
+
+[[package]]
+name = "risc0-zkp"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53342780aef2d31ccc0526e6d4b151dab69e678d2e1495b2270ed40f5e1df6f4"
+dependencies = [
+ "anyhow",
+ "blake2 0.10.6",
+ "bytemuck",
+ "cfg-if",
+ "digest 0.10.7",
+ "hex",
+ "hex-literal",
+ "paste",
+ "rand_core 0.6.4",
+ "risc0-core 1.0.1",
+ "risc0-zkvm-platform 1.0.1",
  "serde",
  "sha2 0.10.8",
  "tracing",
@@ -1380,13 +1480,38 @@ dependencies = [
  "getrandom",
  "hex",
  "num-derive 0.4.2",
- "risc0-binfmt",
- "risc0-circuit-recursion",
- "risc0-circuit-rv32im",
- "risc0-core",
- "risc0-groth16",
- "risc0-zkp",
- "risc0-zkvm-platform",
+ "risc0-binfmt 0.21.0",
+ "risc0-circuit-recursion 0.21.0",
+ "risc0-circuit-rv32im 0.21.0",
+ "risc0-core 0.21.0",
+ "risc0-groth16 0.21.0",
+ "risc0-zkp 0.21.0",
+ "risc0-zkvm-platform 0.21.0",
+ "rrs-lib",
+ "semver",
+ "serde",
+ "sha2 0.10.8",
+ "tracing",
+]
+
+[[package]]
+name = "risc0-zkvm"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "774b03337fa1675204a067b3f15be740dbedde63fa46647017140fd023805afb"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "cfg-if",
+ "getrandom",
+ "hex",
+ "risc0-binfmt 1.0.1",
+ "risc0-circuit-recursion 1.0.1",
+ "risc0-circuit-rv32im 1.0.1",
+ "risc0-core 1.0.1",
+ "risc0-groth16 1.0.1",
+ "risc0-zkp 1.0.1",
+ "risc0-zkvm-platform 1.0.1",
  "rrs-lib",
  "semver",
  "serde",
@@ -1399,6 +1524,17 @@ name = "risc0-zkvm-platform"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03b6378c9e407be18a1560ed030fd87fb6056293c56263efac46c507ae97e0d7"
+dependencies = [
+ "bytemuck",
+ "getrandom",
+ "libm",
+]
+
+[[package]]
+name = "risc0-zkvm-platform"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b8df83bfa425e078ef77ed115f5eff26b5ebc4a584253b31e4e7122fa2bcced"
 dependencies = [
  "bytemuck",
  "getrandom",

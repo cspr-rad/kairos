@@ -71,7 +71,7 @@ fn prove_execution(
         .build()
         .map_err(|e| format!("Error in ExecutorEnv builder build: {e}"))?;
 
-    let receipt = match (cfg!(feature = "cuda"), cfg!(feature = "metal")) {
+    let prove_info = match (cfg!(feature = "cuda"), cfg!(feature = "metal")) {
         (true, true) => panic!("Cannot enable both CUDA and Metal features"),
         #[cfg(feature = "cuda")]
         (true, false) => risc0_zkvm::LocalProver::new("local metal").prove(env, PROVE_BATCH_ELF),
@@ -90,13 +90,13 @@ fn prove_execution(
     let timestamp = Instant::now();
 
     let proof_outputs = kairos_verifier_risc0_lib::verifier::verify_execution_of_any_program(
-        &receipt,
+        &prove_info.receipt,
         PROVE_BATCH_ID,
     )?;
 
     tracing::info!("Verified batch: {}s", timestamp.elapsed().as_secs_f64());
 
-    Ok((proof_outputs, receipt))
+    Ok((proof_outputs, prove_info.receipt))
 }
 
 pub fn test_setup() {
