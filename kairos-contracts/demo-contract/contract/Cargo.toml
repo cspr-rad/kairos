@@ -10,10 +10,10 @@ casper-types = { version = "4.0.1", default-features = false}
 casper-event-standard = { version = "0.5.0", default-features=false}
 risc0-zkvm = {version="=0.21.0", default-features=false}
 kairos-circuit-logic = {path="../../../kairos-prover/kairos-circuit-logic", default-features=false, features=["serde", "rkyv"]}
-kairos-verifier-risc0-lib = {path="../../../kairos-prover/kairos-verifier-risc0-lib"}
+kairos-verifier-risc0-lib = {path="../../../kairos-prover/kairos-verifier-risc0-lib", default-features=false, features=["verifier"]}
 serde = {version="1", default-features=false, features=["derive"]}
-serde-json-wasm = "1"
-contract-utils = { path = "../contract-utils" }
+serde-json-wasm = { version="1", default-features=false }
+contract-utils = { path = "../contract-utils", default-features = false }
 
 [build]
 target = "wasm32-unknown-unknown"
