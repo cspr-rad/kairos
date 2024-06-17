@@ -8,7 +8,8 @@ let
     mkEnableOption
     escapeShellArgs
     optionals
-    optionalAttrs
+    optional
+    concatLines
     ;
   cfg = config.services.cctl;
 in
@@ -47,6 +48,14 @@ in
       '';
     };
 
+    config = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        The path to a casper node config.toml.
+      '';
+    };
+
     logLevel = mkOption {
       type = types.str;
       default = "info";
@@ -61,6 +70,7 @@ in
     systemd.services.cctl =
       let
         writeableChainspec = "${cfg.workingDirectory}/chainspec.toml";
+        writeableConfig = "${cfg.workingDirectory}/config.toml";
         args = escapeShellArgs ([
           "--working-dir"
           cfg.workingDirectory
@@ -68,6 +78,10 @@ in
         ++ optionals (!builtins.isNull cfg.chainspec) [
           "--chainspec-path"
           cfg.chainspec
+        ]
+        ++ optionals (!builtins.isNull cfg.config) [
+          "--config-path"
+          cfg.config
         ]);
       in
       {
@@ -81,10 +95,11 @@ in
         };
         serviceConfig =
           mkMerge [
-            (optionalAttrs (!builtins.isNull cfg.chainspec) {
-              ExecStartPre = "${pkgs.coreutils}/bin/cp --no-preserve=mode ${cfg.chainspec} ${writeableChainspec}";
-            })
             {
+              ExecStartPre =
+                concatLines
+                  ((optional (!builtins.isNull cfg.chainspec) "${pkgs.coreutils}/bin/cp --no-preserve=mode ${cfg.chainspec} ${writeableChainspec}") ++
+                    (optional (!builtins.isNull cfg.config) "${pkgs.coreutils}/bin/cp --no-preserve=mode ${cfg.config} ${writeableConfig}"));
               ExecStart = "${lib.getExe cfg.package} ${args}";
               Type = "notify";
               Restart = "no";
