@@ -129,6 +129,11 @@
               cargoExtraArgs = "-p kairos-tx --no-default-features";
             });
 
+            kairos-crypto-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
+              cargoExtraArgs = "-p kairos-crypto --no-default-features --features crypto-casper,tx";
+            });
+
             cctld = pkgs.runCommand "cctld-wrapped"
               {
                 buildInputs = [ pkgs.makeWrapper ];
