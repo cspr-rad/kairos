@@ -101,7 +101,12 @@ pub extern "C" fn submit_batch() {
         post_batch_trie_root,
         deposits: _,    // TODO: implement deposits
         withdrawals: _, // TODO: implement withdrawals
-    }) = kairos_verifier_risc0_lib::verifier::verify_execution(&receipt)
+    }) = kairos_verifier_risc0_lib::verifier::verify_execution_of_any_program_with_error_hooks(
+        &receipt,
+        kairos_verifier_risc0_lib::BATCH_CIRCUIT_PROGRAM_HASH,
+        |_| runtime::revert(ApiError::User(100u16)),
+        |_| runtime::revert(ApiError::User(101u16)),
+    )
     else {
         runtime::revert(ApiError::User(1u16));
     };

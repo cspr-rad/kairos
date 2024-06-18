@@ -19,6 +19,24 @@ pub mod verifier {
         verify_execution_of_any_program(receipt, crate::BATCH_CIRCUIT_PROGRAM_HASH)
     }
 
+    pub fn verify_execution_of_any_program_with_error_hooks<E>(
+        receipt: &Receipt,
+        image_id: [u32; 8],
+        verify_err: impl FnOnce(String) -> E,
+        deserialize_err: impl FnOnce(String) -> E,
+    ) -> Result<ProofOutputs, E> {
+        receipt
+            .verify(image_id)
+            .map_err(|e| verify_err(format!("Error in risc0_zkvm verify: {e}")))?;
+
+        let proof_outputs =
+            ProofOutputs::rkyv_deserialize(&receipt.journal.bytes).map_err(|e| {
+                deserialize_err(format!("Error in rkyv deserialize of proof outputs: {e}"))
+            })?;
+
+        Ok(proof_outputs)
+    }
+
     pub fn verify_execution_of_any_program(
         receipt: &Receipt,
         image_id: [u32; 8],
