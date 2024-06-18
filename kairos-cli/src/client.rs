@@ -1,6 +1,6 @@
 use casper_client::types::DeployHash;
 use casper_client::types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp};
-use casper_types::{crypto::SecretKey, runtime_args, RuntimeArgs};
+use casper_client_types::{crypto::SecretKey, runtime_args, RuntimeArgs};
 use reqwest::{blocking, Url};
 use serde::{Deserialize, Serialize};
 use std::fmt;

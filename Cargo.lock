@@ -893,7 +893,7 @@ name = "contract-utils"
 version = "0.1.0"
 dependencies = [
  "casper-event-standard",
- "casper-types 3.0.0",
+ "casper-types 4.0.1",
 ]
 
 [[package]]
