@@ -6,15 +6,18 @@ use std::{fmt, str::FromStr};
 pub struct ServerConfig {
     pub socket_addr: SocketAddr,
     pub casper_rpc: Url,
+    pub casper_contract_hash: String,
 }
 
 impl ServerConfig {
     pub fn from_env() -> Result<Self, String> {
         let socket_addr = parse_env_as::<SocketAddr>("KAIROS_SERVER_SOCKET_ADDR")?;
         let casper_rpc = parse_env_as::<Url>("KAIROS_SERVER_CASPER_RPC")?;
+        let casper_contract_hash = parse_env_as::<String>("KAIROS_SERVER_CASPER_CONTRACT_HASH")?;
         Ok(Self {
             socket_addr,
             casper_rpc,
+            casper_contract_hash,
         })
     }
 }

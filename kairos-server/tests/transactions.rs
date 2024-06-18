@@ -49,6 +49,8 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
         server_config: ServerConfig {
             socket_addr: "0.0.0.0:0".parse().unwrap(),
             casper_rpc: casper_node_url.clone(),
+            casper_contract_hash:
+                "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
         },
     });
 

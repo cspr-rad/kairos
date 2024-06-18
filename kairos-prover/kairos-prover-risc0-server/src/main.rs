@@ -71,7 +71,7 @@ fn prove_execution(
         .build()
         .map_err(|e| format!("Error in ExecutorEnv builder build: {e}"))?;
 
-    let receipt = match (cfg!(feature = "cuda"), cfg!(feature = "metal")) {
+    let prove_info = match (cfg!(feature = "cuda"), cfg!(feature = "metal")) {
         (true, true) => panic!("Cannot enable both CUDA and Metal features"),
         #[cfg(feature = "cuda")]
         (true, false) => risc0_zkvm::LocalProver::new("local metal").prove(env, PROVE_BATCH_ELF),
@@ -82,7 +82,8 @@ fn prove_execution(
     }
     .map_err(|e| format!("Error in risc0_zkvm prove: {e}"))?;
 
-    let proof_outputs = receipt
+    let proof_outputs = prove_info
+        .receipt
         .journal
         .decode()
         .map_err(|e| format!("Error in receipt journal decode: {e}"))?;
@@ -91,13 +92,14 @@ fn prove_execution(
 
     let timestamp = Instant::now();
 
-    receipt
+    prove_info
+        .receipt
         .verify(PROVE_BATCH_ID)
         .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
 
     tracing::info!("Verified batch: {}s", timestamp.elapsed().as_secs_f64());
 
-    Ok((proof_outputs, receipt))
+    Ok((proof_outputs, prove_info.receipt))
 }
 
 pub fn test_setup() {
