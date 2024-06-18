@@ -102,13 +102,14 @@ mod tests {
         let mut fixture = TestContext::new(proof_outputs.pre_batch_trie_root);
         fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec())
     }
-    // #[test]
-    // fn submit_batch_to_contract_1() {
-    //     let receipt =
-    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-c77eac1aed36d104.json");
 
-    //     submit_batch_to_contract(receipt);
-    // }
+    #[test]
+    fn submit_batch_to_contract_1() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-c77eac1aed36d104.json");
+
+        submit_batch_to_contract(receipt);
+    }
     // #[test]
     // fn submit_batch_to_contract_1() {
     //     let mut fixture = TestContext::new();
