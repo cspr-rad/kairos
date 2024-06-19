@@ -9,7 +9,7 @@ use kairos_circuit_logic::transactions::{
     KairosTransaction, L1Deposit, Signed, Transfer, Withdraw,
 };
 
-#[derive(diesel_derive_enum::DbEnum, Debug, Serialize)]
+#[derive(diesel_derive_enum::DbEnum, Debug, Serialize, Deserialize)]
 #[ExistingTypePath = "crate::schema::sql_types::Transaction"]
 pub enum Transaction {
     Deposit,
@@ -78,7 +78,7 @@ pub async fn get(
 }
 
 pub async fn insert(
-    pool: crate::Pool,
+    pool: &crate::Pool,
     kairos_trx: KairosTransaction,
 ) -> Result<Transactions, crate::errors::DBError> {
     let trx = Transactions::from(kairos_trx);
