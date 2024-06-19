@@ -23,6 +23,6 @@ pub async fn deposit_mock_handler(
 
     let deposit = KairosTransaction::Deposit(deposit);
     #[cfg(feature = "database")]
-    db::insert(state.pool.clone(), deposit.clone()).await?;
+    db::insert(&state.pool, deposit.clone()).await?;
     state.batch_state_manager.enqueue_transaction(deposit).await
 }

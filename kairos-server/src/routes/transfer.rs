@@ -44,7 +44,7 @@ pub async fn transfer_handler(
         transaction: transfer,
     });
     #[cfg(feature = "database")]
-    db::insert(state.pool.clone(), transfer.clone()).await?;
+    db::insert(&state.pool, transfer.clone()).await?;
     state
         .batch_state_manager
         .enqueue_transaction(transfer)
