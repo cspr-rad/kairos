@@ -12,7 +12,7 @@ pub struct QueryTransactionsPayload {
     sender: Option<String>,
     min_timestamp: Option<String>,
     max_timestamp: Option<String>,
-    min_amount: Option<Transaction>,
+    min_amount: Option<i64>,
     max_amount: Option<i64>,
     recipient: Option<String>,
 }
@@ -26,7 +26,7 @@ pub async fn query_transactions_handler(
     _: QueryTransactionsPath,
     State(state): State<ServerState>,
     Json(payload): Json<QueryTransactionsPayload>,
-) -> Result<Json<Vec<Transaction>>, AppErr> {
+) -> Result<Json<Vec<Transactions>>, AppErr> {
     let filter = TransactionFilter {
         sender: payload.sender,
         min_timestamp: payload
