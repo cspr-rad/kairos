@@ -14,7 +14,6 @@ in
   options.services.kairos = {
 
     enable = mkEnableOption (mdDoc "kairos");
-
     package = mkOption {
       type = types.package;
     };

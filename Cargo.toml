@@ -24,6 +24,7 @@ casper-client = "2.0"
 casper-types = "4.0"
 casper-client-types = { package = "casper-types", version = "3.0" }
 casper-client-hashing = { package = "casper-hashing", version = "2.0" }
+casper-contract = { version = "4.0", default-features = false }
 casper-hashing = "3.0"
 casper-event-standard = "0.5"
 casper-event-toolkit = { git = "https://github.com/koxu1996/casper-event-toolkit", tag = "v0.1.3" }

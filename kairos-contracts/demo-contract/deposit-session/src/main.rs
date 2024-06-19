@@ -8,7 +8,6 @@
 */
 #![no_std]
 #![no_main]
-extern crate alloc;
 use casper_contract::contract_api::{account, runtime, system};
 use casper_types::{runtime_args, ContractHash, RuntimeArgs, URef, U512};
 
@@ -18,8 +17,8 @@ use casper_contract_no_std_helpers;
 
 #[no_mangle]
 pub extern "C" fn call() {
-    let amount: U512 = runtime::get_named_arg("amount");
     let contract_hash: ContractHash = runtime::get_named_arg("demo_contract");
+    let amount: U512 = runtime::get_named_arg("amount");
     let source: URef = account::get_main_purse();
     // create a temporary purse that can be passed to the contract
     // this is required due to the access control model of the purse system used
@@ -35,7 +34,7 @@ pub extern "C" fn call() {
         "deposit",
         runtime_args! {
             "temp_purse" => temp_purse,
-            "amount" => amount,
+            "amount" => amount
         },
     );
 }

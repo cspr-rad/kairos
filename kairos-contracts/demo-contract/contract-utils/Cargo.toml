@@ -10,4 +10,4 @@ bench = false
 doctest = false
 
 [dependencies]
-casper-event-standard = { version = "0.5", default-features = false }
+casper-event-standard = { workspace = true, default-features = false }
