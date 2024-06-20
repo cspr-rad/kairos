@@ -104,7 +104,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn submit_batch_to_contract_1() {
         let receipt =
             include_bytes!("testdata/proptest_prove_batches-proof-journal-c77eac1aed36d104.json");
@@ -119,7 +118,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn submit_batch_to_contract_3() {
         let receipt =
             include_bytes!("testdata/proptest_prove_batches-proof-journal-3673e712f7cc58df.json");
