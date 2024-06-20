@@ -102,23 +102,14 @@ mod tests {
         let mut fixture = TestContext::new(proof_outputs.pre_batch_trie_root);
         fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec())
     }
-    // #[test]
-    // fn submit_batch_to_contract_1() {
-    //     let receipt =
-    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-c77eac1aed36d104.json");
 
-    //     submit_batch_to_contract(receipt);
-    // }
-    // #[test]
-    // fn submit_batch_to_contract_1() {
-    //     let mut fixture = TestContext::new();
-    //     let receipt =
-    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-c77eac1aed36d104.json");
-
-    //     let receipt: Receipt = serde_json_wasm::from_slice(receipt).unwrap();
-
-    //     fixture.submit_proof_to_contract(fixture.admin, serde_json_wasm::to_vec(&receipt).unwrap());
-    // }
+    #[test]
+    #[ignore]
+    fn submit_batch_to_contract_1() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-c77eac1aed36d104.json");
+        submit_batch_to_contract(receipt);
+    }
 
     #[test]
     fn submit_batch_to_contract_2() {
@@ -127,11 +118,11 @@ mod tests {
         submit_batch_to_contract(receipt);
     }
 
-    // #[test]
-    // fn submit_batch_to_contract_3() {
-    //     let mut fixture = TestContext::new();
-    //     let receipt =
-    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-3673e712f7cc58df.json");
-    //     fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec());
-    // }
+    #[test]
+    #[ignore]
+    fn submit_batch_to_contract_3() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-3673e712f7cc58df.json");
+        submit_batch_to_contract(receipt);
+    }
 }
