@@ -22,5 +22,8 @@
     };
   };
 
-  services.kairos.enable = true;
+  services.kairos = {
+    enable = true;
+    demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
+  };
 }

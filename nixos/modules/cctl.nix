@@ -6,6 +6,7 @@ let
     mkIf
     mkMerge
     mkEnableOption
+    escapeShellArgs
     ;
   cfg = config.services.cctl;
 in
@@ -29,7 +30,7 @@ in
     };
 
     workingDirectory = mkOption {
-      type = types.str;
+      type = types.path;
       default = "/var/lib/cctl";
       description = ''
         The working directory path where cctl will put its assets and resources.
@@ -43,11 +44,33 @@ in
         The log-level that should be used.
       '';
     };
+
+    contract = mkOption {
+      type = types.nullOr (types.attrsOf types.path);
+      default = null;
+      example = { "contract hash name" = "/path/to/contract.wasm"; };
+      description = ''
+        The wasm compiled contract that should be deployed once the network is up and ready.
+        The name of the attribute should correspond to the contracts hash name when calling
+        https://docs.rs/casper-contract/latest/casper_contract/contract_api/storage/fn.new_locked_contract.html
+      '';
+    };
+
   };
 
   config = mkIf cfg.enable {
 
     systemd.services.cctl =
+      let
+        args = escapeShellArgs ([
+          "--working-dir"
+          cfg.workingDirectory
+        ]
+        ++ (lib.optional (!builtins.isNull cfg.contract) [
+          "--deploy-contract"
+        ] ++ (lib.mapAttrsToList (hash_name: contract_path: "${hash_name}:${contract_path}") cfg.contract)
+        ));
+      in
       {
         description = "cctl";
         documentation = [ "" ];
@@ -60,9 +83,9 @@ in
         serviceConfig =
           mkMerge [
             {
-              ExecStart = ''${lib.getExe cfg.package} --working-dir ${cfg.workingDirectory}'';
+              ExecStart = "${lib.getExe cfg.package} ${args}";
               Type = "notify";
-              Restart = "always";
+              Restart = "no";
               User = "cctl";
               Group = "cctl";
               StateDirectory = builtins.baseNameOf cfg.workingDirectory;
@@ -89,12 +112,14 @@ in
     # when testing
     services.nginx = {
       enable = true;
-      virtualHosts."${config.networking.hostName}".locations."/cctl/users/" = {
-        alias = "${cfg.workingDirectory}/assets/users/";
-        extraConfig = ''
-          autoindex on;
-          add_header Content-Type 'text/plain charset=UTF-8';
-        '';
+      virtualHosts."${config.networking.hostName}".locations = {
+        "/cctl/users/" = {
+          alias = "${cfg.workingDirectory}/assets/users/";
+          extraConfig = ''
+            autoindex on;
+            add_header Content-Type 'text/plain charset=UTF-8';
+          '';
+        };
       };
     };
   };

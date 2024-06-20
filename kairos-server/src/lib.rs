@@ -6,7 +6,16 @@ pub mod state;
 mod l1_sync;
 mod utils;
 
+use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::mpsc;
+use tokio::sync::RwLock;
+
+use casper_client::types::DeployHash;
+use casper_client_hashing::Digest;
+use casper_deploy_notifier::DeployNotifier;
+use casper_types::ContractHash;
 
 use axum::Router;
 use axum_extra::routing::RouterExt;
@@ -40,10 +49,10 @@ pub fn app_router(state: ServerState) -> Router {
         .with_state(state)
 }
 
-pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {
+pub async fn run_l1_sync(server_state: ServerState) {
     // Extra check: make sure the default dummy value of contract hash was changed.
-    let contract_hash = server_state.server_config.casper_contract_hash.as_str();
-    if contract_hash == "0000000000000000000000000000000000000000000000000000000000000000" {
+    let contract_hash = server_state.server_config.kairos_demo_contract_hash;
+    if contract_hash == ContractHash::default() {
         tracing::warn!(
             "Casper contract hash not configured, L1 synchronization will NOT be enabled."
         );
@@ -51,14 +60,53 @@ pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {
     }
 
     // Initialize L1 synchronizer.
-    let l1_sync_service = L1SyncService::new(server_state).await.unwrap_or_else(|e| {
-        panic!("Event manager failed to initialize: {}", e);
-    });
+    let l1_sync_service = Arc::new(
+        L1SyncService::new(server_state.clone())
+            .await
+            .unwrap_or_else(|e| {
+                panic!("Event manager failed to initialize: {}", e);
+            }),
+    );
 
     // Run periodic synchronization.
-    // TODO: Add additional SSE trigger.
+    let l1_sync_service_clone = l1_sync_service.clone();
     tokio::spawn(async move {
-        l1_sync::interval_trigger::run(l1_sync_service.into()).await;
+        l1_sync::interval_trigger::run(l1_sync_service_clone).await;
+    });
+
+    // deploy notifier
+    let (tx, mut rx) = mpsc::channel(100);
+    let mut deploy_notifier = DeployNotifier::new(server_state.server_config.casper_sse.as_str());
+    tokio::spawn(async move {
+        loop {
+            if let Err(e) = deploy_notifier.connect().await {
+                tracing::error!("Unable to connect: {:?}", e);
+                continue;
+            }
+
+            if let Err(e) = deploy_notifier.run(tx.clone()).await {
+                eprintln!("Error while listening to deployment events: {:?}", e);
+            }
+
+            // Connection can sometimes be lost, so we retry after a delay.
+            eprintln!("Retrying in 5 seconds...",);
+            tokio::time::sleep(Duration::from_secs(5)).await;
+        }
+    });
+    // deploy listener/ callback
+    tokio::spawn(async move {
+        while let Some(notification) = rx.recv().await {
+            let deploy_hash = DeployHash::new(Digest::from_hex(notification.deploy_hash).unwrap());
+            match server_state
+                .known_deposit_deploys
+                .write()
+                .await
+                .take(&deploy_hash)
+            {
+                None => continue,
+                Some(_) => l1_sync::interval_trigger::run(l1_sync_service.clone()).await,
+            }
+        }
     });
 }
 
@@ -71,11 +119,12 @@ pub async fn run(config: ServerConfig) {
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: config.clone(),
+        known_deposit_deploys: RwLock::new(HashSet::new()),
     });
 
     run_l1_sync(state.clone()).await;
 
-    let app = app_router(state);
+    let app = app_router(state.clone());
 
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())

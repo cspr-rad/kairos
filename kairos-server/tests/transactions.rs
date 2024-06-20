@@ -1,4 +1,6 @@
+use std::collections::HashSet;
 use std::sync::{Arc, OnceLock};
+use tokio::sync::RwLock;
 
 use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
@@ -10,6 +12,7 @@ use casper_client_types::{
     crypto::{PublicKey, SecretKey},
     AsymmetricType,
 };
+use casper_types::ContractHash;
 use kairos_server::{
     config::ServerConfig,
     routes::deposit::DepositPath,
@@ -30,10 +33,11 @@ static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 
 #[cfg(feature = "deposit-mock")]
 fn new_test_app() -> TestServer {
-    new_test_app_with_casper_node(&Url::parse("http://0.0.0.0:0").unwrap())
+    let dummy_url = Url::parse("http://0.0.0.0:0").unwrap();
+    new_test_app_with_casper_node(&dummy_url, &dummy_url)
 }
 
-fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
+fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
             .with(
@@ -48,10 +52,11 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: ServerConfig {
             socket_addr: "0.0.0.0:0".parse().unwrap(),
-            casper_rpc: casper_node_url.clone(),
-            casper_contract_hash:
-                "0000000000000000000000000000000000000000000000000000000000000000".to_string(),
+            casper_rpc: casper_rpc_url.clone(),
+            casper_sse: casper_sse_url.clone(),
+            kairos_demo_contract_hash: ContractHash::default(),
         },
+        known_deposit_deploys: RwLock::new(HashSet::new()),
     });
 
     TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()
@@ -60,15 +65,22 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
-    let network = CCTLNetwork::run(Option::None, Option::None).await.unwrap();
+    let network = CCTLNetwork::run(Option::None, Option::None, Option::None)
+        .await
+        .unwrap();
     let node = network
         .nodes
         .first()
         .expect("Expected at least one node after successful network run");
-    let casper_node_url =
+    let casper_rpc_url =
         Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_sse_url = Url::parse(&format!(
+        "http://localhost:{}/events/main",
+        node.port.sse_port
+    ))
+    .unwrap();
 
-    let server = new_test_app_with_casper_node(&casper_node_url);
+    let server = new_test_app_with_casper_node(&casper_rpc_url, &casper_sse_url);
 
     let sender_secret_key_file = network
         .working_dir

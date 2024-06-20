@@ -88,7 +88,6 @@
                 ./kairos-contracts/demo-contract/contract-utils
               ];
             };
-
             nativeBuildInputs = with pkgs; [ pkg-config ];
             buildInputs = with pkgs; [
               openssl.dev
@@ -163,7 +162,8 @@
           };
 
           checks = {
-            lint = craneLib.cargoClippy (kairosNodeAttrs // {
+            kairos-lint = craneLib.cargoClippy (kairosNodeAttrs // {
+              pname = "kairos-lint";
               cargoArtifacts = self'.packages.kairos-deps;
               cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
@@ -181,21 +181,24 @@
             #  ];
             #});
 
-            audit = craneLib.cargoAudit {
+            kairos-audit = craneLib.cargoAudit {
+              pname = "kairos-audit";
               inherit (kairosNodeAttrs) src;
               advisory-db = inputs.advisory-db;
               # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
               # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
-              # FIXME --ignore RUSTSEC-2024-0013 ignores libgit2-sys 0.14.2+1.5.1 vulnerability caused by introducing casper-client 2.0.0
-              cargoAuditExtraArgs = "--ignore yanked --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
+              # FIXME --ignore RUSTSEC-2024-0013 Memory corruption, denial of service, and arbitrary code execution in libgit2
+              cargoAuditExtraArgs = "--ignore yanked --deny warnings --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
             };
 
             kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
+              pname = "kairos-contract-lint";
               cargoArtifacts = self'.packages.kairos-contracts-deps;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });
 
             kairos-contracts-audit = craneLib.cargoAudit {
+              pname = "kairos-contract-audit";
               inherit (kairosContractsAttrs) src;
               advisory-db = inputs.advisory-db;
               # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit

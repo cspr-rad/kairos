@@ -5,10 +5,21 @@
 , kairos-contracts
 , cctlModule
 , casper-client-rs
+, writeShellScript
+, jq
 }:
+let
+  # This is where wget (see test) will place the files advertised at http://kairos/cctl/users if the cctl module is enabled
+  clientUsersDirectory = "kairos/cctl/users";
+  cctlPort = 11101;
+  casperNodeAddress = "http://localhost:${builtins.toString cctlPort}";
+  cctlWorkingDirectory = "/var/lib/cctl";
+  contractHashName = "kairos_contract_package_hash";
+  # The path where cctl will write the deployed contract hash on the servers filesystem
+  serverContractHashPath = "${cctlWorkingDirectory}/contracts/${contractHashName}";
+in
 nixosTest {
   name = "kairos e2e test";
-
   nodes = {
     server = { config, lib, ... }: {
       imports = [
@@ -16,17 +27,37 @@ nixosTest {
         cctlModule
       ];
 
-      # modify acme for nixos-test environment
-      security.acme = {
-        preliminarySelfsigned = true;
-        defaults.server = "https://example.com"; # don't spam the acme production server
-      };
-      environment.systemPackages = [ casper-client-rs ];
       # allow HTTP for nixos-test environment
-      services.nginx.virtualHosts.${config.networking.hostName}.forceSSL = lib.mkForce false;
+      services.nginx.virtualHosts.${config.networking.hostName} = {
+        forceSSL = lib.mkForce false;
+        enableACME = lib.mkForce false;
+      };
 
-      services.cctl.enable = true;
-      services.kairos.casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
+      environment.systemPackages = [ casper-client-rs ];
+
+      services.cctl = {
+        enable = true;
+        port = cctlPort;
+        workingDirectory = cctlWorkingDirectory;
+        contract = { "${contractHashName}" = kairos-contracts + "/bin/demo-contract-optimized.wasm"; };
+      };
+
+      services.kairos = {
+        casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
+        casperSseUrl = "http://127.0.0.1:18101/events/main";
+        demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
+      };
+
+      # We have to wait for cctl to deploy the contract to be able to obtain and export the contract hash
+      systemd.services.kairos = {
+        path = [ casper-client-rs jq ];
+        after = [ "network-online.target" "cctl.service" ];
+        requires = [ "network-online.target" "cctl.service" ];
+        serviceConfig.ExecStart = lib.mkForce (writeShellScript "start-kairos" ''
+          export KAIROS_SERVER_DEMO_CONTRACT_HASH=$(cat ${serverContractHashPath})
+          ${lib.getExe kairos}
+        '');
+      };
     };
 
     client = { pkgs, ... }: {
@@ -34,79 +65,97 @@ nixosTest {
     };
   };
 
-  testScript = { nodes, ... }:
-    let
-      casperNodeAddress = "http://localhost:${builtins.toString nodes.server.services.cctl.port}";
-      serverUsersDirectory = nodes.server.services.cctl.workingDirectory + "/assets/users";
-      # This is where wget will place the files from http://kairos/cctl/users
-      clientUsersDirectory = "kairos/cctl/users";
-    in
-    ''
-      # import json
+  extraPythonPackages = p: [ p.backoff ];
+  testScript = ''
+    import json
+    import backoff
+    
+    # Utils
+    def verify_deploy_success(json_data):
+      # Check if the "Success" key is present
+      try:
+        if "result" in json_data and "execution_results" in json_data["result"]:
+          for execution_result in json_data["result"]["execution_results"]:
+            if "result" in execution_result and "Success" in execution_result["result"]:
+              return True
+      except KeyError:
+        pass
+      return False
 
-      start_all()
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, jitter=backoff.full_jitter)
+    def wait_for_successful_deploy(deploy_hash):
+      client_output = kairos.succeed("casper-client get-deploy --node-address ${casperNodeAddress} {}".format(deploy_hash))
+      get_deploy_result = json.loads(client_output)
+      if not verify_deploy_success(get_deploy_result):
+        raise Exception("Success key not found in JSON")
 
-      kairos.wait_for_unit("cctl.service")
+    # Test
+    start_all()
 
-      kairos.wait_for_unit("kairos.service")
-      kairos.wait_for_unit("nginx.service")
-      kairos.wait_for_open_port(80)
+    kairos.wait_for_unit("cctl.service")
 
-      client.wait_for_unit ("multi-user.target")
+    kairos.wait_for_unit("kairos.service")
+    kairos.wait_for_unit("nginx.service")
+    kairos.wait_for_open_port(80)
 
-      # We need to copy the generated assets from the server to our client
-      # For more details, see cctl module implementation
-      client.succeed("wget --no-parent -r http://kairos/cctl/users/")
+    client.wait_for_unit ("multi-user.target")
 
-      kairos.succeed("casper-client get-node-status --node-address ${casperNodeAddress}")
+    # We need to copy the generated assets from the server to our client, because we use filepaths
+    # in our cli, therefore we need to make sure that the files generated by cctl on the server
+    # are also available on the client
+    # For more details, see cctl module implementation
+    client.succeed("wget --no-parent -r http://kairos/cctl/users/")
 
-      # Deploy the demo contract
-      # chain-name see: https://github.com/casper-network/cctl/blob/745155d080934c409d98266f912b8fd2b7e28a00/utils/constants.sh#L66
-      kairos.succeed("casper-client put-deploy --node-address ${casperNodeAddress} --chain-name cspr-dev-cctl --secret-key ${serverUsersDirectory}/user-1/secret_key.pem --payment-amount 5000000000000  --session-path ${kairos-contracts}/bin/demo-contract-optimized.wasm")
+    contract_hash = kairos.succeed("cat ${serverContractHashPath}")
 
-      # CLI with ed25519
-      cli_output = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 1000 --private-key ${clientUsersDirectory}/user-1/secret_key.pem")
-      assert int(cli_output, 16), "The deposit command did not output a hex encoded deploy hash. The output was {}".format(cli_output)
+    kairos.succeed("casper-client get-node-status --node-address ${casperNodeAddress}")
 
-      # TODO Transfer and withdraw can only work once deposit deploys are processed and the users actually have an account
-      # REST API
-      # Tx Payload
-      #   nonce = 0
-      #   transfer:
-      #     recipient = deadbabe
-      #     amount = 1000
-      #
-      # transfer_payload = "300f020100a10a0404deadbabe020203e8"
-      # transfer_request = { "public_key": "cafebabe", "payload": transfer_payload, "signature": "deadbeef" }
-      # client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
+    # CLI with ed25519
+    # deposit
+    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --private-key ${clientUsersDirectory}/user-2/secret_key.pem --contract-hash {}".format(contract_hash))
+    assert int(deposit_deploy_hash, 16), "The deposit command did not output a hex encoded deploy hash. The output was {}".format(deposit_deploy_hash)
 
-      # Tx Payload
-      #   nonce = 0
-      #   withdrawal:
-      #     amount = 1000
-      #
-      # withdraw_payload = "3009020100a204020203e8"
-      # withdraw_request = { "public_key": "deadbabe", "payload": withdraw_payload, "signature": "deadbeef" }
-      # client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
+    wait_for_successful_deploy(deposit_deploy_hash)
 
-      # TODO Transfer and withdraw can only work once deposit deploys are processed and the users actually have an account
-      # CLI with ed25519
-      # cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
-      # assert "ok\n" in cli_output
+    # TODO Transfer and withdraw can only work once deposit deploys are processed and the users actually have an account
+    # REST API
+    # Tx Payload
+    #   nonce = 0
+    #   transfer:
+    #     recipient = deadbabe
+    #     amount = 1000
+    #
+    # transfer_payload = "300f020100a10a0404deadbabe020203e8"
+    # transfer_request = { "public_key": "cafebabe", "payload": transfer_payload, "signature": "deadbeef" }
+    # client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
 
-      # cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
-      # assert "ok\n" in cli_output
+    # Tx Payload
+    #   nonce = 0
+    #   withdrawal:
+    #     amount = 1000
+    #
+    # withdraw_payload = "3009020100a204020203e8"
+    # withdraw_request = { "public_key": "deadbabe", "payload": withdraw_payload, "signature": "deadbeef" }
+    # client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
 
-      # TODO cctl does not provide any secp256k1 keys
-      # CLI with secp256k1
-      # cli_output = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
-      # assert "ok\n" in cli_output
+    # TODO Transfer and withdraw can only work once deposit deploys are processed and the users actually have an account
+    # CLI with ed25519
+    # cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
+    # assert "ok\n" in cli_output
 
-      # cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
-      # assert "ok\n" in cli_output
+    # cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
+    # assert "ok\n" in cli_output
 
-      # cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
-      # assert "ok\n" in cli_output
-    '';
+    # TODO cctl does not provide any secp256k1 keys
+    # CLI with secp256k1
+    # cli_output = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
+    # assert "ok\n" in cli_output
+
+    # cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
+    # assert "ok\n" in cli_output
+
+    # cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
+    # assert "ok\n" in cli_output
+  '';
 }
 

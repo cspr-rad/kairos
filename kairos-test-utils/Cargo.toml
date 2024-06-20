@@ -12,7 +12,9 @@ test = false
 bench = false
 
 [features]
-all-tests = ["cctl-tests"]
+# FIXME enable cctl-tests once this crate is factored out in a separate repository
+#all-tests = ["cctl-tests"]
+all-tests = []
 cctl-tests = []
 
 [lib]
@@ -23,7 +25,11 @@ anyhow = "1"
 backoff = { version = "0.4", features = ["tokio", "futures"]}
 clap = { version = "4", features = ["derive"] }
 casper-client.workspace = true
+casper-types.workspace = true
+casper-client-types.workspace = true
 nom = "7"
+hex = "0.4"
+rand = "0.8"
 sd-notify = "0.4"
 tokio = { version = "1", features = [ "full", "tracing", "macros" ] }
 tempfile = "3"
