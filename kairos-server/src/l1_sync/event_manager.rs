@@ -1,42 +1,78 @@
-use std::sync::Arc;
+use anyhow::{anyhow, Result};
+use backoff::{future::retry, Error, ExponentialBackoff};
+use casper_client::{
+    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
+};
+use rand::Rng;
+use reqwest::Url;
 
-use casper_event_toolkit::casper_types::bytesrepr::FromBytes;
+use super::error::L1SyncError;
+use crate::state::ServerState;
+use casper_event_standard::casper_types::{bytesrepr::FromBytes, ContractHash, Key};
 use casper_event_toolkit::fetcher::{Fetcher, Schemas};
 use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
-use contract_utils::Deposit;
-
-use crate::state::ServerStateInner;
+use casper_event_toolkit::rpc::compat::key_to_client_types;
+use contract_utils::constants::KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER;
 use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
 
-use super::error::L1SyncError;
-
 pub struct EventManager {
-    next_event_id: u32,
+    /// The last event index that was added to the batch
+    next_deposit_index: u32,
     fetcher: Fetcher,
     schemas: Schemas,
-    server_state: Arc<ServerStateInner>,
+    server_state: ServerState,
 }
 
 impl EventManager {
-    pub async fn new(server_state: Arc<ServerStateInner>) -> Result<Self, L1SyncError> {
+    pub async fn new(server_state: ServerState) -> Result<Self, L1SyncError> {
         tracing::info!("Initializing event manager");
 
-        let rpc_url = server_state.server_config.casper_rpc.as_str();
-        let contract_hash = server_state.server_config.kairos_demo_contract_hash;
-        let client = CasperClient::new(rpc_url);
-        let metadata = CesMetadataRef::fetch_metadata(&client, &contract_hash.to_string()).await?;
-        tracing::debug!("Metadata fetched successfully");
+        let casper_client = CasperClient::new(server_state.server_config.casper_rpc.as_str());
+
+        let metadata = retry(ExponentialBackoff::default(), || async {
+            CesMetadataRef::fetch_metadata(
+                &casper_client,
+                &server_state
+                    .server_config
+                    .kairos_demo_contract_hash
+                    .to_string(),
+            )
+            .await
+            .map_err(Error::transient)
+        })
+        .await?;
+
+        tracing::info!("Metadata fetched successfully");
 
         let fetcher = Fetcher {
-            client,
+            client: casper_client,
             ces_metadata: metadata,
         };
-        let schemas = fetcher.fetch_schema().await?;
-        tracing::debug!("Schemas fetched successfully");
+
+        let schemas = retry(ExponentialBackoff::default(), || async {
+            fetcher.fetch_schema().await.map_err(Error::transient)
+        })
+        .await?;
+
+        tracing::info!("Schemas fetched successfully");
+
+        let last_processed_deposit_index: u32 = get_last_deposit_counter(
+            &server_state.server_config.casper_rpc,
+            &server_state.server_config.kairos_demo_contract_hash,
+        )
+        .await
+        .map_err(|err| {
+            L1SyncError::UnexpectedError(format!(
+                "Failed to fetch the index for the last processed deposit: {}",
+                err
+            ))
+        })?;
+
+        tracing::info!("On-chain stored last processed deposit index fetched successfully");
 
         Ok(EventManager {
-            next_event_id: 0,
+            next_deposit_index: last_processed_deposit_index + 1,
             fetcher,
             schemas,
             server_state,
@@ -45,45 +81,97 @@ impl EventManager {
 
     /// Processes new events starting from the last known event ID.
     pub async fn process_new_events(&mut self) -> Result<(), L1SyncError> {
-        tracing::info!("Looking for new events");
+        let last_unprocessed_deposit_index = self.fetcher.fetch_events_count().await?;
 
-        let num_events = self.fetcher.fetch_events_count().await?;
-        for i in self.next_event_id..num_events {
-            let event = self.fetcher.fetch_event(i, &self.schemas).await?;
-            tracing::debug!("Event {} fetched: {:?}.", i, event);
-
-            let event_bytes = event.to_ces_bytes()?;
+        for deposit_index in self.next_deposit_index..=last_unprocessed_deposit_index {
+            let untyped_event = self
+                .fetcher
+                .fetch_event(deposit_index, &self.schemas)
+                .await?;
 
             // (koxu1996) NOTE: I think we should rather use full transaction data (ASN) for events,
             // parse them here with `kairos-tx` and then push to Data Availability layer.
 
-            match event.name.as_str() {
+            match untyped_event.name.as_str() {
                 "Deposit" => {
-                    // Parse simplified deposit data.
-                    let (deposit, _) = Deposit::from_bytes(&event_bytes)
-                        .expect("Failed to parse deposit event from bytes");
-
-                    let amount = deposit.amount;
-                    let recipient: Vec<u8> = "cafebabe".into(); // CAUTION: Using mocked recipient, as event does NOT contain depositor's public key.
-                    let txn = KairosTransaction::Deposit(L1Deposit { amount, recipient });
-
-                    // Push deposit to trie.
+                    let data = untyped_event.to_ces_bytes()?;
+                    let (deposit, _) =
+                        contract_utils::Deposit::from_bytes(&data).map_err(|err| {
+                            L1SyncError::UnexpectedError(format!(
+                                "Failed to parse deposit event from bytes: {}",
+                                err
+                            ))
+                        })?;
                     self.server_state
                         .batch_state_manager
-                        .enqueue_transaction(txn)
+                        .enqueue_transaction(KairosTransaction::Deposit(L1Deposit {
+                            recipient: "cafebabe".into(),
+                            amount: deposit.amount,
+                        }))
                         .await
-                        .map_err(|e| {
-                            L1SyncError::UnexpectedError(format!("unable to batch tx: {}", e))
+                        .map_err(|err| {
+                            L1SyncError::UnexpectedError(format!(
+                                "Failed to parse deposit event from bytes: {}",
+                                err
+                            ))
                         })?;
                 }
-                name => {
-                    tracing::error!("Unrecognized event {}", name);
+                other => {
+                    tracing::error!("Unknown event type: {}", other)
                 }
             }
-
-            self.next_event_id = i + 1;
         }
-
+        self.next_deposit_index = last_unprocessed_deposit_index + 1;
         Ok(())
     }
+}
+
+async fn get_last_deposit_counter(
+    casper_node_rpc_url: &Url,
+    contract_hash: &ContractHash,
+) -> Result<u32> {
+    let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
+    let state_root_hash = get_state_root_hash(
+        expected_rpc_id.clone(),
+        casper_node_rpc_url.as_str(),
+        Verbosity::High,
+        Option::None,
+    )
+    .await
+    .map_err(Into::<anyhow::Error>::into)
+    .and_then(|response| {
+        if response.id == expected_rpc_id {
+            response
+                .result
+                .state_root_hash
+                .ok_or(anyhow!("No state root hash present in response"))
+        } else {
+            Err(anyhow!("JSON RPC Id missmatch"))
+        }
+    })?;
+
+    let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
+    let contract_hash_key = key_to_client_types(&Key::Hash(contract_hash.value()))?;
+    query_global_state(
+        expected_rpc_id.clone(),
+        casper_node_rpc_url.as_str(),
+        Verbosity::High,
+        casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash), // fetches recent blocks state root hash
+        contract_hash_key,
+        vec![KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string()],
+    )
+    .await
+    .map_err(Into::<anyhow::Error>::into)
+    .and_then(|response| {
+        if response.id == expected_rpc_id {
+            match response.result.stored_value {
+                StoredValue::CLValue(last_deposit_counter) => last_deposit_counter
+                    .into_t()
+                    .map_err(|err| anyhow!("Failed to convert from CLValue to u32: {}", err)),
+                _ => Err(anyhow!("Unexpected result type, type is not a CLValue")),
+            }
+        } else {
+            Err(anyhow!("JSON RPC Id missmatch"))
+        }
+    })
 }
