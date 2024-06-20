@@ -1,4 +1,4 @@
-use crate::state::ServerState;
+use crate::state::BatchStateManager;
 
 use anyhow::{anyhow, Result};
 use rand::Rng;
@@ -7,7 +7,6 @@ use reqwest::Url;
 use casper_client::{
     get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
 };
-use casper_deploy_notifier::types::Notification;
 use casper_event_standard::casper_types::{bytesrepr::FromBytes, ContractHash, Key};
 use casper_event_standard::Schemas;
 use casper_event_toolkit::fetcher::Fetcher;
@@ -68,20 +67,19 @@ async fn get_last_deposit_counter(
 pub async fn on_deploy_notification(
     event_fetcher: &Fetcher,
     event_schemas: &Schemas,
-    state: ServerState,
-    notification: &Notification,
+    casper_node_rpc_url: &Url,
+    contract_hash: &ContractHash,
+    batch_state_manager: &BatchStateManager,
 ) {
     let last_unprocessed_deposit_index = event_fetcher
         .fetch_events_count()
         .await
         .expect("Failed to fetch the last unprocessed deposit index");
     // FIXME in demo-contract to u32
-    let last_processed_deposit_index: u32 = get_last_deposit_counter(
-        &state.server_config.casper_rpc,
-        &state.server_config.kairos_demo_contract_hash,
-    )
-    .await
-    .expect("Failed to fetch the index for the last processed deposit");
+    let last_processed_deposit_index: u32 =
+        get_last_deposit_counter(casper_node_rpc_url, contract_hash)
+            .await
+            .expect("Failed to fetch the index for the last processed deposit");
 
     for deposit_index in (last_processed_deposit_index + 1)..=last_unprocessed_deposit_index {
         let untyped_event = event_fetcher
@@ -95,10 +93,9 @@ pub async fn on_deploy_notification(
                     .expect("Failed convert the untyped deposit event into bytes");
                 let (deposit, _) = contract_utils::Deposit::from_bytes(&data)
                     .expect("Failed to parse deposit event from bytes");
-                state
-                    .batch_state_manager
+                batch_state_manager
                     .enqueue_transaction(KairosTransaction::Deposit(L1Deposit {
-                        recipient: notification.public_key.clone().into_bytes(),
+                        recipient: "cafebabe".into(),
                         amount: deposit.amount,
                     }))
                     .await

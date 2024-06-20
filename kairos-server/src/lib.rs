@@ -4,19 +4,17 @@ pub mod on_deploy;
 pub mod routes;
 pub mod state;
 
-mod l1_sync;
+pub mod l1_sync;
 mod utils;
 
-use backoff::{future::retry, Error, ExponentialBackoff};
+use std::collections::HashSet;
 use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, RwLock};
+use tokio::time::{self, Duration};
 
+use casper_client::types::DeployHash;
+use casper_client_hashing::Digest;
 use casper_deploy_notifier::DeployNotifier;
-use casper_event_toolkit::fetcher::Fetcher;
-use casper_event_toolkit::metadata::CesMetadataRef;
-use casper_event_toolkit::rpc::client::CasperClient;
-use casper_types::ContractHash;
 
 use axum::Router;
 use axum_extra::routing::RouterExt;
@@ -24,7 +22,7 @@ use axum_extra::routing::RouterExt;
 pub use errors::AppErr;
 
 use crate::config::ServerConfig;
-use crate::l1_sync::service::L1SyncService;
+use crate::l1_sync::event_manager::EventManager;
 use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 
 /// TODO: support secp256k1
@@ -50,28 +48,6 @@ pub fn app_router(state: ServerState) -> Router {
         .with_state(state)
 }
 
-pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {
-    // Extra check: make sure the default dummy value of contract hash was changed.
-    let contract_hash = server_state.server_config.kairos_demo_contract_hash;
-    if contract_hash == ContractHash::default() {
-        tracing::warn!(
-            "Casper contract hash not configured, L1 synchronization will NOT be enabled."
-        );
-        return;
-    }
-
-    // Initialize L1 synchronizer.
-    let l1_sync_service = L1SyncService::new(server_state).await.unwrap_or_else(|e| {
-        panic!("Event manager failed to initialize: {}", e);
-    });
-
-    // Run periodic synchronization.
-    // TODO: Add additional SSE trigger.
-    tokio::spawn(async move {
-        l1_sync::interval_trigger::run(l1_sync_service.into()).await;
-    });
-}
-
 pub async fn run(config: ServerConfig) {
     let listener = tokio::net::TcpListener::bind(config.socket_addr)
         .await
@@ -81,9 +57,8 @@ pub async fn run(config: ServerConfig) {
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(),
         server_config: config.clone(),
+        known_deposit_deploys: RwLock::new(HashSet::new()),
     });
-
-    run_l1_sync(state.clone()).await;
 
     let app = app_router(state.clone());
 
@@ -108,42 +83,56 @@ pub async fn run(config: ServerConfig) {
         }
     });
 
-    // deploy listener/ callback
+    let state_x = Arc::clone(&state);
     tokio::spawn(async move {
-        let casper_client = CasperClient::new(state.server_config.casper_rpc.as_str());
-        let metadata = retry(ExponentialBackoff::default(), || async {
-            CesMetadataRef::fetch_metadata(
-                &casper_client,
-                &state
-                    .server_config
-                    .kairos_demo_contract_hash
-                    .to_formatted_string(),
-            )
-            .await
-            .map_err(Error::transient)
-        })
+        let event_manager = EventManager::new(
+            &state_x.server_config.casper_rpc,
+            &state_x.server_config.kairos_demo_contract_hash,
+        )
         .await
-        .expect("Failed to fetch the demo contracts event metadata");
+        .unwrap();
 
-        let fetcher = Fetcher {
-            client: CasperClient::default_mainnet(),
-            ces_metadata: metadata,
-        };
+        let mut interval = time::interval(Duration::from_secs(30));
 
-        let schemas = retry(ExponentialBackoff::default(), || async {
-            fetcher.fetch_schema().await.map_err(Error::transient)
-        })
-        .await
-        .expect("Failed to fetch the demo contracts event schema");
+        loop {
+            interval.tick().await;
 
-        while let Some(notification) = rx.recv().await {
+            tracing::debug!("Triggering periodic L1 sync");
             on_deploy::on_deploy_notification(
-                &fetcher,
-                &schemas,
-                Arc::clone(&state),
-                &notification,
+                &event_manager.fetcher,
+                &event_manager.schemas,
+                &state_x.server_config.casper_rpc,
+                &state_x.server_config.kairos_demo_contract_hash,
+                &state_x.batch_state_manager,
             )
             .await;
+        }
+    });
+
+    // deploy listener/ callback
+    tokio::spawn(async move {
+        let event_manager = EventManager::new(
+            &state.server_config.casper_rpc,
+            &state.server_config.kairos_demo_contract_hash,
+        )
+        .await
+        .unwrap();
+
+        while let Some(notification) = rx.recv().await {
+            let deploy_hash = DeployHash::new(Digest::from_hex(notification.deploy_hash).unwrap());
+            match state.known_deposit_deploys.write().await.take(&deploy_hash) {
+                None => continue,
+                Some(_) => {
+                    on_deploy::on_deploy_notification(
+                        &event_manager.fetcher,
+                        &event_manager.schemas,
+                        &state.server_config.casper_rpc,
+                        &state.server_config.kairos_demo_contract_hash,
+                        &state.batch_state_manager,
+                    )
+                    .await
+                }
+            }
         }
     });
 

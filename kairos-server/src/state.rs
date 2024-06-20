@@ -1,21 +1,24 @@
 pub mod transactions;
 mod trie;
 
+use std::collections::HashSet;
 use std::{sync::Arc, thread::JoinHandle};
-
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, RwLock};
 
 pub use self::trie::TrieStateThreadMsg;
 use crate::config::ServerConfig;
+use crate::l1_sync::event_manager::EventManager;
+use casper_client::types::DeployHash;
 use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
 pub type ServerState = Arc<ServerStateInner>;
 
-#[derive(Debug)]
 pub struct ServerStateInner {
     pub batch_state_manager: BatchStateManager,
     pub server_config: ServerConfig,
+    pub known_deposit_deploys: RwLock<HashSet<DeployHash>>,
+    //pub event_manager: EventManager,
 }
 
 /// The `BatchStateManager` is a piece of Axum state.
