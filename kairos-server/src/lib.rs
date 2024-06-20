@@ -95,8 +95,17 @@ pub async fn run_l1_sync(server_state: ServerState) {
     });
     // deploy listener/ callback
     tokio::spawn(async move {
-        while let Some(_notification) = rx.recv().await {
-            l1_sync::interval_trigger::run(l1_sync_service.clone()).await;
+        while let Some(notification) = rx.recv().await {
+            let deploy_hash = DeployHash::new(Digest::from_hex(notification.deploy_hash).unwrap());
+            match server_state
+                .known_deposit_deploys
+                .write()
+                .await
+                .take(&deploy_hash)
+            {
+                None => continue,
+                Some(_) => l1_sync::interval_trigger::run(l1_sync_service.clone()).await,
+            }
         }
     });
 }

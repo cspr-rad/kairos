@@ -2153,6 +2153,7 @@ dependencies = [
  "casper-deploy-notifier",
  "casper-event-standard",
  "casper-event-toolkit",
+ "casper-hashing 2.0.0",
  "casper-types 3.0.0",
  "casper-types 4.0.1",
  "contract-utils",

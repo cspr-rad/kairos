@@ -1,9 +1,12 @@
 pub mod transactions;
 mod trie;
 
+use std::collections::HashSet;
 use std::{sync::Arc, thread::JoinHandle};
-
 use tokio::sync::mpsc;
+use tokio::sync::RwLock;
+
+use casper_client::types::DeployHash;
 
 pub use self::trie::TrieStateThreadMsg;
 use crate::config::ServerConfig;
@@ -16,6 +19,7 @@ pub type ServerState = Arc<ServerStateInner>;
 pub struct ServerStateInner {
     pub batch_state_manager: BatchStateManager,
     pub server_config: ServerConfig,
+    pub known_deposit_deploys: RwLock<HashSet<DeployHash>>,
 }
 
 /// The `BatchStateManager` is a piece of Axum state.

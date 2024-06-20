@@ -1,4 +1,6 @@
+use std::collections::HashSet;
 use std::sync::{Arc, OnceLock};
+use tokio::sync::RwLock;
 
 use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
@@ -54,6 +56,7 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
             casper_sse: casper_sse_url.clone(),
             kairos_demo_contract_hash: ContractHash::default(),
         },
+        known_deposit_deploys: RwLock::new(HashSet::new()),
     });
 
     TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()

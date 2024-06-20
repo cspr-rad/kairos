@@ -28,6 +28,7 @@ axum-extra = { version = "0.9", features = [
 anyhow = "1"
 backoff = { version = "0.4", features = ["tokio", "futures"]}
 casper-client.workspace = true
+casper-client-hashing.workspace = true
 casper-types.workspace = true
 casper-deploy-notifier = { path = "../casper-deploy-notifier" }
 casper-event-standard.workspace = true
