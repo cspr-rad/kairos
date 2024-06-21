@@ -5,6 +5,7 @@ let
       {
         imports = [
           self.nixosModules.kairos
+          self.nixosModules.kairos-prover
           ./configurations/kairos-host
           ({ config, ... }: {
             networking.hostName = hostName;
@@ -54,6 +55,12 @@ in
         {
           imports = [ ./modules/kairos.nix ];
           services.kairos.package = self.packages.${pkgs.system}.kairos;
+        };
+      kairos-prover =
+        { pkgs, ... }:
+        {
+          imports = [ ./modules/kairos-prover.nix ];
+          services.kairos-prover.package = self.packages.${pkgs.system}.kairos-prover;
         };
       cctl =
         { pkgs, lib, ... }:

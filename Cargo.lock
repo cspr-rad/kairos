@@ -2533,6 +2533,7 @@ dependencies = [
  "backoff",
  "casper-client",
  "clap",
+ "dotenvy",
  "kairos-server",
  "nom",
  "reqwest 0.12.4",
