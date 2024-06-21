@@ -4,8 +4,9 @@
 , testResources ? ../../kairos-cli/tests/fixtures
 , kairos-contracts
 , cctlModule
-, fetchurl
 , casper-client-rs
+, casper-node
+, runCommand
 }:
 nixosTest {
   name = "kairos e2e test";
@@ -28,14 +29,17 @@ nixosTest {
 
       services.cctl = {
         enable = true;
-        config = fetchurl {
-          url = "https://raw.githubusercontent.com/jonas089/casper-node/kairos-demo-chainspec/resources/local/config.toml";
-          hash = "sha256-iwJkUY1dG+qh2BGXuwgnALJ3fNCvarr9ELJAqvd7kUg=";
-        };
-        chainspec = fetchurl {
-          url = "https://raw.githubusercontent.com/jonas089/casper-node/kairos-demo-chainspec/resources/local/chainspec.toml.in";
-          hash = "sha256-b/6c5o3JXFlaTgTHxs8JepaHzjMG75knzlKKqRd/7pc=";
-        };
+        config = runCommand "patched-config" { } ''
+          sed -E "s/(max_body_bytes\s*=\s*)[0-9_]+/\118_388_608/" "${casper-node.src}/resources/local/config.toml" > "$out"
+        '';
+        chainspec = runCommand "patched-chainspec" { } ''
+          sed -E "s/(max_block_size\s*=\s*)[0-9_]+/\1141_943_040/" "${casper-node.src}/resources/local/chainspec.toml.in" > "$out"
+          sed -i -E "s/(max_deploy_size\s*=\s*)[0-9_]+/\114_194_304/" "$out"
+          sed -i -E "s/(session_args_max_length\s*=\s*)[0-9_]+/\110000000/" "$out"
+          sed -i -E "s/(minimum_block_time\s*=\s*')[0-9]+ ms'/\1100 ms'/" "$out"
+          sed -i -E "s/(maximum_round_length\s*=\s*')[0-9]+ seconds'/\11 seconds'/" "$out"
+
+        '';
       };
       services.kairos.casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
     };
