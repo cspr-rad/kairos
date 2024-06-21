@@ -6,7 +6,7 @@ use casper_client::{
     types::{DeployBuilder, Timestamp},
     TransferTarget,
 };
-use casper_types::{
+use casper_client_types::{
     crypto::{PublicKey, SecretKey},
     AsymmetricType,
 };
