@@ -16,7 +16,7 @@ impl EventManager {
         tracing::info!("Initializing event manager");
         let casper_client = CasperClient::new(casper_rpc_url.as_str());
         let metadata = retry(ExponentialBackoff::default(), || async {
-            CesMetadataRef::fetch_metadata(&casper_client, &contract_hash.to_formatted_string())
+            CesMetadataRef::fetch_metadata(&casper_client, &contract_hash.to_string())
                 .await
                 .map_err(Error::transient)
         })
