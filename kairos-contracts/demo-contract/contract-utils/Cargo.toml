@@ -4,6 +4,11 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[lib]
+test = false
+bench = false
+doctest = false
+
 [dependencies]
-casper-types = { version = "3", default-features = false }
-casper-event-standard = { version = "0.5.0", default-features = false }
+casper-types.workspace = true
+casper-event-standard = { workspace = true, default-features = false }
