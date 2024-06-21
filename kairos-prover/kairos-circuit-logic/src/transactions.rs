@@ -10,8 +10,8 @@ pub type PublicKey = Vec<u8>;
 /// Deposit comes from the L1, and is executed first on L1 and then on L2.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
 )]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum KairosTransaction {
@@ -24,9 +24,8 @@ pub enum KairosTransaction {
 /// The signature should already be verified before you construct this type.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize),
-    archive(compare(PartialEq), check_bytes)
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
 )]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Signed<T> {
@@ -38,8 +37,8 @@ pub struct Signed<T> {
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
 )]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Transfer {
@@ -49,9 +48,8 @@ pub struct Transfer {
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize),
-    archive(compare(PartialEq), check_bytes)
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
 )]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct L1Deposit {
@@ -61,9 +59,8 @@ pub struct L1Deposit {
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize),
-    archive(compare(PartialEq), check_bytes)
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
 )]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Withdraw {

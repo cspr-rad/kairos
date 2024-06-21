@@ -1,30 +1,31 @@
+use std::{env, fs::File, io::Write, path::PathBuf};
+
 fn main() {
-    let guests = risc0_build::embed_methods();
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=prove_batch_bin");
 
-    let ignore_image_id = option_env!("IGNORE_WRONG_RISC0_IMAGE_ID").unwrap_or("1");
+    let Ok(image_id) = risc0_binfmt::compute_image_id(include_bytes!("prove_batch_bin")) else {
+        panic!("Failed to compute image_id");
+    };
+    let image_id: [u32; 8] = image_id.into();
 
-    match guests.as_slice() {
-        [guest] => {
-            let hardcoded_id = kairos_verifier_risc0_lib::BATCH_CIRCUIT_PROGRAM_HASH;
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-            if matches!(ignore_image_id, "1" | "true" | "True" | "TRUE")
-                && hardcoded_id != guest.image_id
-            {
-                println!(
-                    "cargo:warning=Ignoring error: kairos_verifier_risc0_lib::BATCH_CIRCUIT_PROGRAM_HASH = {hardcoded_id:?}`,\
-                    but the circuit's new hash is: {0:?}", guest.image_id
-                );
-            } else {
-                assert_eq!(
-                hardcoded_id,
-                guest.image_id,
-                "`kairos_verifier_risc0_lib::BATCH_CIRCUIT_PROGRAM_HASH = {hardcoded_id:?}` is out of date.\n\
-                 Update the hardcoded value to the new hash: {0:?}", guest.image_id
-            );
-            }
-        }
-        // FIXME the image_id should be stable in devshell and nix
-        // Ignore the wrong image_id in nix
-        _ => panic!("Expected exactly one guest method"),
+    let constants = format!(
+        "pub const PROVE_BATCH_ID: [u32; 8] = {image_id:?};\n\
+         pub const PROVE_BATCH_ELF: &[u8] = include_bytes!(\"{manifest_dir}/prove_batch_bin\");",
+    );
+
+    let methods_path = PathBuf::from(&env::var_os("OUT_DIR").unwrap()).join("methods.rs");
+    File::create(methods_path)
+        .unwrap()
+        .write_all(constants.as_bytes())
+        .unwrap();
+
+    if kairos_verifier_risc0_lib::BATCH_CIRCUIT_PROGRAM_HASH != image_id {
+        panic!(
+            "`kairos_verifier_risc0_lib::BATCH_CIRCUIT_PROGRAM_HASH` is out of date\n\
+              The new hash is: {image_id:?}\n"
+        );
     }
 }

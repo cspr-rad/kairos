@@ -91,13 +91,15 @@ mod tests {
         fixture.submit_proof_to_contract(fixture.admin, receipt1.to_vec());
     }
 
-    // TODO all these more real batches fail with code unreachable in the contract.
+    // TODO some more real larger batches fail with code unreachable in the contract.
     // They verify fine outside the contract, so I suspect they use too much gas.
     #[allow(dead_code)]
     fn submit_batch_to_contract(receipt: &[u8]) {
         // precheck proofs before contract tests that are hard to debug
         let proof_outputs =
             verify_execution(&serde_json_wasm::from_slice(receipt).unwrap()).unwrap();
+
+        eprintln!("{:?}", proof_outputs);
 
         let mut fixture = TestContext::new(proof_outputs.pre_batch_trie_root);
         fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec())
@@ -106,21 +108,28 @@ mod tests {
     #[test]
     fn submit_batch_to_contract_1() {
         let receipt =
-            include_bytes!("testdata/proptest_prove_batches-proof-journal-c77eac1aed36d104.json");
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-517453938a5b4f3e.json");
         submit_batch_to_contract(receipt);
     }
 
     #[test]
     fn submit_batch_to_contract_2() {
         let receipt =
-            include_bytes!("testdata/proptest_prove_batches-proof-journal-7d8dadeda4c1eb1c.json");
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-9a85f9117f0bf3a8.json");
         submit_batch_to_contract(receipt);
     }
 
     #[test]
     fn submit_batch_to_contract_3() {
         let receipt =
-            include_bytes!("testdata/proptest_prove_batches-proof-journal-3673e712f7cc58df.json");
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-52945c21c49e8ca6.json");
+        submit_batch_to_contract(receipt);
+    }
+
+    #[test]
+    fn submit_batch_to_contract_4() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-a53b58a9cf37e50e.json");
         submit_batch_to_contract(receipt);
     }
 }

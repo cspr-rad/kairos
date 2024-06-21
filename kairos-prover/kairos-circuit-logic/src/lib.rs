@@ -10,9 +10,6 @@ use kairos_trie::{stored::merkle::Snapshot, DigestHasher};
 use sha2::Sha256;
 use transactions::{KairosTransaction, L1Deposit, Signed, Withdraw};
 
-#[cfg(feature = "rkyv")]
-use rkyv::{AlignedVec, Deserialize};
-
 pub mod account_trie;
 pub mod transactions;
 
@@ -29,9 +26,8 @@ pub struct ProofInputs {
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(
-    feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize),
-    archive(compare(PartialEq), check_bytes)
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
 )]
 #[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
 pub struct ProofOutputs {
@@ -42,21 +38,15 @@ pub struct ProofOutputs {
     pub withdrawals: Box<[Signed<Withdraw>]>,
 }
 
-#[cfg(feature = "rkyv")]
+#[cfg(feature = "borsh")]
 impl ProofOutputs {
-    pub fn rkyv_serialize(&self) -> AlignedVec {
-        rkyv::to_bytes::<_, 256>(self).expect("Failed to rkyv_serialize ProofOutputs")
+    pub fn borsh_serialize(&self) -> Result<Vec<u8>, String> {
+        borsh::to_vec(self).map_err(|e| format!("Error in borsh serialize: {e}"))
     }
 
-    pub fn rkyv_deserialize(bytes: &[u8]) -> Result<Self, String> {
-        let proof_outputs = rkyv::check_archived_root::<ProofOutputs>(bytes)
-            .map_err(|e| format!("Error in rkyv::check_archived_root: {e}"))?;
-
-        let proof_outputs = proof_outputs
-            .deserialize(&mut rkyv::Infallible)
-            .map_err(|e| format!("Error in ProofOutputs::rkyv_deserialize: {e}"))?;
-
-        Ok(proof_outputs)
+    pub fn borsh_deserialize(bytes: &[u8]) -> Result<Self, String> {
+        borsh::BorshDeserialize::try_from_slice(bytes)
+            .map_err(|e| format!("Error in borsh deserialize: {e}"))
     }
 }
 
