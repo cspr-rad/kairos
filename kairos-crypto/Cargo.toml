@@ -5,17 +5,17 @@ edition.workspace = true
 license.workspace = true
 
 [features]
-default = ["crypto-casper", "tx"]
+default = ["crypto-casper", "tx", "std"]
 crypto-casper = ["casper-types"]
+std = ["fs"]
 tx = ["kairos-tx"]
-fs = ["casper-types/std"] # TODO: Change `std` -> `std-fs-io` in the future version.
+fs = ["casper-types/std"] # FUTURE: Change `casper-types/std` -> `casper-types/std-fs-io` with next types release.
 
 [lib]
 
 [dependencies]
-hex = "0.4"
-thiserror = "1"
+hex = { version = "0.4", default-features = false }
 kairos-tx = { path = "../kairos-tx", optional = true }
 
 # Casper signer implementation.
-casper-types = { version = "4", optional = true }
+casper-types = { workspace = true, optional = true }

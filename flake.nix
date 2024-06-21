@@ -6,11 +6,13 @@
       "https://crane.cachix.org"
       "https://nix-community.cachix.org"
       "https://kairos.cachix.org"
+      "https://casper-cache.marijan.pro"
     ];
     extra-trusted-public-keys = [
       "crane.cachix.org-1:8Scfpmn9w+hGdXH/Q9tTLiYAE/2dnJYRJP7kl80GuRk="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "kairos.cachix.org-1:1EqnyWXEbd4Dn1jCbiWOF1NLOc/bELx+wuqk0ZpbeqQ="
+      "casper-cache.marijan.pro:XIDjpzFQTEuWbnRu47IqSOy6IqyZlunVGvukNROL850="
     ];
   };
 
@@ -83,6 +85,7 @@
                 ./kairos-test-utils
                 ./kairos-tx
                 ./kairos-prover/kairos-circuit-logic
+                ./kairos-contracts/demo-contract/contract-utils
               ];
             };
 
@@ -110,7 +113,8 @@
             RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
-            inputsFrom = [ self'.packages.kairos ];
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+            inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
           };
 
           packages = {
@@ -125,6 +129,11 @@
             kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
               cargoExtraArgs = "-p kairos-tx --no-default-features";
+            });
+
+            kairos-crypto-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              cargoArtifacts = self'.packages.kairos-deps;
+              cargoExtraArgs = "-p kairos-crypto --no-default-features --features crypto-casper,tx";
             });
 
             cctld = pkgs.runCommand "cctld-wrapped"

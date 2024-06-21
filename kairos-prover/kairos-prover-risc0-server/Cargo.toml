@@ -13,7 +13,7 @@ metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
 
 [dependencies]
 methods = { path = "../methods" }
-risc0-zkvm = "=0.21.0"
+risc0-zkvm = "=1.0.1"
 
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

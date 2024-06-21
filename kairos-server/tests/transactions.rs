@@ -6,7 +6,7 @@ use casper_client::{
     types::{DeployBuilder, Timestamp},
     TransferTarget,
 };
-use casper_types::{
+use casper_client_types::{
     crypto::{PublicKey, SecretKey},
     AsymmetricType,
 };
@@ -47,6 +47,8 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     let server_config = ServerConfig {
         socket_addr: "0.0.0.0:0".parse().unwrap(),
         casper_rpc: casper_node_url.clone(),
+        casper_contract_hash: "0000000000000000000000000000000000000000000000000000000000000000"
+            .to_string(),
         batch_config: BatchConfig {
             max_batch_size: None,
             max_batch_duration: None,

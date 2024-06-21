@@ -40,8 +40,11 @@ impl Kairos {
             });
 
         let config = ServerConfig {
-            casper_rpc,
             socket_addr,
+            casper_rpc,
+            casper_contract_hash: String::from(
+                "0000000000000000000000000000000000000000000000000000000000000000",
+            ),
             batch_config,
         };
 

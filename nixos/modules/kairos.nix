@@ -82,6 +82,7 @@ in
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
           KAIROS_SERVER_CASPER_RPC = "${cfg.casperRpcUrl}";
           KAIROS_PROVING_SERVER_URL = "${cfg.provingServerUrl}";
+          KAIROS_SERVER_CASPER_CONTRACT_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
         };
         serviceConfig = mkMerge [
           {
