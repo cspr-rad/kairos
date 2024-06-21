@@ -27,8 +27,6 @@ nixosTest {
 
       services.cctl.enable = true;
       services.kairos.casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
-      # TODO this is a placeholder, replace with real proving server url
-      services.kairos.provingServerUrl = "http://127.0.0.1:7894";
     };
 
     client = { pkgs, ... }: {

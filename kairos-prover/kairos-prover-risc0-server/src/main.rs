@@ -27,7 +27,7 @@ async fn main() {
         .expect("Failed to fetch environment variable KAIROS_PROVER_SERVER_SOCKET_ADDR");
     let socket_addr = socket_addr
         .parse::<std::net::SocketAddr>()
-        .expect("Failed to parse KAIROS_SERVER_SOCKET_ADDR");
+        .expect("Failed to parse KAIROS_PROVER_SERVER_SOCKET_ADDR");
 
     let app = axum::Router::new()
         .typed_post(prove_batch_route)

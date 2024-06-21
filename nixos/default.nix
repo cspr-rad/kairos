@@ -5,6 +5,7 @@ let
       {
         imports = [
           self.nixosModules.kairos
+          self.nixosModules.kairos-prover
           ./configurations/kairos-host
           ({ config, ... }: {
             networking.hostName = hostName;
@@ -28,7 +29,6 @@ in
                 ];
                 # A placeholder URL to make the test pass
                 services.kairos.casperRpcUrl = "http://localhost:11101/rpc";
-                services.kairos.provingServerUrl = "http://127.0.0.1:7894";
               };
               verifyServices = [ "kairos.service" ];
             };
@@ -48,6 +48,12 @@ in
         {
           imports = [ ./modules/kairos.nix ];
           services.kairos.package = self.packages.${pkgs.system}.kairos;
+        };
+      kairos-prover =
+        { pkgs, ... }:
+        {
+          imports = [ ./modules/kairos-prover.nix ];
+          services.kairos-prover.package = self.packages.${pkgs.system}.kairos-prover;
         };
       cctl =
         { pkgs, lib, ... }:

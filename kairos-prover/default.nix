@@ -88,7 +88,7 @@
 
         kairos-prover = craneLib.buildPackage (kairosProverAttrs // {
           cargoArtifacts = self'.packages.kairos-prover-deps;
-          meta.mainProgram = "kairos-prover";
+          meta.mainProgram = "kairos-prover-risc0-server";
         });
       };
     };
