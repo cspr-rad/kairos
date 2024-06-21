@@ -12,7 +12,7 @@ pub fn get_wasm_directory() -> (PathBuf, PathBuf) {
         PathBuf::from(project_root)
             .join("../kairos-contracts/target/wasm32-unknown-unknown/release/")
     };
-    
+
     eprintln!("base_path: {:?}", base_path);
 
     let base_path_session = if let Ok(custom_path) = env::var("PATH_TO_SESSION_BINARIES") {
