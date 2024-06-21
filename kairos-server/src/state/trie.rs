@@ -2,13 +2,14 @@ use std::{
     mem,
     rc::Rc,
     thread::{self, JoinHandle},
+    time::Instant,
 };
 
 use sha2::Sha256;
 use tokio::sync::{mpsc, oneshot};
 
 use super::transactions::batch_state::BatchState;
-use crate::AppErr;
+use crate::{config::BatchConfig, AppErr};
 use kairos_circuit_logic::{
     account_trie::{Account, AccountTrie},
     transactions::KairosTransaction,
@@ -40,12 +41,15 @@ impl TrieStateThreadMsg {
 }
 
 pub fn spawn_state_thread(
+    config: BatchConfig,
     mut queue: mpsc::Receiver<TrieStateThreadMsg>,
+    batch_outputs_receiver: mpsc::Sender<BatchOutput>,
     db: Database,
     batch_root: TrieRoot<NodeHash>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         let mut state = TrieState::new(db, batch_root);
+        let mut last_commit_time = Instant::now();
 
         while let Some(msg) = queue.blocking_recv() {
             tracing::trace!("Trie State Thread received message: {:?}", msg);
@@ -58,7 +62,35 @@ pub fn spawn_state_thread(
                             err.map(|()| "Success".to_string())
                                 .unwrap_or_else(|err| err.to_string())
                         )
-                    })
+                    });
+
+                    let should_commit = match config {
+                        BatchConfig {
+                            max_batch_size: Some(batch_size),
+                            ..
+                        } if state.batch_state.batched_txns.len() as u64 >= batch_size => true,
+                        BatchConfig {
+                            max_batch_duration: Some(duration),
+                            ..
+                        } if last_commit_time.elapsed() >= duration => true,
+                        _ => false,
+                    };
+
+                    if should_commit {
+                        let batch_output = state.commit_and_start_new_txn().unwrap_or_else(|err| {
+                            tracing::error!("Failed to commit trie state: {:?}", err);
+                            panic!("Failed to commit trie state: {:?}", err);
+                        });
+
+                        batch_outputs_receiver
+                            .blocking_send(batch_output)
+                            .unwrap_or_else(|err| {
+                                tracing::error!("Failed to send batch output: {:?}", err);
+                                panic!("Failed to send batch output: {:?}", err);
+                            });
+
+                        last_commit_time = Instant::now();
+                    }
                 }
                 TrieStateThreadMsg::Commit(sender) => {
                     let res = state.commit_and_start_new_txn();
@@ -104,6 +136,8 @@ impl TrieState {
     }
 
     /// Calculate the new root hash of the trie and sync changes to the database.
+    ///
+    /// Errors if underlying trie commit fails due to data database connection or consistency issues.
     pub fn commit_and_start_new_txn(&mut self) -> Result<BatchOutput, AppErr> {
         let old_trie_txn = &self.batch_state.account_trie;
         let old_root = self.batch_root;
