@@ -18,7 +18,7 @@ kairos-tx = { path = "../../kairos-tx", default-features = false, optional = tru
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", default-features = false }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"], optional = true }
 sha2 = { version = "0.10", default-features = false }
-rkyv = { version = "0.7", default-features = false, features = ["size_32", "archive_le", "alloc", "validation"], optional = true }
+rkyv = { version = "0.7", default-features = false, features = ["size_32", "archive_le", "alloc", "validation", "strict"], optional = true }
 
 # dev dependencies enabled by arbitrary
 test-strategy = { version = "0.3", optional = true }

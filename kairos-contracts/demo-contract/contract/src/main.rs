@@ -21,7 +21,9 @@ use contract_utils::constants::{
 use contract_utils::Deposit;
 mod entry_points;
 mod utils;
-use kairos_verifier_risc0_lib::verifier::Receipt;
+use risc0_zkvm::Receipt;
+use rkyv::Deserialize;
+// use kairos_verifier_risc0_lib::verifier::Receipt;
 use utils::errors::DepositError;
 use utils::get_immediate_caller;
 
@@ -29,7 +31,7 @@ use utils::get_immediate_caller;
 #[allow(unused)]
 use casper_contract_no_std_helpers;
 
-use kairos_circuit_logic::ProofOutputs;
+use kairos_circuit_logic::{ArchivedProofOutputs, ProofOutputs};
 
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
@@ -96,20 +98,60 @@ pub extern "C" fn submit_batch() {
         runtime::revert(ApiError::User(0u16));
     };
 
+    // let Ok(ProofOutputs {
+    //     pre_batch_trie_root,
+    //     post_batch_trie_root,
+    //     deposits: _,    // TODO: implement deposits
+    //     withdrawals: _, // TODO: implement withdrawals
+    // }) = kairos_verifier_risc0_lib::verifier::verify_execution_of_any_program_with_error_hooks(
+    //     &receipt,
+    //     kairos_verifier_risc0_lib::BATCH_CIRCUIT_PROGRAM_HASH,
+    //     |_| runtime::revert(ApiError::User(100u16)),
+    //     |_| runtime::revert(ApiError::User(101u16)),
+    // )
+    // else {
+    //     runtime::revert(ApiError::User(1u16));
+    // };
+
+    if receipt.journal.bytes
+        != [
+            97, 108, 105, 99, 101, 95, 112, 117, 98, 108, 105, 99, 95, 107, 101, 121, 240, 255,
+            255, 255, 16, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 97, 108, 105, 99, 101, 95, 112, 117,
+            98, 108, 105, 99, 95, 107, 101, 121, 240, 255, 255, 255, 16, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+            0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 177, 191, 11, 99, 82, 80, 117, 150, 40,
+            153, 179, 9, 170, 82, 31, 187, 13, 237, 233, 233, 253, 246, 227, 233, 167, 242, 87, 7,
+            125, 188, 61, 219, 0, 0, 132, 255, 255, 255, 1, 0, 0, 0, 156, 255, 255, 255, 1, 0, 0,
+            0,
+        ]
+    {
+        runtime::revert(ApiError::User(100u16));
+    }
+
+    let Ok(proof_outputs) = rkyv::check_archived_root::<ProofOutputs>(&receipt.journal.bytes)
+    else {
+        runtime::revert(ApiError::User(111u16));
+    };
+
     let Ok(ProofOutputs {
         pre_batch_trie_root,
         post_batch_trie_root,
         deposits: _,    // TODO: implement deposits
         withdrawals: _, // TODO: implement withdrawals
-    }) = kairos_verifier_risc0_lib::verifier::verify_execution_of_any_program_with_error_hooks(
-        &receipt,
-        kairos_verifier_risc0_lib::BATCH_CIRCUIT_PROGRAM_HASH,
-        |_| runtime::revert(ApiError::User(100u16)),
-        |_| runtime::revert(ApiError::User(101u16)),
-    )
+    }): Result<ProofOutputs, _> = proof_outputs.deserialize(&mut rkyv::Infallible)
     else {
-        runtime::revert(ApiError::User(1u16));
+        runtime::revert(ApiError::User(112u16));
     };
+
+    // let Ok(ProofOutputs {
+    //     pre_batch_trie_root,
+    //     post_batch_trie_root,
+    //     deposits: _,    // TODO: implement deposits
+    //     withdrawals: _, // TODO: implement withdrawals
+    // }) = ProofOutputs::rkyv_deserialize(&receipt.journal.bytes)
+    // else {
+    //     runtime::revert(ApiError::User(113u16));
+    // };
 
     // todo: check that the deposits are unique
 

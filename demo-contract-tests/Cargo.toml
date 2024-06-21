@@ -16,3 +16,5 @@ serde-json-wasm = "1"
 rand = "0.8"
 wasm-opt = "0.116"
 sha2 = {version = "0.10", default-features = false}
+
+rkyv = { version = "0.7", default-features = false, features = ["size_32", "archive_le", "alloc", "validation", "strict", "arbitrary_enum_discriminant"] }

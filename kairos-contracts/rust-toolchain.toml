@@ -1,4 +1,4 @@
 [toolchain]
-channel = "stable"
+channel = "nightly"
 components = ["rustc", "rustfmt", "rust-src", "cargo", "clippy", "rust-docs", "rust-analyzer"]
 targets = [ "wasm32-unknown-unknown" ]

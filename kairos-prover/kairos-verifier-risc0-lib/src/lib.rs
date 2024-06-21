@@ -1,8 +1,12 @@
 #![no_std]
 
 /// The risc0 image_id of the batch update circuit program.
+/// To update this you must rebuild the circuit with `cargo risczero build`, which will use docker
+/// to reproducibly build the circuit.
+/// Then you must copy the output ELF to `kairos-prover/methods/prove_batch_bin`
+/// and run `cargo build` which will output the new hash.
 pub const BATCH_CIRCUIT_PROGRAM_HASH: [u32; 8] = [
-    320854583, 2447485113, 797278591, 1789923934, 1334004034, 2048706803, 1258983714, 745178164,
+    1933896867, 724949015, 2801151840, 3598218816, 678156014, 3617865613, 2087653082, 1179432235,
 ];
 
 #[cfg(feature = "verifier")]

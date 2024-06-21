@@ -34,7 +34,6 @@
         nativeBuildInputs = with pkgs; [
           pkg-config
           cargo-risczero
-          rustup-mock
         ];
         buildInputs = with pkgs; [
           openssl.dev
@@ -46,9 +45,7 @@
         cargoVendorDir = inputs.crane.lib.${system}.vendorMultipleCargoDeps {
           inherit (craneLib.findCargoFiles src) cargoConfigs;
           cargoLockList = [
-            ./methods/guest/Cargo.lock
             ./Cargo.lock
-            ./rust-std-Cargo.lock
           ];
         };
 

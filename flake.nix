@@ -42,8 +42,8 @@
       perSystem = { config, self', inputs', system, pkgs, lib, ... }:
         let
           rustToolchain = with inputs'.fenix.packages; combine [
-            stable.toolchain
-            targets.wasm32-unknown-unknown.stable.rust-std
+            latest.toolchain
+            targets.wasm32-unknown-unknown.latest.rust-std
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
@@ -55,6 +55,7 @@
                   ./kairos-contracts
                   ./kairos-prover/kairos-circuit-logic
                   ./kairos-prover/kairos-verifier-risc0-lib
+                  ./kairos-prover/methods
                 ];
               };
               filter = path: type: craneLib.filterCargoSources path type;
@@ -137,6 +138,7 @@
             nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools pkgs.pkg-config ];
             buildInputs = with pkgs; [
               openssl.dev
+              wasm-bindgen-cli
             ] ++ lib.optionals stdenv.isDarwin [
               libiconv
               darwin.apple_sdk.frameworks.Security

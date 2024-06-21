@@ -45,7 +45,7 @@ pub struct ProofOutputs {
 #[cfg(feature = "rkyv")]
 impl ProofOutputs {
     pub fn rkyv_serialize(&self) -> AlignedVec {
-        rkyv::to_bytes::<_, 256>(self).expect("Failed to rkyv_serialize ProofOutputs")
+        rkyv::to_bytes::<_, 512>(self).expect("Failed to rkyv_serialize ProofOutputs")
     }
 
     pub fn rkyv_deserialize(bytes: &[u8]) -> Result<Self, String> {
