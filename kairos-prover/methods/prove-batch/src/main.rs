@@ -13,7 +13,11 @@ fn main() {
     let output = proof_inputs
         .run_batch_proof_logic()
         .unwrap()
-        .rkyv_serialize();
+        .borsh_serialize()
+        .unwrap();
 
+    env::journal()
+        .write_words(&[output.len().try_into().unwrap()])
+        .unwrap();
     env::journal().write_padded_bytes(&output).unwrap();
 }

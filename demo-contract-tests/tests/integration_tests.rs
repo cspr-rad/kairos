@@ -3,8 +3,7 @@ mod test_fixture;
 mod tests {
     use crate::test_fixture::TestContext;
     use casper_types::U512;
-    use kairos_verifier_risc0_lib::verifier::{verify_execution, Receipt};
-    use rkyv::Deserialize;
+    use kairos_verifier_risc0_lib::verifier::verify_execution;
 
     #[test]
     fn should_install_contract() {
@@ -80,34 +79,6 @@ mod tests {
         let receipt0 = include_bytes!("testdata/test_prove_simple_batches_0.json");
         let receipt1 = include_bytes!("testdata/test_prove_simple_batches_1.json");
 
-        let receipt0_de: Receipt = serde_json_wasm::from_slice(receipt0).unwrap();
-        let Ok(proof_outputs) = rkyv::check_archived_root::<
-            kairos_verifier_risc0_lib::verifier::ProofOutputs,
-        >(&receipt0_de.journal.bytes) else {
-            panic!("failed to check archived root");
-        };
-
-        assert_eq!(
-            receipt0_de.journal.bytes.as_slice(),
-            &[
-                97, 108, 105, 99, 101, 95, 112, 117, 98, 108, 105, 99, 95, 107, 101, 121, 240, 255,
-                255, 255, 16, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 97, 108, 105, 99, 101, 95, 112,
-                117, 98, 108, 105, 99, 95, 107, 101, 121, 240, 255, 255, 255, 16, 0, 0, 0, 1, 0, 0,
-                0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 177, 191, 11, 99, 82, 80,
-                117, 150, 40, 153, 179, 9, 170, 82, 31, 187, 13, 237, 233, 233, 253, 246, 227, 233,
-                167, 242, 87, 7, 125, 188, 61, 219, 0, 0, 132, 255, 255, 255, 1, 0, 0, 0, 156, 255,
-                255, 255, 1, 0, 0, 0
-            ]
-        );
-
-        let Ok(proof_outputs): Result<kairos_verifier_risc0_lib::verifier::ProofOutputs, _> =
-            proof_outputs.deserialize(&mut rkyv::Infallible)
-        else {
-            panic!("failed to deserialize proof outputs");
-        };
-        eprintln!("{:?}", proof_outputs);
-
         // precheck proofs before contract tests that are hard to debug
         let proof_outputs =
             verify_execution(&serde_json_wasm::from_slice(receipt0).unwrap()).unwrap();
@@ -134,24 +105,31 @@ mod tests {
         fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec())
     }
 
-    // #[test]
-    // fn submit_batch_to_contract_1() {
-    //     let receipt =
-    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-a2821bb3813201f2.json");
-    //     submit_batch_to_contract(receipt);
-    // }
+    #[test]
+    fn submit_batch_to_contract_1() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-517453938a5b4f3e.json");
+        submit_batch_to_contract(receipt);
+    }
 
-    // #[test]
-    // fn submit_batch_to_contract_2() {
-    //     let receipt =
-    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-dd5c1b8fe0d7b964.json");
-    //     submit_batch_to_contract(receipt);
-    // }
+    #[test]
+    fn submit_batch_to_contract_2() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-9a85f9117f0bf3a8.json");
+        submit_batch_to_contract(receipt);
+    }
 
-    // #[test]
-    // fn submit_batch_to_contract_3() {
-    //     let receipt =
-    //         include_bytes!("testdata/proptest_prove_batches-proof-journal-349be3cb5fcb1f3b.json");
-    //     submit_batch_to_contract(receipt);
-    // }
+    #[test]
+    fn submit_batch_to_contract_3() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-52945c21c49e8ca6.json");
+        submit_batch_to_contract(receipt);
+    }
+
+    #[test]
+    fn submit_batch_to_contract_4() {
+        let receipt =
+            include_bytes!("testdata/proptest_prove_batches-proof-journal-a53b58a9cf37e50e.json");
+        submit_batch_to_contract(receipt);
+    }
 }

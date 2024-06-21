@@ -6,14 +6,14 @@
 /// Then you must copy the output ELF to `kairos-prover/methods/prove_batch_bin`
 /// and run `cargo build` which will output the new hash.
 pub const BATCH_CIRCUIT_PROGRAM_HASH: [u32; 8] = [
-    1933896867, 724949015, 2801151840, 3598218816, 678156014, 3617865613, 2087653082, 1179432235,
+    2249819926, 1807275128, 879420467, 753150136, 3885109892, 1252737579, 1362575552, 43533945,
 ];
 
 #[cfg(feature = "verifier")]
 pub mod verifier {
     extern crate alloc;
 
-    use alloc::{format, string::String};
+    use alloc::{borrow::ToOwned, format, string::String};
 
     pub use kairos_circuit_logic::ProofOutputs;
 
@@ -21,24 +21,6 @@ pub mod verifier {
 
     pub fn verify_execution(receipt: &Receipt) -> Result<ProofOutputs, String> {
         verify_execution_of_any_program(receipt, crate::BATCH_CIRCUIT_PROGRAM_HASH)
-    }
-
-    pub fn verify_execution_of_any_program_with_error_hooks<E>(
-        receipt: &Receipt,
-        image_id: [u32; 8],
-        verify_err: impl FnOnce(String) -> E,
-        deserialize_err: impl FnOnce(String) -> E,
-    ) -> Result<ProofOutputs, E> {
-        receipt
-            .verify(image_id)
-            .map_err(|e| verify_err(format!("Error in risc0_zkvm verify: {e}")))?;
-
-        let proof_outputs =
-            ProofOutputs::rkyv_deserialize(&receipt.journal.bytes).map_err(|e| {
-                deserialize_err(format!("Error in rkyv deserialize of proof outputs: {e}"))
-            })?;
-
-        Ok(proof_outputs)
     }
 
     pub fn verify_execution_of_any_program(
@@ -49,7 +31,13 @@ pub mod verifier {
             .verify(image_id)
             .map_err(|e| format!("Error in risc0_zkvm verify: {e}"))?;
 
-        let proof_outputs = ProofOutputs::rkyv_deserialize(&receipt.journal.bytes)?;
+        let (len, borsh_bytes) = match receipt.journal.bytes.as_slice() {
+            [a, b, c, d, rest @ ..] => (u32::from_le_bytes([*a, *b, *c, *d]), rest),
+            _ => return Err("No bytes in journal".to_owned()),
+        };
+
+        let proof_outputs = ProofOutputs::borsh_deserialize(&borsh_bytes[..len as usize])
+            .map_err(|e| format!("Error in borsh deserialize: {e}"))?;
 
         Ok(proof_outputs)
     }
