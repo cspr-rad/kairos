@@ -2117,6 +2117,7 @@ dependencies = [
  "casper-client",
  "casper-hashing 2.0.0",
  "casper-types 3.0.0",
+ "casper-types 4.0.1",
  "clap",
  "hex",
  "kairos-crypto",
