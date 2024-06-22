@@ -103,6 +103,9 @@ impl CCTLNetwork {
             })
             .collect();
 
+        let node_port = nodes.first().unwrap().port.rpc_port;
+        let casper_node_rpc_url = format!("http://localhost:{}/rpc", node_port);
+
         tracing::info!("Waiting for network to pass genesis");
         retry(ExponentialBackoff::default(), || async {
             get_node_status(JsonRpcId::Number(1), &casper_node_rpc_url, Verbosity::Low)
