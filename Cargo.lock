@@ -2456,6 +2456,7 @@ name = "kairos-circuit-logic"
 version = "0.1.0"
 dependencies = [
  "borsh",
+ "casper-event-standard",
  "kairos-trie",
  "kairos-tx",
  "proptest",
