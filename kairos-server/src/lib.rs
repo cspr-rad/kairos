@@ -65,7 +65,7 @@ pub async fn run(config: ServerConfig) {
     };
 
     let state = Arc::new(ServerStateInner {
-        batch_state_manager: BatchStateManager::new_empty(),
+        batch_state_manager: BatchStateManager::new_empty(config.batch_config.clone()),
         server_config: config.clone(),
         deposit_manager,
     });

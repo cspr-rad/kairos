@@ -12,7 +12,7 @@ use casper_client_types::{
 };
 use casper_types::ContractHash;
 use kairos_server::{
-    config::ServerConfig,
+    config::{BatchConfig, ServerConfig},
     routes::deposit::DepositPath,
     state::{BatchStateManager, ServerStateInner},
 };
@@ -46,14 +46,22 @@ async fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Ur
             .init();
     });
     let config = TestServerConfig::builder().mock_transport().build();
-    let state = Arc::new(ServerStateInner {
-        batch_state_manager: BatchStateManager::new_empty(),
-        server_config: ServerConfig {
-            socket_addr: "0.0.0.0:0".parse().unwrap(),
-            casper_rpc: casper_rpc_url.clone(),
-            casper_sse: casper_sse_url.clone(),
-            kairos_demo_contract_hash: ContractHash::default(),
+    let server_config = ServerConfig {
+        socket_addr: "0.0.0.0:0".parse().unwrap(),
+        casper_rpc: casper_rpc_url.clone(),
+        casper_sse: casper_sse_url.clone(),
+        kairos_demo_contract_hash: ContractHash::default(),
+        batch_config: BatchConfig {
+            max_batch_size: None,
+            max_batch_duration: None,
+            // dummy proving server will never be called because of max_batch_size and max_batch_duration
+            proving_server: Url::parse("http://127.0.0.1:7894").unwrap(),
         },
+    };
+
+    let state = Arc::new(ServerStateInner {
+        batch_state_manager: BatchStateManager::new_empty(server_config.batch_config.clone()),
+        server_config,
         deposit_manager: None,
     });
 

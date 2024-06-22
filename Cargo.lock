@@ -2185,6 +2185,7 @@ dependencies = [
  "casper-types 3.0.0",
  "casper-types 4.0.1",
  "clap",
+ "dotenvy",
  "hex",
  "kairos-server",
  "nom",
