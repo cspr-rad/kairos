@@ -7,9 +7,9 @@ use casper_client::{
     types::{DeployBuilder, ExecutableDeployItem, StoredValue, TimeDiff, Timestamp},
     Error, JsonRpcId, Verbosity,
 };
-use casper_client_types::{
-    runtime_args, ContractHash, ExecutionResult, Key, PublicKey, RuntimeArgs, SecretKey,
-};
+use casper_client_types::{runtime_args, ExecutionResult, Key, PublicKey, RuntimeArgs, SecretKey};
+use casper_types::ContractHash;
+use hex::FromHex;
 use rand::Rng;
 use std::fs;
 use std::io::{self, Write};
@@ -121,7 +121,7 @@ impl CCTLNetwork {
 
         tracing::info!("Waiting for network to pass genesis");
         retry(ExponentialBackoff::default(), || async {
-            get_node_status(JsonRpcId::Number(1), &casper_node_rpc_url, Verbosity::High)
+            get_node_status(JsonRpcId::Number(1), &casper_node_rpc_url, Verbosity::Low)
                 .await
                 .map_err(|err| match &err {
                     Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
@@ -174,6 +174,14 @@ impl CCTLNetwork {
         }
         Ok(CCTLNetwork { working_dir, nodes })
     }
+    /// Get the deployed contract hash for a hash_name that was passed to new_contract
+    /// https://docs.rs/casper-contract/latest/casper_contract/contract_api/storage/fn.new_contract.html
+    pub fn get_contract_hash_for(&self, hash_name: &str) -> ContractHash {
+        let contract_hash_path = self.working_dir.join("contracts").join(hash_name);
+        let contract_hash_string = fs::read_to_string(contract_hash_path).unwrap();
+        let contract_hash_bytes = <[u8; 32]>::from_hex(contract_hash_string).unwrap();
+        ContractHash::new(contract_hash_bytes)
+    }
 }
 
 impl Drop for CCTLNetwork {
@@ -194,7 +202,7 @@ async fn deploy_contract(
     contract_deployer_skey: &SecretKey,
     contract_deployer_pkey: &PublicKey,
     DeployableContract { hash_name, path }: &DeployableContract,
-) -> anyhow::Result<(String, ContractHash)> {
+) -> anyhow::Result<(String, casper_client_types::ContractHash)> {
     tracing::info!(
         "Deploying contract {}: {}",
         &hash_name,
@@ -310,7 +318,7 @@ async fn deploy_contract(
 
     let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
     let account_key = Key::Account(*account.account_hash());
-    let contract_hash: ContractHash = query_global_state(
+    let contract_hash: casper_client_types::ContractHash = query_global_state(
         expected_rpc_id.clone(),
         casper_node_rpc_url,
         Verbosity::High,
@@ -342,7 +350,10 @@ async fn deploy_contract(
         &hash_name,
         &contract_hash
     );
-    Ok::<(String, ContractHash), anyhow::Error>((hash_name.clone(), contract_hash))
+    Ok::<(String, casper_client_types::ContractHash), anyhow::Error>((
+        hash_name.clone(),
+        contract_hash,
+    ))
 }
 
 #[cfg(test)]
