@@ -1,6 +1,4 @@
-use std::collections::HashSet;
 use std::sync::{Arc, OnceLock};
-use tokio::sync::RwLock;
 
 use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
@@ -32,12 +30,12 @@ use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 
 #[cfg(feature = "deposit-mock")]
-fn new_test_app() -> TestServer {
+async fn new_test_app() -> TestServer {
     let dummy_url = Url::parse("http://0.0.0.0:0").unwrap();
-    new_test_app_with_casper_node(&dummy_url, &dummy_url)
+    new_test_app_with_casper_node(&dummy_url, &dummy_url).await
 }
 
-fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
+async fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
             .with(
@@ -56,7 +54,7 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
             casper_sse: casper_sse_url.clone(),
             kairos_demo_contract_hash: ContractHash::default(),
         },
-        known_deposit_deploys: RwLock::new(HashSet::new()),
+        deposit_manager: None,
     });
 
     TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()
@@ -80,7 +78,7 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
     ))
     .unwrap();
 
-    let server = new_test_app_with_casper_node(&casper_rpc_url, &casper_sse_url);
+    let server = new_test_app_with_casper_node(&casper_rpc_url, &casper_sse_url).await;
 
     let sender_secret_key_file = network
         .working_dir
@@ -122,7 +120,7 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
 async fn test_deposit_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app();
+    let server = new_test_app().await;
 
     let deposit = L1Deposit {
         recipient: "alice_key".into(),
@@ -206,7 +204,7 @@ async fn test_deposit_withdraw() {
 async fn test_deposit_transfer_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app();
+    let server = new_test_app().await;
 
     // deposit
     server
@@ -250,7 +248,7 @@ async fn test_deposit_transfer_withdraw() {
 async fn test_deposit_transfer_to_self_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app();
+    let server = new_test_app().await;
 
     // deposit
     server

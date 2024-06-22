@@ -1,45 +1,51 @@
+pub mod error;
+
 use anyhow::{anyhow, Result};
 use backoff::{future::retry, Error, ExponentialBackoff};
 use casper_client::{
-    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
+    get_state_root_hash, query_global_state, types::DeployHash, types::StoredValue, JsonRpcId,
+    Verbosity,
 };
 use rand::Rng;
 use reqwest::Url;
+use std::collections::HashSet;
+use std::sync::atomic::{AtomicU32, Ordering};
+use tokio::sync::RwLock;
 
-use super::error::L1SyncError;
-use crate::state::ServerState;
+use crate::state::BatchStateManager;
 use casper_event_standard::casper_types::{bytesrepr::FromBytes, ContractHash, Key};
 use casper_event_toolkit::fetcher::{Fetcher, Schemas};
 use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
 use casper_event_toolkit::rpc::compat::key_to_client_types;
 use contract_utils::constants::KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER;
+use error::DepositManagerError;
 use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
 
-pub struct EventManager {
-    /// The last event index that was added to the batch
-    next_deposit_index: u32,
+pub struct DepositManager {
+    /// The last deposit event index that was added to the batch
+    last_deposit_added_to_batch: AtomicU32,
+    pub known_deposit_deploys: RwLock<HashSet<DeployHash>>,
     fetcher: Fetcher,
     schemas: Schemas,
-    server_state: ServerState,
 }
 
-impl EventManager {
-    pub async fn new(server_state: ServerState) -> Result<Self, L1SyncError> {
+impl DepositManager {
+    pub async fn new(
+        casper_rpc_url: &Url,
+        contract_hash: &ContractHash,
+    ) -> Result<Self, DepositManagerError> {
         tracing::info!("Initializing event manager");
 
-        let casper_client = CasperClient::new(server_state.server_config.casper_rpc.as_str());
+        let casper_client = CasperClient::new(casper_rpc_url.as_str());
 
         let metadata = retry(ExponentialBackoff::default(), || async {
-            CesMetadataRef::fetch_metadata(
-                &casper_client,
-                &server_state
-                    .server_config
-                    .kairos_demo_contract_hash
-                    .to_string(),
-            )
-            .await
-            .map_err(Error::transient)
+            CesMetadataRef::fetch_metadata(&casper_client, &contract_hash.to_string())
+                .await
+                .map_err(|err| {
+                    tracing::info!("Failed to fetch metadata {}", err);
+                    Error::transient(err)
+                })
         })
         .await?;
 
@@ -51,39 +57,47 @@ impl EventManager {
         };
 
         let schemas = retry(ExponentialBackoff::default(), || async {
-            fetcher.fetch_schema().await.map_err(Error::transient)
+            fetcher.fetch_schema().await.map_err(|err| {
+                tracing::info!("Failed to fetch schema {}", err);
+                Error::transient(err)
+            })
         })
         .await?;
 
         tracing::info!("Schemas fetched successfully");
 
-        let last_processed_deposit_index: u32 = get_last_deposit_counter(
-            &server_state.server_config.casper_rpc,
-            &server_state.server_config.kairos_demo_contract_hash,
-        )
-        .await
-        .map_err(|err| {
-            L1SyncError::UnexpectedError(format!(
-                "Failed to fetch the index for the last processed deposit: {}",
-                err
-            ))
-        })?;
+        let last_processed_deposit_index: u32 =
+            get_last_deposit_counter(casper_rpc_url, contract_hash)
+                .await
+                .map_err(|err| {
+                    DepositManagerError::UnexpectedError(format!(
+                        "Failed to fetch the index for the last processed deposit: {}",
+                        err
+                    ))
+                })?;
 
         tracing::info!("On-chain stored last processed deposit index fetched successfully");
 
-        Ok(EventManager {
-            next_deposit_index: last_processed_deposit_index + 1,
+        Ok(DepositManager {
+            last_deposit_added_to_batch: AtomicU32::new(last_processed_deposit_index + 1),
             fetcher,
             schemas,
-            server_state,
+            known_deposit_deploys: RwLock::new(HashSet::new()),
         })
     }
 
     /// Processes new events starting from the last known event ID.
-    pub async fn process_new_events(&mut self) -> Result<(), L1SyncError> {
+    pub async fn add_new_events_to(
+        &self,
+        batch_state_manager: &BatchStateManager,
+    ) -> Result<(), DepositManagerError> {
         let last_unprocessed_deposit_index = self.fetcher.fetch_events_count().await?;
 
-        for deposit_index in self.next_deposit_index..=last_unprocessed_deposit_index {
+        for deposit_index in (self
+            .last_deposit_added_to_batch
+            .fetch_add(1, Ordering::SeqCst)
+            + 1)..=last_unprocessed_deposit_index
+        {
             let untyped_event = self
                 .fetcher
                 .fetch_event(deposit_index, &self.schemas)
@@ -97,20 +111,19 @@ impl EventManager {
                     let data = untyped_event.to_ces_bytes()?;
                     let (deposit, _) =
                         contract_utils::Deposit::from_bytes(&data).map_err(|err| {
-                            L1SyncError::UnexpectedError(format!(
+                            DepositManagerError::UnexpectedError(format!(
                                 "Failed to parse deposit event from bytes: {}",
                                 err
                             ))
                         })?;
-                    self.server_state
-                        .batch_state_manager
+                    batch_state_manager
                         .enqueue_transaction(KairosTransaction::Deposit(L1Deposit {
                             recipient: "cafebabe".into(),
                             amount: deposit.amount,
                         }))
                         .await
                         .map_err(|err| {
-                            L1SyncError::UnexpectedError(format!(
+                            DepositManagerError::UnexpectedError(format!(
                                 "Failed to parse deposit event from bytes: {}",
                                 err
                             ))
@@ -121,7 +134,8 @@ impl EventManager {
                 }
             }
         }
-        self.next_deposit_index = last_unprocessed_deposit_index + 1;
+        self.last_deposit_added_to_batch
+            .store(last_unprocessed_deposit_index, Ordering::SeqCst);
         Ok(())
     }
 }
