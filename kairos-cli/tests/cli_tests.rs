@@ -25,7 +25,7 @@ async fn deposit_successful_with_ed25519() {
         .expect("Expected at least one node after successful network run");
     let node_url = Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
 
-    let kairos = kairos::Kairos::run(node_url).await.unwrap();
+    let kairos = kairos::Kairos::run(node_url, None).await.unwrap();
 
     tokio::task::spawn_blocking(move || {
         let depositor_secret_key_path = network

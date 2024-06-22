@@ -7,6 +7,7 @@ let
     mkMerge
     mkEnableOption
     mdDoc
+    optionalAttrs
     ;
   cfg = config.services.kairos;
 in
@@ -45,6 +46,57 @@ in
       '';
     };
 
+    prover = mkOption {
+      description = "Prover server related options";
+      default = { };
+      type = types.submodule {
+        options = {
+          protocol = mkOption {
+            type = types.enum [ "http" "https" ];
+            default = "http";
+            description = "The protocol that should be used to connect to the prover server.";
+          };
+
+          bindAddress = mkOption {
+            type = types.str;
+            default = "0.0.0.0";
+            example = "0.0.0.0";
+            description = ''
+              The address of the prover server.
+            '';
+          };
+
+          port = mkOption {
+            type = types.port;
+            default = 60001;
+            example = 60001;
+            description = ''
+              The port of the prover server.
+            '';
+          };
+
+          maxBatchSize = mkOption {
+            type = types.nullOr types.ints.unsigned;
+            default = null;
+            example = 100;
+            description = ''
+              The maximal amount of transactions that should be included in a batch.
+            '';
+          };
+
+          maxBatchDuration = mkOption {
+            type = types.nullOr types.ints.unsigned;
+            default = null;
+            example = 180;
+            description = ''
+              The maximal duration in seconds until batch is created.
+            '';
+          };
+        };
+      };
+    };
+
+
     logLevel = mkOption {
       type = types.enum [
         "error"
@@ -67,13 +119,18 @@ in
         description = "kairos";
         documentation = [ "" ];
         wantedBy = [ "multi-user.target" ];
-        after = [ "network-online.target" ];
-        requires = [ "network-online.target" ];
+        after = [ "network-online.target" "kairos-prover.service" ];
+        requires = [ "network-online.target" "kairos-prover.service" ];
         environment = {
           RUST_LOG = cfg.logLevel;
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
           KAIROS_SERVER_CASPER_RPC = "${cfg.casperRpcUrl}";
           KAIROS_SERVER_CASPER_CONTRACT_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
+          KAIROS_PROVER_SERVER_URL = "${cfg.prover.protocol}://${cfg.prover.bindAddress}:${builtins.toString cfg.prover.port}";
+        } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchSize) {
+          KAIROS_SERVER_MAX_BATCH_SIZE = cfg.maxBatchSize;
+        } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchDuration) {
+          KAIROS_SERVER_MAX_BATCH_SECONDS = cfg.prover.maxBatchDuration;
         };
         serviceConfig = mkMerge [
           {
@@ -83,5 +140,10 @@ in
           }
         ];
       };
+
+    services.kairos-prover = {
+      enable = true;
+      inherit (cfg.prover) bindAddress port;
+    };
   };
 }
