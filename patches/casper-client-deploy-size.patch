@@ -1,0 +1,22 @@
+From d6bd6c80aaa97acdcfe90a4a97ddc82baa3019fb Mon Sep 17 00:00:00 2001
+From: Jonas Pauli <49498646+jonas089@users.noreply.github.com>
+Date: Mon, 10 Jun 2024 03:40:56 +0530
+Subject: [PATCH] Update deploy.rs
+
+---
+ lib/types/deploy.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/types/deploy.rs b/lib/types/deploy.rs
+index 663292ad..09847d43 100644
+--- a/lib/types/deploy.rs
++++ b/lib/types/deploy.rs
+@@ -18,7 +18,7 @@ use crate::{
+ ///
+ /// Note: this should be kept in sync with the value of `[deploys.max_deploy_size]` in the
+ /// production chainspec.
+-pub const MAX_SERIALIZED_SIZE_OF_DEPLOY: u32 = 1_024 * 1_024;
++pub const MAX_SERIALIZED_SIZE_OF_DEPLOY: u32 = 3_072 * 1_024;
+ 
+ /// A cryptographic hash uniquely identifying a [`Deploy`].
+ #[derive(

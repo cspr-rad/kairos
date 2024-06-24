@@ -1,4 +1,4 @@
-{ lib, config, ... }:
+{ lib, config, pkgs, ... }:
 let
   inherit (lib)
     types
@@ -7,6 +7,9 @@ let
     mkMerge
     mkEnableOption
     escapeShellArgs
+    optionals
+    optional
+    concatLines
     ;
   cfg = config.services.cctl;
 in
@@ -34,6 +37,22 @@ in
       default = "/var/lib/cctl";
       description = ''
         The working directory path where cctl will put its assets and resources.
+      '';
+    };
+
+    chainspec = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        The path to a chainspec.toml.
+      '';
+    };
+
+    config = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = ''
+        The path to a casper node config.toml.
       '';
     };
 
@@ -66,10 +85,17 @@ in
           "--working-dir"
           cfg.workingDirectory
         ]
-        ++ (lib.optional (!builtins.isNull cfg.contract) [
+        ++ optionals (!builtins.isNull cfg.contract) ([
           "--deploy-contract"
-        ] ++ (lib.mapAttrsToList (hash_name: contract_path: "${hash_name}:${contract_path}") cfg.contract)
-        ));
+        ] ++ (lib.mapAttrsToList (hash_name: contract_path: "${hash_name}:${contract_path}") cfg.contract))
+        ++ optionals (!builtins.isNull cfg.chainspec) [
+          "--chainspec-path"
+          cfg.chainspec
+        ]
+        ++ optionals (!builtins.isNull cfg.config) [
+          "--config-path"
+          cfg.config
+        ]);
       in
       {
         description = "cctl";

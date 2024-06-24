@@ -4,6 +4,7 @@
 , testResources ? ../../kairos-cli/tests/fixtures
 , kairos-contracts
 , cctlModule
+, fetchurl
 , casper-client-rs
 , writeShellScript
 , jq
@@ -40,6 +41,14 @@ nixosTest {
         port = cctlPort;
         workingDirectory = cctlWorkingDirectory;
         contract = { "${contractHashName}" = kairos-contracts + "/bin/demo-contract-optimized.wasm"; };
+        chainspec = fetchurl {
+          url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/chainspec.toml.in";
+          hash = "sha256-b/6c5o3JXFlaTgTHxs8JepaHzjMG75knzlKKqRd/7pc=";
+        };
+        config = fetchurl {
+          url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/config.toml";
+          hash = "sha256-ZuNbxw0nBjuONEZRK8Ru96zZQak4MEQ/eM1fA6esyCM=";
+        };
       };
 
       services.kairos = {

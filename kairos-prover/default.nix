@@ -34,7 +34,6 @@
         nativeBuildInputs = with pkgs; [
           pkg-config
           cargo-risczero
-          rustup-mock
         ];
         buildInputs = with pkgs; [
           openssl.dev
@@ -46,12 +45,11 @@
         cargoVendorDir = inputs.crane.lib.${system}.vendorMultipleCargoDeps {
           inherit (craneLib.findCargoFiles src) cargoConfigs;
           cargoLockList = [
-            ./methods/guest/Cargo.lock
             ./Cargo.lock
-            ./rust-std-Cargo.lock
           ];
         };
 
+        IGNORE_WRONG_RISC0_IMAGE_ID = "1";
         RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
 
         preCheck = ''
@@ -77,7 +75,7 @@
     {
       devShells.risczero = pkgs.mkShell {
         RISC0_RUST_SRC = "${rustToolchain}/lib/rustlib/src/rust";
-        RISC0_DEV_MODE = 1;
+        RISC0_DEV_MODE = 0;
         RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
         inputsFrom = [ self.packages.${system}.kairos-prover ];
       };

@@ -7,7 +7,7 @@ use casper_client::{
     types::{DeployBuilder, ExecutableDeployItem, StoredValue, TimeDiff, Timestamp},
     Error, JsonRpcId, Verbosity,
 };
-use casper_client_types::{runtime_args, ExecutionResult, Key, PublicKey, RuntimeArgs, SecretKey};
+use casper_client_types::{ExecutionResult, Key, PublicKey, RuntimeArgs, SecretKey};
 use casper_types::ContractHash;
 use hex::FromHex;
 use rand::Rng;
@@ -48,17 +48,19 @@ pub struct CCTLNetwork {
 pub struct DeployableContract {
     /// This is the named key under which the contract hash is located
     pub hash_name: String,
+    pub runtime_args: RuntimeArgs,
     pub path: PathBuf,
 }
 
 // max amount allowed to be used on gas fees
-pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
+pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 10_000_000_000_000;
 
 impl CCTLNetwork {
     pub async fn run(
         working_dir: Option<PathBuf>,
         contract_to_deploy: Option<DeployableContract>,
         chainspec_path: Option<&Path>,
+        config_path: Option<&Path>,
     ) -> anyhow::Result<CCTLNetwork> {
         let working_dir = working_dir
             .map(|dir| {
@@ -69,12 +71,18 @@ impl CCTLNetwork {
             .unwrap_or(tempdir()?.into_path());
         let assets_dir = working_dir.join("assets");
 
-        let setup_args = chainspec_path.map_or(vec![], |chainspec_path| {
-            vec!["chainspec", chainspec_path.to_str().unwrap()]
-        });
-        let output = Command::new("cctl-infra-net-setup")
-            .env("CCTL_ASSETS", &assets_dir)
-            .args(setup_args)
+        let mut setup_command = Command::new("cctl-infra-net-setup");
+        setup_command.env("CCTL_ASSETS", &assets_dir);
+
+        if let Some(chainspec_path) = chainspec_path {
+            setup_command.arg(format!("chainspec={}", chainspec_path.to_str().unwrap()));
+        };
+
+        if let Some(config_path) = config_path {
+            setup_command.arg(format!("config={}", config_path.to_str().unwrap()));
+        };
+
+        let output = setup_command
             .output()
             .expect("Failed to setup network configuration");
         let output = std::str::from_utf8(output.stdout.as_slice()).unwrap();
@@ -201,7 +209,11 @@ async fn deploy_contract(
     casper_node_rpc_url: &str,
     contract_deployer_skey: &SecretKey,
     contract_deployer_pkey: &PublicKey,
-    DeployableContract { hash_name, path }: &DeployableContract,
+    DeployableContract {
+        hash_name,
+        runtime_args,
+        path,
+    }: &DeployableContract,
 ) -> anyhow::Result<(String, casper_client_types::ContractHash)> {
     tracing::info!(
         "Deploying contract {}: {}",
@@ -210,7 +222,8 @@ async fn deploy_contract(
     );
 
     let contract_bytes = fs::read(path)?;
-    let contract = ExecutableDeployItem::new_module_bytes(contract_bytes.into(), runtime_args! {});
+    let contract =
+        ExecutableDeployItem::new_module_bytes(contract_bytes.into(), runtime_args.clone());
     let deploy = DeployBuilder::new(
         // TODO ideally make the chain-name this configurable
         "cspr-dev-cctl",
@@ -359,14 +372,13 @@ async fn deploy_contract(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use casper_client_types::runtime_args;
     use hex::FromHex;
 
     #[cfg_attr(not(feature = "cctl-tests"), ignore)]
     #[tokio::test]
     async fn test_cctl_network_starts_and_terminates() {
-        let network = CCTLNetwork::run(Option::None, Option::None, Option::None)
-            .await
-            .unwrap();
+        let network = CCTLNetwork::run(None, None, None, None).await.unwrap();
         for node in &network.nodes {
             if node.state == NodeState::Running {
                 let node_status = get_node_status(
@@ -389,12 +401,12 @@ mod tests {
         let hash_name = "kairos_contract_package_hash";
         let contract_to_deploy = DeployableContract {
             hash_name: hash_name.to_string(),
+            runtime_args: runtime_args! { "initial_trie_rot" => Option::<[u8; 32]>::None },
             path: contract_wasm_path,
         };
-        let network =
-            CCTLNetwork::run(Option::None, Option::Some(contract_to_deploy), Option::None)
-                .await
-                .unwrap();
+        let network = CCTLNetwork::run(None, Some(contract_to_deploy), None, None)
+            .await
+            .unwrap();
         let expected_contract_hash_path = network.working_dir.join("contracts").join(hash_name);
         assert!(expected_contract_hash_path.exists());
 

@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
 use casper_client_hashing::Digest;
+use casper_client_types::{runtime_args, RuntimeArgs};
 use kairos_test_utils::{cctl, kairos};
 
 // Helper function to get the path to a fixture file
@@ -21,12 +22,12 @@ async fn deposit_successful_with_ed25519() {
     let hash_name = "kairos_contract_package_hash";
     let contract_to_deploy = cctl::DeployableContract {
         hash_name: hash_name.to_string(),
+        runtime_args: runtime_args! { "initial_trie_rot" => Option::<[u8; 32]>::None },
         path: contract_wasm_path,
     };
-    let network =
-        cctl::CCTLNetwork::run(Option::None, Option::Some(contract_to_deploy), Option::None)
-            .await
-            .unwrap();
+    let network = cctl::CCTLNetwork::run(None, Some(contract_to_deploy), None, None)
+        .await
+        .unwrap();
     let node = network
         .nodes
         .first()
