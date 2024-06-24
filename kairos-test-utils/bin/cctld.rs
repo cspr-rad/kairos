@@ -11,7 +11,7 @@ use crate::cctl::DeployableContract;
 pub struct Cli {
     #[arg(short, long)]
     pub working_dir: Option<PathBuf>,
-    #[arg(short, long, num_args(0..))]
+    #[arg(short, long)]
     pub deploy_contract: Option<String>,
     #[arg(short, long)]
     pub chainspec_path: Option<PathBuf>,
