@@ -5,11 +5,17 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+kairos-circuit-logic = {path="../../../kairos-prover/kairos-circuit-logic", default-features=false, features=["serde"]}
+kairos-verifier-risc0-lib = {path="../../../kairos-prover/kairos-verifier-risc0-lib", default-features=false, features=["verifier", "disable-dev-mode"]}
+serde = {version="1", default-features=false, features=["derive"]}
+serde-json-wasm = { version="1", default-features=false }
+contract-utils = { path = "../contract-utils", default-features = false }
+borsh = { version = "1", default-features = false }
+
 casper-contract.workspace = true
 casper-contract-no-std-helpers.workspace = true
 casper-types.workspace = true
 casper-event-standard.workspace = true
-contract-utils = { path = "../contract-utils" }
 
 [build]
 target = "wasm32-unknown-unknown"
@@ -24,3 +30,7 @@ test = false
 [profile.release]
 codegen-units = 1
 lto = true
+debug = false
+strip = true
+opt-level = 3
+panic = "abort"

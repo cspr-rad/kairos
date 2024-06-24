@@ -7,6 +7,7 @@ use casper_engine_test_support::{
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{
     account::AccountHash,
+    bytesrepr::Bytes,
     crypto::{PublicKey, SecretKey},
     runtime_args,
     system::{handle_payment::ARG_TARGET, mint::ARG_ID},
@@ -30,13 +31,18 @@ pub struct TestContext {
 }
 
 impl TestContext {
-    pub fn new() -> TestContext {
+    pub fn new(initial_trie_root: Option<[u8; 32]>) -> TestContext {
         let mut builder = InMemoryWasmTestBuilder::default();
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
         let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
-        let contract_path = get_wasm_directory().join("demo-contract-optimized.wasm");
-        run_session_with_args(&mut builder, &contract_path, admin, runtime_args! {});
+        let contract_path = get_wasm_directory().0.join("demo-contract-optimized.wasm");
+        run_session_with_args(
+            &mut builder,
+            &contract_path,
+            admin,
+            runtime_args! {"initial_trie_root" => initial_trie_root },
+        );
 
         let contract_hash = builder
             .get_expected_account(admin)
@@ -83,7 +89,9 @@ impl TestContext {
     }
 
     pub fn deposit_succeeds(&mut self, depositor: AccountHash, amount: U512) {
-        let deposit_session_path = get_wasm_directory().join("deposit-session-optimized.wasm");
+        let deposit_session_path = get_wasm_directory()
+            .1
+            .join("deposit-session-optimized.wasm");
         let session_args = runtime_args! {
             "amount" => amount,
             "demo_contract" => self.contract_hash
@@ -106,7 +114,9 @@ impl TestContext {
             "amount" => amount,
             "demo_contract" => self.contract_hash
         };
-        let malicious_session_path = get_wasm_directory().join("malicious-session-optimized.wasm");
+        let malicious_session_path = get_wasm_directory()
+            .1
+            .join("malicious-session-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_session_path.as_path(),
@@ -125,8 +135,9 @@ impl TestContext {
             "demo_contract" => self.contract_hash,
             "purse_uref" => self.contract_purse
         };
-        let malicious_reader_session_path =
-            get_wasm_directory().join("malicious-reader-optimized.wasm");
+        let malicious_reader_session_path = get_wasm_directory()
+            .1
+            .join("malicious-reader-optimized.wasm");
         run_session_with_args(
             &mut self.builder,
             malicious_reader_session_path.as_path(),
@@ -134,6 +145,22 @@ impl TestContext {
             session_args,
         );
         self.builder.expect_failure();
+    }
+    pub fn submit_proof_to_contract(&mut self, sender: AccountHash, proof_serialized: Vec<u8>) {
+        let session_args = runtime_args! {
+            "risc0_receipt" => Bytes::from(proof_serialized),
+        };
+        let submit_batch_request = ExecuteRequestBuilder::contract_call_by_hash(
+            sender,
+            self.contract_hash,
+            "submit_batch",
+            session_args,
+        )
+        .build();
+        self.builder
+            .exec(submit_batch_request)
+            .commit()
+            .expect_success();
     }
 }
 

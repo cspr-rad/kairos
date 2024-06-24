@@ -1,4 +1,4 @@
-use alloc::{str, vec::Vec};
+use alloc::vec::Vec;
 
 #[cfg(feature = "asn1")]
 use kairos_tx::{asn, error::TxError};
@@ -9,6 +9,10 @@ pub type PublicKey = Vec<u8>;
 /// Withdraw is initiated on L2 and executed on the L1.
 /// Deposit comes from the L1, and is executed first on L1 and then on L2.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum KairosTransaction {
     Transfer(Signed<Transfer>),
@@ -19,6 +23,10 @@ pub enum KairosTransaction {
 /// A signed transaction.
 /// The signature should already be verified before you construct this type.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Signed<T> {
     pub public_key: PublicKey,
@@ -28,6 +36,10 @@ pub struct Signed<T> {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Transfer {
     pub recipient: PublicKey,
@@ -35,6 +47,10 @@ pub struct Transfer {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct L1Deposit {
     pub recipient: PublicKey,
@@ -42,6 +58,10 @@ pub struct L1Deposit {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Withdraw {
     pub amount: u64,

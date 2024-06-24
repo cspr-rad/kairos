@@ -4,14 +4,6 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
-[profile.dev]
-opt-level = 3
-
-[profile.release]
-debug = true
-lto = true
-opt-level = 3
-
 [dependencies]
 methods = { path = "../methods" }
 risc0-zkvm = "=1.0.1"
