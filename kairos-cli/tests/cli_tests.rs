@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
 use casper_client_hashing::Digest;
+use casper_client_types::{runtime_args, RuntimeArgs};
 use kairos_test_utils::{cctl, kairos};
 
 // Helper function to get the path to a fixture file
@@ -16,16 +17,34 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
-    let network = cctl::CCTLNetwork::run(Option::None, Option::None, Option::None)
+    let contract_wasm_path =
+        PathBuf::from(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
+    let hash_name = "kairos_contract_package_hash";
+    let contract_to_deploy = cctl::DeployableContract {
+        hash_name: hash_name.to_string(),
+        runtime_args: runtime_args! { "initial_trie_rot" => Option::<[u8; 32]>::None },
+        path: contract_wasm_path,
+    };
+    let network = cctl::CCTLNetwork::run(None, Some(contract_to_deploy), None, None)
         .await
         .unwrap();
     let node = network
         .nodes
         .first()
         .expect("Expected at least one node after successful network run");
-    let node_url = Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_rpc_url =
+        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_sse_url = Url::parse(&format!(
+        "http://localhost:{}/events/main",
+        node.port.sse_port
+    ))
+    .unwrap();
 
-    let kairos = kairos::Kairos::run(node_url, None).await.unwrap();
+    let contract_hash = network.get_contract_hash_for(hash_name);
+
+    let kairos = kairos::Kairos::run(casper_rpc_url, casper_sse_url, None, Some(contract_hash))
+        .await
+        .unwrap();
 
     tokio::task::spawn_blocking(move || {
         let depositor_secret_key_path = network
@@ -36,6 +55,8 @@ async fn deposit_successful_with_ed25519() {
         cmd.arg("--kairos-server-address")
             .arg(kairos.url.as_str())
             .arg("deposit")
+            .arg("--contract-hash")
+            .arg(contract_hash.to_string())
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
@@ -90,6 +111,8 @@ fn deposit_invalid_amount() {
 
     let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
     cmd.arg("deposit")
+        .arg("--contract-hash")
+        .arg("000000000000000000000000000000000000")
         .arg("--amount")
         .arg("foo") // Invalid amount
         .arg("--private-key")
@@ -105,6 +128,8 @@ fn deposit_invalid_private_key_path() {
 
     let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
     cmd.arg("deposit")
+        .arg("--contract-hash")
+        .arg("000000000000000000000000000000000000")
         .arg("--amount")
         .arg("123")
         .arg("--private-key")
@@ -120,13 +145,15 @@ fn deposit_invalid_private_key_content() {
 
     let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
     cmd.arg("deposit")
+        .arg("--contract-hash")
+        .arg("000000000000000000000000000000000000")
         .arg("--amount")
         .arg("123")
         .arg("--private-key")
         .arg(secret_key_path);
-    cmd.assert().failure().stderr(predicates::str::contains(
-        "Failed to read secret key from file",
-    ));
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("cryptography error"));
 }
 
 #[test]

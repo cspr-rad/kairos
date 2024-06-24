@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum L1SyncError {
+pub enum DepositManagerError {
     /// Casper Event Toolkit error.
     #[error("toolkit error: {error}")]
     ToolkitError {

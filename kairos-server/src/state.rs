@@ -2,20 +2,20 @@ pub mod transactions;
 mod trie;
 
 use std::{sync::Arc, thread};
-
 use tokio::{sync::mpsc, task};
 
 pub use self::trie::TrieStateThreadMsg;
 use crate::config::{BatchConfig, ServerConfig};
+use crate::deposit_manager::DepositManager;
 use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
 pub type ServerState = Arc<ServerStateInner>;
 
-#[derive(Debug)]
 pub struct ServerStateInner {
     pub batch_state_manager: BatchStateManager,
     pub server_config: ServerConfig,
+    pub deposit_manager: Option<DepositManager>,
 }
 
 /// The `BatchStateManager` is a piece of Axum state.
