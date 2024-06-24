@@ -112,7 +112,7 @@ in
               Restart = "no";
               User = "cctl";
               Group = "cctl";
-              TimeoutStartSec = 300;
+              TimeoutStartSec = 1000;
               StateDirectory = builtins.baseNameOf cfg.workingDirectory;
               WorkingDirectory = cfg.workingDirectory;
               ReadWritePaths = [
