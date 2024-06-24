@@ -8,8 +8,6 @@ let
     mkEnableOption
     escapeShellArgs
     optionals
-    optional
-    concatLines
     ;
   cfg = config.services.cctl;
 in
@@ -114,6 +112,7 @@ in
               Restart = "no";
               User = "cctl";
               Group = "cctl";
+              TimeoutStartSec = 300;
               StateDirectory = builtins.baseNameOf cfg.workingDirectory;
               WorkingDirectory = cfg.workingDirectory;
               ReadWritePaths = [
