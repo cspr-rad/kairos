@@ -3,7 +3,7 @@ use reqwest::Url;
 use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
-use casper_hashing::Digest;
+use casper_client_hashing::Digest;
 use kairos_test_utils::{cctl, kairos};
 
 // Helper function to get the path to a fixture file
@@ -16,7 +16,7 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
-    let network = cctl::CCTLNetwork::run(Option::None, Option::None)
+    let network = cctl::CCTLNetwork::run(Option::None, Option::None, Option::None)
         .await
         .unwrap();
     let node = network
@@ -25,7 +25,7 @@ async fn deposit_successful_with_ed25519() {
         .expect("Expected at least one node after successful network run");
     let node_url = Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
 
-    let kairos = kairos::Kairos::run(node_url).await.unwrap();
+    let kairos = kairos::Kairos::run(node_url, None).await.unwrap();
 
     tokio::task::spawn_blocking(move || {
         let depositor_secret_key_path = network

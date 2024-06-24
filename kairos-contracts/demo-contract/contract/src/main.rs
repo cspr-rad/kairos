@@ -9,24 +9,28 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_event_standard::Schemas;
+use casper_types::bytesrepr::Bytes;
 use casper_types::{
     contracts::NamedKeys, runtime_args, AccessRights, ApiError, CLValue, EntryPoints, Key,
     RuntimeArgs, URef, U512,
 };
 use contract_utils::constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
-    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, RUNTIME_ARG_AMOUNT, RUNTIME_ARG_TEMP_PURSE,
-    RUNTIME_ARG_TX,
+    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, KAIROS_TRIE_ROOT, RUNTIME_ARG_AMOUNT,
+    RUNTIME_ARG_INITIAL_TRIE_ROOT, RUNTIME_ARG_RECEIPT, RUNTIME_ARG_TEMP_PURSE, RUNTIME_ARG_TX,
 };
 use contract_utils::Deposit;
 mod entry_points;
 mod utils;
+use kairos_verifier_risc0_lib::verifier::Receipt;
 use utils::errors::DepositError;
 use utils::get_immediate_caller;
 
 #[allow(clippy::single_component_path_imports)]
 #[allow(unused)]
 use casper_contract_no_std_helpers;
+
+use kairos_circuit_logic::ProofOutputs;
 
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
@@ -67,23 +71,22 @@ pub extern "C" fn get_purse() {
 pub extern "C" fn deposit() {
     let temp_purse: URef = runtime::get_named_arg(RUNTIME_ARG_TEMP_PURSE);
     let amount: U512 = runtime::get_named_arg(RUNTIME_ARG_AMOUNT);
-    let tx: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_TX);
-
-    utils::validate_deposit_tx(&tx, &amount).unwrap_or_revert();
-
     let deposit_purse_uref: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
         .unwrap_or_revert_with(DepositError::MissingKeyDepositPurse)
         .into_uref()
         .unwrap_or_revert_with(ApiError::UnexpectedKeyVariant);
     system::transfer_from_purse_to_purse(temp_purse, deposit_purse_uref, amount, None)
         .unwrap_or_revert();
+    let tx: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_TX);
+
+    utils::validate_deposit_tx(&tx, &amount).unwrap_or_revert();
 
     // kairos utilizes u64 so only amounts that can be converted are accepted.
     let amount =
         u64::try_from(amount).unwrap_or_else(|_| runtime::revert(ApiError::InvalidArgument));
 
     let new_deposit_record: Deposit = Deposit {
-        depositor: get_immediate_caller().unwrap_or_revert(),
+        depositor: get_immediate_caller().unwrap_or_revert(), // NOTE: This is wrong.
         amount,
         tx,
     };
@@ -92,19 +95,64 @@ pub extern "C" fn deposit() {
 }
 
 #[no_mangle]
+pub extern "C" fn submit_batch() {
+    let receipt_serialized: Bytes = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
+    let Ok(receipt): Result<Receipt, _> = serde_json_wasm::from_slice(&receipt_serialized) else {
+        runtime::revert(ApiError::User(0u16));
+    };
+
+    let Ok(ProofOutputs {
+        pre_batch_trie_root,
+        post_batch_trie_root,
+        deposits: _,    // TODO: implement deposits
+        withdrawals: _, // TODO: implement withdrawals
+    }) = kairos_verifier_risc0_lib::verifier::verify_execution(&receipt)
+    else {
+        runtime::revert(ApiError::User(1u16));
+    };
+
+    // todo: check that the deposits are unique
+
+    // get the current root from contract storage
+    let trie_root_uref: URef = runtime::get_key(KAIROS_TRIE_ROOT)
+        .unwrap_or_revert()
+        .into_uref()
+        .unwrap_or_revert_with(ApiError::User(2u16));
+    let trie_root: Option<[u8; 32]> = storage::read(trie_root_uref)
+        .unwrap_or_revert()
+        .unwrap_or_revert_with(ApiError::User(3u16));
+
+    // revert if the previous root of the proof doesn't match the current root
+    if trie_root != pre_batch_trie_root {
+        runtime::revert(ApiError::User(4u16))
+    };
+    // store the new root under the contract URef
+    storage::write(trie_root_uref, post_batch_trie_root);
+    // todo: update sliding window
+}
+
+#[no_mangle]
 pub extern "C" fn call() {
     let entry_points = EntryPoints::from(vec![
         entry_points::init(),
         entry_points::get_purse(),
         entry_points::deposit(),
+        entry_points::submit_batch(),
     ]);
 
     // this counter will be udpated by the entry point that processes / verifies batches
-    let last_processed_deposit_counter = storage::new_uref(0u64);
-    let named_keys = NamedKeys::from([(
-        KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),
-        last_processed_deposit_counter.into(),
-    )]);
+    let last_processed_deposit_counter_uref: URef = storage::new_uref(0u64);
+
+    let initial_trie_root: Option<[u8; 32]> = runtime::get_named_arg(RUNTIME_ARG_INITIAL_TRIE_ROOT);
+
+    let trie_root_uref: URef = storage::new_uref(initial_trie_root);
+    let named_keys = NamedKeys::from([
+        (
+            KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),
+            last_processed_deposit_counter_uref.into(),
+        ),
+        (KAIROS_TRIE_ROOT.to_string(), trie_root_uref.into()),
+    ]);
 
     let (contract_hash, _) = storage::new_locked_contract(
         entry_points,
@@ -112,11 +160,12 @@ pub extern "C" fn call() {
         Some(KAIROS_CONTRACT_PACKAGE_HASH.to_string()),
         Some(KAIROS_CONTRACT_UREF.to_string()),
     );
+
     let contract_hash_key = Key::from(contract_hash);
     runtime::put_key(KAIROS_CONTRACT_HASH, contract_hash_key);
 
-    let init_args = runtime_args! {};
     // Call the init entry point of the newly installed contract
     // This will setup the deposit purse and initialize Event Schemas (CES)
+    let init_args = runtime_args! {};
     runtime::call_contract::<()>(contract_hash, "init", init_args);
 }

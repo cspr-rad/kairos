@@ -22,7 +22,7 @@ cctl-tests = []
 anyhow = "1"
 backoff = { version = "0.4", features = ["tokio", "futures"]}
 clap = { version = "4", features = ["derive"] }
-casper-client = "2"
+casper-client.workspace = true
 nom = "7"
 sd-notify = "0.4"
 tokio = { version = "1", features = [ "full", "tracing", "macros" ] }
@@ -31,4 +31,4 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 reqwest = { version = "0.12", features = ["json"] }
 kairos-server = { path = "../kairos-server" }
-
+dotenvy = "0.15"

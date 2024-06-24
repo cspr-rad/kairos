@@ -6,14 +6,10 @@
     Finally the temporary purse is emptied / all funds are transferred to the contract's
     purse.
 */
-#![no_std]
+
 #![no_main]
 use casper_contract::contract_api::{account, runtime, system};
 use casper_types::{runtime_args, ContractHash, RuntimeArgs, URef, U512};
-
-#[allow(clippy::single_component_path_imports)]
-#[allow(unused)]
-use casper_contract_no_std_helpers;
 
 #[no_mangle]
 pub extern "C" fn call() {

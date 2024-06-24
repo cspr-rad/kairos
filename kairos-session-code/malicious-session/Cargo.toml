@@ -1,0 +1,17 @@
+[package]
+name = "malicious-session"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+casper-contract.workspace = true
+casper-contract-no-std-helpers.workspace = true
+casper-types.workspace = true
+
+[[bin]]
+name = "malicious-session"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false

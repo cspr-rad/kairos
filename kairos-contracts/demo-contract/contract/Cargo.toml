@@ -5,13 +5,19 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-casper-contract = { version = "4.0.0", default-features = false }
-casper-contract-no-std-helpers = { version = "0.1.0", "git" = "https://github.com/koxu1996/casper-contract-no-std-helpers"}
-casper-types = { version = "4.0.1", default-features = false }
-casper-event-standard = { version = "0.5.0", default-features = false }
-contract-utils = { path = "../contract-utils" }
+kairos-circuit-logic = {path="../../../kairos-prover/kairos-circuit-logic", default-features=false, features=["serde"]}
+kairos-verifier-risc0-lib = {path="../../../kairos-prover/kairos-verifier-risc0-lib", default-features=false, features=["verifier", "disable-dev-mode"]}
+serde = {version="1", default-features=false, features=["derive"]}
+serde-json-wasm = { version="1", default-features=false }
+contract-utils = { path = "../contract-utils", default-features = false }
+borsh = { version = "1", default-features = false }
 kairos-tx = { path = "../../../kairos-tx", default-features = false }
-kairos-crypto-tmp = { package = "kairos-crypto", git = "https://github.com/cspr-rad/kairos", branch = "feature/kairos-crypto-improvements", default-features = false, features = ["crypto-casper", "tx"] } # TODO: Switch to `path = "../../../kairos-crypto"` once PR #123 is merged.
+kairos-crypto = { path = "../../../kairos-crypto", default-features = false, features = ["crypto-casper", "tx"] }
+
+casper-contract.workspace = true
+casper-contract-no-std-helpers.workspace = true
+casper-types.workspace = true
+casper-event-standard.workspace = true
 
 [build]
 target = "wasm32-unknown-unknown"
@@ -26,3 +32,7 @@ test = false
 [profile.release]
 codegen-units = 1
 lto = true
+debug = false
+strip = true
+opt-level = 3
+panic = "abort"

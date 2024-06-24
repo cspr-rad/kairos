@@ -7,18 +7,20 @@ license.workspace = true
 
 [features]
 default = []
-disable-dev-mode = [ "risc0-zkvm/disable-dev-mode" ]
+write-test-proofs = [ "disable-dev-mode" ]
+disable-dev-mode = [ "risc0-zkvm/disable-dev-mode", "kairos-verifier-risc0-lib/disable-dev-mode" ]
 cuda = [ "risc0-zkvm/cuda",  "disable-dev-mode" ]
 metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
 
 [dependencies]
 methods = { path = "../methods" }
-risc0-zkvm = "=0.21.0"
+risc0-zkvm = { version="=1.0.1", default-features=false }
 
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"], default-features = false }
+kairos-verifier-risc0-lib = { path = "../kairos-verifier-risc0-lib" }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", features = ["serde"] }
 
 tokio = { version = "1", features = ["rt-multi-thread", "tracing", "macros"] }
@@ -32,8 +34,9 @@ axum-extra = { version = "0.9", features = [
 dotenvy = "0.15"
 
 serde = { version = "1", features = ["derive"] }
-# TODO switch to bincode 2
+# TODO switch to borsh
 serde_json = "1.0"
+
 
 [dev-dependencies]
 kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde", "test-logic", "arbitrary" ], default-features = false }

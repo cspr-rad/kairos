@@ -1,9 +1,13 @@
-use alloc::vec::Vec;
 // Utilities copied from cep-78 and cep-18 implementation.
+
+use alloc::vec::Vec;
 
 use casper_contract::contract_api::runtime;
 use casper_types::bytesrepr::FromBytes;
 use casper_types::{account::AccountHash, system::CallStackElement, Key, U512};
+
+use kairos_crypto::SignerCore;
+use kairos_crypto::SignerTxExtension;
 
 pub mod errors;
 use errors::DepositError;
@@ -71,7 +75,7 @@ pub(crate) fn validate_deposit_tx(tx_bytes: &[u8], amount: &U512) -> Result<(), 
     }
 
     // Signature must be valid.
-    let signer = kairos_crypto_tmp::implementations::Signer::from_public_key(tx_raw_public_key)
+    let signer = kairos_crypto::implementations::Signer::from_public_key(tx_raw_public_key)
         .map_err(|_e| DepositError::FailedToCreateSigner)?;
     signer
         .verify_tx(tx)
