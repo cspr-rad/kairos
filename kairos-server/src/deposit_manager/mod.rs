@@ -93,11 +93,12 @@ impl DepositManager {
     ) -> Result<(), DepositManagerError> {
         let last_unprocessed_deposit_index = self.fetcher.fetch_events_count().await?;
 
-        for deposit_index in (self
+        let next_deposit_index = self
             .last_deposit_added_to_batch
             .fetch_add(1, Ordering::SeqCst)
-            + 1)..=last_unprocessed_deposit_index
-        {
+            + 1;
+        assert!(next_deposit_index <= last_unprocessed_deposit_index);
+        for deposit_index in next_deposit_index..=last_unprocessed_deposit_index {
             let untyped_event = self
                 .fetcher
                 .fetch_event(deposit_index, &self.schemas)
