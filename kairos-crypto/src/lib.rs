@@ -21,15 +21,15 @@ pub trait SignerCore {
         signature_bytes: U,
     ) -> Result<(), CryptoError>;
 
+    fn from_public_key<T: AsRef<[u8]>>(bytes: T) -> Result<Self, CryptoError>
+    where
+        Self: Sized;
     fn to_public_key(&self) -> Result<Vec<u8>, CryptoError>;
 }
 
 #[cfg(feature = "fs")]
 pub trait SignerFsExtension: SignerCore {
     fn from_private_key_file<P: AsRef<Path>>(file: P) -> Result<Self, CryptoError>
-    where
-        Self: Sized;
-    fn from_public_key<T: AsRef<[u8]>>(bytes: T) -> Result<Self, CryptoError>
     where
         Self: Sized;
 }
