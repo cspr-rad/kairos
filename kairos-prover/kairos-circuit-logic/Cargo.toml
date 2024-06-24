@@ -1,14 +1,15 @@
 [package]
 name = "kairos-circuit-logic"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
 
 [features]
-default = ["std", "arbitrary", "test-logic"] 
+default = ["std", "arbitrary", "test-logic", "borsh"] 
 std = []
 serde = ["dep:serde", "kairos-trie/serde"]
 asn1 = ["dep:kairos-tx"]
+borsh = ["dep:borsh"]
 arbitrary = ["dep:proptest", "dep:test-strategy", "std", "test-logic"]
 test-logic = []
 
@@ -17,6 +18,7 @@ kairos-tx = { path = "../../kairos-tx", default-features = false, optional = tru
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", default-features = false }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"], optional = true }
 sha2 = { version = "0.10", default-features = false }
+borsh = { version = "1", default-features = false, features = ["derive"], optional = true }
 
 # dev dependencies enabled by arbitrary
 test-strategy = { version = "0.3", optional = true }

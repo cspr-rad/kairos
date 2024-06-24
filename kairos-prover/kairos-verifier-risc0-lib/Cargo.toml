@@ -1,13 +1,16 @@
 [package]
 name = "kairos-verifier-risc0-lib"
-version.workspace = true
-edition.workspace = true
-license.workspace = true
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
 
 [features]
+default = ["verifier"]
+verifier = ["dep:risc0-zkvm", "dep:kairos-circuit-logic", "dep:borsh"]
 disable-dev-mode = [ "risc0-zkvm/disable-dev-mode" ]
 
+
 [dependencies]
-methods = { path = "../methods" }
-risc0-zkvm = { version = "=1.0.1", default-features = false }
-kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde"], default-features = false }
+risc0-zkvm = { version = "=1.0.1", default-features = false, optional = true }
+kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde", "borsh"], default-features = false, optional = true }
+borsh = { version = "1", default-features = false, optional = true }

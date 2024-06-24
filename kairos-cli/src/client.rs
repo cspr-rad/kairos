@@ -46,7 +46,7 @@ pub fn deposit(
     amount: u64,
 ) -> Result<DeployHash, KairosClientError> {
     let deposit_session_wasm_path =
-        Path::new(env!("PATH_TO_WASM_BINARIES")).join("deposit-session-optimized.wasm");
+        Path::new(env!("PATH_TO_SESSION_BINARIES")).join("deposit-session-optimized.wasm");
     let deposit_session_wasm_bytes = fs::read(&deposit_session_wasm_path).unwrap_or_else(|err| {
         panic!(
             "Failed to read the deposit session wasm as bytes from file: {:?}.\n{}",

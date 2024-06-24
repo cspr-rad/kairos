@@ -14,6 +14,14 @@ let
       });
 in
 {
+  perSystem = { inputs', ... }: {
+    packages.casper-client-rs = inputs'.csprpkgs.packages.casper-client-rs.overrideAttrs (_: prev: {
+      # the patch can be obtained from https://github.com/cspr-rad/casper-client-rs/pull/2 by appending ".patch" to the URL
+      patches = prev.patches ++ [ ../patches/casper-client-deploy-size.patch ];
+      # disable checks because of this test https://github.com/casper-ecosystem/casper-client-rs/blob/release-2.0.0/lib/cli/tests.rs#L135
+      doCheck = false;
+    });
+  };
   flake = {
     checks."x86_64-linux" =
       let pkgs = inputs.nixpkgs.legacyPackages."x86_64-linux";
@@ -37,9 +45,8 @@ in
             ./tests/end-to-end.nix
             {
               inherit mkKairosHostConfig;
-              inherit (self.packages.${pkgs.system}) kairos kairos-contracts;
+              inherit (self.packages.${pkgs.system}) kairos kairos-contracts casper-client-rs;
               cctlModule = self.nixosModules.cctl;
-              inherit (inputs.csprpkgs.packages.${pkgs.system}) casper-client-rs;
             };
       };
     nixosModules = {
