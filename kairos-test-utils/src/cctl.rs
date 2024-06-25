@@ -1,6 +1,6 @@
 pub mod parsers;
 use anyhow::anyhow;
-use backoff::{backoff::Constant, future::retry};
+use backoff::{future::retry, ExponentialBackoff};
 use casper_client::{get_node_status, rpcs::results::ReactorState, Error, JsonRpcId, Verbosity};
 use std::io::{self, Write};
 use std::path::Path;
@@ -103,16 +103,12 @@ impl CCTLNetwork {
             })
             .collect();
 
+        let node_port = nodes.first().unwrap().port.rpc_port;
+        let casper_node_rpc_url = format!("http://localhost:{}/rpc", node_port);
+
         tracing::info!("Waiting for network to pass genesis");
-        retry(
-            Constant::new(std::time::Duration::from_millis(100)),
-            || async {
-                let node_port = nodes.first().unwrap().port.rpc_port;
-                get_node_status(
-                    JsonRpcId::Number(1),
-                    &format!("http://localhost:{}", node_port),
-                    Verbosity::High,
-                )
+        retry(ExponentialBackoff::default(), || async {
+            get_node_status(JsonRpcId::Number(1), &casper_node_rpc_url, Verbosity::Low)
                 .await
                 .map_err(|err| match &err {
                     Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
@@ -126,8 +122,7 @@ impl CCTLNetwork {
                         "Node didn't reach the VALIDATE state yet"
                     ))),
                 })?
-            },
-        )
+        })
         .await
         .expect("Waiting for network to pass genesis failed");
 
