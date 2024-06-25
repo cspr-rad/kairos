@@ -1,6 +1,5 @@
 use assert_cmd::Command;
 use reqwest::Url;
-use std::fs;
 use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
