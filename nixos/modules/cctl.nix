@@ -1,4 +1,4 @@
-{ lib, config, pkgs, ... }:
+{ lib, config, ... }:
 let
   inherit (lib)
     types
@@ -8,8 +8,6 @@ let
     mkEnableOption
     escapeShellArgs
     optionals
-    optional
-    concatLines
     ;
   cfg = config.services.cctl;
 in
@@ -69,8 +67,6 @@ in
 
     systemd.services.cctl =
       let
-        writeableChainspec = "${cfg.workingDirectory}/chainspec.toml";
-        writeableConfig = "${cfg.workingDirectory}/config.toml";
         args = escapeShellArgs ([
           "--working-dir"
           cfg.workingDirectory
@@ -96,10 +92,6 @@ in
         serviceConfig =
           mkMerge [
             {
-              ExecStartPre =
-                concatLines
-                  ((optional (!builtins.isNull cfg.chainspec) "${pkgs.coreutils}/bin/cp --no-preserve=mode ${cfg.chainspec} ${writeableChainspec}") ++
-                    (optional (!builtins.isNull cfg.config) "${pkgs.coreutils}/bin/cp --no-preserve=mode ${cfg.config} ${writeableConfig}"));
               ExecStart = "${lib.getExe cfg.package} ${args}";
               Type = "notify";
               Restart = "no";
