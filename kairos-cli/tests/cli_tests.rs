@@ -125,6 +125,8 @@ fn deposit_invalid_private_key_path() {
         .arg("000000000000000000000000000000000000")
         .arg("--amount")
         .arg("123")
+        .arg("--recipient")
+        .arg("01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356") // Example recipient
         .arg("--private-key")
         .arg(secret_key_path);
     cmd.assert()
@@ -142,6 +144,8 @@ fn deposit_invalid_private_key_content() {
         .arg("000000000000000000000000000000000000")
         .arg("--amount")
         .arg("123")
+        .arg("--recipient")
+        .arg("01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356") // Example recipient
         .arg("--private-key")
         .arg(secret_key_path);
     cmd.assert()

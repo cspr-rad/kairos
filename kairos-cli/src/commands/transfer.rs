@@ -1,7 +1,6 @@
 use crate::client::KairosClientError;
-use crate::common::args::{AmountArg, NonceArg, PrivateKeyPathArg};
+use crate::common::args::{AmountArg, NonceArg, PrivateKeyPathArg, RecipientArg};
 use crate::error::CliError;
-use crate::utils::parse_hex_string;
 
 use axum_extra::routing::TypedPath;
 use kairos_crypto::error::CryptoError;
@@ -16,8 +15,8 @@ use reqwest::Url;
 
 #[derive(Parser)]
 pub struct Args {
-    #[arg(long, short, value_name = "PUBLIC_KEY", value_parser = parse_hex_string)]
-    recipient: ::std::vec::Vec<u8>, // Absolute path is required here - see https://github.com/clap-rs/clap/issues/4626#issue-1528622454.
+    #[clap(flatten)]
+    recipient: RecipientArg,
     #[clap(flatten)]
     amount: AmountArg,
     #[clap(flatten)]
@@ -27,7 +26,7 @@ pub struct Args {
 }
 
 pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
-    let recipient = Signer::from_public_key(args.recipient)?.to_public_key()?;
+    let recipient = Signer::from_public_key(args.recipient.recipient)?.to_public_key()?;
     let amount: u64 = args.amount.field;
     let signer =
         Signer::from_private_key_file(args.private_key_path.field).map_err(CryptoError::from)?;

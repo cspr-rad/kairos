@@ -1,6 +1,5 @@
 use axum_extra::routing::TypedPath;
-use casper_client::types::DeployHash;
-use casper_client::types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp};
+use casper_client::types::{DeployBuilder, DeployHash, ExecutableDeployItem, TimeDiff, Timestamp};
 use casper_client_types::{crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs, U512};
 use kairos_server::routes::deposit::DepositPath;
 use reqwest::Url;
@@ -50,6 +49,7 @@ pub fn deposit(
     depositor_secret_key: &SecretKey,
     contract_hash: &ContractHash,
     amount: impl Into<U512>,
+    recipient: casper_client_types::PublicKey,
 ) -> Result<DeployHash, KairosClientError> {
     let deposit_session_wasm_path =
         Path::new(env!("PATH_TO_SESSION_BINARIES")).join("deposit-session-optimized.wasm");
@@ -61,7 +61,11 @@ pub fn deposit(
     });
     let deposit_session = ExecutableDeployItem::new_module_bytes(
         deposit_session_wasm_bytes.into(),
-        runtime_args! { "demo_contract" => *contract_hash, "amount" => amount.into() },
+        runtime_args! {
+          "demo_contract" => *contract_hash,
+          "amount" => amount.into(),
+          "recipient" => recipient
+        },
     );
     let deploy = DeployBuilder::new(
         env!("CASPER_CHAIN_NAME"),
