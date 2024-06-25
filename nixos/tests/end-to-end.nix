@@ -4,8 +4,8 @@
 , testResources ? ../../kairos-cli/tests/fixtures
 , kairos-contracts
 , cctlModule
-, fetchurl
 , casper-client-rs
+, fetchurl
 }:
 nixosTest {
   name = "kairos e2e test";
