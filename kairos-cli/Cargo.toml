@@ -14,10 +14,14 @@ license.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+default = ["demo"]
 all-tests = ["cctl-tests"]
 cctl-tests = []
+demo = ["dep:kairos-test-utils", "dep:tokio"]
 
 [dependencies]
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 casper-client.workspace = true
 casper-client-types = { workspace = true, features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
 clap = { version = "4", features = ["derive", "deprecated"] }
@@ -30,6 +34,8 @@ axum-extra = { version = "0.9", features = [ "typed-routing" ] }
 reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde_json = "1.0"
 serde = "1.0"
+kairos-test-utils = { path = "../kairos-test-utils", optional = true }
+tokio = { version = "1", features = ["full"], optional = true }
 
 [dev-dependencies]
 tokio = "1"

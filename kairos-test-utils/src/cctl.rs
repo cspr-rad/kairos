@@ -70,6 +70,7 @@ impl CCTLNetwork {
             })
             .unwrap_or(tempdir()?.into_path());
         let assets_dir = working_dir.join("assets");
+        tracing::info!("Working directory: {:?}", working_dir);
 
         let mut setup_command = Command::new("cctl-infra-net-setup");
         setup_command.env("CCTL_ASSETS", &assets_dir);
@@ -82,6 +83,7 @@ impl CCTLNetwork {
             setup_command.arg(format!("config={}", config_path.to_str().unwrap()));
         };
 
+        tracing::info!("Setting up network configuration");
         let output = setup_command
             .output()
             .expect("Failed to setup network configuration");
