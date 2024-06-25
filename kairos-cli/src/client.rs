@@ -45,6 +45,7 @@ pub fn deposit(
     depositor_secret_key: &SecretKey,
     amount: u64,
 ) -> Result<DeployHash, KairosClientError> {
+    // TODO
     let deposit_session_wasm_path =
         Path::new(env!("PATH_TO_SESSION_BINARIES")).join("deposit-session-optimized.wasm");
     let deposit_session_wasm_bytes = fs::read(&deposit_session_wasm_path).unwrap_or_else(|err| {

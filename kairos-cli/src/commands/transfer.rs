@@ -10,8 +10,7 @@ use kairos_crypto::SignerCore;
 use kairos_crypto::SignerFsExtension;
 
 use clap::Parser;
-use kairos_server::routes::transfer::TransferPath;
-use kairos_server::routes::PayloadBody;
+use kairos_server::routes::{transfer::TransferPath, PayloadBody};
 use kairos_tx::asn::{SigningPayload, Transfer};
 use reqwest::Url;
 
@@ -27,7 +26,7 @@ pub struct Args {
     nonce: NonceArg,
 }
 
-pub async fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
+pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     let recipient = Signer::from_public_key(args.recipient)?.to_public_key()?;
     let amount: u64 = args.amount.field;
     let signer =
@@ -37,7 +36,7 @@ pub async fn run(args: Args, kairos_server_address: Url) -> Result<String, CliEr
     // TODO: Create transaction and sign it with `signer`.
 
     // TODO: Send transaction to the network, using Rust SDK.
-    reqwest::Client::new()
+    reqwest::blocking::Client::new()
         .post(kairos_server_address.join(TransferPath::PATH).unwrap())
         .json(&PayloadBody {
             public_key: signer.to_public_key()?,
@@ -47,7 +46,6 @@ pub async fn run(args: Args, kairos_server_address: Url) -> Result<String, CliEr
             signature: vec![],
         })
         .send()
-        .await
         .map_err(KairosClientError::from)?;
 
     Ok("ok".to_string())
