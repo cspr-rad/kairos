@@ -10,5 +10,4 @@ bench = false
 doctest = false
 
 [dependencies]
-casper-types.workspace = true
 casper-event-standard = { workspace = true, default-features = false }
