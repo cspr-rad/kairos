@@ -66,9 +66,15 @@ fn transfer_successful_with_secp256k1() {
         .arg(recipient)
         .arg("--amount")
         .arg("123")
+        .arg("--nonce")
+        .arg("0")
         .arg("--private-key")
         .arg(secret_key_path);
-    cmd.assert().success().stdout("ok\n");
+
+    // the transfer command should fail because the server is not running
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("http client error"));
 }
 
 #[test]
@@ -79,9 +85,15 @@ fn withdraw_successful_with_ed25519() {
     cmd.arg("withdraw")
         .arg("--amount")
         .arg("123")
+        .arg("--nonce")
+        .arg("0")
         .arg("--private-key")
         .arg(secret_key_path);
-    cmd.assert().success().stdout("ok\n");
+
+    // the transfer command should fail because the server is not running
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("http client error"));
 }
 
 #[test]
