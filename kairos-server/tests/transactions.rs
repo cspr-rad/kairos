@@ -30,10 +30,11 @@ static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 
 #[cfg(feature = "deposit-mock")]
 fn new_test_app() -> TestServer {
-    new_test_app_with_casper_node(&Url::parse("http://0.0.0.0:0").unwrap())
+    let dummy_url = Url::parse("http://0.0.0.0:0").unwrap();
+    new_test_app_with_casper_node(&dummy_url, &dummy_url)
 }
 
-fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
+fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
             .with(
@@ -46,7 +47,8 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     let config = TestServerConfig::builder().mock_transport().build();
     let server_config = ServerConfig {
         socket_addr: "0.0.0.0:0".parse().unwrap(),
-        casper_rpc: casper_node_url.clone(),
+        casper_rpc: casper_rpc_url.clone(),
+        casper_sse: casper_sse_url.clone(),
         casper_contract_hash: "0000000000000000000000000000000000000000000000000000000000000000"
             .to_string(),
         batch_config: BatchConfig {
@@ -75,10 +77,15 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
         .nodes
         .first()
         .expect("Expected at least one node after successful network run");
-    let casper_node_url =
+    let casper_rpc_url =
         Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_sse_url = Url::parse(&format!(
+        "http://localhost:{}/events/main",
+        node.port.sse_port
+    ))
+    .unwrap();
 
-    let server = new_test_app_with_casper_node(&casper_node_url);
+    let server = new_test_app_with_casper_node(&casper_rpc_url, &casper_sse_url);
 
     let sender_secret_key_file = network
         .working_dir

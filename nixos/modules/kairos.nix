@@ -46,6 +46,14 @@ in
       '';
     };
 
+    casperSseUrl = mkOption {
+      type = types.str;
+      example = "http://127.0.0.1:18101/events/main";
+      description = ''
+        The casper node URL to the SSE events endpoint.
+      '';
+    };
+
     prover = mkOption {
       description = "Prover server related options";
       default = { };
@@ -124,7 +132,8 @@ in
         environment = {
           RUST_LOG = cfg.logLevel;
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
-          KAIROS_SERVER_CASPER_RPC = "${cfg.casperRpcUrl}";
+          KAIROS_SERVER_CASPER_RPC = cfg.casperRpcUrl;
+          KAIROS_SERVER_CASPER_SSE = cfg.casperSseUrl;
           KAIROS_SERVER_CASPER_CONTRACT_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
           KAIROS_PROVER_SERVER_URL = "${cfg.prover.protocol}://${cfg.prover.bindAddress}:${builtins.toString cfg.prover.port}";
         } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchSize) {

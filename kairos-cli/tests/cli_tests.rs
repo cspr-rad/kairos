@@ -23,9 +23,17 @@ async fn deposit_successful_with_ed25519() {
         .nodes
         .first()
         .expect("Expected at least one node after successful network run");
-    let node_url = Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_rpc_url =
+        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_sse_url = Url::parse(&format!(
+        "http://localhost:{}/events/main",
+        node.port.sse_port
+    ))
+    .unwrap();
 
-    let kairos = kairos::Kairos::run(node_url, None).await.unwrap();
+    let kairos = kairos::Kairos::run(&casper_rpc_url, &casper_sse_url, None)
+        .await
+        .unwrap();
 
     tokio::task::spawn_blocking(move || {
         let depositor_secret_key_path = network
