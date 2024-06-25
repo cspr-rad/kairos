@@ -1,10 +1,14 @@
 use assert_cmd::Command;
+use casper_client_types::{runtime_args, RuntimeArgs};
 use reqwest::Url;
 use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
 use casper_client_hashing::Digest;
-use kairos_test_utils::{cctl, kairos};
+use kairos_test_utils::{
+    cctl::{CCTLNetwork, DeployableContract},
+    kairos,
+};
 
 // Helper function to get the path to a fixture file
 fn fixture_path(relative_path: &str) -> PathBuf {
@@ -16,9 +20,20 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
-    let network = cctl::CCTLNetwork::run(None, None, None, None)
+    let contract_wasm_path =
+        PathBuf::from(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
+    let hash_name = "kairos_contract_package_hash";
+    let contract_to_deploy = DeployableContract {
+        hash_name: hash_name.to_string(),
+        runtime_args: runtime_args! { "initial_trie_root" => Option::<[u8; 32]>::None },
+        path: contract_wasm_path,
+    };
+    let network = CCTLNetwork::run(None, Some(contract_to_deploy), None, None)
         .await
         .unwrap();
+
+    let contract_hash = network.get_contract_hash_for(hash_name);
+
     let node = network
         .nodes
         .first()
@@ -38,6 +53,7 @@ async fn deposit_successful_with_ed25519() {
             .arg(kairos.url.as_str())
             .arg("deposit")
             .arg("--contract-hash")
+            .arg(contract_hash.to_string())
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
