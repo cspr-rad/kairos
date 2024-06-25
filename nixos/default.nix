@@ -47,7 +47,6 @@ in
               inherit mkKairosHostConfig;
               inherit (self.packages.${pkgs.system}) kairos kairos-contracts casper-client-rs;
               cctlModule = self.nixosModules.cctl;
-              inherit (inputs.csprpkgs.packages.${pkgs.system}) casper-node;
             };
       };
     nixosModules = {
