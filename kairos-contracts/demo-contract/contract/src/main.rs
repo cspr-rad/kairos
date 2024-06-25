@@ -140,7 +140,7 @@ pub extern "C" fn call() {
     ]);
 
     // this counter will be udpated by the entry point that processes / verifies batches
-    let last_processed_deposit_counter_uref: URef = storage::new_uref(0u64);
+    let last_processed_deposit_counter_uref: URef = storage::new_uref(0u32);
 
     let initial_trie_root: Option<[u8; 32]> = runtime::get_named_arg(RUNTIME_ARG_INITIAL_TRIE_ROOT);
 
