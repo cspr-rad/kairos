@@ -36,7 +36,7 @@ pub fn run(
 ) -> Result<String, CliError> {
     match command {
         Command::Deposit(args) => commands::deposit::run(args, kairos_server_address),
-        Command::Transfer(args) => commands::transfer::run(args),
-        Command::Withdraw(args) => commands::withdraw::run(args),
+        Command::Transfer(args) => commands::transfer::run(args, kairos_server_address),
+        Command::Withdraw(args) => commands::withdraw::run(args, kairos_server_address),
     }
 }

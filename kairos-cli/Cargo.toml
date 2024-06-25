@@ -26,6 +26,7 @@ thiserror = "1"
 kairos-crypto = { path = "../kairos-crypto", features = ["std"] }
 kairos-tx = { path = "../kairos-tx" }
 kairos-server = { path = "../kairos-server" }
+axum-extra = { version = "0.9", features = [ "typed-routing" ] }
 reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde_json = "1.0"
 serde = "1.0"
