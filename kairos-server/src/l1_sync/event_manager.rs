@@ -63,7 +63,7 @@ impl EventManager {
                         .expect("Failed to parse deposit event from bytes");
 
                     let amount = deposit.amount;
-                    let recipient: Vec<u8> = "cafebabe".into(); // CAUTION: Using mocked recipient, as event does NOT contain depositor's public key.
+                    let recipient: Vec<u8> = deposit.recipient;
                     let txn = KairosTransaction::Deposit(L1Deposit { amount, recipient });
 
                     // Push deposit to trie.
