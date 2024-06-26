@@ -1,4 +1,5 @@
-use casper_client_types::SecretKey;
+use casper_client_types::{ContractHash, SecretKey};
+use hex::FromHex;
 use reqwest::Url;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -12,7 +13,7 @@ pub struct ServerConfig {
     pub secret_key_file: Option<PathBuf>,
     pub socket_addr: SocketAddr,
     pub casper_rpc: Url,
-    pub casper_contract_hash: String,
+    pub kairos_demo_contract_hash: ContractHash,
     pub batch_config: BatchConfig,
 }
 
@@ -21,7 +22,6 @@ impl ServerConfig {
         let socket_addr = parse_env_as::<SocketAddr>("KAIROS_SERVER_SOCKET_ADDR")?;
         let casper_rpc = parse_env_as::<Url>("KAIROS_SERVER_CASPER_RPC")?;
         let batch_config = BatchConfig::from_env()?;
-        let casper_contract_hash = parse_env_as::<String>("KAIROS_CONTRACT_HASH")?;
         let secret_key_file =
             parse_env_as_opt::<String>("KAIROS_SERVER_SECRET_KEY_FILE")?.map(PathBuf::from);
 
@@ -35,12 +35,22 @@ impl ServerConfig {
                 tracing::warn!("No secret key file provided. This server will not be able to sign or send depolys.");
             }
         }
+        let kairos_demo_contract_hash = parse_env_as::<String>("KAIROS_SERVER_DEMO_CONTRACT_HASH")
+            .and_then(|contract_hash_string| {
+                <[u8; 32]>::from_hex(&contract_hash_string).map_err(|err| {
+                    panic!(
+                        "Failed to decode kairos-demo-contract-hash {}: {}",
+                        contract_hash_string, err
+                    )
+                })
+            })
+            .map(ContractHash::new)?;
 
         Ok(Self {
             secret_key_file,
             socket_addr,
             casper_rpc,
-            casper_contract_hash,
+            kairos_demo_contract_hash,
             batch_config,
         })
     }

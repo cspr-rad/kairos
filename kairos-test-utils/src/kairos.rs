@@ -1,5 +1,6 @@
 use backoff::future::retry;
 use backoff::ExponentialBackoff;
+use casper_client_types::ContractHash;
 use reqwest::Url;
 use std::io;
 use std::net::{SocketAddr, TcpListener};
@@ -26,6 +27,7 @@ impl Kairos {
     pub async fn run(
         casper_rpc: Url,
         proving_server_batch_config: Option<BatchConfig>,
+        kairos_demo_contract_hash: Option<ContractHash>,
     ) -> Result<Kairos, io::Error> {
         let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
@@ -43,9 +45,7 @@ impl Kairos {
             secret_key_file: None,
             socket_addr,
             casper_rpc,
-            casper_contract_hash: String::from(
-                "0000000000000000000000000000000000000000000000000000000000000000",
-            ),
+            kairos_demo_contract_hash: kairos_demo_contract_hash.unwrap_or_default(),
             batch_config,
         };
 
@@ -117,6 +117,6 @@ mod tests {
     #[tokio::test]
     async fn test_kairos_starts_and_terminates() {
         let dummy_rpc = Url::parse("http://127.0.0.1:11101/rpc").unwrap();
-        let _kairos = Kairos::run(dummy_rpc, None).await.unwrap();
+        let _kairos = Kairos::run(dummy_rpc, None, None).await.unwrap();
     }
 }

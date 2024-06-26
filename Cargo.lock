@@ -2509,6 +2509,7 @@ dependencies = [
  "casper-client",
  "casper-event-toolkit",
  "casper-types 3.0.0",
+ "casper-types 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "contract-utils",
  "dotenvy",
  "hex",
