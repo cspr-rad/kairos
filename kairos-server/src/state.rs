@@ -4,8 +4,6 @@ mod trie;
 
 use std::{sync::Arc, thread};
 
-use casper_client_types::ContractHash;
-use hex::FromHex;
 use tokio::{sync::mpsc, task};
 
 pub use self::trie::TrieStateThreadMsg;
@@ -41,9 +39,7 @@ impl BatchStateManager {
     pub fn new(config: &ServerConfig, db: trie::Database, batch_root: TrieRoot<NodeHash>) -> Self {
         let batch_config = config.batch_config.clone();
         let casper_rpc = config.casper_rpc.clone();
-        let contract_hash_bytes = <[u8; 32]>::from_hex(config.casper_contract_hash.as_str())
-            .expect("Invalid contract hash");
-        let contract_hash = ContractHash::new(contract_hash_bytes);
+        let contract_hash = config.kairos_demo_contract_hash;
 
         let secret_key = config
             .secret_key_file
