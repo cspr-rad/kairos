@@ -130,38 +130,12 @@ nixosTest {
 
     wait_for_successful_deploy(deposit_deploy_hash)
 
-    # TODO Transfer and withdraw can only work once deposit deploys are processed and the users actually have an account
-    # REST API
-    # Tx Payload
-    #   nonce = 0
-    #   transfer:
-    #     recipient = deadbabe
-    #     amount = 1000
-    #
-    # transfer_payload = "300f020100a10a0404deadbabe020203e8"
-    # transfer_request = { "public_key": "cafebabe", "payload": transfer_payload, "signature": "deadbeef" }
-    # client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
-
-    # Tx Payload
-    #   nonce = 0
-    #   withdrawal:
-    #     amount = 1000
-    #
-    # withdraw_payload = "3009020100a204020203e8"
-    # withdraw_request = { "public_key": "deadbabe", "payload": withdraw_payload, "signature": "deadbeef" }
-    # client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
-
-    # TODO Transfer and withdraw can only work once deposit deploys are processed and the users actually have an account
-    # CLI with ed25519
-    # cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
-    # assert "ok\n" in cli_output
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
     transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --nonce 0 --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
     assert "ok\n" in transfer_output
 
-    # cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
-    # assert "ok\n" in cli_output
+    # TODO test withdraw
 
     # TODO cctl does not provide any secp256k1 keys
     # CLI with secp256k1
