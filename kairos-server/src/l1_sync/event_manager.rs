@@ -57,7 +57,7 @@ impl EventManager {
             // parse them here with `kairos-tx` and then push to Data Availability layer.
 
             match event.name.as_str() {
-                "Deposit" => {
+                "L1Deposit" => {
                     // Parse simplified deposit data.
                     let (deposit, _) = L1Deposit::from_bytes(&event_bytes)
                         .expect("Failed to parse deposit event from bytes");

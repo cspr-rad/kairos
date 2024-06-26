@@ -16,7 +16,7 @@ impl ServerConfig {
         let socket_addr = parse_env_as::<SocketAddr>("KAIROS_SERVER_SOCKET_ADDR")?;
         let casper_rpc = parse_env_as::<Url>("KAIROS_SERVER_CASPER_RPC")?;
         let batch_config = BatchConfig::from_env()?;
-        let casper_contract_hash = parse_env_as::<String>("KAIROS_SERVER_CASPER_CONTRACT_HASH")?;
+        let casper_contract_hash = parse_env_as::<String>("KAIROS_CONTRACT_HASH")?;
 
         Ok(Self {
             socket_addr,

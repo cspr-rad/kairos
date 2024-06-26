@@ -44,7 +44,15 @@ impl BatchStateManager {
 
         let batch_output_handler = tokio::spawn(async move {
             while let Some(batch_output) = batch_rec.recv().await {
-                let prove_url = config.proving_server.join("prove").expect("Invalid URL");
+                tracing::info!(
+                    "Sending batch output to proving server: {:?}",
+                    batch_output.proof_inputs.transactions
+                );
+
+                let prove_url = config
+                    .proving_server
+                    .join("/api/v1/prove/batch")
+                    .expect("Invalid URL");
 
                 let res = reqwest::Client::new()
                     .post(prove_url)
@@ -58,6 +66,7 @@ impl BatchStateManager {
 
                 if res.status().is_success() {
                     // TODO send the proof to layer 1
+                    tracing::info!("Proving server returned success");
                 } else {
                     tracing::error!("Proving server returned an error: {:?}", res);
                     panic!("Proving server returned an error: {:?}", res);
