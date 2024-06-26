@@ -123,9 +123,9 @@ nixosTest {
 
     # CLI with ed25519
     # deposit
-    recipient = client.succeed("cat ${clientUsersDirectory}/user-2/public_key_hex")
-    private_key = "${clientUsersDirectory}/user-2/secret_key.pem"
-    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --recipient {} --private-key {} --contract-hash {}".format(recipient, private_key, contract_hash))
+    depositor = client.succeed("cat ${clientUsersDirectory}/user-2/public_key_hex")
+    depositor_private_key = "${clientUsersDirectory}/user-2/secret_key.pem"
+    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --recipient {} --private-key {} --contract-hash {}".format(depositor, depositor_private_key, contract_hash))
     assert int(deposit_deploy_hash, 16), "The deposit command did not output a hex encoded deploy hash. The output was {}".format(deposit_deploy_hash)
 
     wait_for_successful_deploy(deposit_deploy_hash)
@@ -155,6 +155,10 @@ nixosTest {
     # CLI with ed25519
     # cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
     # assert "ok\n" in cli_output
+    # transfer
+    beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
+    transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --nonce 0 --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
+    assert "ok\n" in transfer_output
 
     # cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
     # assert "ok\n" in cli_output
