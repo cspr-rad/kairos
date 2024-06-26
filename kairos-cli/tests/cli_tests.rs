@@ -20,6 +20,10 @@ fn fixture_path(relative_path: &str) -> PathBuf {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn deposit_successful_with_ed25519() {
+    if std::env::var("RUST_LOG").is_ok() {
+        panic!("RUST_LOG is set, which will interfere with the test");
+    }
+
     let contract_wasm_path =
         PathBuf::from(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
     let hash_name = "kairos_contract_package_hash";
@@ -48,6 +52,11 @@ async fn deposit_successful_with_ed25519() {
             .working_dir
             .join("assets/users/user-1/secret_key.pem");
 
+        let recipient_pk_path = network
+            .working_dir
+            .join("assets/users/user-2/public_key_hex");
+        let recipient_pk = std::fs::read_to_string(recipient_pk_path).unwrap();
+
         let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
         cmd.arg("--kairos-server-address")
             .arg(kairos.url.as_str())
@@ -57,7 +66,10 @@ async fn deposit_successful_with_ed25519() {
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
-            .arg(depositor_secret_key_path);
+            .arg(depositor_secret_key_path)
+            .arg("--recipient")
+            .arg(recipient_pk);
+
         cmd.assert()
             .success()
             .stdout(predicates::function::function(|stdout: &str| {
@@ -180,8 +192,32 @@ fn transfer_invalid_recipient() {
         .arg("--amount")
         .arg("123")
         .arg("--private-key")
-        .arg(secret_key_path);
+        .arg(secret_key_path)
+        .arg("--nonce")
+        .arg("0");
+
     cmd.assert()
         .failure()
         .stderr(predicates::str::contains("failed to parse hex string"));
+}
+
+#[test]
+fn transfer_valid_recipient() {
+    let secret_key_path = fixture_path("ed25519/secret_key.pem");
+    let hex_pk = "01e8e1e0b10972e4945d1e493d41be8f39f47bb1299f3248f297d22cbc02010f89";
+
+    let mut cmd = Command::cargo_bin("kairos-cli").unwrap();
+    cmd.arg("transfer")
+        .arg("--recipient")
+        .arg(hex_pk)
+        .arg("--amount")
+        .arg("123")
+        .arg("--private-key")
+        .arg(secret_key_path)
+        .arg("--nonce")
+        .arg("0");
+
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("http client error"));
 }
