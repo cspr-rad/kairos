@@ -1,10 +1,15 @@
+use casper_client_types::SecretKey;
 use reqwest::Url;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::time::Duration;
 use std::{fmt, str::FromStr};
 
 #[derive(Clone, Debug)]
 pub struct ServerConfig {
+    /// Set by the environment variable `KAIROS_SERVER_SECRET_KEY_FILE`.
+    /// This is checked at startup to ensure SecretKey::from_file is successful.
+    pub secret_key_file: Option<PathBuf>,
     pub socket_addr: SocketAddr,
     pub casper_rpc: Url,
     pub casper_contract_hash: String,
@@ -17,8 +22,22 @@ impl ServerConfig {
         let casper_rpc = parse_env_as::<Url>("KAIROS_SERVER_CASPER_RPC")?;
         let batch_config = BatchConfig::from_env()?;
         let casper_contract_hash = parse_env_as::<String>("KAIROS_CONTRACT_HASH")?;
+        let secret_key_file =
+            parse_env_as_opt::<String>("KAIROS_SERVER_SECRET_KEY_FILE")?.map(PathBuf::from);
+
+        match &secret_key_file {
+            Some(secret_key_file) => {
+                if SecretKey::from_file(secret_key_file).is_err() {
+                    return Err("Invalid secret key".to_string());
+                }
+            }
+            None => {
+                tracing::warn!("No secret key file provided. This server will not be able to sign or send depolys.");
+            }
+        }
 
         Ok(Self {
+            secret_key_file,
             socket_addr,
             casper_rpc,
             casper_contract_hash,

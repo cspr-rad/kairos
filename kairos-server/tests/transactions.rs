@@ -45,6 +45,7 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     });
     let config = TestServerConfig::builder().mock_transport().build();
     let server_config = ServerConfig {
+        secret_key_file: None,
         socket_addr: "0.0.0.0:0".parse().unwrap(),
         casper_rpc: casper_node_url.clone(),
         casper_contract_hash: "0000000000000000000000000000000000000000000000000000000000000000"
@@ -58,7 +59,7 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     };
 
     let state = Arc::new(ServerStateInner {
-        batch_state_manager: BatchStateManager::new_empty(server_config.batch_config.clone()),
+        batch_state_manager: BatchStateManager::new_empty(&server_config),
         server_config,
     });
 

@@ -40,6 +40,7 @@ impl Kairos {
             });
 
         let config = ServerConfig {
+            secret_key_file: None,
             socket_addr,
             casper_rpc,
             casper_contract_hash: String::from(
