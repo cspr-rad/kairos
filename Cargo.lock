@@ -2781,6 +2781,7 @@ dependencies = [
  "clap",
  "dotenvy",
  "hex",
+ "kairos-data",
  "kairos-server",
  "nom",
  "rand 0.8.5",
