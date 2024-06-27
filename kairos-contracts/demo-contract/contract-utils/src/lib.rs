@@ -6,8 +6,11 @@ use casper_event_standard::Event;
 
 extern crate alloc;
 
+use alloc::vec::Vec;
+
 #[derive(Event)]
 pub struct Deposit {
-    pub depositor: Key,
-    pub amount: u64,
+    pub depositor: Key, // TODO: Deprecate this.
+    pub amount: u64,    // TODO: Deprecate this.
+    pub tx: Vec<u8>,
 }

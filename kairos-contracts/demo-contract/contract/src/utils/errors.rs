@@ -13,6 +13,15 @@ pub enum DepositError {
     MissingKeyDepositEventDict = 6,
     FailedToCreateDepositDict = 7,
     FailedToReturnContractPurseAsReference = 8,
+    InvalidTransactionData = 9,
+    InvalidTransactionType = 10,
+    FailedToParsePublicKey = 11,
+    InvalidTransactionSigner = 12,
+    FailedToParseTransactionAmount = 13,
+    OverflowTransactionAmount = 14,
+    InvalidTransactionAmount = 15,
+    FailedToCreateSigner = 16,
+    InvalidTransactionSignature = 17,
 }
 
 impl From<DepositError> for ApiError {

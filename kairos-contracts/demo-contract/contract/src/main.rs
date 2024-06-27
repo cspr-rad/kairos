@@ -3,6 +3,7 @@
 extern crate alloc;
 use alloc::string::ToString;
 use alloc::vec;
+use alloc::vec::Vec;
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
@@ -16,7 +17,7 @@ use casper_types::{
 use contract_utils::constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
     KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, KAIROS_TRIE_ROOT, RUNTIME_ARG_AMOUNT,
-    RUNTIME_ARG_INITIAL_TRIE_ROOT, RUNTIME_ARG_RECEIPT, RUNTIME_ARG_TEMP_PURSE,
+    RUNTIME_ARG_INITIAL_TRIE_ROOT, RUNTIME_ARG_RECEIPT, RUNTIME_ARG_TEMP_PURSE, RUNTIME_ARG_TX,
 };
 use contract_utils::Deposit;
 mod entry_points;
@@ -76,14 +77,18 @@ pub extern "C" fn deposit() {
         .unwrap_or_revert_with(ApiError::UnexpectedKeyVariant);
     system::transfer_from_purse_to_purse(temp_purse, deposit_purse_uref, amount, None)
         .unwrap_or_revert();
+    let tx: Vec<u8> = runtime::get_named_arg(RUNTIME_ARG_TX);
+
+    utils::validate_deposit_tx(&tx, &amount).unwrap_or_revert();
 
     // kairos utilizes u64 so only amounts that can be converted are accepted.
     let amount =
         u64::try_from(amount).unwrap_or_else(|_| runtime::revert(ApiError::InvalidArgument));
 
     let new_deposit_record: Deposit = Deposit {
-        depositor: get_immediate_caller().unwrap_or_revert(),
+        depositor: get_immediate_caller().unwrap_or_revert(), // NOTE: This is wrong.
         amount,
+        tx,
     };
     // this increases a counter automatically - we don't need to create one ourselves
     casper_event_standard::emit(new_deposit_record);

@@ -9,6 +9,7 @@ pub const KAIROS_TRIE_ROOT: &str = "kairos_trie_root";
 pub const RUNTIME_ARG_INITIAL_TRIE_ROOT: &str = "initial_trie_root";
 pub const RUNTIME_ARG_TEMP_PURSE: &str = "temp_purse";
 pub const RUNTIME_ARG_AMOUNT: &str = "amount";
+pub const RUNTIME_ARG_TX: &str = "tx";
 pub const RUNTIME_ARG_RECEIPT: &str = "risc0_receipt";
 
 pub const EP_INIT_NAME: &str = "init";
