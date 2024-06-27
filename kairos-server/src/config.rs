@@ -24,6 +24,8 @@ impl ServerConfig {
         Ok(Self {
             socket_addr,
             casper_rpc,
+            casper_contract_hash,
+            batch_config,
             #[cfg(feature = "database")]
             db_addr,
         })

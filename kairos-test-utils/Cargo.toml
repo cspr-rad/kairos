@@ -16,6 +16,7 @@ bench = false
 #all-tests = ["cctl-tests"]
 all-tests = []
 cctl-tests = []
+database = ["kairos-data"]
 
 [lib]
 
@@ -37,4 +38,5 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 reqwest = { version = "0.12", features = ["json"] }
 kairos-server = { path = "../kairos-server" }
+kairos-data = { path = "../kairos-data", optional = true }
 dotenvy = "0.15"
