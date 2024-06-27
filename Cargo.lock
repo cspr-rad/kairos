@@ -2733,27 +2733,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kairos-data"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bigdecimal",
- "chrono",
- "deadpool",
- "deadpool-diesel",
- "diesel",
- "diesel-derive-enum",
- "diesel_migrations",
- "hex",
- "kairos-circuit-logic",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "kairos-server"
 version = "0.1.0"
 dependencies = [
