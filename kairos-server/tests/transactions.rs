@@ -10,6 +10,7 @@ use casper_client_types::{
     crypto::{PublicKey, SecretKey},
     AsymmetricType,
 };
+use casper_types::ContractHash;
 use kairos_server::{
     config::{BatchConfig, ServerConfig},
     routes::deposit::DepositPath,
@@ -47,8 +48,7 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
     let server_config = ServerConfig {
         socket_addr: "0.0.0.0:0".parse().unwrap(),
         casper_rpc: casper_node_url.clone(),
-        casper_contract_hash: "0000000000000000000000000000000000000000000000000000000000000000"
-            .to_string(),
+        kairos_demo_contract_hash: ContractHash::default(),
         batch_config: BatchConfig {
             max_batch_size: None,
             max_batch_duration: None,
@@ -68,9 +68,7 @@ fn new_test_app_with_casper_node(casper_node_url: &Url) -> TestServer {
 #[tokio::test]
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
-    let network = CCTLNetwork::run(Option::None, Option::None, Option::None)
-        .await
-        .unwrap();
+    let network = CCTLNetwork::run(None, None, None, None).await.unwrap();
     let node = network
         .nodes
         .first()
