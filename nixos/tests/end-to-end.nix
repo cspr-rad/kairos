@@ -37,7 +37,10 @@ nixosTest {
           hash = "sha256-ZuNbxw0nBjuONEZRK8Ru96zZQak4MEQ/eM1fA6esyCM=";
         };
       };
-      services.kairos.casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
+      services.kairos = {
+        casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
+        casperSseUrl = "http://localhost:18101/events/main"; # has to be hardcoded since it's not configurable atm
+      };
     };
 
     client = { pkgs, ... }: {
