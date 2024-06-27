@@ -16,7 +16,7 @@ bench = false
 #all-tests = ["cctl-tests"]
 all-tests = []
 cctl-tests = []
-database = ["kairos-data"]
+database = ["kairos-data", "kairos-server/database"]
 
 [lib]
 

@@ -30,6 +30,7 @@ impl Kairos {
         let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
         let url = Url::parse(&format!("http://0.0.0.0:{}", port)).unwrap();
+        #[cfg(feature="database")]
         let db_addr = "postgres://kairos:kairos@localhost/kairos".to_string();
 
         let batch_config = proving_server_batch_config
@@ -47,6 +48,7 @@ impl Kairos {
                 "0000000000000000000000000000000000000000000000000000000000000000",
             ),
             batch_config,
+            #[cfg(feature="database")]
             db_addr
         };
 
