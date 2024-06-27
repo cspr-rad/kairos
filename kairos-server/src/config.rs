@@ -9,6 +9,8 @@ pub struct ServerConfig {
     pub casper_rpc: Url,
     pub casper_contract_hash: String,
     pub batch_config: BatchConfig,
+    #[cfg(feature="database")]
+    pub db_addr: String,
 }
 
 impl ServerConfig {
@@ -17,12 +19,15 @@ impl ServerConfig {
         let casper_rpc = parse_env_as::<Url>("KAIROS_SERVER_CASPER_RPC")?;
         let batch_config = BatchConfig::from_env()?;
         let casper_contract_hash = parse_env_as::<String>("KAIROS_SERVER_CASPER_CONTRACT_HASH")?;
-
+        #[cfg(feature="database")]
+        let db_addr = parse_env_as::<String>("KAIROS_SERVER_DB_ADDR")?;
         Ok(Self {
             socket_addr,
             casper_rpc,
             casper_contract_hash,
             batch_config,
+            #[cfg(feature = "database")]
+            db_addr,
         })
     }
 }

@@ -6,6 +6,9 @@ use tracing::*;
 use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Withdraw};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
+#[cfg(feature = "database")]
+use kairos_data::transaction as db;
+
 use crate::routes::PayloadBody;
 use crate::state::ServerState;
 use crate::AppErr;
@@ -37,12 +40,15 @@ pub async fn withdraw_handler(
 
     tracing::info!("queuing withdrawal transaction");
 
+    let withdrawal = KairosTransaction::Withdraw(Signed {
+        public_key,
+        nonce,
+        transaction: withdrawal,
+    });
+    #[cfg(feature = "database")]
+    db::insert(&state.pool, withdrawal.clone()).await?;
     state
         .batch_state_manager
-        .enqueue_transaction(KairosTransaction::Withdraw(Signed {
-            public_key,
-            nonce,
-            transaction: withdrawal,
-        }))
+        .enqueue_transaction(withdrawal)
         .await
 }
