@@ -10,6 +10,7 @@ use casper_client_types::{
     crypto::{PublicKey, SecretKey},
     AsymmetricType,
 };
+use casper_types::ContractHash;
 use kairos_server::{
     config::{BatchConfig, ServerConfig},
     routes::deposit::DepositPath,
@@ -49,8 +50,7 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
         socket_addr: "0.0.0.0:0".parse().unwrap(),
         casper_rpc: casper_rpc_url.clone(),
         casper_sse: casper_sse_url.clone(),
-        casper_contract_hash: "0000000000000000000000000000000000000000000000000000000000000000"
-            .to_string(),
+        kairos_demo_contract_hash: ContractHash::default(),
         batch_config: BatchConfig {
             max_batch_size: None,
             max_batch_duration: None,

@@ -15,7 +15,6 @@ in
   options.services.kairos = {
 
     enable = mkEnableOption (mdDoc "kairos");
-
     package = mkOption {
       type = types.package;
     };
@@ -42,7 +41,16 @@ in
       type = types.str;
       example = "http://127.0.0.1:11101/rpc";
       description = ''
-        A casper node URL.
+        The casper node URL to the RPC endpoint.
+      '';
+    };
+
+    demoContractHash = mkOption {
+      type = types.str;
+      example = "TODO put a contract hash here";
+      description = ''
+        The hash of the deployed demo contract.
+        Use an empty string when testing with cctl.
       '';
     };
 
@@ -134,7 +142,7 @@ in
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
           KAIROS_SERVER_CASPER_RPC = cfg.casperRpcUrl;
           KAIROS_SERVER_CASPER_SSE = cfg.casperSseUrl;
-          KAIROS_SERVER_CASPER_CONTRACT_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
+          KAIROS_SERVER_DEMO_CONTRACT_HASH = cfg.demoContractHash;
           KAIROS_PROVER_SERVER_URL = "${cfg.prover.protocol}://${cfg.prover.bindAddress}:${builtins.toString cfg.prover.port}";
         } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchSize) {
           KAIROS_SERVER_MAX_BATCH_SIZE = cfg.maxBatchSize;

@@ -31,7 +31,7 @@ async fn deposit_successful_with_ed25519() {
     ))
     .unwrap();
 
-    let kairos = kairos::Kairos::run(&casper_rpc_url, &casper_sse_url, None)
+    let kairos = kairos::Kairos::run(&casper_rpc_url, &casper_sse_url, None, None)
         .await
         .unwrap();
 
