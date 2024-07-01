@@ -15,7 +15,8 @@ mod tests {
         let mut fixture = TestContext::new(None);
 
         let user = fixture.create_funded_user();
-        let user_balance_before = fixture.get_user_balance(user);
+        let user_account_hash = user.to_account_hash();
+        let user_balance_before = fixture.get_user_balance(user_account_hash);
 
         // check that the contract balance is zero before depositing
         let deposit_amount = U512::from(100000000000u64);
@@ -29,7 +30,7 @@ mod tests {
         let contract_balance_after = fixture.get_contract_balance();
         assert_eq!(contract_balance_after, deposit_amount);
 
-        let user_balance_after = fixture.get_user_balance(user);
+        let user_balance_after = fixture.get_user_balance(user_account_hash);
         assert!(user_balance_after <= user_balance_before - deposit_amount);
     }
 
@@ -38,10 +39,11 @@ mod tests {
         let mut fixture = TestContext::new(None);
 
         let user = fixture.create_funded_user();
+        let user_account_hash = user.to_account_hash();
         let amount = U512::from(100000000000u64);
         fixture.deposit_succeeds(user, amount);
 
-        fixture.transfer_from_contract_purse_to_user_fails(user, amount)
+        fixture.transfer_from_contract_purse_to_user_fails(user_account_hash, amount)
     }
 
     #[test]
@@ -50,7 +52,7 @@ mod tests {
 
         let user = fixture.create_funded_user();
         let amount = U512::from(100000000000u64);
-        fixture.deposit_succeeds(user, amount);
+        fixture.deposit_succeeds(user.clone(), amount);
 
         fixture.transfer_from_contract_purse_to_user_fails(fixture.admin, amount)
     }
@@ -59,10 +61,11 @@ mod tests {
     fn test_transfer_from_contract_purse_by_uref_to_user_fails() {
         let mut fixture = TestContext::new(None);
         let user = fixture.create_funded_user();
+        let user_account_hash = user.to_account_hash();
         let amount = U512::from(100000000000u64);
-        fixture.deposit_succeeds(user, amount);
+        fixture.deposit_succeeds(user.clone(), amount);
 
-        fixture.transfer_from_contract_purse_by_uref_to_user_fails(user, amount)
+        fixture.transfer_from_contract_purse_by_uref_to_user_fails(user_account_hash, amount)
     }
 
     #[test]

@@ -8,7 +8,7 @@ use casper_contract::{
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_event_standard::Schemas;
-use casper_types::bytesrepr::Bytes;
+use casper_types::bytesrepr::{Bytes, ToBytes};
 use casper_types::{
     contracts::NamedKeys, runtime_args, AccessRights, ApiError, CLValue, EntryPoints, Key,
     RuntimeArgs, URef, U512,
@@ -16,9 +16,9 @@ use casper_types::{
 use contract_utils::constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
     KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, KAIROS_TRIE_ROOT, RUNTIME_ARG_AMOUNT,
-    RUNTIME_ARG_INITIAL_TRIE_ROOT, RUNTIME_ARG_RECEIPT, RUNTIME_ARG_TEMP_PURSE,
+    RUNTIME_ARG_INITIAL_TRIE_ROOT, RUNTIME_ARG_RECEIPT, RUNTIME_ARG_RECIPIENT,
+    RUNTIME_ARG_TEMP_PURSE,
 };
-use contract_utils::Deposit;
 mod entry_points;
 mod utils;
 use kairos_verifier_risc0_lib::verifier::Receipt;
@@ -29,7 +29,7 @@ use utils::get_immediate_caller;
 #[allow(unused)]
 use casper_contract_no_std_helpers;
 
-use kairos_circuit_logic::ProofOutputs;
+use kairos_circuit_logic::{transactions::L1Deposit, ProofOutputs};
 
 // This entry point is called once when the contract is installed.
 // The contract purse will be created in contract context so that it is "owned" by the contract
@@ -41,7 +41,7 @@ pub extern "C" fn init() {
     }
 
     // initialize event schema
-    let schemas = Schemas::new().with::<Deposit>();
+    let schemas = Schemas::new().with::<L1Deposit>();
     casper_event_standard::init(schemas);
 
     let new_deposit_purse: URef = system::create_purse();
@@ -69,6 +69,7 @@ pub extern "C" fn get_purse() {
 #[no_mangle]
 pub extern "C" fn deposit() {
     let temp_purse: URef = runtime::get_named_arg(RUNTIME_ARG_TEMP_PURSE);
+    let recipient: casper_types::PublicKey = runtime::get_named_arg(RUNTIME_ARG_RECIPIENT);
     let amount: U512 = runtime::get_named_arg(RUNTIME_ARG_AMOUNT);
     let deposit_purse_uref: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
         .unwrap_or_revert_with(DepositError::MissingKeyDepositPurse)
@@ -81,10 +82,13 @@ pub extern "C" fn deposit() {
     let amount =
         u64::try_from(amount).unwrap_or_else(|_| runtime::revert(ApiError::InvalidArgument));
 
-    let new_deposit_record: Deposit = Deposit {
-        depositor: get_immediate_caller().unwrap_or_revert(),
-        amount,
-    };
+    // FIXME: verify that the caller's account hash matches a depositor public key argument.
+    // We have to ensure we know who the depositor is for regulatory reasons.
+    // We could check that the recipient of the funds is the caller or off chain get another signature from the public key.
+    let _account_hash = get_immediate_caller().unwrap_or_revert();
+
+    let recipient = recipient.into_bytes().unwrap_or_revert();
+    let new_deposit_record: L1Deposit = L1Deposit { recipient, amount };
     // this increases a counter automatically - we don't need to create one ourselves
     casper_event_standard::emit(new_deposit_record);
 }

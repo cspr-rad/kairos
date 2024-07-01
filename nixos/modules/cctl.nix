@@ -145,6 +145,13 @@ in
             add_header Content-Type 'text/plain charset=UTF-8';
           '';
         };
+        "/cctl/contracts/" = {
+          alias = "${cfg.workingDirectory}/contracts/";
+          extraConfig = ''
+            autoindex on;
+            add_header Content-Type 'text/plain charset=UTF-8';
+          '';
+        };
       };
     };
   };

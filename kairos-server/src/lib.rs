@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use axum::Router;
 use axum_extra::routing::RouterExt;
-use casper_types::ContractHash;
+use casper_client_types::ContractHash;
 
 pub use errors::AppErr;
 
@@ -70,7 +70,7 @@ pub async fn run(config: ServerConfig) {
     tracing::info!("listening on `{}`", listener.local_addr().unwrap());
 
     let state = Arc::new(ServerStateInner {
-        batch_state_manager: BatchStateManager::new_empty(config.batch_config.clone()),
+        batch_state_manager: BatchStateManager::new_empty(&config),
         server_config: config.clone(),
     });
 

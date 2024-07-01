@@ -51,6 +51,10 @@ pub struct Transfer {
     feature = "borsh",
     derive(borsh::BorshSerialize, borsh::BorshDeserialize)
 )]
+#[cfg_attr(
+    feature = "casper-event-standard",
+    derive(casper_event_standard::Event)
+)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct L1Deposit {
     pub recipient: PublicKey,

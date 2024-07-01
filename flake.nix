@@ -47,6 +47,18 @@
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
+          # TODO reuse in nixos tests
+          cctlConfig = {
+            chainspec = pkgs.fetchurl {
+              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/chainspec.toml.in";
+              hash = "sha256-b/6c5o3JXFlaTgTHxs8JepaHzjMG75knzlKKqRd/7pc=";
+            };
+            config = pkgs.fetchurl {
+              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/config.toml";
+              hash = "sha256-ZuNbxw0nBjuONEZRK8Ru96zZQak4MEQ/eM1fA6esyCM=";
+            };
+          };
+
           kairosContractsAttrs = {
             src = lib.cleanSourceWith {
               src = lib.fileset.toSource {
@@ -149,6 +161,8 @@
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
+            CCTL_CONFIG = "${cctlConfig.config}";
+            CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
 
             meta.mainProgram = "kairos-server";
           };
@@ -161,6 +175,8 @@
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
+            CCTL_CONFIG = "${cctlConfig.config}";
+            CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
             inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
           };
 

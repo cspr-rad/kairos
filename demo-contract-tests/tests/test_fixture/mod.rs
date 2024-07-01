@@ -35,7 +35,8 @@ impl TestContext {
         let mut builder = InMemoryWasmTestBuilder::default();
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
-        let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY);
+        let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY)
+            .to_account_hash();
         let contract_path = get_wasm_directory().0.join("demo-contract-optimized.wasm");
         run_session_with_args(
             &mut builder,
@@ -71,7 +72,7 @@ impl TestContext {
         }
     }
 
-    pub fn create_funded_user(&mut self) -> AccountHash {
+    pub fn create_funded_user(&mut self) -> PublicKey {
         let mut random_secret_key: [u8; 32] = rand::random();
         while random_secret_key == ADMIN_SECRET_KEY {
             random_secret_key = rand::random();
@@ -88,18 +89,21 @@ impl TestContext {
         self.builder.get_purse_balance(self.contract_purse)
     }
 
-    pub fn deposit_succeeds(&mut self, depositor: AccountHash, amount: U512) {
+    pub fn deposit_succeeds(&mut self, depositor: PublicKey, amount: U512) {
+        let account_hash = depositor.to_account_hash();
+
         let deposit_session_path = get_wasm_directory()
             .1
             .join("deposit-session-optimized.wasm");
         let session_args = runtime_args! {
             "amount" => amount,
-            "demo_contract" => self.contract_hash
+            "demo_contract" => self.contract_hash,
+            "recipient" => depositor,
         };
         run_session_with_args(
             &mut self.builder,
             deposit_session_path.as_path(),
-            depositor,
+            account_hash,
             session_args,
         );
         self.builder.expect_success();
@@ -181,7 +185,7 @@ pub fn run_session_with_args(
 pub fn create_funded_account_for_secret_key_bytes(
     builder: &mut WasmTestBuilder<InMemoryGlobalState>,
     account_secret_key_bytes: [u8; 32],
-) -> AccountHash {
+) -> PublicKey {
     let account_secret_key = SecretKey::ed25519_from_bytes(account_secret_key_bytes).unwrap();
     let account_public_key = PublicKey::from(&account_secret_key);
     let account_hash = account_public_key.to_account_hash();
@@ -195,5 +199,5 @@ pub fn create_funded_account_for_secret_key_bytes(
     )
     .build();
     builder.exec(transfer).expect_success().commit();
-    account_hash
+    account_public_key
 }

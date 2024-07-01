@@ -4,7 +4,6 @@ use casper_event_toolkit::casper_types::bytesrepr::FromBytes;
 use casper_event_toolkit::fetcher::{Fetcher, Schemas};
 use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
-use contract_utils::Deposit;
 
 use crate::state::ServerStateInner;
 use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
@@ -61,13 +60,13 @@ impl EventManager {
             // parse them here with `kairos-tx` and then push to Data Availability layer.
 
             match event.name.as_str() {
-                "Deposit" => {
+                "L1Deposit" => {
                     // Parse simplified deposit data.
-                    let (deposit, _) = Deposit::from_bytes(&event_bytes)
+                    let (deposit, _) = L1Deposit::from_bytes(&event_bytes)
                         .expect("Failed to parse deposit event from bytes");
 
                     let amount = deposit.amount;
-                    let recipient: Vec<u8> = "cafebabe".into(); // CAUTION: Using mocked recipient, as event does NOT contain depositor's public key.
+                    let recipient: Vec<u8> = deposit.recipient;
                     let txn = KairosTransaction::Deposit(L1Deposit { amount, recipient });
 
                     // Push deposit to trie.

@@ -9,11 +9,12 @@
 
 #![no_main]
 use casper_contract::contract_api::{account, runtime, system};
-use casper_types::{runtime_args, ContractHash, RuntimeArgs, URef, U512};
+use casper_types::{runtime_args, ContractHash, PublicKey, RuntimeArgs, URef, U512};
 
 #[no_mangle]
 pub extern "C" fn call() {
     let contract_hash: ContractHash = runtime::get_named_arg("demo_contract");
+    let public_key: PublicKey = runtime::get_named_arg("recipient");
     let amount: U512 = runtime::get_named_arg("amount");
     let source: URef = account::get_main_purse();
     // create a temporary purse that can be passed to the contract
@@ -30,6 +31,7 @@ pub extern "C" fn call() {
         "deposit",
         runtime_args! {
             "temp_purse" => temp_purse,
+            "recipient" => public_key,
             "amount" => amount
         },
     );
