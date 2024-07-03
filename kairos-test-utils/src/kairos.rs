@@ -1,6 +1,6 @@
 use backoff::future::retry;
 use backoff::ExponentialBackoff;
-use casper_types::ContractHash;
+use casper_client_types::ContractHash;
 use reqwest::Url;
 use std::io;
 use std::net::{SocketAddr, TcpListener};
@@ -42,6 +42,7 @@ impl Kairos {
             });
 
         let config = ServerConfig {
+            secret_key_file: None,
             socket_addr,
             casper_rpc,
             kairos_demo_contract_hash: kairos_demo_contract_hash.unwrap_or_default(),
