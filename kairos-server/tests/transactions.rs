@@ -8,9 +8,8 @@ use casper_client::{
 };
 use casper_client_types::{
     crypto::{PublicKey, SecretKey},
-    AsymmetricType,
+    AsymmetricType, ContractHash,
 };
-use casper_types::ContractHash;
 use kairos_server::{
     config::{BatchConfig, ServerConfig},
     routes::deposit::DepositPath,
@@ -47,6 +46,7 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
     });
     let config = TestServerConfig::builder().mock_transport().build();
     let server_config = ServerConfig {
+        secret_key_file: None,
         socket_addr: "0.0.0.0:0".parse().unwrap(),
         casper_rpc: casper_rpc_url.clone(),
         casper_sse: casper_sse_url.clone(),
@@ -60,7 +60,7 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
     };
 
     let state = Arc::new(ServerStateInner {
-        batch_state_manager: BatchStateManager::new_empty(server_config.batch_config.clone()),
+        batch_state_manager: BatchStateManager::new_empty(&server_config),
         server_config,
     });
 

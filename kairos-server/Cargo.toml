@@ -27,6 +27,7 @@ axum-extra = { version = "0.9", features = [
 ] }
 anyhow = "1"
 casper-client.workspace = true
+casper-client-types = { workspace = true, features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
 casper-types.workspace = true
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
@@ -37,7 +38,7 @@ tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
 contract-utils = { path = "../kairos-contracts/demo-contract/contract-utils" }
-kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1"] }
+kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1", "casper-event-standard"] }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
 sha2 = "0.10"
 reqwest = { version = "0.12", features = ["json"] }

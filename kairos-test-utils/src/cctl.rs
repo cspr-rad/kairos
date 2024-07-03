@@ -11,11 +11,11 @@ use casper_client_types::{ExecutionResult, Key, PublicKey, RuntimeArgs, SecretKe
 use casper_types::ContractHash;
 use hex::FromHex;
 use rand::Rng;
-use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+use std::{fs, time::Instant};
 use tempfile::tempdir;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -56,12 +56,21 @@ pub struct DeployableContract {
 pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 10_000_000_000_000;
 
 impl CCTLNetwork {
+    /// Spins up a CCTL network, and deploys a contract if provided
+    ///
+    /// If a chain spec and config path are not provided, the environment variables `CCTL_CHAINSPEC` and `CCTL_CONFIG` are used.
+    ///
+    /// WARNING: do not use this function in unit tests, only sequentially executed integration tests.
+    /// Ensure that two instances of this function are not running at the same time even in different processes.
     pub async fn run(
         working_dir: Option<PathBuf>,
         contract_to_deploy: Option<DeployableContract>,
         chainspec_path: Option<&Path>,
         config_path: Option<&Path>,
     ) -> anyhow::Result<CCTLNetwork> {
+        let chainspec_path = chainspec_path.unwrap_or_else(|| Path::new(env!("CCTL_CHAINSPEC")));
+        let config_path = config_path.unwrap_or_else(|| Path::new(env!("CCTL_CONFIG")));
+
         let working_dir = working_dir
             .map(|dir| {
                 std::fs::create_dir_all(&dir)
@@ -70,18 +79,16 @@ impl CCTLNetwork {
             })
             .unwrap_or(tempdir()?.into_path());
         let assets_dir = working_dir.join("assets");
+        tracing::info!("Working directory: {:?}", working_dir);
 
         let mut setup_command = Command::new("cctl-infra-net-setup");
         setup_command.env("CCTL_ASSETS", &assets_dir);
 
-        if let Some(chainspec_path) = chainspec_path {
-            setup_command.arg(format!("chainspec={}", chainspec_path.to_str().unwrap()));
-        };
+        setup_command.arg(format!("chainspec={}", chainspec_path.to_str().unwrap()));
 
-        if let Some(config_path) = config_path {
-            setup_command.arg(format!("config={}", config_path.to_str().unwrap()));
-        };
+        setup_command.arg(format!("config={}", config_path.to_str().unwrap()));
 
+        tracing::info!("Setting up network configuration");
         let output = setup_command
             .output()
             .expect("Failed to setup network configuration");
@@ -127,11 +134,23 @@ impl CCTLNetwork {
         let node_port = nodes.first().unwrap().port.rpc_port;
         let casper_node_rpc_url = format!("http://localhost:{}/rpc", node_port);
 
+        let start_time = Instant::now();
         tracing::info!("Waiting for network to pass genesis");
         retry(ExponentialBackoff::default(), || async {
+            // This prevents retrying forever even after ctrl-c
+            let timed_out = start_time.elapsed().as_secs() > 60;
+
             get_node_status(JsonRpcId::Number(1), &casper_node_rpc_url, Verbosity::Low)
                 .await
+                .map_err(|err| {
+                    let elapsed = start_time.elapsed().as_secs();
+                    tracing::info!("Running for {elapsed}s, Error: {err:?}");
+                    err
+                })
                 .map_err(|err| match &err {
+                    err if timed_out => {
+                        backoff::Error::permanent(anyhow!("Timeout on error: {err:?}"))
+                    }
                     Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
                         backoff::Error::transient(anyhow!(err))
                     }
@@ -139,6 +158,10 @@ impl CCTLNetwork {
                 })
                 .map(|success| match success.result.reactor_state {
                     ReactorState::Validate => Ok(()),
+                    // _ if timed_out => Ok(()),
+                    rs if timed_out => Err(backoff::Error::permanent(anyhow!(
+                        "Node didn't reach the VALIDATE state before timeout: {rs:?}"
+                    ))),
                     _ => Err(backoff::Error::transient(anyhow!(
                         "Node didn't reach the VALIDATE state yet"
                     ))),
@@ -254,7 +277,10 @@ async fn deploy_contract(
     })?;
 
     tracing::info!("Waiting for successful contract initialization");
+    let start = Instant::now();
     retry(ExponentialBackoff::default(), || async {
+        let timed_out = start.elapsed().as_secs() > 60;
+
         let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
         let response = get_deploy(
             expected_rpc_id.clone(),
@@ -264,12 +290,19 @@ async fn deploy_contract(
             false,
         )
         .await
+        .map_err(|err| {
+            let elapsed = start.elapsed().as_secs();
+            tracing::info!("Running for {elapsed}s, Error: {err:?}");
+            err
+        })
         .map_err(|err| match &err {
+            e if timed_out => backoff::Error::permanent(anyhow!("Timeout on error: {e:?}")),
             Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
                 backoff::Error::transient(anyhow!(err))
             }
             _ => backoff::Error::permanent(anyhow!(err)),
         })?;
+
         if response.id == expected_rpc_id {
             match response.result.execution_results.first() {
                 Some(result) => match &result.result {
@@ -278,7 +311,10 @@ async fn deploy_contract(
                     }
                     ExecutionResult::Success { .. } => Ok(()),
                 },
-                Option::None => Err(backoff::Error::transient(anyhow!(
+                None if timed_out => Err(backoff::Error::permanent(anyhow!(
+                    "Timeout on error: No execution results"
+                ))),
+                None => Err(backoff::Error::transient(anyhow!(
                     "No execution results there yet"
                 ))),
             }
@@ -367,52 +403,4 @@ async fn deploy_contract(
         hash_name.clone(),
         contract_hash,
     ))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use casper_client_types::runtime_args;
-    use hex::FromHex;
-
-    #[cfg_attr(not(feature = "cctl-tests"), ignore)]
-    #[tokio::test]
-    async fn test_cctl_network_starts_and_terminates() {
-        let network = CCTLNetwork::run(None, None, None, None).await.unwrap();
-        for node in &network.nodes {
-            if node.state == NodeState::Running {
-                let node_status = get_node_status(
-                    JsonRpcId::Number(1),
-                    &format!("http://localhost:{}", node.port.rpc_port),
-                    Verbosity::High,
-                )
-                .await
-                .unwrap();
-                assert_eq!(node_status.result.reactor_state, ReactorState::Validate);
-            }
-        }
-    }
-
-    #[cfg_attr(not(feature = "cctl-tests"), ignore)]
-    #[tokio::test]
-    async fn test_cctl_deploys_a_contract_successfully() {
-        let contract_wasm_path =
-            PathBuf::from(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
-        let hash_name = "kairos_contract_package_hash";
-        let contract_to_deploy = DeployableContract {
-            hash_name: hash_name.to_string(),
-            runtime_args: runtime_args! { "initial_trie_root" => Option::<[u8; 32]>::None },
-            path: contract_wasm_path,
-        };
-        let network = CCTLNetwork::run(None, Some(contract_to_deploy), None, None)
-            .await
-            .unwrap();
-        let expected_contract_hash_path = network.working_dir.join("contracts").join(hash_name);
-        assert!(expected_contract_hash_path.exists());
-
-        let hash_string = fs::read_to_string(expected_contract_hash_path).unwrap();
-        let contract_hash_bytes = <[u8; 32]>::from_hex(hash_string).unwrap();
-        let contract_hash = ContractHash::new(contract_hash_bytes);
-        assert!(contract_hash.to_formatted_string().starts_with("contract-"))
-    }
 }

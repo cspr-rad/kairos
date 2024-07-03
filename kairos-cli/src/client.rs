@@ -1,11 +1,15 @@
-use casper_client::types::DeployHash;
-use casper_client::types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp};
-use casper_client_types::{crypto::SecretKey, runtime_args, RuntimeArgs};
-use reqwest::{blocking, Url};
+use axum_extra::routing::TypedPath;
+use casper_client::types::{DeployBuilder, DeployHash, ExecutableDeployItem, TimeDiff, Timestamp};
+use casper_client_types::{crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs, U512};
+use kairos_server::routes::deposit::DepositPath;
+use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fs;
 use std::path::Path;
+
+// max amount allowed to be used on gas fees
+pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
 #[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum KairosClientError {
@@ -43,7 +47,9 @@ impl From<reqwest::Error> for KairosClientError {
 pub fn deposit(
     base_url: &Url,
     depositor_secret_key: &SecretKey,
-    amount: u64,
+    contract_hash: &ContractHash,
+    amount: impl Into<U512>,
+    recipient: casper_client_types::PublicKey,
 ) -> Result<DeployHash, KairosClientError> {
     let deposit_session_wasm_path =
         Path::new(env!("PATH_TO_SESSION_BINARIES")).join("deposit-session-optimized.wasm");
@@ -53,33 +59,38 @@ pub fn deposit(
             deposit_session_wasm_path, err
         )
     });
-    let deposit_session =
-        ExecutableDeployItem::new_module_bytes(deposit_session_wasm_bytes.into(), runtime_args! {});
+    let deposit_session = ExecutableDeployItem::new_module_bytes(
+        deposit_session_wasm_bytes.into(),
+        runtime_args! {
+          "demo_contract" => *contract_hash,
+          "amount" => amount.into(),
+          "recipient" => recipient
+        },
+    );
     let deploy = DeployBuilder::new(
         env!("CASPER_CHAIN_NAME"),
         deposit_session,
         depositor_secret_key,
     )
-    .with_standard_payment(amount)
+    .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT) // max amount allowed to be used on gas fees
     .with_timestamp(Timestamp::now())
     .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
     .build()
     .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
 
-    let client = blocking::Client::new();
-    let url = base_url.join("/api/v1/deposit").unwrap();
-    let response = client
-        .post(url)
+    let response = reqwest::blocking::Client::new()
+        .post(base_url.join(DepositPath::PATH).unwrap())
         .header("Content-Type", "application/json")
         .json(&deploy)
         .send()
-        .map_err(Into::<KairosClientError>::into)?;
+        .map_err(KairosClientError::from)?;
+
     let status = response.status();
     if !status.is_success() {
         Err(KairosClientError::KairosServerError(status.to_string()))
     } else {
         response
             .json::<DeployHash>()
-            .map_err(Into::<KairosClientError>::into)
+            .map_err(KairosClientError::from)
     }
 }
