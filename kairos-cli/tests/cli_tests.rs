@@ -44,8 +44,13 @@ async fn deposit_successful_with_ed25519() {
         .expect("Expected at least one node after successful network run");
     let casper_rpc_url =
         Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_sse_url = Url::parse(&format!(
+        "http://localhost:{}/events/main",
+        node.port.sse_port
+    ))
+    .unwrap();
 
-    let kairos = kairos::Kairos::run(casper_rpc_url, None, None)
+    let kairos = kairos::Kairos::run(&casper_rpc_url, &casper_sse_url, None, None)
         .await
         .unwrap();
 

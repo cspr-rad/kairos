@@ -25,7 +25,8 @@ impl Kairos {
     /// If no proving server is running, we will start the one at `BatchConfig.proving_server`.
     /// The caller should ensure that `BatchConfig.proving_server == KAIROS_PROVER_SERVER_URL`.
     pub async fn run(
-        casper_rpc: Url,
+        casper_rpc: &Url,
+        casper_sse: &Url,
         proving_server_batch_config: Option<BatchConfig>,
         kairos_demo_contract_hash: Option<ContractHash>,
     ) -> Result<Kairos, io::Error> {
@@ -44,7 +45,8 @@ impl Kairos {
         let config = ServerConfig {
             secret_key_file: None,
             socket_addr,
-            casper_rpc,
+            casper_rpc: casper_rpc.clone(),
+            casper_sse: casper_sse.clone(),
             kairos_demo_contract_hash: kairos_demo_contract_hash.unwrap_or_default(),
             batch_config,
         };
@@ -117,6 +119,9 @@ mod tests {
     #[tokio::test]
     async fn test_kairos_starts_and_terminates() {
         let dummy_rpc = Url::parse("http://127.0.0.1:11101/rpc").unwrap();
-        let _kairos = Kairos::run(dummy_rpc, None, None).await.unwrap();
+        let dummy_sse = Url::parse("http://127.0.0.1:18101/events/main").unwrap();
+        let _kairos = Kairos::run(&dummy_rpc, &dummy_sse, None, None)
+            .await
+            .unwrap();
     }
 }
