@@ -1,13 +1,15 @@
 pub mod config;
-pub mod deposit_manager;
 pub mod errors;
+pub mod event_manager;
 pub mod routes;
 pub mod state;
 
 mod utils;
 
+use std::collections::HashSet;
 use std::sync::Arc;
 use tokio::sync::mpsc;
+use tokio::sync::RwLock;
 use tokio::time::{self, Duration};
 
 use casper_client::types::DeployHash;
@@ -21,7 +23,7 @@ use casper_client_types::ContractHash;
 pub use errors::AppErr;
 
 use crate::config::ServerConfig;
-use crate::deposit_manager::DepositManager;
+use crate::event_manager::EventManager;
 use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 
 /// TODO: support secp256k1
@@ -53,13 +55,13 @@ pub async fn run(config: ServerConfig) {
         .unwrap_or_else(|err| panic!("Failed to bind to address {}: {}", config.socket_addr, err));
     tracing::info!("listening on `{}`", listener.local_addr().unwrap());
 
-    let deposit_manager = if config.kairos_demo_contract_hash == ContractHash::default() {
+    let event_manager = if config.kairos_demo_contract_hash == ContractHash::default() {
         tracing::warn!(
             "Casper contract hash not configured, L1 synchronization will NOT be enabled."
         );
         None
     } else {
-        DepositManager::new(&config.casper_rpc, &config.kairos_demo_contract_hash)
+        EventManager::new(&config.casper_rpc, &config.kairos_demo_contract_hash)
             .await
             .ok()
     };
@@ -67,10 +69,11 @@ pub async fn run(config: ServerConfig) {
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(&config),
         server_config: config.clone(),
-        deposit_manager,
+        event_manager,
+        known_deposit_deploys: RwLock::new(HashSet::new()),
     });
 
-    if state.deposit_manager.is_some() {
+    if state.event_manager.is_some() {
         // deploy notifier
         let (tx, mut rx) = mpsc::channel(100);
         let mut deploy_notifier = DeployNotifier::new(config.casper_sse.as_str());
@@ -101,7 +104,7 @@ pub async fn run(config: ServerConfig) {
 
                 tracing::debug!("Triggering periodic L1 sync");
                 state_clone
-                    .deposit_manager
+                    .event_manager
                     .as_ref()
                     .unwrap()
                     .add_new_events_to(&state_clone.batch_state_manager)
@@ -117,9 +120,6 @@ pub async fn run(config: ServerConfig) {
                 let deploy_hash =
                     DeployHash::new(Digest::from_hex(notification.deploy_hash).unwrap());
                 match state_clone
-                    .deposit_manager
-                    .as_ref()
-                    .unwrap()
                     .known_deposit_deploys
                     .write()
                     .await
@@ -128,7 +128,7 @@ pub async fn run(config: ServerConfig) {
                     None => continue,
                     Some(_) => {
                         state_clone
-                            .deposit_manager
+                            .event_manager
                             .as_ref()
                             .unwrap()
                             .add_new_events_to(&state_clone.batch_state_manager)

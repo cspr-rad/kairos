@@ -39,11 +39,8 @@ pub async fn deposit_handler(
             .await
             .map_err(Into::<AppErr>::into)?;
             if response.id == expected_rpc_id {
-                if state.deposit_manager.is_some() {
+                if state.event_manager.is_some() {
                     assert!(state
-                        .deposit_manager
-                        .as_ref()
-                        .unwrap()
                         .known_deposit_deploys
                         .write()
                         .await

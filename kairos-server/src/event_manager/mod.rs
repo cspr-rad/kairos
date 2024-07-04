@@ -3,14 +3,11 @@ pub mod error;
 use anyhow::{anyhow, Result};
 use backoff::{future::retry, Error, ExponentialBackoff};
 use casper_client::{
-    get_state_root_hash, query_global_state, types::DeployHash, types::StoredValue, JsonRpcId,
-    Verbosity,
+    get_state_root_hash, query_global_state, types::StoredValue, JsonRpcId, Verbosity,
 };
 use rand::Rng;
 use reqwest::Url;
-use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
-use tokio::sync::RwLock;
 
 use crate::state::BatchStateManager;
 use casper_client_types::ContractHash;
@@ -23,15 +20,14 @@ use contract_utils::constants::KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER;
 use error::DepositManagerError;
 use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
 
-pub struct DepositManager {
+pub struct EventManager {
     /// The last deposit event index that was added to the batch
     last_deposit_added_to_batch: AtomicU32,
-    pub known_deposit_deploys: RwLock<HashSet<DeployHash>>,
     fetcher: Fetcher,
     schemas: Schemas,
 }
 
-impl DepositManager {
+impl EventManager {
     pub async fn new(
         casper_rpc_url: &Url,
         contract_hash: &ContractHash,
@@ -79,11 +75,10 @@ impl DepositManager {
 
         tracing::info!("On-chain stored last processed deposit index fetched successfully");
 
-        Ok(DepositManager {
+        Ok(EventManager {
             last_deposit_added_to_batch: AtomicU32::new(last_processed_deposit_index + 1),
             fetcher,
             schemas,
-            known_deposit_deploys: RwLock::new(HashSet::new()),
         })
     }
 
