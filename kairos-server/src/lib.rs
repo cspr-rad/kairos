@@ -6,17 +6,18 @@ pub mod state;
 mod l1_sync;
 mod utils;
 
-use std::sync::Arc;
-
 use axum::Router;
 use axum_extra::routing::RouterExt;
-use casper_client_types::ContractHash;
+use std::collections::HashSet;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
-pub use errors::AppErr;
+use casper_client_types::ContractHash;
 
 use crate::config::ServerConfig;
 use crate::l1_sync::service::L1SyncService;
 use crate::state::{BatchStateManager, ServerState, ServerStateInner};
+pub use errors::AppErr;
 
 /// TODO: support secp256k1
 type PublicKey = Vec<u8>;
@@ -72,6 +73,7 @@ pub async fn run(config: ServerConfig) {
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(&config),
         server_config: config.clone(),
+        known_deposit_deploys: RwLock::new(HashSet::new()),
     });
 
     run_l1_sync(state.clone()).await;
