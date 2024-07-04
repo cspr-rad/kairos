@@ -45,20 +45,20 @@ in
       '';
     };
 
-    casperSseUrl = mkOption {
-      type = types.str;
-      example = "http://127.0.0.1:18101/events/main";
-      description = ''
-        The casper node URL to the SSE event endpoint.
-      '';
-    };
-
     demoContractHash = mkOption {
       type = types.str;
       example = "TODO put a contract hash here";
       description = ''
         The hash of the deployed demo contract.
         Use an empty string when testing with cctl.
+      '';
+    };
+
+    casperSseUrl = mkOption {
+      type = types.str;
+      example = "http://127.0.0.1:18101/events/main";
+      description = ''
+        The casper node URL to the SSE events endpoint.
       '';
     };
 
@@ -154,7 +154,6 @@ in
             ExecStart = ''${lib.getExe cfg.package}'';
             Restart = "always";
             DynamicUser = true;
-            ConfigurationDirectory = "kairos";
           }
         ];
       };

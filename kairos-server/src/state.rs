@@ -1,3 +1,4 @@
+pub mod submit_batch;
 pub mod transactions;
 mod trie;
 
@@ -5,8 +6,8 @@ use std::{sync::Arc, thread};
 use tokio::{sync::mpsc, task};
 
 pub use self::trie::TrieStateThreadMsg;
-use crate::config::{BatchConfig, ServerConfig};
 use crate::deposit_manager::DepositManager;
+use crate::{config::ServerConfig, state::submit_batch::submit_proof_to_contract};
 use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
@@ -35,16 +36,40 @@ impl BatchStateManager {
     /// Create a new `BatchStateManager` with the given `db` and `batch_root`.
     /// `batch_root` and it's descendants must be in the `db`.
     /// This method spawns the trie state thread, it should be called only once.
-    pub fn new(config: BatchConfig, db: trie::Database, batch_root: TrieRoot<NodeHash>) -> Self {
+    pub fn new(config: &ServerConfig, db: trie::Database, batch_root: TrieRoot<NodeHash>) -> Self {
+        let batch_config = config.batch_config.clone();
+        let casper_rpc = config.casper_rpc.clone();
+        let contract_hash = config.kairos_demo_contract_hash;
+
+        let secret_key = config
+            .secret_key_file
+            .as_ref()
+            // We already checked that we can read the secret key in at startup.
+            // SecretKey does not implement Clone, so we need to clone the path and read it again.
+            .map(|f| casper_client_types::SecretKey::from_file(f).expect("Invalid secret key"));
+
         let (queued_transactions, txn_receiver) = mpsc::channel(1000);
         // This queue provides back pressure to the trie thread.
         let (batch_sender, mut batch_rec) = mpsc::channel(10);
-        let trie_thread =
-            trie::spawn_state_thread(config.clone(), txn_receiver, batch_sender, db, batch_root);
+        let trie_thread = trie::spawn_state_thread(
+            config.batch_config.clone(),
+            txn_receiver,
+            batch_sender,
+            db,
+            batch_root,
+        );
 
         let batch_output_handler = tokio::spawn(async move {
             while let Some(batch_output) = batch_rec.recv().await {
-                let prove_url = config.proving_server.join("prove").expect("Invalid URL");
+                tracing::info!(
+                    "Sending batch output to proving server: {:?}",
+                    batch_output.proof_inputs.transactions
+                );
+
+                let prove_url = batch_config
+                    .proving_server
+                    .join("/api/v1/prove/batch")
+                    .expect("Invalid URL");
 
                 let res = reqwest::Client::new()
                     .post(prove_url)
@@ -57,7 +82,23 @@ impl BatchStateManager {
                     });
 
                 if res.status().is_success() {
-                    // TODO send the proof to layer 1
+                    tracing::info!("Proving server returned success");
+                    let proof_serialized = res.bytes().await.unwrap_or_else(|e| {
+                        tracing::error!("Could not read response from proving server: {}", e);
+                        panic!("Could not read response from proving server: {}", e);
+                    });
+
+                    if let Some(secret_key) = secret_key.as_ref() {
+                        submit_proof_to_contract(
+                            secret_key,
+                            contract_hash,
+                            casper_rpc.clone(),
+                            proof_serialized.to_vec(),
+                        )
+                        .await
+                    } else {
+                        tracing::warn!("No secret key provided. Not submitting proof to contract.");
+                    }
                 } else {
                     tracing::error!("Proving server returned an error: {:?}", res);
                     panic!("Proving server returned an error: {:?}", res);
@@ -74,7 +115,7 @@ impl BatchStateManager {
 
     /// Create a new `BatchStateManager` with an empty `MemoryDb` and an empty `TrieRoot`.
     /// This is useful for testing.
-    pub fn new_empty(config: BatchConfig) -> Self {
+    pub fn new_empty(config: &ServerConfig) -> Self {
         Self::new(config, MemoryDb::empty(), TrieRoot::default())
     }
 

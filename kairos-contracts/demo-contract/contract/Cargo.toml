@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-kairos-circuit-logic = {path="../../../kairos-prover/kairos-circuit-logic", default-features=false, features=["serde"]}
+kairos-circuit-logic = {path="../../../kairos-prover/kairos-circuit-logic", default-features=false, features=["serde", "casper-event-standard"]}
 kairos-verifier-risc0-lib = {path="../../../kairos-prover/kairos-verifier-risc0-lib", default-features=false, features=["verifier", "disable-dev-mode"]}
 serde = {version="1", default-features=false, features=["derive"]}
 serde-json-wasm = { version="1", default-features=false }

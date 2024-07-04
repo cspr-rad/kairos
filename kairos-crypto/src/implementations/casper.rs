@@ -53,6 +53,21 @@ impl SignerCore for Signer {
         Ok(())
     }
 
+    fn from_public_key<T: AsRef<[u8]>>(bytes: T) -> Result<Self, CryptoError>
+    where
+        Self: Sized,
+    {
+        let (public_key, _remainder) = casper_types::PublicKey::from_bytes(bytes.as_ref())
+            .map_err(|_e| CryptoError::Deserialization {
+                context: "public key",
+            })?;
+
+        Ok(Self {
+            private_key: None,
+            public_key,
+        })
+    }
+
     fn to_public_key(&self) -> Result<Vec<u8>, CryptoError> {
         let public_key =
             self.public_key
@@ -80,21 +95,6 @@ impl crate::SignerFsExtension for Signer {
 
         Ok(Self {
             private_key: Some(private_key),
-            public_key,
-        })
-    }
-
-    fn from_public_key<T: AsRef<[u8]>>(bytes: T) -> Result<Self, CryptoError>
-    where
-        Self: Sized,
-    {
-        let (public_key, _remainder) = casper_types::PublicKey::from_bytes(bytes.as_ref())
-            .map_err(|_e| CryptoError::Deserialization {
-                context: "public key",
-            })?;
-
-        Ok(Self {
-            private_key: None,
             public_key,
         })
     }
@@ -146,10 +146,8 @@ impl crate::SignerTxExtension for Signer {
 }
 
 #[cfg(test)]
-#[cfg(feature = "fs")]
 mod tests {
     use super::*;
-    use crate::SignerFsExtension;
 
     #[test]
     fn test_casper_ed25519_public_key() {

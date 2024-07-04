@@ -1,4 +1,4 @@
-{ lib, config, pkgs, ... }:
+{ lib, config, ... }:
 let
   inherit (lib)
     types
@@ -140,6 +140,13 @@ in
       virtualHosts."${config.networking.hostName}".locations = {
         "/cctl/users/" = {
           alias = "${cfg.workingDirectory}/assets/users/";
+          extraConfig = ''
+            autoindex on;
+            add_header Content-Type 'text/plain charset=UTF-8';
+          '';
+        };
+        "/cctl/contracts/" = {
+          alias = "${cfg.workingDirectory}/contracts/";
           extraConfig = ''
             autoindex on;
             add_header Content-Type 'text/plain charset=UTF-8';

@@ -13,7 +13,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use tokio::sync::RwLock;
 
 use crate::state::BatchStateManager;
-use casper_event_standard::casper_types::{bytesrepr::FromBytes, ContractHash, Key};
+use casper_client_types::ContractHash;
+use casper_event_standard::casper_types::{bytesrepr::FromBytes, Key};
 use casper_event_toolkit::fetcher::{Fetcher, Schemas};
 use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;
@@ -110,16 +111,15 @@ impl DepositManager {
             match untyped_event.name.as_str() {
                 "Deposit" => {
                     let data = untyped_event.to_ces_bytes()?;
-                    let (deposit, _) =
-                        contract_utils::Deposit::from_bytes(&data).map_err(|err| {
-                            DepositManagerError::UnexpectedError(format!(
-                                "Failed to parse deposit event from bytes: {}",
-                                err
-                            ))
-                        })?;
+                    let (deposit, _) = L1Deposit::from_bytes(&data).map_err(|err| {
+                        DepositManagerError::UnexpectedError(format!(
+                            "Failed to parse deposit event from bytes: {}",
+                            err
+                        ))
+                    })?;
                     batch_state_manager
                         .enqueue_transaction(KairosTransaction::Deposit(L1Deposit {
-                            recipient: "cafebabe".into(),
+                            recipient: deposit.recipient,
                             amount: deposit.amount,
                         }))
                         .await

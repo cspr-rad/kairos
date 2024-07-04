@@ -35,9 +35,11 @@ in
                 imports = [
                   (mkKairosHostConfig "kairos-host")
                 ];
-                # Placeholder URLs to make the test pass
-                services.kairos.casperRpcUrl = "http://localhost:11101/rpc";
-                services.kairos.casperSseUrl = "http://localhost:18101/events/main";
+                # Placeholder values make the test pass
+                services.kairos = {
+                  casperRpcUrl = "http://localhost:11101/rpc";
+                  casperSseUrl = "http://localhost:18101/events/main";
+                };
               };
               verifyServices = [ "kairos.service" ];
             };

@@ -47,6 +47,18 @@
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
+          # TODO reuse in nixos tests
+          cctlConfig = {
+            chainspec = pkgs.fetchurl {
+              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/chainspec.toml.in";
+              hash = "sha256-b/6c5o3JXFlaTgTHxs8JepaHzjMG75knzlKKqRd/7pc=";
+            };
+            config = pkgs.fetchurl {
+              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/config.toml";
+              hash = "sha256-ZuNbxw0nBjuONEZRK8Ru96zZQak4MEQ/eM1fA6esyCM=";
+            };
+          };
+
           kairosContractsAttrs = {
             src = lib.cleanSourceWith {
               src = lib.fileset.toSource {
@@ -149,6 +161,8 @@
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
+            CCTL_CONFIG = "${cctlConfig.config}";
+            CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
 
             meta.mainProgram = "kairos-server";
           };
@@ -161,6 +175,8 @@
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
+            CCTL_CONFIG = "${cctlConfig.config}";
+            CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
             inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
           };
 
@@ -218,8 +234,7 @@
           };
 
           checks = {
-            kairos-lint = craneLib.cargoClippy (kairosNodeAttrs // {
-              pname = "kairos-lint";
+            lint = craneLib.cargoClippy (kairosNodeAttrs // {
               cargoArtifacts = self'.packages.kairos-deps;
               cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
@@ -237,18 +252,17 @@
             #  ];
             #});
 
-            #kairos-audit = craneLib.cargoAudit {
-            #  pname = "kairos-audit";
-            #  inherit (kairosNodeAttrs) src;
-            #  advisory-db = inputs.advisory-db;
-            #  # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
-            #  # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
-            #  # FIXME --ignore RUSTSEC-2024-0013 Memory corruption, denial of service, and arbitrary code execution in libgit2
-            #  cargoAuditExtraArgs = "--ignore yanked --deny warnings --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
-            #};
+            # See https://github.com/cspr-rad/kairos/security/dependabot for this functionality
+            # audit = craneLib.cargoAudit {
+            #   inherit (kairosNodeAttrs) src;
+            #   advisory-db = inputs.advisory-db;
+            #   # Default values from https://crane.dev/API.html?highlight=cargoAudit#cranelibcargoaudit
+            #   # FIXME --ignore RUSTSEC-2022-0093 ignores ed25519-dalek 1.0.1 vulnerability caused by introducing casper-client 2.0.0
+            #   # FIXME --ignore RUSTSEC-2024-0013 ignores libgit2-sys 0.14.2+1.5.1 vulnerability caused by introducing casper-client 2.0.0
+            #   cargoAuditExtraArgs = "--ignore yanked --ignore RUSTSEC-2022-0093 --ignore RUSTSEC-2024-0013";
+            # };
 
             kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
-              pname = "kairos-contract-lint";
               cargoArtifacts = self'.packages.kairos-contracts-deps;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });

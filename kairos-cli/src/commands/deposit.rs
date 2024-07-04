@@ -1,5 +1,5 @@
 use crate::client;
-use crate::common::args::{AmountArg, ContractHashArg, PrivateKeyPathArg};
+use crate::common::args::{AmountArg, ContractHashArg, PrivateKeyPathArg, RecipientArg};
 use crate::error::CliError;
 
 use casper_client_types::{crypto::SecretKey, ContractHash};
@@ -17,6 +17,8 @@ pub struct Args {
     private_key_path: PrivateKeyPathArg,
     #[clap(flatten)]
     contract_hash: ContractHashArg,
+    #[clap(flatten)]
+    recipient: RecipientArg,
 }
 
 pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
@@ -36,6 +38,7 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
         &depositor_secret_key,
         &contract_hash,
         amount,
+        args.recipient.try_into()?,
     )
     .map_err(Into::<CliError>::into)
     .map(|deploy_hash| {

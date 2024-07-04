@@ -28,6 +28,9 @@ nixosTest {
         cctlModule
       ];
 
+      virtualisation.cores = 4;
+      virtualisation.memorySize = 4096;
+
       # allow HTTP for nixos-test environment
       services.nginx.virtualHosts.${config.networking.hostName} = {
         forceSSL = lib.mkForce false;
@@ -53,7 +56,7 @@ nixosTest {
 
       services.kairos = {
         casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
-        casperSseUrl = "http://127.0.0.1:18101/events/main";
+        casperSseUrl = "http://localhost:18101/events/main"; # has to be hardcoded since it's not configurable atm
         demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
       };
 
@@ -78,7 +81,7 @@ nixosTest {
   testScript = ''
     import json
     import backoff
-    
+
     # Utils
     def verify_deploy_success(json_data):
       # Check if the "Success" key is present
@@ -121,39 +124,19 @@ nixosTest {
 
     # CLI with ed25519
     # deposit
-    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --private-key ${clientUsersDirectory}/user-2/secret_key.pem --contract-hash {}".format(contract_hash))
+    depositor = client.succeed("cat ${clientUsersDirectory}/user-2/public_key_hex")
+    depositor_private_key = "${clientUsersDirectory}/user-2/secret_key.pem"
+    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --recipient {} --private-key {} --contract-hash {}".format(depositor, depositor_private_key, contract_hash))
     assert int(deposit_deploy_hash, 16), "The deposit command did not output a hex encoded deploy hash. The output was {}".format(deposit_deploy_hash)
 
     wait_for_successful_deploy(deposit_deploy_hash)
 
-    # TODO Transfer and withdraw can only work once deposit deploys are processed and the users actually have an account
-    # REST API
-    # Tx Payload
-    #   nonce = 0
-    #   transfer:
-    #     recipient = deadbabe
-    #     amount = 1000
-    #
-    # transfer_payload = "300f020100a10a0404deadbabe020203e8"
-    # transfer_request = { "public_key": "cafebabe", "payload": transfer_payload, "signature": "deadbeef" }
-    # client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transfer -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transfer_request)))
+    # transfer
+    beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
+    transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --nonce 0 --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
+    assert "ok\n" in transfer_output
 
-    # Tx Payload
-    #   nonce = 0
-    #   withdrawal:
-    #     amount = 1000
-    #
-    # withdraw_payload = "3009020100a204020203e8"
-    # withdraw_request = { "public_key": "deadbabe", "payload": withdraw_payload, "signature": "deadbeef" }
-    # client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/withdraw -H 'Content-Type: application/json' -d '{}'".format(json.dumps(withdraw_request)))
-
-    # TODO Transfer and withdraw can only work once deposit deploys are processed and the users actually have an account
-    # CLI with ed25519
-    # cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
-    # assert "ok\n" in cli_output
-
-    # cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/ed25519/secret_key.pem")
-    # assert "ok\n" in cli_output
+    # TODO test withdraw
 
     # TODO cctl does not provide any secp256k1 keys
     # CLI with secp256k1

@@ -29,6 +29,7 @@ anyhow = "1"
 backoff = { version = "0.4", features = ["tokio", "futures"]}
 casper-client.workspace = true
 casper-client-hashing.workspace = true
+casper-client-types = { workspace = true, features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
 casper-types.workspace = true
 casper-deploy-notifier = { path = "../casper-deploy-notifier" }
 casper-event-standard.workspace = true
@@ -42,7 +43,7 @@ tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 hex = "0.4"
 kairos-tx = { path = "../kairos-tx" }
 contract-utils = { path = "../kairos-contracts/demo-contract/contract-utils" }
-kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1"] }
+kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1", "casper-event-standard"] }
 kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie" }
 sha2 = "0.10"
 reqwest = { version = "0.12", features = ["json"] }

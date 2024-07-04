@@ -13,10 +13,10 @@ use tokio::time::{self, Duration};
 use casper_client::types::DeployHash;
 use casper_client_hashing::Digest;
 use casper_deploy_notifier::DeployNotifier;
-use casper_types::ContractHash;
 
 use axum::Router;
 use axum_extra::routing::RouterExt;
+use casper_client_types::ContractHash;
 
 pub use errors::AppErr;
 
@@ -65,7 +65,7 @@ pub async fn run(config: ServerConfig) {
     };
 
     let state = Arc::new(ServerStateInner {
-        batch_state_manager: BatchStateManager::new_empty(config.batch_config.clone()),
+        batch_state_manager: BatchStateManager::new_empty(&config),
         server_config: config.clone(),
         deposit_manager,
     });

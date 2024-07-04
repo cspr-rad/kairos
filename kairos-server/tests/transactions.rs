@@ -8,9 +8,8 @@ use casper_client::{
 };
 use casper_client_types::{
     crypto::{PublicKey, SecretKey},
-    AsymmetricType,
+    AsymmetricType, ContractHash,
 };
-use casper_types::ContractHash;
 use kairos_server::{
     config::{BatchConfig, ServerConfig},
     routes::deposit::DepositPath,
@@ -30,12 +29,12 @@ use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 
 #[cfg(feature = "deposit-mock")]
-async fn new_test_app() -> TestServer {
+fn new_test_app() -> TestServer {
     let dummy_url = Url::parse("http://0.0.0.0:0").unwrap();
-    new_test_app_with_casper_node(&dummy_url, &dummy_url).await
+    new_test_app_with_casper_node(&dummy_url, &dummy_url)
 }
 
-async fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
+fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
             .with(
@@ -47,6 +46,7 @@ async fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Ur
     });
     let config = TestServerConfig::builder().mock_transport().build();
     let server_config = ServerConfig {
+        secret_key_file: None,
         socket_addr: "0.0.0.0:0".parse().unwrap(),
         casper_rpc: casper_rpc_url.clone(),
         casper_sse: casper_sse_url.clone(),
@@ -60,7 +60,7 @@ async fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Ur
     };
 
     let state = Arc::new(ServerStateInner {
-        batch_state_manager: BatchStateManager::new_empty(server_config.batch_config.clone()),
+        batch_state_manager: BatchStateManager::new_empty(&server_config),
         server_config,
         deposit_manager: None,
     });
@@ -84,7 +84,7 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
     ))
     .unwrap();
 
-    let server = new_test_app_with_casper_node(&casper_rpc_url, &casper_sse_url).await;
+    let server = new_test_app_with_casper_node(&casper_rpc_url, &casper_sse_url);
 
     let sender_secret_key_file = network
         .working_dir
@@ -126,7 +126,7 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
 async fn test_deposit_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app().await;
+    let server = new_test_app();
 
     let deposit = L1Deposit {
         recipient: "alice_key".into(),
@@ -210,7 +210,7 @@ async fn test_deposit_withdraw() {
 async fn test_deposit_transfer_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app().await;
+    let server = new_test_app();
 
     // deposit
     server
@@ -254,7 +254,7 @@ async fn test_deposit_transfer_withdraw() {
 async fn test_deposit_transfer_to_self_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app().await;
+    let server = new_test_app();
 
     // deposit
     server
