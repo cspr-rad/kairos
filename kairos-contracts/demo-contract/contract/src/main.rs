@@ -1,21 +1,21 @@
 #![no_std]
 #![no_main]
 extern crate alloc;
-use alloc::string::ToString;
 use alloc::vec;
+use alloc::{string::ToString, vec::Vec};
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_event_standard::Schemas;
-use casper_types::bytesrepr::{Bytes, ToBytes};
+use casper_types::bytesrepr::{Bytes, FromBytes, ToBytes};
 use casper_types::{
     contracts::NamedKeys, runtime_args, AccessRights, ApiError, CLValue, EntryPoints, Key,
     RuntimeArgs, URef, U512,
 };
 use contract_utils::constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
-    KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER, KAIROS_TRIE_ROOT, RUNTIME_ARG_AMOUNT,
+    KAIROS_TRIE_ROOT, KAIROS_UNPROCESSED_DEPOSIT_INDEX, RUNTIME_ARG_AMOUNT,
     RUNTIME_ARG_INITIAL_TRIE_ROOT, RUNTIME_ARG_RECEIPT, RUNTIME_ARG_RECIPIENT,
     RUNTIME_ARG_TEMP_PURSE,
 };
@@ -103,14 +103,12 @@ pub extern "C" fn submit_batch() {
     let Ok(ProofOutputs {
         pre_batch_trie_root,
         post_batch_trie_root,
-        deposits: _,    // TODO: implement deposits
+        deposits,
         withdrawals: _, // TODO: implement withdrawals
     }) = kairos_verifier_risc0_lib::verifier::verify_execution(&receipt)
     else {
         runtime::revert(ApiError::User(1u16));
     };
-
-    // todo: check that the deposits are unique
 
     // get the current root from contract storage
     let trie_root_uref: URef = runtime::get_key(KAIROS_TRIE_ROOT)
@@ -125,9 +123,94 @@ pub extern "C" fn submit_batch() {
     if trie_root != pre_batch_trie_root {
         runtime::revert(ApiError::User(4u16))
     };
+
+    check_batch_deposits_against_unprocessed(&deposits);
+
     // store the new root under the contract URef
     storage::write(trie_root_uref, post_batch_trie_root);
     // todo: update sliding window
+}
+
+/// Retrive all deposits that have not appeared in a batch yet.
+/// Returns the value of `KAIROS_UNPROCESSED_DEPOSIT_INDEX`
+/// and an event_index ordered vector of `(event_index, L1Deposit)` tuples.
+///
+/// This functions error codes are in the range of 101-199.
+fn get_unprocessed_deposits() -> (u32, Vec<(u32, L1Deposit)>) {
+    let unprocessed_deposits_uref: URef = runtime::get_key(KAIROS_UNPROCESSED_DEPOSIT_INDEX)
+        .unwrap_or_revert()
+        .into_uref()
+        .unwrap_or_revert_with(ApiError::User(101u16));
+    let unprocessed_deposits_index: u32 = storage::read(unprocessed_deposits_uref)
+        .unwrap_or_revert()
+        .unwrap_or_revert_with(ApiError::User(102u16));
+
+    let events_length_uref: URef = runtime::get_key(casper_event_standard::EVENTS_LENGTH)
+        .unwrap_or_revert()
+        .into_uref()
+        .unwrap_or_revert_with(ApiError::User(103u16));
+    let events_length: u32 = storage::read(events_length_uref)
+        .unwrap_or_revert()
+        .unwrap_or_revert_with(ApiError::User(104u16));
+
+    let events_dict_uref: URef = runtime::get_key(casper_event_standard::EVENTS_DICT)
+        .unwrap_or_revert()
+        .into_uref()
+        .unwrap_or_revert_with(ApiError::User(105u16));
+
+    let mut unprocessed_deposits: Vec<(u32, L1Deposit)> =
+        Vec::with_capacity(events_length as usize);
+
+    for i in unprocessed_deposits_index..events_length {
+        let event_key = storage::dictionary_get(events_dict_uref, &i.to_string())
+            .unwrap_or_revert()
+            .unwrap_or_revert_with(ApiError::User(106u16));
+
+        let event_bytes: Bytes = storage::read(event_key)
+            .unwrap_or_revert()
+            .unwrap_or_revert_with(ApiError::User(107u16));
+
+        match L1Deposit::from_bytes(&event_bytes) {
+            Ok((deposit, [])) => unprocessed_deposits.push((i, deposit)),
+            // There should be no trailing bytes
+            Ok((_, [_, ..])) => {
+                runtime::revert(ApiError::User(108u16));
+            }
+            Err(_) => continue,
+        }
+    }
+
+    (unprocessed_deposits_index, unprocessed_deposits)
+}
+
+/// Check that the deposits in the batch match the deposits in the unprocessed deposits list.
+/// The batch deposits must an ordered subset of the unprocessed deposits.
+///
+/// Returns the event index of the first unprocessed deposit that is not present in the batch.
+/// If the batch contains all unprocessed deposits,
+/// the returned index will point to the next event emitted by the contract.
+///
+/// Panics: This functions error codes are in the range of 201-299.
+fn check_batch_deposits_against_unprocessed(batch_deposits: &[L1Deposit]) -> u32 {
+    let (unprocessed_deposits_idx, unprocessed_deposits) = get_unprocessed_deposits();
+
+    // This check ensures that zip does not smuggle fake deposits.
+    // Without this check, an attacker could submit a batch with deposits that are not in the unprocessed list.
+    if batch_deposits.len() > unprocessed_deposits.len() {
+        runtime::revert(ApiError::User(201u16));
+    };
+
+    batch_deposits.iter().zip(unprocessed_deposits.iter()).fold(
+        unprocessed_deposits_idx,
+        |unprocessed_deposits_idx, (batch_deposit, (event_idx, unprocessed_deposit))| {
+            assert!(unprocessed_deposits_idx <= *event_idx);
+
+            if batch_deposit != unprocessed_deposit {
+                runtime::revert(ApiError::User(202u16));
+            }
+            *event_idx
+        },
+    )
 }
 
 #[no_mangle]
@@ -147,7 +230,7 @@ pub extern "C" fn call() {
     let trie_root_uref: URef = storage::new_uref(initial_trie_root);
     let named_keys = NamedKeys::from([
         (
-            KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER.to_string(),
+            KAIROS_UNPROCESSED_DEPOSIT_INDEX.to_string(),
             last_processed_deposit_counter_uref.into(),
         ),
         (KAIROS_TRIE_ROOT.to_string(), trie_root_uref.into()),
