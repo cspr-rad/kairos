@@ -88,7 +88,7 @@
                   filename=$(basename "$file" .wasm)
                   # Append "-optimized" to the filename and add back the .wasm extension
                   new_filename="$directory$filename-optimized.wasm"
-                  wasm-opt --strip-debug --signext-lowering "$file" -o "$new_filename"
+                  wasm-opt -Oz --strip-debug --signext-lowering "$file" -o "$new_filename"
                 fi
               done
             '';
@@ -121,7 +121,7 @@
                   filename=$(basename "$file" .wasm)
                   # Append "-optimized" to the filename and add back the .wasm extension
                   new_filename="$directory$filename-optimized.wasm"
-                  wasm-opt --strip-debug --signext-lowering "$file" -o "$new_filename"
+                  wasm-opt -Oz --strip-debug --signext-lowering "$file" -o "$new_filename"
                 fi
               done
             '';
