@@ -201,3 +201,27 @@ pub fn create_funded_account_for_secret_key_bytes(
     builder.exec(transfer).expect_success().commit();
     account_public_key
 }
+
+/// Returns an [`ExecuteRequest`] that will call a stored contract by hash.
+/// NOTE: This utiliity is a custom version of `ExecuteRequest::contract_call_by_hash`
+/// that allows to specify custom payment.
+pub fn contract_call_by_hash(
+    sender: AccountHash,
+    contract_hash: ContractHash,
+    entry_point: &str,
+    args: RuntimeArgs,
+    payment: U512,
+) -> ExecuteRequestBuilder {
+    let mut rng = rand::thread_rng();
+    let deploy_hash = rng.gen();
+
+    let deploy = DeployItemBuilder::new()
+        .with_address(sender)
+        .with_stored_session_hash(contract_hash, entry_point, args)
+        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => payment, })
+        .with_authorization_keys(&[sender])
+        .with_deploy_hash(deploy_hash)
+        .build();
+
+    ExecuteRequestBuilder::new().push_deploy(deploy)
+}
