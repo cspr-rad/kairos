@@ -1,7 +1,7 @@
 mod wasm_helper;
 
 use casper_engine_test_support::{
-    ExecuteRequestBuilder, WasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR,
+    DeployItemBuilder, ExecuteRequestBuilder, WasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR,
     DEFAULT_ACCOUNT_INITIAL_BALANCE,
 };
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
@@ -13,6 +13,7 @@ use casper_types::{
     system::{handle_payment::ARG_TARGET, mint::ARG_ID},
     RuntimeArgs, U512,
 };
+use rand::Rng;
 use std::path::Path;
 
 use casper_engine_test_support::{InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST};
@@ -154,11 +155,13 @@ impl TestContext {
         let session_args = runtime_args! {
             "risc0_receipt" => Bytes::from(proof_serialized),
         };
-        let submit_batch_request = ExecuteRequestBuilder::contract_call_by_hash(
+        let payment = U512::from(3_000_000_000_000u64); // 3000 CSPR
+        let submit_batch_request = contract_call_by_hash(
             sender,
             self.contract_hash,
             "submit_batch",
             session_args,
+            payment,
         )
         .build();
         self.builder
