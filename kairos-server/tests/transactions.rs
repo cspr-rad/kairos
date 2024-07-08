@@ -1,7 +1,11 @@
-use std::sync::{Arc, OnceLock};
-
 use axum_extra::routing::TypedPath;
 use axum_test::{TestServer, TestServerConfig};
+use reqwest::Url;
+use std::collections::HashSet;
+use std::sync::{Arc, OnceLock};
+use tokio::sync::RwLock;
+use tracing_subscriber::{prelude::*, EnvFilter};
+
 use casper_client::{
     types::{DeployBuilder, Timestamp},
     TransferTarget,
@@ -16,8 +20,6 @@ use kairos_server::{
     state::{BatchStateManager, ServerStateInner},
 };
 use kairos_test_utils::cctl::CCTLNetwork;
-use reqwest::Url;
-use tracing_subscriber::{prelude::*, EnvFilter};
 
 #[cfg(feature = "deposit-mock")]
 use kairos_server::routes::{
@@ -62,7 +64,8 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(&server_config),
         server_config,
-        deposit_manager: None,
+        event_manager: None,
+        known_deposit_deploys: RwLock::new(HashSet::new()),
     });
 
     TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()

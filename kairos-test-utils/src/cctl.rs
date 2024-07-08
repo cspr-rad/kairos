@@ -7,8 +7,7 @@ use casper_client::{
     types::{DeployBuilder, ExecutableDeployItem, StoredValue, TimeDiff, Timestamp},
     Error, JsonRpcId, Verbosity,
 };
-use casper_client_types::{ExecutionResult, Key, PublicKey, RuntimeArgs, SecretKey};
-use casper_types::ContractHash;
+use casper_client_types::{ContractHash, ExecutionResult, Key, PublicKey, RuntimeArgs, SecretKey};
 use hex::FromHex;
 use rand::Rng;
 use std::io::{self, Write};

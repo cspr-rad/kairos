@@ -6,25 +6,22 @@ pub mod state;
 
 mod utils;
 
+use axum::Router;
+use axum_extra::routing::RouterExt;
 use std::collections::HashSet;
 use std::sync::Arc;
-use tokio::sync::mpsc;
-use tokio::sync::RwLock;
+use tokio::sync::{mpsc, RwLock};
 use tokio::time::{self, Duration};
 
 use casper_client::types::DeployHash;
 use casper_client_hashing::Digest;
-use casper_deploy_notifier::DeployNotifier;
-
-use axum::Router;
-use axum_extra::routing::RouterExt;
 use casper_client_types::ContractHash;
-
-pub use errors::AppErr;
+use casper_deploy_notifier::DeployNotifier;
 
 use crate::config::ServerConfig;
 use crate::event_manager::EventManager;
 use crate::state::{BatchStateManager, ServerState, ServerStateInner};
+pub use errors::AppErr;
 
 /// TODO: support secp256k1
 type PublicKey = Vec<u8>;

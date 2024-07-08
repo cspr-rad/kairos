@@ -4,8 +4,10 @@ mod trie;
 
 use std::collections::HashSet;
 use std::{sync::Arc, thread};
-use tokio::sync::RwLock;
-use tokio::{sync::mpsc, task};
+use tokio::{
+    sync::{mpsc, RwLock},
+    task,
+};
 
 use casper_client::types::DeployHash;
 
