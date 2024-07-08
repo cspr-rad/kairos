@@ -1,7 +1,7 @@
 mod wasm_helper;
 
 use casper_engine_test_support::{
-    ExecuteRequestBuilder, WasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR,
+    DeployItemBuilder, ExecuteRequestBuilder, WasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR,
     DEFAULT_ACCOUNT_INITIAL_BALANCE,
 };
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
@@ -13,6 +13,7 @@ use casper_types::{
     system::{handle_payment::ARG_TARGET, mint::ARG_ID},
     RuntimeArgs, U512,
 };
+use rand::Rng;
 use std::path::Path;
 
 use casper_engine_test_support::{InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST};
@@ -154,11 +155,13 @@ impl TestContext {
         let session_args = runtime_args! {
             "risc0_receipt" => Bytes::from(proof_serialized),
         };
-        let submit_batch_request = ExecuteRequestBuilder::contract_call_by_hash(
+        let payment = U512::from(3_000_000_000_000u64); // 3000 CSPR
+        let submit_batch_request = contract_call_by_hash(
             sender,
             self.contract_hash,
             "submit_batch",
             session_args,
+            payment,
         )
         .build();
         self.builder
@@ -200,4 +203,28 @@ pub fn create_funded_account_for_secret_key_bytes(
     .build();
     builder.exec(transfer).expect_success().commit();
     account_public_key
+}
+
+/// Returns an [`ExecuteRequest`] that will call a stored contract by hash.
+/// NOTE: This utiliity is a custom version of `ExecuteRequest::contract_call_by_hash`
+/// that allows to specify custom payment.
+pub fn contract_call_by_hash(
+    sender: AccountHash,
+    contract_hash: ContractHash,
+    entry_point: &str,
+    args: RuntimeArgs,
+    payment: U512,
+) -> ExecuteRequestBuilder {
+    let mut rng = rand::thread_rng();
+    let deploy_hash = rng.gen();
+
+    let deploy = DeployItemBuilder::new()
+        .with_address(sender)
+        .with_stored_session_hash(contract_hash, entry_point, args)
+        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => payment, })
+        .with_authorization_keys(&[sender])
+        .with_deploy_hash(deploy_hash)
+        .build();
+
+    ExecuteRequestBuilder::new().push_deploy(deploy)
 }
