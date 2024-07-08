@@ -17,7 +17,7 @@ codegen-units = 1
 lto = true
 debug = false
 strip = true
-opt-level = 3
+opt-level = 'z'
 panic = "abort"
 
 [workspace.dependencies]
