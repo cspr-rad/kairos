@@ -141,46 +141,44 @@ pub extern "C" fn submit_batch() {
 /// This functions error codes are in the range of 101-199.
 fn get_unprocessed_deposits() -> (u32, Vec<(u32, L1Deposit)>) {
     let unprocessed_deposits_uref: URef = runtime::get_key(KAIROS_UNPROCESSED_DEPOSIT_INDEX)
-        .unwrap_or_revert()
+        .unwrap_or_revert_with(ApiError::User(101u16))
         .into_uref()
-        .unwrap_or_revert_with(ApiError::User(101u16));
-    let unprocessed_deposits_index: u32 = storage::read(unprocessed_deposits_uref)
-        .unwrap_or_revert()
         .unwrap_or_revert_with(ApiError::User(102u16));
-
-    let events_length_uref: URef = runtime::get_key(casper_event_standard::EVENTS_LENGTH)
-        .unwrap_or_revert()
-        .into_uref()
-        .unwrap_or_revert_with(ApiError::User(103u16));
-    let events_length: u32 = storage::read(events_length_uref)
-        .unwrap_or_revert()
+    let unprocessed_deposits_index: u32 = storage::read(unprocessed_deposits_uref)
+        .unwrap_or_revert_with(ApiError::User(103u16))
         .unwrap_or_revert_with(ApiError::User(104u16));
 
-    let events_dict_uref: URef = runtime::get_key(casper_event_standard::EVENTS_DICT)
-        .unwrap_or_revert()
+    let events_length_uref: URef = runtime::get_key(casper_event_standard::EVENTS_LENGTH)
+        .unwrap_or_revert_with(ApiError::User(105u16))
         .into_uref()
-        .unwrap_or_revert_with(ApiError::User(105u16));
+        .unwrap_or_revert_with(ApiError::User(106u16));
+    let events_length: u32 = storage::read(events_length_uref)
+        .unwrap_or_revert_with(ApiError::User(107u16))
+        .unwrap_or_revert_with(ApiError::User(108u16));
+
+    let events_dict_uref: URef = runtime::get_key(casper_event_standard::EVENTS_DICT)
+        .unwrap_or_revert_with(ApiError::User(109u16))
+        .into_uref()
+        .unwrap_or_revert_with(ApiError::User(110u16));
 
     let mut unprocessed_deposits: Vec<(u32, L1Deposit)> =
         Vec::with_capacity(events_length as usize);
 
     for i in unprocessed_deposits_index..events_length {
-        let event_key = storage::dictionary_get(events_dict_uref, &i.to_string())
-            .unwrap_or_revert()
-            .unwrap_or_revert_with(ApiError::User(106u16));
+        match storage::dictionary_get::<Bytes>(events_dict_uref, &i.to_string()) {
+            Err(_) => runtime::revert(ApiError::User(111u16)),
+            Ok(None) => runtime::revert(ApiError::User(112u16)),
+            Ok(Some(event_bytes)) => {
+                let (deposit, trailing) = L1Deposit::from_bytes(&event_bytes)
+                    .unwrap_or_revert_with(ApiError::User(113u16));
 
-        let event_bytes: Bytes = storage::read(event_key)
-            .unwrap_or_revert()
-            .unwrap_or_revert_with(ApiError::User(107u16));
+                if !trailing.is_empty() {
+                    runtime::revert(ApiError::User(114u16));
+                }
 
-        match L1Deposit::from_bytes(&event_bytes) {
-            Ok((deposit, [])) => unprocessed_deposits.push((i, deposit)),
-            // There should be no trailing bytes
-            Ok((_, [_, ..])) => {
-                runtime::revert(ApiError::User(108u16));
+                unprocessed_deposits.push((i, deposit));
             }
-            Err(_) => continue,
-        }
+        };
     }
 
     (unprocessed_deposits_index, unprocessed_deposits)

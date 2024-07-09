@@ -97,7 +97,6 @@ mod tests {
 
         let alice_public_key = fixture.create_funded_account_for_secret_key(alice_secret_key);
         let alice_account_hash = alice_public_key.to_account_hash();
-        let alice_pre_bal = fixture.get_user_balance(alice_account_hash);
 
         let bob_secret_key =
             SecretKey::from_pem(include_str!("../../testdata/users/user-3/secret_key.pem"))
@@ -107,17 +106,28 @@ mod tests {
 
         // must match the amount in the receipt simple_batches_0
         fixture.deposit_succeeds(alice_public_key, U512::from(10u64));
+        let alice_post_deposit_bal = fixture.get_user_balance(alice_account_hash);
 
         // submit proofs to contract
         fixture.submit_proof_to_contract_expect_success(fixture.admin, receipt0.to_vec());
+
+        let alice_post_batch_1_bal = fixture.get_user_balance(alice_account_hash);
+        assert_eq!(
+            alice_post_batch_1_bal,
+            alice_post_deposit_bal + U512::from(5u64)
+        );
+
         fixture.submit_proof_to_contract_expect_success(fixture.admin, receipt1.to_vec());
 
         // must match the logic in the kairos_prover simple_batches test.
-        let bob_post_bal = fixture.get_user_balance(bob_account_hash);
-        assert_eq!(bob_post_bal, U512::from(2u64));
+        let bob_post_batch_2_bal = fixture.get_user_balance(bob_account_hash);
+        assert_eq!(bob_post_batch_2_bal, U512::from(3u64));
 
-        let alice_post_bal = fixture.get_user_balance(alice_account_hash);
-        assert_eq!(alice_post_bal, alice_pre_bal - U512::from(3u64));
+        let alice_post_batch_2_bal = fixture.get_user_balance(alice_account_hash);
+        assert_eq!(
+            alice_post_batch_2_bal,
+            alice_post_batch_1_bal + U512::from(2u64)
+        );
     }
 
     // TODO some more real larger batches fail with code unreachable in the contract.
