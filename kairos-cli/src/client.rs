@@ -2,6 +2,8 @@ use axum_extra::routing::TypedPath;
 use casper_client::types::{DeployBuilder, DeployHash, ExecutableDeployItem, TimeDiff, Timestamp};
 use casper_client_types::{crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs, U512};
 use kairos_server::routes::deposit::DepositPath;
+use kairos_server::routes::get_nonce::GetNoncePath;
+use kairos_server::PublicKey;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -17,7 +19,7 @@ pub enum KairosClientError {
     ResponseErrorWithCode(u16, String),
     DecodeError(String),
     CasperClientError(String),
-    KairosServerError(String),
+    KairosServerError(u16, String),
 }
 
 impl std::error::Error for KairosClientError {}
@@ -83,14 +85,28 @@ pub fn deposit(
         .header("Content-Type", "application/json")
         .json(&deploy)
         .send()
-        .map_err(KairosClientError::from)?;
+        .map_err(KairosClientError::from)?
+        .error_for_status();
 
-    let status = response.status();
-    if !status.is_success() {
-        Err(KairosClientError::KairosServerError(status.to_string()))
-    } else {
-        response
+    match response {
+        Err(err) => Err(KairosClientError::from(err)),
+        Ok(response) => response
             .json::<DeployHash>()
-            .map_err(KairosClientError::from)
+            .map_err(KairosClientError::from),
+    }
+}
+
+pub fn get_nonce(base_url: &Url, account: &PublicKey) -> Result<u64, KairosClientError> {
+    let response = reqwest::blocking::Client::new()
+        .post(base_url.join(GetNoncePath::PATH).unwrap())
+        .header("Content-Type", "application/json")
+        .json(&account)
+        .send()
+        .map_err(KairosClientError::from)?
+        .error_for_status();
+
+    match response {
+        Err(err) => Err(KairosClientError::from(err)),
+        Ok(response) => response.json::<u64>().map_err(KairosClientError::from),
     }
 }
