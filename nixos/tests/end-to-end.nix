@@ -133,6 +133,10 @@ nixosTest {
 
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
+    # TODO we currently have to pass the nonce explicitly as we are lacking a way to synchronize
+    # the successful creation of an account in the account trie after a deposit.
+    # After adding the DA and awaiting that the server picked up the new deposit and thus
+    # an according account was added to the trie, we can discard the nonce and get it from the server
     transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --nonce 0 --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
     assert "ok\n" in transfer_output
 
