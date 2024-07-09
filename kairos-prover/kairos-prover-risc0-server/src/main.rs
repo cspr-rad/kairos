@@ -118,6 +118,7 @@ pub fn test_setup() {
 mod tests {
     use std::rc::Rc;
 
+    use casper_types::{bytesrepr::ToBytes, AsymmetricType};
     use kairos_trie::{stored::memory_db::MemoryDb, TrieRoot};
     use proptest::prelude::*;
 
@@ -134,8 +135,17 @@ mod tests {
     fn test_prove_simple_batches() {
         test_setup();
 
-        let alice_public_key = "alice_public_key".as_bytes().to_vec();
-        let bob_public_key = "bob_public_key".as_bytes().to_vec();
+        let alice_public_key = include_bytes!("../../../testdata/users/user-2/public_key_hex");
+        let alice_public_key = casper_types::PublicKey::from_hex(alice_public_key)
+            .expect("Failed to parse public key")
+            .to_bytes()
+            .expect("Failed to convert public key to bytes");
+
+        let bob_public_key = include_bytes!("../../../testdata/users/user-3/public_key_hex");
+        let bob_public_key = casper_types::PublicKey::from_hex(bob_public_key)
+            .expect("Failed to parse public key")
+            .to_bytes()
+            .expect("Failed to convert public key to bytes");
 
         let batches = vec![
             vec![

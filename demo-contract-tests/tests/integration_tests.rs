@@ -2,7 +2,7 @@ mod test_fixture;
 #[cfg(test)]
 mod tests {
     use crate::test_fixture::TestContext;
-    use casper_types::U512;
+    use casper_types::{PublicKey, SecretKey, U512};
     use kairos_verifier_risc0_lib::verifier::verify_execution;
 
     #[test]
@@ -89,14 +89,39 @@ mod tests {
         verify_execution(&serde_json_wasm::from_slice(receipt1).unwrap()).unwrap();
 
         let mut fixture = TestContext::new(None);
+
+        // must match the key in the receipt simple_batches_0
+        let alice_secret_key =
+            SecretKey::from_pem(include_str!("../../testdata/users/user-2/secret_key.pem"))
+                .unwrap();
+
+        let alice_public_key = fixture.create_funded_account_for_secret_key(alice_secret_key);
+        let alice_account_hash = alice_public_key.to_account_hash();
+        let alice_pre_bal = fixture.get_user_balance(alice_account_hash);
+
+        let bob_secret_key =
+            SecretKey::from_pem(include_str!("../../testdata/users/user-3/secret_key.pem"))
+                .unwrap();
+        let bob_public_key = PublicKey::from(&bob_secret_key);
+        let bob_account_hash = bob_public_key.to_account_hash();
+
+        // must match the amount in the receipt simple_batches_0
+        fixture.deposit_succeeds(alice_public_key, U512::from(10u64));
+
         // submit proofs to contract
-        fixture.submit_proof_to_contract(fixture.admin, receipt0.to_vec());
-        fixture.submit_proof_to_contract(fixture.admin, receipt1.to_vec());
+        fixture.submit_proof_to_contract_expect_success(fixture.admin, receipt0.to_vec());
+        fixture.submit_proof_to_contract_expect_success(fixture.admin, receipt1.to_vec());
+
+        // must match the logic in the kairos_prover simple_batches test.
+        let bob_post_bal = fixture.get_user_balance(bob_account_hash);
+        assert_eq!(bob_post_bal, U512::from(2u64));
+
+        let alice_post_bal = fixture.get_user_balance(alice_account_hash);
+        assert_eq!(alice_post_bal, alice_pre_bal - U512::from(3u64));
     }
 
     // TODO some more real larger batches fail with code unreachable in the contract.
     // They verify fine outside the contract, so I suspect they use too much gas.
-    #[allow(dead_code)]
     fn submit_batch_to_contract(receipt: &[u8]) {
         // precheck proofs before contract tests that are hard to debug
         let proof_outputs =
@@ -105,7 +130,17 @@ mod tests {
         eprintln!("{:?}", proof_outputs);
 
         let mut fixture = TestContext::new(proof_outputs.pre_batch_trie_root);
-        fixture.submit_proof_to_contract(fixture.admin, receipt.to_vec())
+        let api_err =
+            fixture.submit_proof_to_contract_expect_api_err(fixture.admin, receipt.to_vec());
+
+        // We expect error 201 which occurs after proof verification
+        // when the proof outputs deposits are checked against the contract's deposits.
+        //
+        // Since we have not made any deposits on the l1 an error is expected.
+        //
+        // In the future it would be nice to make these prop test batches use real public keys so
+        // we could make this test pass all the way through.
+        assert_eq!(api_err, casper_types::ApiError::User(201));
     }
 
     #[test]

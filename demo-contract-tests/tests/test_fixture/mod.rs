@@ -4,14 +4,17 @@ use casper_engine_test_support::{
     DeployItemBuilder, ExecuteRequestBuilder, WasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR,
     DEFAULT_ACCOUNT_INITIAL_BALANCE,
 };
-use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
+use casper_execution_engine::{
+    core::{engine_state, execution},
+    storage::global_state::in_memory::InMemoryGlobalState,
+};
 use casper_types::{
     account::AccountHash,
     bytesrepr::Bytes,
     crypto::{PublicKey, SecretKey},
     runtime_args,
     system::{handle_payment::ARG_TARGET, mint::ARG_ID},
-    RuntimeArgs, U512,
+    ApiError, RuntimeArgs, U512,
 };
 use rand::Rng;
 use std::path::Path;
@@ -36,7 +39,8 @@ impl TestContext {
         let mut builder = InMemoryWasmTestBuilder::default();
         builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
 
-        let admin = create_funded_account_for_secret_key_bytes(&mut builder, ADMIN_SECRET_KEY)
+        let admin_secret_key = SecretKey::ed25519_from_bytes(ADMIN_SECRET_KEY).unwrap();
+        let admin = create_funded_account_for_secret_key_bytes(&mut builder, admin_secret_key)
             .to_account_hash();
         let contract_path = get_wasm_directory().0.join("demo-contract-optimized.wasm");
         run_session_with_args(
@@ -78,7 +82,15 @@ impl TestContext {
         while random_secret_key == ADMIN_SECRET_KEY {
             random_secret_key = rand::random();
         }
-        create_funded_account_for_secret_key_bytes(&mut self.builder, random_secret_key)
+
+        create_funded_account_for_secret_key_bytes(
+            &mut self.builder,
+            SecretKey::ed25519_from_bytes(random_secret_key).unwrap(),
+        )
+    }
+
+    pub fn create_funded_account_for_secret_key(&mut self, secret_key: SecretKey) -> PublicKey {
+        create_funded_account_for_secret_key_bytes(&mut self.builder, secret_key)
     }
 
     pub fn get_user_balance(&mut self, user: AccountHash) -> U512 {
@@ -151,7 +163,8 @@ impl TestContext {
         );
         self.builder.expect_failure();
     }
-    pub fn submit_proof_to_contract(&mut self, sender: AccountHash, proof_serialized: Vec<u8>) {
+
+    fn submit_proof_to_contract_commit(&mut self, sender: AccountHash, proof_serialized: Vec<u8>) {
         let session_args = runtime_args! {
             "risc0_receipt" => Bytes::from(proof_serialized),
         };
@@ -164,10 +177,40 @@ impl TestContext {
             payment,
         )
         .build();
-        self.builder
-            .exec(submit_batch_request)
-            .commit()
-            .expect_success();
+        self.builder.exec(submit_batch_request).commit();
+    }
+
+    pub fn submit_proof_to_contract_expect_success(
+        &mut self,
+        sender: AccountHash,
+        proof_serialized: Vec<u8>,
+    ) {
+        self.submit_proof_to_contract_commit(sender, proof_serialized);
+        self.builder.expect_success();
+    }
+
+    pub fn submit_proof_to_contract_expect_api_err(
+        &mut self,
+        sender: AccountHash,
+        proof_serialized: Vec<u8>,
+    ) -> ApiError {
+        self.submit_proof_to_contract_commit(sender, proof_serialized);
+
+        let exec_results = self
+            .builder
+            .get_last_exec_results()
+            .expect("Expected to be called after run()");
+
+        // not sure about first here it's what the upstream code does
+        let exec_result = exec_results
+            .first()
+            .expect("Unable to get first deploy result");
+
+        match exec_result.as_error() {
+            Some(engine_state::Error::Exec(execution::Error::Revert(err))) => *err,
+            Some(err) => panic!("Expected revert ApiError, got {:?}", err),
+            None => panic!("Expected error"),
+        }
     }
 }
 
@@ -187,9 +230,8 @@ pub fn run_session_with_args(
 /// It panics if the passed secret key bytes cannot be read
 pub fn create_funded_account_for_secret_key_bytes(
     builder: &mut WasmTestBuilder<InMemoryGlobalState>,
-    account_secret_key_bytes: [u8; 32],
+    account_secret_key: SecretKey,
 ) -> PublicKey {
-    let account_secret_key = SecretKey::ed25519_from_bytes(account_secret_key_bytes).unwrap();
     let account_public_key = PublicKey::from(&account_secret_key);
     let account_hash = account_public_key.to_account_hash();
     let transfer = ExecuteRequestBuilder::transfer(

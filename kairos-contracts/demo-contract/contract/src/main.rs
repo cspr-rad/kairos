@@ -9,6 +9,7 @@ use casper_contract::{
 };
 use casper_event_standard::Schemas;
 use casper_types::bytesrepr::{Bytes, FromBytes, ToBytes};
+use casper_types::PublicKey;
 use casper_types::{
     contracts::NamedKeys, runtime_args, AccessRights, ApiError, CLValue, EntryPoints, Key,
     RuntimeArgs, URef, U512,
@@ -21,6 +22,7 @@ use contract_utils::constants::{
 };
 mod entry_points;
 mod utils;
+use kairos_circuit_logic::transactions::{Signed, Withdraw};
 use kairos_verifier_risc0_lib::verifier::Receipt;
 use utils::errors::DepositError;
 use utils::get_immediate_caller;
@@ -104,7 +106,7 @@ pub extern "C" fn submit_batch() {
         pre_batch_trie_root,
         post_batch_trie_root,
         deposits,
-        withdrawals: _, // TODO: implement withdrawals
+        withdrawals,
     }) = kairos_verifier_risc0_lib::verifier::verify_execution(&receipt)
     else {
         runtime::revert(ApiError::User(1u16));
@@ -125,6 +127,7 @@ pub extern "C" fn submit_batch() {
     };
 
     check_batch_deposits_against_unprocessed(&deposits);
+    execute_withdrawals(&withdrawals);
 
     // store the new root under the contract URef
     storage::write(trie_root_uref, post_batch_trie_root);
@@ -211,6 +214,36 @@ fn check_batch_deposits_against_unprocessed(batch_deposits: &[L1Deposit]) -> u32
             *event_idx
         },
     )
+}
+
+/// Execute the withdrawals from the batch.
+/// Errors are in the range of 301-399.
+///
+/// TODO guard against tiny withdrawals that could be used to spam the contract.
+fn execute_withdrawals(withdrawals: &[Signed<Withdraw>]) {
+    for withdraw in withdrawals {
+        let (recipient, trailing_bytes) = PublicKey::from_bytes(&withdraw.public_key)
+            .unwrap_or_revert_with(ApiError::User(301u16));
+
+        if !trailing_bytes.is_empty() {
+            runtime::revert(ApiError::User(302u16));
+        }
+
+        let amount = U512::from(withdraw.transaction.amount);
+
+        let deposit_purse: URef = runtime::get_key(KAIROS_DEPOSIT_PURSE)
+            .unwrap_or_revert_with(ApiError::User(303u16))
+            .into_uref()
+            .unwrap_or_revert_with(ApiError::User(304u16));
+
+        system::transfer_from_purse_to_account(
+            deposit_purse,
+            recipient.to_account_hash(),
+            amount,
+            None,
+        )
+        .unwrap_or_revert();
+    }
 }
 
 #[no_mangle]
