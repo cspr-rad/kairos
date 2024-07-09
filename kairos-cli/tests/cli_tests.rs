@@ -103,8 +103,6 @@ fn transfer_successful_with_secp256k1() {
         .arg(recipient)
         .arg("--amount")
         .arg("123")
-        .arg("--nonce")
-        .arg("0")
         .arg("--private-key")
         .arg(secret_key_path);
 
@@ -122,8 +120,6 @@ fn withdraw_successful_with_ed25519() {
     cmd.arg("withdraw")
         .arg("--amount")
         .arg("123")
-        .arg("--nonce")
-        .arg("0")
         .arg("--private-key")
         .arg(secret_key_path);
 
@@ -199,9 +195,7 @@ fn transfer_invalid_recipient() {
         .arg("--amount")
         .arg("123")
         .arg("--private-key")
-        .arg(secret_key_path)
-        .arg("--nonce")
-        .arg("0");
+        .arg(secret_key_path);
 
     cmd.assert()
         .failure()
@@ -220,9 +214,7 @@ fn transfer_valid_recipient() {
         .arg("--amount")
         .arg("123")
         .arg("--private-key")
-        .arg(secret_key_path)
-        .arg("--nonce")
-        .arg("0");
+        .arg(secret_key_path);
 
     cmd.assert()
         .failure()

@@ -21,7 +21,7 @@ pub struct PrivateKeyPathArg {
 #[derive(Args, Debug)]
 pub struct NonceArg {
     #[arg(id = "nonce", long, short, value_name = "NUM")]
-    pub val: u64,
+    pub val: Option<u64>,
 }
 
 #[derive(Args, Debug)]
