@@ -30,8 +30,13 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
             error: err.to_string(),
         })?;
 
-    let contract_hash_bytes = <[u8; 32]>::from_hex(contract_hash)?;
-    let contract_hash = ContractHash::new(contract_hash_bytes);
+    let contract_hash = match contract_hash {
+        Some(contract_hash_string) => {
+            let contract_hash_bytes = <[u8; 32]>::from_hex(contract_hash_string)?;
+            ContractHash::new(contract_hash_bytes)
+        }
+        None => client::contract_hash(&kairos_server_address)?,
+    };
 
     client::deposit(
         &kairos_server_address,

@@ -68,8 +68,6 @@ async fn deposit_successful_with_ed25519() {
         cmd.arg("--kairos-server-address")
             .arg(kairos.url.as_str())
             .arg("deposit")
-            .arg("--contract-hash")
-            .arg(contract_hash.to_string())
             .arg("--amount")
             .arg("123")
             .arg("--private-key")
