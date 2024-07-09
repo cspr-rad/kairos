@@ -1,12 +1,14 @@
 pub mod deposit;
 #[cfg(feature = "deposit-mock")]
 pub mod deposit_mock;
+pub mod get_nonce;
 pub mod transfer;
 pub mod withdraw;
 
 pub use deposit::deposit_handler;
 #[cfg(feature = "deposit-mock")]
 pub use deposit_mock::deposit_mock_handler;
+pub use get_nonce::get_nonce_handler;
 pub use transfer::transfer_handler;
 pub use withdraw::withdraw_handler;
 

@@ -20,7 +20,7 @@ use crate::state::{BatchStateManager, ServerState, ServerStateInner};
 pub use errors::AppErr;
 
 /// TODO: support secp256k1
-type PublicKey = Vec<u8>;
+pub type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 
 #[cfg(not(feature = "deposit-mock"))]
@@ -39,6 +39,7 @@ pub fn app_router(state: ServerState) -> Router {
         .typed_post(routes::withdraw_handler)
         .typed_post(routes::transfer_handler)
         .typed_post(routes::deposit_mock_handler)
+        .typed_post(routes::get_nonce_handler)
         .with_state(state)
 }
 
