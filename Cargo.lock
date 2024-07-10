@@ -2784,6 +2784,7 @@ dependencies = [
  "kairos-data",
  "kairos-server",
  "nom",
+ "percent-encoding",
  "rand 0.8.5",
  "reqwest 0.12.4",
  "sd-notify",
