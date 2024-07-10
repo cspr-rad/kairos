@@ -2,7 +2,8 @@ pub const KAIROS_CONTRACT_HASH: &str = "kairos_contract_hash";
 pub const KAIROS_CONTRACT_PACKAGE_HASH: &str = "kairos_contract_package_hash";
 pub const KAIROS_CONTRACT_UREF: &str = "kairos_contract_uref";
 
-pub const KAIROS_LAST_PROCESSED_DEPOSIT_COUNTER: &str = "last_processed_deposit_counter";
+/// The casper event standard length key of the last processed deposit.
+pub const KAIROS_UNPROCESSED_DEPOSIT_INDEX: &str = "kairos_unprocessed_deposit_index";
 pub const KAIROS_DEPOSIT_PURSE: &str = "kairos_deposit_purse";
 pub const KAIROS_TRIE_ROOT: &str = "kairos_trie_root";
 
