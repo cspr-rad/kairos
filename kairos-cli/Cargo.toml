@@ -15,9 +15,10 @@ license.workspace = true
 
 [features]
 default = ["demo"]
-all-tests = ["cctl-tests"]
+all-tests = ["cctl-tests", "database"]
 cctl-tests = []
 demo = ["dep:kairos-test-utils", "dep:tokio"]
+database = ["kairos-server/database"]
 
 [dependencies]
 tracing = "0.1"
