@@ -16,7 +16,7 @@ default = ["cctl-tests", "deposit-mock"]
 all-tests = ["cctl-tests", "deposit-mock", "database"]
 cctl-tests = []
 deposit-mock = []
-database = ["kairos-data"]
+database = ["kairos-data", "kairos-test-utils/database"]
 
 [dependencies]
 dotenvy = "0.15"

@@ -18,7 +18,7 @@ default = ["demo"]
 all-tests = ["cctl-tests", "database"]
 cctl-tests = []
 demo = ["dep:kairos-test-utils", "dep:tokio"]
-database = ["kairos-server/database"]
+database = ["kairos-server/database", "kairos-test-utils/database"]
 
 [dependencies]
 tracing = "0.1"
