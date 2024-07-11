@@ -3,6 +3,16 @@ mod tests {
     use casper_deploy_notifier::*;
 
     #[tokio::test]
+    async fn test_connection_failure() {
+        let mut server = mockito::Server::new_async().await;
+        server.mock("GET", "/").with_status(500);
+
+        let mut notifier = DeployNotifier::new(&server.url());
+        let result = notifier.connect().await;
+        assert!(matches!(result, Err(SseError::ConnectionError(_))));
+    }
+
+    #[tokio::test]
     async fn test_connection_success() {
         let mut server = mockito::Server::new_async().await;
         server
