@@ -38,7 +38,7 @@ static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 async fn new_test_app() -> TestServer {
     let dummy_url = Url::parse("http://0.0.0.0:0").unwrap();
     #[cfg(feature = "database")]
-    let postgres = PostgresDB::run("KAIROS_SERVER_MIGRATIONS").unwrap();
+    let postgres = PostgresDB::run(None).unwrap();
 
     new_test_app_with_casper_node(
         &dummy_url,
@@ -110,7 +110,7 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
     .unwrap();
 
     #[cfg(feature = "database")]
-    let postgres = PostgresDB::run("KAIROS_SERVER_MIGRATIONS").unwrap();
+    let postgres = PostgresDB::run(None).unwrap();
 
     let server = new_test_app_with_casper_node(
         &casper_rpc_url,

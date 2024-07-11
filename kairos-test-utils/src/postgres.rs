@@ -44,16 +44,7 @@ pub struct PostgresDB {
 }
 
 impl PostgresDB {
-    pub fn run(migrations_dir_env: &str) -> Result<PostgresDB, io::Error> {
-        let migrations = match env::var(migrations_dir_env) {
-            Ok(migrations_dir) => fs::read_dir(migrations_dir)?
-                .map(|res| res.map(|p| p.path()))
-                .collect::<Result<Vec<_>, io::Error>>()?,
-            Err(_) => {
-                warn!("The environment variable defining the database migrations directory `{}` is not set", migrations_dir_env);
-                vec![]
-            }
-        };
+    pub fn run(migrations_dir_env: Option<&str>) -> Result<PostgresDB, io::Error> {
         let working_dir = tempdir()?;
         let database_dir = working_dir.path().join("data");
         let socket = working_dir.path().join("socket");
@@ -129,23 +120,34 @@ impl PostgresDB {
             .output()
             .expect("Creating database failed");
 
-        info!("Running the migrations");
-        for migration in migrations {
-            info!("Running migration {}", migration.to_str().unwrap());
-            Command::new("psql")
-                .args([
-                    "-h",
-                    socket.to_str().unwrap(),
-                    "-p",
-                    &port.to_string(),
-                    "-U",
-                    pg_user,
-                    pg_database,
-                    "-f",
-                    migration.to_str().unwrap(),
-                ])
-                .output()
-                .expect("Failed to run migration");
+        if let Some(migrations_dir_env) = migrations_dir_env {
+            let migrations = match env::var(migrations_dir_env) {
+                Ok(migrations_dir) => fs::read_dir(migrations_dir)?
+                    .map(|res| res.map(|p| p.path()))
+                    .collect::<Result<Vec<_>, io::Error>>()?,
+                Err(_) => {
+                    warn!("The environment variable defining the database migrations directory `{}` is not set", migrations_dir_env);
+                    vec![]
+                }
+            };
+            info!("Running the migrations");
+            for migration in migrations {
+                info!("Running migration {}", migration.to_str().unwrap());
+                Command::new("psql")
+                    .args([
+                        "-h",
+                        socket.to_str().unwrap(),
+                        "-p",
+                        &port.to_string(),
+                        "-U",
+                        pg_user,
+                        pg_database,
+                        "-f",
+                        migration.to_str().unwrap(),
+                    ])
+                    .output()
+                    .expect("Failed to run migration");
+            }
         }
 
         let connection = PgConnection {

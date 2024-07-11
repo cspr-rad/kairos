@@ -41,7 +41,7 @@ async fn deposit_successful_with_ed25519() {
     let contract_hash = network.get_contract_hash_for(hash_name);
 
     #[cfg(feature = "database")]
-    let postgres = PostgresDB::run("KAIROS_SERVER_MIGRATIONS").unwrap();
+    let postgres = PostgresDB::run(None).unwrap();
 
     let node = network
         .nodes
