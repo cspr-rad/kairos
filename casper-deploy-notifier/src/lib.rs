@@ -2,9 +2,9 @@ use eventsource_stream::{Event, EventStreamError, Eventsource};
 use futures::stream::{BoxStream, TryStreamExt};
 use tokio::sync::mpsc;
 
-use crate::error::SseError;
+pub use crate::error::SseError;
 use crate::sse_types::SseData;
-use crate::types::Notification;
+pub use crate::types::Notification;
 
 mod error;
 mod sse_types;
