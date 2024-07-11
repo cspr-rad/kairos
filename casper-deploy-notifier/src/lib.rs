@@ -42,8 +42,11 @@ impl DeployNotifier {
         // Connect to SSE endpoint.
         let client = reqwest::Client::new();
         let response = client.get(&self.url).send().await?;
+        let successful_response = response
+            .error_for_status()
+            .map_err(SseError::ConnectionError)?;
 
-        let stream = response.bytes_stream();
+        let stream = successful_response.bytes_stream();
         let mut event_stream = stream.eventsource();
 
         // Handle the handshake with API version.
