@@ -159,7 +159,7 @@ mod tests {
                 notification.public_key,
                 "016acb4cfa2ec31ea67ca53c1f93c77dba6740c463968ac550466723dc2cbaa421"
             );
-            assert_eq!(notification.success, true);
+            assert!(notification.success);
         } else {
             panic!("Expected a notification, but none was received");
         }
@@ -172,7 +172,7 @@ mod tests {
                 notification.public_key,
                 "01f03bbc42a3d5901c7232987ba84ab2c6d210973a0cfe742284dcb1d8b4cbe1c3"
             );
-            assert_eq!(notification.success, true);
+            assert!(notification.success);
         } else {
             panic!("Expected a second notification, but none was received");
         }
