@@ -177,4 +177,30 @@ mod tests {
             panic!("Expected a second notification, but none was received");
         }
     }
+
+    #[tokio::test]
+    async fn test_ignoring_other_events() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/")
+            .with_header("content-type", "text/event-stream")
+            .with_body(concat!(
+                "data: {\"ApiVersion\": \"1.5.6\"}\n\n",
+                "data: {\"Foo\": \"Bar\"}\n\n",
+                "data: \"Shutdown\"\n\n"
+            ))
+            .create_async()
+            .await;
+
+        let mut notifier = DeployNotifier::new(&server.url());
+        notifier.connect().await.unwrap();
+
+        let (tx, mut rx) = mpsc::channel(1);
+        let result = notifier.run(tx).await;
+        assert!(matches!(result, Err(SseError::NodeShutdown)));
+
+        // There was no deploy event, so no notification expected.
+        let maybe_notification = rx.recv().await;
+        assert!(maybe_notification.is_none());
+    }
 }
