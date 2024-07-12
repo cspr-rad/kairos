@@ -1,4 +1,4 @@
-CREATE TYPE transaction AS ENUM ('Deposit', 'Transfer', 'Withdrawal');
+CREATE TYPE transaction AS ENUM ('deposit', 'transfer', 'withdrawal');
 CREATE TABLE transactions (
     "timestamp" timestamp DEFAULT CURRENT_TIMESTAMP,
     public_key varchar NOT NULL,
