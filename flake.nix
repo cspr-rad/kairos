@@ -199,6 +199,7 @@
             CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
             KAIROS_SERVER_MIGRATIONS = kairosServerMigrations;
             inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
+            packages = [ pkgs.diesel-cli ];
           };
 
           packages = {
