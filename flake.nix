@@ -160,6 +160,7 @@
                 ./kairos-prover/kairos-circuit-logic
                 ./kairos-prover/kairos-verifier-risc0-lib
                 ./kairos-contracts/demo-contract/contract-utils
+                ./testdata
               ];
             };
 

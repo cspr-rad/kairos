@@ -26,6 +26,7 @@
           fileset = lib.fileset.unions [
             ../kairos-prover
             ../kairos-tx
+            ../testdata
           ];
         };
         cargoToml = ./Cargo.toml;
