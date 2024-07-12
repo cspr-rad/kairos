@@ -16,6 +16,7 @@ pub mod transaction;
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 pub async fn new(conn_str: &str) -> Result<Pool, errors::DBError> {
+    info!("Connecting to database: {}", conn_str);
     let manager = Manager::new(conn_str, Runtime::Tokio1);
     debug!("Setup DB manager.");
     let conn_pool = Pool::builder(manager).max_size(8).build().unwrap();
@@ -38,8 +39,15 @@ pub async fn new(conn_str: &str) -> Result<Pool, errors::DBError> {
 #[cfg(feature = "migrations")]
 async fn run_migrations(pool: &Pool) {
     let conn = pool.get().await.unwrap();
-    conn.interact(|conn| conn.run_pending_migrations(MIGRATIONS).map(|_| ()))
-        .await
-        .unwrap()
-        .unwrap();
+    info!("Running migrations...");
+    conn.interact(|conn| {
+        conn.run_pending_migrations(MIGRATIONS).map(|migrations| {
+            for migration in migrations {
+                info!("Applying migration: {}", migration)
+            }
+        })
+    })
+    .await
+    .unwrap()
+    .unwrap();
 }
