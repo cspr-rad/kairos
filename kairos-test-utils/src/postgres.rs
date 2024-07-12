@@ -10,7 +10,7 @@ use std::process::{Child, Command};
 use tempfile::{tempdir, TempDir};
 use tracing::{info, warn};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct PgConnection {
     pub host: String,
     pub port: u16,
