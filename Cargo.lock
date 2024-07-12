@@ -820,7 +820,7 @@ dependencies = [
 [[package]]
 name = "casper-event-toolkit"
 version = "0.1.3"
-source = "git+https://github.com/koxu1996/casper-event-toolkit.git#360dbe1db29fd4575fadf06dbcb7b7c9ddc741ca"
+source = "git+https://github.com/koxu1996/casper-event-toolkit?tag=v0.1.3#360dbe1db29fd4575fadf06dbcb7b7c9ddc741ca"
 dependencies = [
  "bincode",
  "casper-client",
@@ -2527,8 +2527,12 @@ dependencies = [
  "axum",
  "axum-extra",
  "axum-test",
+ "backoff",
  "casper-client",
+ "casper-deploy-notifier",
+ "casper-event-standard",
  "casper-event-toolkit",
+ "casper-hashing 2.0.0",
  "casper-types 3.0.0",
  "casper-types 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "contract-utils",

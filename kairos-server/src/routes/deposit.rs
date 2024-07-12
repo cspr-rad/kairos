@@ -39,11 +39,13 @@ pub async fn deposit_handler(
             .await
             .map_err(Into::<AppErr>::into)?;
             if response.id == expected_rpc_id {
-                assert!(state
-                    .known_deposit_deploys
-                    .write()
-                    .await
-                    .insert(response.result.deploy_hash));
+                if state.event_manager.is_some() {
+                    assert!(state
+                        .known_deposit_deploys
+                        .write()
+                        .await
+                        .insert(response.result.deploy_hash));
+                }
                 Ok(Json(response.result.deploy_hash))
             } else {
                 Err(anyhow!("JSON RPC Id missmatch").into())

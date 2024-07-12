@@ -64,6 +64,7 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(&server_config),
         server_config,
+        event_manager: None,
         known_deposit_deploys: RwLock::new(HashSet::new()),
     });
 

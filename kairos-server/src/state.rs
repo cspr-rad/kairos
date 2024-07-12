@@ -4,7 +4,6 @@ mod trie;
 
 use std::collections::HashSet;
 use std::{sync::Arc, thread};
-
 use tokio::{
     sync::{mpsc, RwLock},
     task,
@@ -13,16 +12,17 @@ use tokio::{
 use casper_client::types::DeployHash;
 
 pub use self::trie::TrieStateThreadMsg;
+use crate::event_manager::EventManager;
 use crate::{config::ServerConfig, state::submit_batch::submit_proof_to_contract};
 use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
 pub type ServerState = Arc<ServerStateInner>;
 
-#[derive(Debug)]
 pub struct ServerStateInner {
     pub batch_state_manager: BatchStateManager,
     pub server_config: ServerConfig,
+    pub event_manager: Option<EventManager>,
     pub known_deposit_deploys: RwLock<HashSet<DeployHash>>,
 }
 
