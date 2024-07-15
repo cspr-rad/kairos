@@ -62,6 +62,15 @@ in
       '';
     };
 
+    casper_sync_interval = mkOption {
+      type = types.int;
+      default = 10;
+      example = 10;
+      description = ''
+        The interval in seconds to between calls to the casper node to sync the deploys.
+      '';
+    };
+
     prover = mkOption {
       description = "Prover server related options";
       default = { };
@@ -142,6 +151,7 @@ in
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
           KAIROS_SERVER_CASPER_RPC = cfg.casperRpcUrl;
           KAIROS_SERVER_CASPER_SSE = cfg.casperSseUrl;
+          KAIROS_SERVER_CASPER_SYNC_INTERVAL = cfg.casper_sync_interval;
           KAIROS_SERVER_DEMO_CONTRACT_HASH = cfg.demoContractHash;
           KAIROS_PROVER_SERVER_URL = "${cfg.prover.protocol}://${cfg.prover.bindAddress}:${builtins.toString cfg.prover.port}";
         } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchSize) {

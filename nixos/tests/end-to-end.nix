@@ -81,6 +81,7 @@ nixosTest {
   testScript = ''
     import json
     import backoff
+    import time
 
     # Utils
     def verify_deploy_success(json_data):
@@ -130,6 +131,10 @@ nixosTest {
     assert int(deposit_deploy_hash, 16), "The deposit command did not output a hex encoded deploy hash. The output was {}".format(deposit_deploy_hash)
 
     wait_for_successful_deploy(deposit_deploy_hash)
+
+    # wait for l2 to sync with l1 every 10 seconds
+    time.sleep(12)
+
 
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
