@@ -57,6 +57,7 @@ nixosTest {
       services.kairos = {
         casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
         casperSseUrl = "http://localhost:18101/events/main"; # has to be hardcoded since it's not configurable atm
+        casperSyncInterval = 5;
         demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
       };
 
