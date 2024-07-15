@@ -147,7 +147,7 @@ impl CCTLNetwork {
         tracing::info!("Waiting for network to pass genesis");
         retry(ExponentialBackoff::default(), || async {
             // This prevents retrying forever even after ctrl-c
-            let timed_out = start_time.elapsed().as_secs() > 60;
+            let timed_out = start_time.elapsed().as_secs() > 90;
 
             get_node_status(
                 JsonRpcId::Number(1),
