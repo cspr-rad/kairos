@@ -51,6 +51,16 @@ pub struct DeployableContract {
     pub path: PathBuf,
 }
 
+pub fn casper_client_verbosity() -> Verbosity {
+    if tracing::enabled!(tracing::Level::TRACE) {
+        Verbosity::High
+    } else if tracing::enabled!(tracing::Level::DEBUG) {
+        Verbosity::Medium
+    } else {
+        Verbosity::Low
+    }
+}
+
 // max amount allowed to be used on gas fees
 pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 10_000_000_000_000;
 
@@ -139,32 +149,34 @@ impl CCTLNetwork {
             // This prevents retrying forever even after ctrl-c
             let timed_out = start_time.elapsed().as_secs() > 60;
 
-            get_node_status(JsonRpcId::Number(1), &casper_node_rpc_url, Verbosity::Low)
-                .await
-                .map_err(|err| {
-                    let elapsed = start_time.elapsed().as_secs();
-                    tracing::info!("Running for {elapsed}s, Error: {err:?}");
-                    err
-                })
-                .map_err(|err| match &err {
-                    err if timed_out => {
-                        backoff::Error::permanent(anyhow!("Timeout on error: {err:?}"))
-                    }
-                    Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
-                        backoff::Error::transient(anyhow!(err))
-                    }
-                    _ => backoff::Error::permanent(anyhow!(err)),
-                })
-                .map(|success| match success.result.reactor_state {
-                    ReactorState::Validate => Ok(()),
-                    // _ if timed_out => Ok(()),
-                    rs if timed_out => Err(backoff::Error::permanent(anyhow!(
-                        "Node didn't reach the VALIDATE state before timeout: {rs:?}"
-                    ))),
-                    _ => Err(backoff::Error::transient(anyhow!(
-                        "Node didn't reach the VALIDATE state yet"
-                    ))),
-                })?
+            get_node_status(
+                JsonRpcId::Number(1),
+                &casper_node_rpc_url,
+                casper_client_verbosity(),
+            )
+            .await
+            .map_err(|err| {
+                let elapsed = start_time.elapsed().as_secs();
+                tracing::info!("Running for {elapsed}s, Error: {err:?}");
+                err
+            })
+            .map_err(|err| match &err {
+                err if timed_out => backoff::Error::permanent(anyhow!("Timeout on error: {err:?}")),
+                Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
+                    backoff::Error::transient(anyhow!(err))
+                }
+                _ => backoff::Error::permanent(anyhow!(err)),
+            })
+            .map(|success| match success.result.reactor_state {
+                ReactorState::Validate => Ok(()),
+                // _ if timed_out => Ok(()),
+                rs if timed_out => Err(backoff::Error::permanent(anyhow!(
+                    "Node didn't reach the VALIDATE state before timeout: {rs:?}"
+                ))),
+                _ => Err(backoff::Error::transient(anyhow!(
+                    "Node didn't reach the VALIDATE state yet"
+                ))),
+            })?
         })
         .await
         .expect("Waiting for network to pass genesis failed");
@@ -243,6 +255,8 @@ async fn deploy_contract(
         path.to_str().unwrap()
     );
 
+    let casper_client_verbosity = casper_client_verbosity();
+
     let contract_bytes = fs::read(path)?;
     let contract =
         ExecutableDeployItem::new_module_bytes(contract_bytes.into(), runtime_args.clone());
@@ -262,7 +276,7 @@ async fn deploy_contract(
     let deploy_hash = put_deploy(
         expected_rpc_id.clone(),
         casper_node_rpc_url,
-        Verbosity::High,
+        casper_client_verbosity,
         deploy,
     )
     .await
@@ -284,7 +298,7 @@ async fn deploy_contract(
         let response = get_deploy(
             expected_rpc_id.clone(),
             casper_node_rpc_url,
-            Verbosity::High,
+            casper_client_verbosity,
             deploy_hash,
             false,
         )
@@ -330,7 +344,7 @@ async fn deploy_contract(
     let state_root_hash = get_state_root_hash(
         expected_rpc_id.clone(),
         casper_node_rpc_url,
-        Verbosity::High,
+        casper_client_verbosity,
         Option::None,
     )
     .await
@@ -350,7 +364,7 @@ async fn deploy_contract(
     let account = get_account(
         expected_rpc_id.clone(),
         casper_node_rpc_url,
-        Verbosity::High,
+        casper_client_verbosity,
         Option::None,
         contract_deployer_pkey.clone(),
     )
@@ -369,7 +383,7 @@ async fn deploy_contract(
     let contract_hash: casper_client_types::ContractHash = query_global_state(
         expected_rpc_id.clone(),
         casper_node_rpc_url,
-        Verbosity::High,
+        casper_client_verbosity,
         casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash), // fetches recent blocks state root hash
         account_key,
         vec![hash_name.clone()],
