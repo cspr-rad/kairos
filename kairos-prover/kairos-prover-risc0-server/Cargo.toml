@@ -42,3 +42,4 @@ serde_json = "1.0"
 kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde", "test-logic", "arbitrary" ], default-features = false }
 test-strategy = { version = "0.3" }
 proptest = { version = "1" }
+casper-types = "4.0"

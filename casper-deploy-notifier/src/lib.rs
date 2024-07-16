@@ -2,9 +2,9 @@ use eventsource_stream::{Event, EventStreamError, Eventsource};
 use futures::stream::{BoxStream, TryStreamExt};
 use tokio::sync::mpsc;
 
-use crate::error::SseError;
+pub use crate::error::SseError;
 use crate::sse_types::SseData;
-use crate::types::Notification;
+pub use crate::types::Notification;
 
 mod error;
 mod sse_types;
@@ -42,8 +42,11 @@ impl DeployNotifier {
         // Connect to SSE endpoint.
         let client = reqwest::Client::new();
         let response = client.get(&self.url).send().await?;
+        let successful_response = response
+            .error_for_status()
+            .map_err(SseError::ConnectionError)?;
 
-        let stream = response.bytes_stream();
+        let stream = successful_response.bytes_stream();
         let mut event_stream = stream.eventsource();
 
         // Handle the handshake with API version.
