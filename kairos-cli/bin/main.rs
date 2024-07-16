@@ -3,6 +3,9 @@ use std::process;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 fn main() {
+    #[cfg(feature = "demo")]
+    let _ = dotenvy::dotenv();
+
     tracing_subscriber::registry()
         .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| "warn".into()))
         .with(tracing_subscriber::fmt::layer())

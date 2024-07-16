@@ -3,6 +3,7 @@ use axum_test::{TestServer, TestServerConfig};
 use reqwest::Url;
 use std::collections::HashSet;
 use std::sync::{Arc, OnceLock};
+use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
@@ -52,6 +53,8 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
         socket_addr: "0.0.0.0:0".parse().unwrap(),
         casper_rpc: casper_rpc_url.clone(),
         casper_sse: casper_sse_url.clone(),
+        // For testing purposes, we set the sync interval to be fast
+        casper_sync_interval: Duration::from_secs(5),
         kairos_demo_contract_hash: ContractHash::default(),
         batch_config: BatchConfig {
             max_batch_size: None,

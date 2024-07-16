@@ -44,6 +44,7 @@ pub fn app_router(state: ServerState) -> Router {
 
 pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {
     // Extra check: make sure the default dummy value of contract hash was changed.
+    let sync_interval = server_state.server_config.casper_sync_interval;
     let contract_hash = server_state.server_config.kairos_demo_contract_hash;
     if contract_hash == ContractHash::default() {
         tracing::warn!(
@@ -60,7 +61,7 @@ pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {
     // Run periodic synchronization.
     // TODO: Add additional SSE trigger.
     tokio::spawn(async move {
-        l1_sync::interval_trigger::run(l1_sync_service.into()).await;
+        l1_sync_service.run_periodic_sync(sync_interval).await;
     });
 }
 

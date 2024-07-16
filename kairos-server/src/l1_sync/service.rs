@@ -5,8 +5,9 @@ use super::event_manager::EventManager;
 
 use tokio::sync::mpsc;
 use tokio::sync::oneshot;
+use tokio::time;
 
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 pub enum SyncCommand {
     TriggerSync(oneshot::Sender<()>),
@@ -44,6 +45,19 @@ impl L1SyncService {
         })?;
 
         Ok(())
+    }
+
+    pub async fn run_periodic_sync(&self, interval: Duration) {
+        let mut interval = time::interval(interval);
+
+        loop {
+            interval.tick().await;
+
+            tracing::debug!("Triggering periodic L1 sync");
+            let _ = self.trigger_sync().await.map_err(|e| {
+                tracing::error!("Unable to trigger sync: {}", e);
+            });
+        }
     }
 }
 
