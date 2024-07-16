@@ -57,6 +57,7 @@ nixosTest {
       services.kairos = {
         casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
         casperSseUrl = "http://localhost:18101/events/main"; # has to be hardcoded since it's not configurable atm
+        casperSyncInterval = 5;
         demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
       };
 
@@ -81,6 +82,7 @@ nixosTest {
   testScript = ''
     import json
     import backoff
+    import time
 
     # Utils
     def verify_deploy_success(json_data):
@@ -131,6 +133,10 @@ nixosTest {
 
     wait_for_successful_deploy(deposit_deploy_hash)
 
+    # wait for l2 to sync with l1 every 10 seconds
+    time.sleep(12)
+
+
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
     # TODO we currently have to pass the nonce explicitly as we are lacking a way to synchronize
@@ -138,7 +144,7 @@ nixosTest {
     # After adding the DA and awaiting that the server picked up the new deposit and thus
     # an according account was added to the trie, we can discard the nonce and get it from the server
     transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --nonce 0 --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
-    assert "ok\n" in transfer_output
+    assert "Transfer successfully sent to L2\n" in transfer_output, "The transfer command was not successful: {}".format(transfer_output)
 
     # TODO test withdraw
 

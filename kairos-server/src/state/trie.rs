@@ -63,7 +63,11 @@ pub fn spawn_state_thread(
             tracing::trace!("Trie State Thread received message: {:?}", msg);
             match msg {
                 TrieStateThreadMsg::Transaction(txn, responder) => {
-                    let res = state.batch_state.execute_transaction(txn);
+                    let res = state.batch_state.execute_transaction(txn).map_err(|e| {
+                        tracing::warn!("Error executing transaction: {:?}", e);
+                        e
+                    });
+
                     responder.send(res).unwrap_or_else(|err| {
                         tracing::warn!(
                             "Transaction submitter hung up before receiving response: {}",

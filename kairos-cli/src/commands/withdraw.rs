@@ -36,7 +36,7 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     // TODO: Create transaction and sign it with `signer`.
 
     // TODO: Send transaction to the network, using Rust SDK.
-    reqwest::blocking::Client::new()
+    let res = reqwest::blocking::Client::new()
         .post(kairos_server_address.join(WithdrawPath::PATH).unwrap())
         .json(&PayloadBody {
             public_key: signer_public_key,
@@ -48,5 +48,13 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
         .send()
         .map_err(KairosClientError::from)?;
 
-    Ok("ok".to_string())
+    if res.status().is_success() {
+        Ok("Withdrawal successfully sent to L2".to_string())
+    } else {
+        Err(KairosClientError::ResponseErrorWithCode(
+            res.status().as_u16(),
+            res.text().unwrap_or_default(),
+        )
+        .into())
+    }
 }
