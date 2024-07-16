@@ -18,6 +18,7 @@ let
   contractHashName = "kairos_contract_package_hash";
   # The path where cctl will write the deployed contract hash on the servers filesystem
   serverContractHashPath = "${cctlWorkingDirectory}/contracts/${contractHashName}";
+  casperSyncInterval = 5;
 in
 nixosTest {
   name = "kairos e2e test";
@@ -57,7 +58,7 @@ nixosTest {
       services.kairos = {
         casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
         casperSseUrl = "http://localhost:18101/events/main"; # has to be hardcoded since it's not configurable atm
-        casperSyncInterval = 5;
+        inherit casperSyncInterval;
         demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
       };
 
@@ -133,17 +134,12 @@ nixosTest {
 
     wait_for_successful_deploy(deposit_deploy_hash)
 
-    # wait for l2 to sync with l1 every 10 seconds
-    time.sleep(12)
-
+    # wait for l2 to sync with l1 every 5 seconds
+    time.sleep(${builtins.toString (casperSyncInterval * 2)})
 
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
-    # TODO we currently have to pass the nonce explicitly as we are lacking a way to synchronize
-    # the successful creation of an account in the account trie after a deposit.
-    # After adding the DA and awaiting that the server picked up the new deposit and thus
-    # an according account was added to the trie, we can discard the nonce and get it from the server
-    transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --nonce 0 --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
+    transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
     assert "Transfer successfully sent to L2\n" in transfer_output, "The transfer command was not successful: {}".format(transfer_output)
 
     # TODO test withdraw
