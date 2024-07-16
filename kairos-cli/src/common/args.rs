@@ -27,7 +27,7 @@ pub struct NonceArg {
 #[derive(Args, Debug)]
 pub struct ContractHashArg {
     #[arg(id = "contract-hash", long, short = 'c', value_name = "CONTRACT_HASH")]
-    pub field: String,
+    pub field: Option<String>,
 }
 
 #[derive(Args, Debug)]

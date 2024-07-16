@@ -1,6 +1,7 @@
 use axum_extra::routing::TypedPath;
 use casper_client::types::{DeployBuilder, DeployHash, ExecutableDeployItem, TimeDiff, Timestamp};
 use casper_client_types::{crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs, U512};
+use kairos_server::routes::contract_hash::ContractHashPath;
 use kairos_server::routes::deposit::DepositPath;
 use kairos_server::routes::get_nonce::GetNoncePath;
 use kairos_server::PublicKey;
@@ -108,5 +109,25 @@ pub fn get_nonce(base_url: &Url, account: &PublicKey) -> Result<u64, KairosClien
     match response {
         Err(err) => Err(KairosClientError::from(err)),
         Ok(response) => response.json::<u64>().map_err(KairosClientError::from),
+    }
+}
+
+pub fn contract_hash(base_url: &Url) -> Result<ContractHash, KairosClientError> {
+    let response = reqwest::blocking::Client::new()
+        .get(base_url.join(ContractHashPath::PATH).unwrap())
+        .header("Content-Type", "application/json")
+        .send()
+        .map_err(KairosClientError::from)?;
+
+    let status = response.status();
+    if !status.is_success() {
+        Err(KairosClientError::KairosServerError(
+            status.as_u16(),
+            status.to_string(),
+        ))
+    } else {
+        response
+            .json::<ContractHash>()
+            .map_err(KairosClientError::from)
     }
 }

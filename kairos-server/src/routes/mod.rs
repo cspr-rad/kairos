@@ -1,3 +1,4 @@
+pub mod contract_hash;
 pub mod deposit;
 #[cfg(feature = "deposit-mock")]
 pub mod deposit_mock;
@@ -5,6 +6,7 @@ pub mod get_nonce;
 pub mod transfer;
 pub mod withdraw;
 
+pub use contract_hash::contract_hash_handler;
 pub use deposit::deposit_handler;
 #[cfg(feature = "deposit-mock")]
 pub use deposit_mock::deposit_mock_handler;
