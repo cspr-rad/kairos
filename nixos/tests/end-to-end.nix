@@ -140,7 +140,7 @@ nixosTest {
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
     transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --nonce 0 --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
-    assert "ok\n" in transfer_output
+    assert "Transfer successfully sent to L2\n" in transfer_output, "The transfer command was not successful: {}".format(transfer_output)
 
     # TODO test withdraw
 
