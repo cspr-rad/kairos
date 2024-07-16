@@ -120,15 +120,13 @@ nixosTest {
     # For more details, see cctl module implementation
     client.succeed("wget --no-parent -r http://kairos/cctl/users/")
 
-    contract_hash = kairos.succeed("cat ${serverContractHashPath}")
-
     kairos.succeed("casper-client get-node-status --node-address ${casperNodeAddress}")
 
     # CLI with ed25519
     # deposit
     depositor = client.succeed("cat ${clientUsersDirectory}/user-2/public_key_hex")
     depositor_private_key = "${clientUsersDirectory}/user-2/secret_key.pem"
-    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --recipient {} --private-key {} --contract-hash {}".format(depositor, depositor_private_key, contract_hash))
+    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --recipient {} --private-key {}".format(depositor, depositor_private_key))
     assert int(deposit_deploy_hash, 16), "The deposit command did not output a hex encoded deploy hash. The output was {}".format(deposit_deploy_hash)
 
     wait_for_successful_deploy(deposit_deploy_hash)
