@@ -13,7 +13,7 @@ use tokio::{
 use casper_client::types::DeployHash;
 
 pub use self::trie::TrieStateThreadMsg;
-use crate::{config::ServerConfig, state::submit_batch::submit_proof_to_contract};
+use crate::{config::ServerConfig, state::submit_batch::submit_proof_to_contract, PublicKey};
 use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
@@ -137,5 +137,22 @@ impl BatchStateManager {
         response
             .await
             .expect("Never received response from trie thread")
+    }
+
+    pub async fn get_nonce_for(&self, account: PublicKey) -> Result<u64, crate::AppErr> {
+        let (msg, response) = TrieStateThreadMsg::get_nonce_for(account);
+
+        self.queued_transactions.send(msg).await.map_err(|err| {
+            tracing::error!("Could not send get-nonce request to trie thread {:?}", err);
+            crate::AppErr::new(err)
+        })?;
+
+        response.await.map_err(|err| {
+            tracing::error!(
+                "Never received response from the trie thread for the get-nonce-request {:?}",
+                err
+            );
+            crate::AppErr::new(err)
+        })?
     }
 }

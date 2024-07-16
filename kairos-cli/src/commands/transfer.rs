@@ -1,4 +1,4 @@
-use crate::client::KairosClientError;
+use crate::client::{self, KairosClientError};
 use crate::common::args::{AmountArg, NonceArg, PrivateKeyPathArg, RecipientArg};
 use crate::error::CliError;
 
@@ -30,15 +30,19 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     let amount: u64 = args.amount.field;
     let signer =
         Signer::from_private_key_file(args.private_key_path.field).map_err(CryptoError::from)?;
-    let nonce = args.nonce.val;
+    let signer_public_key = signer.to_public_key()?;
+    let nonce = match args.nonce.val {
+        None => client::get_nonce(&kairos_server_address, &signer_public_key)?,
+        Some(nonce) => nonce,
+    };
 
     // TODO: Create transaction and sign it with `signer`.
 
     // TODO: Send transaction to the network, using Rust SDK.
-    reqwest::blocking::Client::new()
+    let res = reqwest::blocking::Client::new()
         .post(kairos_server_address.join(TransferPath::PATH).unwrap())
         .json(&PayloadBody {
-            public_key: signer.to_public_key()?,
+            public_key: signer_public_key,
             payload: SigningPayload::new(nonce, Transfer::new(recipient, amount))
                 .try_into()
                 .unwrap(),
@@ -47,5 +51,13 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
         .send()
         .map_err(KairosClientError::from)?;
 
-    Ok("ok".to_string())
+    if res.status().is_success() {
+        Ok("Transfer successfully sent to L2".to_string())
+    } else {
+        Err(KairosClientError::ResponseErrorWithCode(
+            res.status().as_u16(),
+            res.text().unwrap_or_default(),
+        )
+        .into())
+    }
 }

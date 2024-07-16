@@ -4,6 +4,7 @@ use casper_client_types::ContractHash;
 use reqwest::Url;
 use std::io;
 use std::net::{SocketAddr, TcpListener};
+use std::time::Duration;
 use tokio::net::TcpStream;
 
 use kairos_server::config::{BatchConfig, ServerConfig};
@@ -47,6 +48,8 @@ impl Kairos {
             socket_addr,
             casper_rpc: casper_rpc.clone(),
             casper_sse: casper_sse.clone(),
+            // We want a short sync interval for tests.
+            casper_sync_interval: Duration::from_secs(5),
             kairos_demo_contract_hash: kairos_demo_contract_hash.unwrap_or_default(),
             batch_config,
         };

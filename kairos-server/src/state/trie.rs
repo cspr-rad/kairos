@@ -20,12 +20,15 @@ use kairos_trie::{
     DigestHasher, NodeHash, TrieRoot,
 };
 
+use kairos_circuit_logic::transactions::PublicKey;
+
 pub type Database = MemoryDb<Account>;
 
 #[derive(Debug)]
 pub enum TrieStateThreadMsg {
     Transaction(KairosTransaction, oneshot::Sender<Result<(), AppErr>>),
     Commit(oneshot::Sender<Result<BatchOutput, AppErr>>),
+    GetNonce(PublicKey, oneshot::Sender<Result<u64, AppErr>>),
 }
 
 impl TrieStateThreadMsg {
@@ -37,6 +40,11 @@ impl TrieStateThreadMsg {
     pub fn commit() -> (Self, oneshot::Receiver<Result<BatchOutput, AppErr>>) {
         let (sender, receiver) = oneshot::channel();
         (Self::Commit(sender), receiver)
+    }
+
+    pub fn get_nonce_for(account: PublicKey) -> (Self, oneshot::Receiver<Result<u64, AppErr>>) {
+        let (sender, receiver) = oneshot::channel();
+        (Self::GetNonce(account, sender), receiver)
     }
 }
 
@@ -55,7 +63,11 @@ pub fn spawn_state_thread(
             tracing::trace!("Trie State Thread received message: {:?}", msg);
             match msg {
                 TrieStateThreadMsg::Transaction(txn, responder) => {
-                    let res = state.batch_state.execute_transaction(txn);
+                    let res = state.batch_state.execute_transaction(txn).map_err(|e| {
+                        tracing::warn!("Error executing transaction: {:?}", e);
+                        e
+                    });
+
                     responder.send(res).unwrap_or_else(|err| {
                         tracing::warn!(
                             "Transaction submitter hung up before receiving response: {}",
@@ -97,6 +109,23 @@ pub fn spawn_state_thread(
 
                     if let Err(err) = sender.send(res) {
                         tracing::error!("failed to send commit result: {:?}", err);
+                    }
+                }
+                TrieStateThreadMsg::GetNonce(account, responder) => {
+                    let res = state
+                        .batch_state
+                        .account_trie
+                        .get_nonce_for(&account)
+                        .map_err(|err| {
+                            AppErr::new(anyhow::anyhow!(err))
+                                .set_status(axum::http::StatusCode::NOT_FOUND)
+                        });
+                    if let Err(err) = responder.send(res) {
+                        tracing::error!(
+                            "Failed to get the nonce for account '{:?}': {:?}",
+                            account,
+                            err
+                        );
                     }
                 }
             }

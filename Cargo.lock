@@ -2495,6 +2495,7 @@ dependencies = [
  "casper-hashing 2.0.0",
  "casper-types 3.0.0",
  "clap",
+ "dotenvy",
  "hex",
  "kairos-crypto",
  "kairos-server",
