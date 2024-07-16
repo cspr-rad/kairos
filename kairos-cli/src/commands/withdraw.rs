@@ -1,4 +1,4 @@
-use crate::client::KairosClientError;
+use crate::client::{self, KairosClientError};
 use crate::common::args::{AmountArg, NonceArg, PrivateKeyPathArg};
 use crate::error::CliError;
 
@@ -27,7 +27,11 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     let amount: u64 = args.amount.field;
     let signer =
         Signer::from_private_key_file(args.private_key_path.field).map_err(CryptoError::from)?;
-    let nonce = args.nonce.val;
+    let signer_public_key = signer.to_public_key()?;
+    let nonce = match args.nonce.val {
+        None => client::get_nonce(&kairos_server_address, &signer_public_key)?,
+        Some(nonce) => nonce,
+    };
 
     // TODO: Create transaction and sign it with `signer`.
 
@@ -35,7 +39,7 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
     let res = reqwest::blocking::Client::new()
         .post(kairos_server_address.join(WithdrawPath::PATH).unwrap())
         .json(&PayloadBody {
-            public_key: signer.to_public_key()?,
+            public_key: signer_public_key,
             payload: SigningPayload::new(nonce, Withdrawal::new(amount))
                 .try_into()
                 .unwrap(),

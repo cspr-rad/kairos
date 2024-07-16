@@ -310,6 +310,16 @@ impl<Db: DatabaseGet<Account>> AccountTrie<SnapshotBuilder<Db, Account>> {
             Ok(())
         }
     }
+
+    /// Returns the nonce for an accounts public key if it's known, returns an error if unknown.
+    pub fn get_nonce_for(&self, account: &PublicKey) -> Result<u64, TxnErr> {
+        let [account_hash] = hash_buffers([account]);
+
+        let account = self.txn.get_exclude_from_txn(&account_hash)?;
+        let account = account.ok_or("Unknown account")?;
+
+        Ok(account.nonce)
+    }
 }
 
 /// An account in the trie.
