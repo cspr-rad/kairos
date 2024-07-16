@@ -14,6 +14,7 @@ use reqwest::Url;
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
+    // Make sure matches the default in `../.env` and the nix module.
     #[arg(long, value_name = "URL", default_value = "http://0.0.0.0:9999")]
     pub kairos_server_address: Url,
 }
