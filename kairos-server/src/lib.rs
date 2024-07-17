@@ -23,7 +23,7 @@ pub use errors::AppErr;
 use kairos_data::new as new_pool;
 
 /// TODO: support secp256k1
-type PublicKey = Vec<u8>;
+pub type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 
 #[cfg(not(feature = "deposit-mock"))]
@@ -42,11 +42,14 @@ pub fn app_router(state: ServerState) -> Router {
         .typed_post(routes::withdraw_handler)
         .typed_post(routes::transfer_handler)
         .typed_post(routes::deposit_mock_handler)
+        .typed_post(routes::get_nonce_handler)
+        .typed_get(routes::contract_hash_handler)
         .with_state(state)
 }
 
 pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {
     // Extra check: make sure the default dummy value of contract hash was changed.
+    let sync_interval = server_state.server_config.casper_sync_interval;
     let contract_hash = server_state.server_config.kairos_demo_contract_hash;
     if contract_hash == ContractHash::default() {
         tracing::warn!(
@@ -63,7 +66,7 @@ pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {
     // Run periodic synchronization.
     // TODO: Add additional SSE trigger.
     tokio::spawn(async move {
-        l1_sync::interval_trigger::run(l1_sync_service.into()).await;
+        l1_sync_service.run_periodic_sync(sync_interval).await;
     });
 }
 

@@ -18,6 +18,7 @@ let
   contractHashName = "kairos_contract_package_hash";
   # The path where cctl will write the deployed contract hash on the servers filesystem
   serverContractHashPath = "${cctlWorkingDirectory}/contracts/${contractHashName}";
+  casperSyncInterval = 5;
 in
 nixosTest {
   name = "kairos e2e test";
@@ -57,6 +58,7 @@ nixosTest {
       services.kairos = {
         casperRpcUrl = "http://localhost:${builtins.toString config.services.cctl.port}/rpc";
         casperSseUrl = "http://localhost:18101/events/main"; # has to be hardcoded since it's not configurable atm
+        inherit casperSyncInterval;
         demoContractHash = "0000000000000000000000000000000000000000000000000000000000000000";
       };
 
@@ -81,6 +83,7 @@ nixosTest {
   testScript = ''
     import json
     import backoff
+    import time
 
     # Utils
     def verify_deploy_success(json_data):
@@ -118,23 +121,24 @@ nixosTest {
     # For more details, see cctl module implementation
     client.succeed("wget --no-parent -r http://kairos/cctl/users/")
 
-    contract_hash = kairos.succeed("cat ${serverContractHashPath}")
-
     kairos.succeed("casper-client get-node-status --node-address ${casperNodeAddress}")
 
     # CLI with ed25519
     # deposit
     depositor = client.succeed("cat ${clientUsersDirectory}/user-2/public_key_hex")
     depositor_private_key = "${clientUsersDirectory}/user-2/secret_key.pem"
-    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --recipient {} --private-key {} --contract-hash {}".format(depositor, depositor_private_key, contract_hash))
+    deposit_deploy_hash = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 3000000000 --recipient {} --private-key {}".format(depositor, depositor_private_key))
     assert int(deposit_deploy_hash, 16), "The deposit command did not output a hex encoded deploy hash. The output was {}".format(deposit_deploy_hash)
 
     wait_for_successful_deploy(deposit_deploy_hash)
 
+    # wait for l2 to sync with l1 every 5 seconds
+    time.sleep(${builtins.toString (casperSyncInterval * 2)})
+
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
-    transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --nonce 0 --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
-    assert "ok\n" in transfer_output
+    transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
+    assert "Transfer successfully sent to L2\n" in transfer_output, "The transfer command was not successful: {}".format(transfer_output)
 
     # TODO test withdraw
 

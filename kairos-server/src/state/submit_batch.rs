@@ -30,7 +30,7 @@ pub async fn submit_proof_to_contract(
     let r = casper_client::put_deploy(
         casper_client::JsonRpcId::Number(random()),
         casper_rpc.as_str(),
-        casper_client::Verbosity::High,
+        casper_client::Verbosity::Low,
         deploy,
     )
     .await

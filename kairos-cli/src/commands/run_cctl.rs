@@ -32,10 +32,10 @@ pub fn run() -> Result<String, CliError> {
             .expect("Expected at least one node after successful network run");
         let casper_rpc_url = format!("http://localhost:{}/rpc", node.port.rpc_port);
 
-        println!("You can find demo key pairs in `{:?}`", network.working_dir);
 
         println!("Before running the Kairos CLI in another terminal, set the following environment variables:");
-        println!("export KAIROS_CONTRACT_HASH={}", contract_hash);
+        println!("export DEMO_KEYS={}/assets/users", network.working_dir.display());
+        println!("export KAIROS_SERVER_DEMO_CONTRACT_HASH={}", contract_hash);
         println!("export KAIROS_SERVER_CASPER_RPC={}", casper_rpc_url);
 
         let _ = tokio::signal::ctrl_c().await;

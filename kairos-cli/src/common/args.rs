@@ -21,13 +21,13 @@ pub struct PrivateKeyPathArg {
 #[derive(Args, Debug)]
 pub struct NonceArg {
     #[arg(id = "nonce", long, short, value_name = "NUM")]
-    pub val: u64,
+    pub val: Option<u64>,
 }
 
 #[derive(Args, Debug)]
 pub struct ContractHashArg {
     #[arg(id = "contract-hash", long, short = 'c', value_name = "CONTRACT_HASH")]
-    pub field: String,
+    pub field: Option<String>,
 }
 
 #[derive(Args, Debug)]

@@ -33,7 +33,7 @@ pub async fn deposit_handler(
             let response = put_deploy(
                 expected_rpc_id.clone(),
                 state.server_config.casper_rpc.as_str(),
-                casper_client::Verbosity::High,
+                casper_client::Verbosity::Low,
                 body,
             )
             .await

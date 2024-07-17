@@ -17,10 +17,11 @@ license.workspace = true
 default = ["demo"]
 all-tests = ["cctl-tests", "database"]
 cctl-tests = []
-demo = ["dep:kairos-test-utils", "dep:tokio"]
+demo = ["dep:kairos-test-utils", "dep:tokio", "dep:dotenvy"]
 database = ["kairos-server/database", "kairos-test-utils/database"]
 
 [dependencies]
+dotenvy = { version = "0.15", optional = true }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 casper-client.workspace = true
