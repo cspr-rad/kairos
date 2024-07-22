@@ -5,9 +5,11 @@ use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
 use casper_client_hashing::Digest;
+#[cfg(feature = "database")]
+use kairos_test_utils::postgres::PostgresDB;
 use kairos_test_utils::{
     cctl::{CCTLNetwork, DeployableContract},
-    kairos,
+    kairos::Kairos,
 };
 
 // Helper function to get the path to a fixture file
@@ -38,6 +40,9 @@ async fn deposit_successful_with_ed25519() {
 
     let contract_hash = network.get_contract_hash_for(hash_name);
 
+    #[cfg(feature = "database")]
+    let postgres = PostgresDB::run(None).unwrap();
+
     let node = network
         .nodes
         .first()
@@ -50,9 +55,16 @@ async fn deposit_successful_with_ed25519() {
     ))
     .unwrap();
 
-    let kairos = kairos::Kairos::run(&casper_rpc_url, &casper_sse_url, None, Some(contract_hash))
-        .await
-        .unwrap();
+    let kairos = Kairos::run(
+        &casper_rpc_url,
+        &casper_sse_url,
+        None,
+        Some(contract_hash),
+        #[cfg(feature = "database")]
+        &postgres.connection.clone().into(),
+    )
+    .await
+    .unwrap();
 
     tokio::task::spawn_blocking(move || {
         let depositor_secret_key_path = network

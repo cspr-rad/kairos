@@ -15,9 +15,10 @@ license.workspace = true
 
 [features]
 default = ["demo"]
-all-tests = ["cctl-tests"]
+all-tests = ["cctl-tests", "database"]
 cctl-tests = []
 demo = ["dep:kairos-test-utils", "dep:tokio", "dep:dotenvy"]
+database = ["kairos-server/database", "kairos-test-utils/database"]
 
 [dependencies]
 dotenvy = { version = "0.15", optional = true }

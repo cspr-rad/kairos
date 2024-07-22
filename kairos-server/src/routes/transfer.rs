@@ -6,6 +6,9 @@ use tracing::instrument;
 use kairos_circuit_logic::transactions::{KairosTransaction, Signed, Transfer};
 use kairos_tx::asn::{SigningPayload, TransactionBody};
 
+#[cfg(feature = "database")]
+use kairos_data::transaction as db;
+
 use crate::{routes::PayloadBody, state::ServerState, AppErr};
 
 #[derive(TypedPath)]
@@ -35,12 +38,15 @@ pub async fn transfer_handler(
 
     tracing::info!("queuing transaction for trie update");
 
+    let transfer = KairosTransaction::Transfer(Signed {
+        public_key,
+        nonce,
+        transaction: transfer,
+    });
+    #[cfg(feature = "database")]
+    db::insert(&state.pool, transfer.clone()).await?;
     state
         .batch_state_manager
-        .enqueue_transaction(KairosTransaction::Transfer(Signed {
-            public_key,
-            nonce,
-            transaction: transfer,
-        }))
+        .enqueue_transaction(transfer)
         .await
 }
