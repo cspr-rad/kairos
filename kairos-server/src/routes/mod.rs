@@ -6,6 +6,8 @@ pub mod get_nonce;
 pub mod transfer;
 pub mod withdraw;
 
+#[cfg(feature = "database")]
+pub mod fetch;
 pub use contract_hash::contract_hash_handler;
 pub use deposit::deposit_handler;
 #[cfg(feature = "deposit-mock")]

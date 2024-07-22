@@ -1,0 +1,25 @@
+[package]
+name = "kairos-data"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+diesel = { version = "2.1", features = ["postgres", "chrono", "numeric"] }
+deadpool-diesel = { version = "0.6", features = ["postgres", "tracing"]}
+diesel_migrations = { version = "2.1", features = ["postgres"], optional = true }
+tokio = "1"
+tracing = "0.1"
+thiserror = "1.0"
+deadpool = "0.12"
+chrono = { version = "0.4", features = ["serde"] }
+bigdecimal = { version = "0.4", features = ["serde"] }
+serde_json = "1.0"
+serde = "1.0"
+kairos-circuit-logic = { path = "../kairos-prover/kairos-circuit-logic", features = ["serde", "asn1"] }
+hex = "0.4"
+anyhow = "1.0"
+diesel-derive-enum = { version = "2.1", features = ["postgres"] }
+
+[features]
+migrations = ["diesel_migrations"]

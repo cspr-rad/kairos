@@ -15,12 +15,16 @@ use casper_client_types::{
     crypto::{PublicKey, SecretKey},
     AsymmetricType, ContractHash,
 };
+#[cfg(feature = "database")]
+use kairos_data::new as new_pool;
 use kairos_server::{
     config::{BatchConfig, ServerConfig},
     routes::deposit::DepositPath,
     state::{BatchStateManager, ServerStateInner},
 };
 use kairos_test_utils::cctl::CCTLNetwork;
+#[cfg(feature = "database")]
+use kairos_test_utils::postgres::PostgresDB;
 
 #[cfg(feature = "deposit-mock")]
 use kairos_server::routes::{
@@ -32,12 +36,23 @@ use kairos_tx::asn::{SigningPayload, Transfer, Withdrawal};
 static TEST_ENVIRONMENT: OnceLock<()> = OnceLock::new();
 
 #[cfg(feature = "deposit-mock")]
-fn new_test_app() -> TestServer {
+async fn new_test_app(#[cfg(feature = "database")] postgres_url: &Url) -> TestServer {
     let dummy_url = Url::parse("http://0.0.0.0:0").unwrap();
-    new_test_app_with_casper_node(&dummy_url, &dummy_url)
+
+    new_test_app_with_casper_node(
+        &dummy_url,
+        &dummy_url,
+        #[cfg(feature = "database")]
+        postgres_url,
+    )
+    .await
 }
 
-fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> TestServer {
+async fn new_test_app_with_casper_node(
+    casper_rpc_url: &Url,
+    casper_sse_url: &Url,
+    #[cfg(feature = "database")] postgres_url: &Url,
+) -> TestServer {
     TEST_ENVIRONMENT.get_or_init(|| {
         tracing_subscriber::registry()
             .with(
@@ -62,12 +77,18 @@ fn new_test_app_with_casper_node(casper_rpc_url: &Url, casper_sse_url: &Url) -> 
             // dummy proving server will never be called because of max_batch_size and max_batch_duration
             proving_server: Url::parse("http://127.0.0.1:7894").unwrap(),
         },
+        #[cfg(feature = "database")]
+        db_addr: postgres_url.to_string(),
     };
 
     let state = Arc::new(ServerStateInner {
         batch_state_manager: BatchStateManager::new_empty(&server_config),
         server_config,
         known_deposit_deploys: RwLock::new(HashSet::new()),
+        #[cfg(feature = "database")]
+        pool: new_pool(postgres_url.as_ref())
+            .await
+            .expect("Failed to connect to database"),
     });
 
     TestServer::new_with_config(kairos_server::app_router(state), config).unwrap()
@@ -89,7 +110,16 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
     ))
     .unwrap();
 
-    let server = new_test_app_with_casper_node(&casper_rpc_url, &casper_sse_url);
+    #[cfg(feature = "database")]
+    let postgres = PostgresDB::run(None).unwrap();
+
+    let server = new_test_app_with_casper_node(
+        &casper_rpc_url,
+        &casper_sse_url,
+        #[cfg(feature = "database")]
+        &postgres.connection.clone().into(),
+    )
+    .await;
 
     let sender_secret_key_file = network
         .working_dir
@@ -131,7 +161,14 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
 async fn test_deposit_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app();
+    #[cfg(feature = "database")]
+    let postgres = PostgresDB::run(None).unwrap();
+
+    let server = new_test_app(
+        #[cfg(feature = "database")]
+        &postgres.connection.clone().into(),
+    )
+    .await;
 
     let deposit = L1Deposit {
         recipient: "alice_key".into(),
@@ -145,11 +182,13 @@ async fn test_deposit_withdraw() {
         .assert_status_failure();
 
     // deposit
-    server
+    let response = server
         .post(MockDepositPath.to_uri().path())
         .json(&deposit)
-        .await
-        .assert_status_success();
+        .await;
+
+    println!("{}", &response.text());
+    response.assert_status_success();
 
     // wrong arguments
     server
@@ -215,7 +254,14 @@ async fn test_deposit_withdraw() {
 async fn test_deposit_transfer_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app();
+    #[cfg(feature = "database")]
+    let postgres = PostgresDB::run(None).unwrap();
+
+    let server = new_test_app(
+        #[cfg(feature = "database")]
+        &postgres.connection.clone().into(),
+    )
+    .await;
 
     // deposit
     server
@@ -259,7 +305,14 @@ async fn test_deposit_transfer_withdraw() {
 async fn test_deposit_transfer_to_self_withdraw() {
     use kairos_circuit_logic::transactions::L1Deposit;
 
-    let server = new_test_app();
+    #[cfg(feature = "database")]
+    let postgres = PostgresDB::run(None).unwrap();
+
+    let server = new_test_app(
+        #[cfg(feature = "database")]
+        &postgres.connection.clone().into(),
+    )
+    .await;
 
     // deposit
     server
