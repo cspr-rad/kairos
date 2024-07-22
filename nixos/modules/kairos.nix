@@ -135,9 +135,8 @@ in
       '';
     };
 
-    database = mkOption {
-      description = "The database connection";
-      type = types.submodule {
+    database =
+      {
         host = mkOption {
           type = types.str;
           default = "/run/postgresql";
@@ -149,7 +148,7 @@ in
 
         port = mkOption {
           type = types.port;
-          default = config.services.postgresql.port;
+          default = config.services.postgresql.settings.port;
           description = ''
             Port of the PostgreSQL server
           '';
@@ -173,55 +172,54 @@ in
           '';
         };
       };
-    };  
+  };
 
-    config = mkIf cfg.enable {
+  config = mkIf cfg.enable {
 
-      systemd.services.kairos =
-        {
-          description = "kairos";
-          documentation = [ "" ];
-          wantedBy = [ "multi-user.target" ];
-          after = [ "network-online.target" "kairos-prover.service" "postgresql.service" ];
-          requires = [ "network-online.target" "kairos-prover.service" "postgresql.service" ];
-          environment = {
-            RUST_LOG = cfg.logLevel;
-            KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
-            KAIROS_SERVER_CASPER_RPC = cfg.casperRpcUrl;
-            KAIROS_SERVER_CASPER_SSE = cfg.casperSseUrl;
-            KAIROS_SERVER_CASPER_SYNC_INTERVAL = builtins.toString cfg.casperSyncInterval;
-            KAIROS_SERVER_DEMO_CONTRACT_HASH = cfg.demoContractHash;
-            KAIROS_PROVER_SERVER_URL = "${cfg.prover.protocol}://${cfg.prover.bindAddress}:${builtins.toString cfg.prover.port}";
-            KAIROS_SERVER_DB_ADDR = "postgresql://${cfg.database.userName}@localhost:${cfg.database.port}/${cfg.database.databaseName}?host=${cfg.database.host}";
-          } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchSize) {
-            KAIROS_SERVER_MAX_BATCH_SIZE = cfg.maxBatchSize;
-          } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchDuration) {
-            KAIROS_SERVER_MAX_BATCH_SECONDS = cfg.prover.maxBatchDuration;
-          };
-          serviceConfig = mkMerge [
-            {
-              ExecStart = ''${lib.getExe cfg.package}'';
-              Restart = "always";
-              DynamicUser = true;
-            }
-          ];
+    systemd.services.kairos =
+      {
+        description = "kairos";
+        documentation = [ "" ];
+        wantedBy = [ "multi-user.target" ];
+        after = [ "network-online.target" "kairos-prover.service" "postgresql.service" ];
+        requires = [ "network-online.target" "kairos-prover.service" "postgresql.service" ];
+        environment = {
+          RUST_LOG = cfg.logLevel;
+          KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
+          KAIROS_SERVER_CASPER_RPC = cfg.casperRpcUrl;
+          KAIROS_SERVER_CASPER_SSE = cfg.casperSseUrl;
+          KAIROS_SERVER_CASPER_SYNC_INTERVAL = builtins.toString cfg.casperSyncInterval;
+          KAIROS_SERVER_DEMO_CONTRACT_HASH = cfg.demoContractHash;
+          KAIROS_PROVER_SERVER_URL = "${cfg.prover.protocol}://${cfg.prover.bindAddress}:${builtins.toString cfg.prover.port}";
+          KAIROS_SERVER_DB_ADDR = "postgresql://${cfg.database.userName}@localhost:${builtins.toString cfg.database.port}/${cfg.database.databaseName}?host=${cfg.database.host}";
+        } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchSize) {
+          KAIROS_SERVER_MAX_BATCH_SIZE = cfg.maxBatchSize;
+        } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchDuration) {
+          KAIROS_SERVER_MAX_BATCH_SECONDS = cfg.prover.maxBatchDuration;
         };
-
-      services.kairos-prover = {
-        enable = true;
-        inherit (cfg.prover) bindAddress port;
-      };
-
-      services.postgresql = {
-        enable = true;
-        ensureDatabases = [ cfg.database.databaseName ];
-        ensureUsers = [
+        serviceConfig = mkMerge [
           {
-            name = cfg.database.user;
-            ensureDBOwnership = true;
+            ExecStart = ''${lib.getExe cfg.package}'';
+            Restart = "always";
+            DynamicUser = true;
           }
         ];
       };
+
+    services.kairos-prover = {
+      enable = true;
+      inherit (cfg.prover) bindAddress port;
+    };
+
+    services.postgresql = {
+      enable = true;
+      ensureDatabases = [ cfg.database.databaseName ];
+      ensureUsers = [
+        {
+          name = cfg.database.userName;
+          ensureDBOwnership = true;
+        }
+      ];
     };
   };
 }
