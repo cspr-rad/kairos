@@ -17,7 +17,7 @@ pub enum Transaction {
     Withdrawal,
 }
 
-#[derive(Queryable, Debug, Identifiable, Insertable, Serialize, Selectable)]
+#[derive(Queryable, Debug, Identifiable, Insertable, Serialize, Selectable, Deserialize)]
 #[diesel(primary_key(timestamp, amount, public_key))]
 #[diesel(table_name = transactions)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -30,7 +30,7 @@ pub struct Transactions {
     pub recipient: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Serialize)]
 pub struct TransactionFilter {
     pub sender: Option<String>,
     pub min_timestamp: Option<NaiveDateTime>,
