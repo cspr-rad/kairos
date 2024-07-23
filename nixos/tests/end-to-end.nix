@@ -105,8 +105,7 @@ nixosTest {
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, jitter=backoff.full_jitter)
     def wait_for_deposit(depositor, amount):
-      transactions_query = { "sender": depositor }
-      transactions_result = client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transactions -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transactions_query)))
+      transactions_result = client.succeed("kairos-cli --kairos-server-address http://kairos fetch --sender {}".format(depositor))
       transactions = json.loads(transactions_result)
       if not any(transaction.get("public_key") == depositor and transaction.get("amount") == str(amount) for transaction in transactions):
         raise Exception("Couldn't find deposit for depositor {} with amount {} in transactions\n:{}".format(depositor, amount, transactions))
@@ -147,8 +146,7 @@ nixosTest {
     assert "Transfer successfully sent to L2\n" in transfer_output, "The transfer command was not successful: {}".format(transfer_output)
 
     # data availability
-    transactions_query = { "recipient": beneficiary }
-    transactions_result = client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transactions -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transactions_query)))
+    transactions_result = client.succeed("kairos-cli --kairos-server-address http://kairos fetch --recipient {}".format(beneficiary))
     transactions = json.loads(transactions_result)
     assert any(transaction.get("recipient") == beneficiary and transaction.get("amount") == str(1000) for transaction in transactions), "Couldn't find the transfer in the L2's DA: {}".format(transactions)
 
