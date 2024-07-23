@@ -127,6 +127,22 @@
             '';
           };
 
+          kairosServerMigrations = pkgs.runCommand "kairos-server-migrations" { } ''
+            mkdir $out
+            ln -s ${./kairos-data}
+            for dir in ${./kairos-data/migrations}/*/; do
+              # Check if up.sql exists
+              if [ -f "''${dir}up.sql" ]; then
+                # Get the directory name without the trailing slash
+                dir_name=$(basename "$dir")
+                new_file="$out/''${dir_name}-up.sql"
+                ln -s "''${dir}up.sql" "$new_file"
+              else
+                echo "No up.sql found in $dir"
+              fi
+            done
+          '';
+
           kairosNodeAttrs = {
             src = lib.fileset.toSource {
               root = ./.;
@@ -137,6 +153,7 @@
                 ./demo-contract-tests
                 ./kairos-cli
                 ./kairos-crypto
+                ./kairos-data
                 ./kairos-server
                 ./kairos-test-utils
                 ./kairos-tx
@@ -150,6 +167,7 @@
             nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools pkgs.pkg-config ];
             buildInputs = with pkgs; [
               openssl.dev
+              postgresql.lib
             ] ++ lib.optionals stdenv.isDarwin [
               libiconv
               darwin.apple_sdk.frameworks.Security
@@ -157,6 +175,7 @@
             ];
             checkInputs = [
               inputs'.cctl.packages.cctl
+              pkgs.postgresql
             ];
 
             CASPER_CHAIN_NAME = "cspr-dev-cctl";
@@ -164,6 +183,7 @@
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
             CCTL_CONFIG = "${cctlConfig.config}";
             CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
+            KAIROS_SERVER_MIGRATIONS = kairosServerMigrations;
 
             meta.mainProgram = "kairos-server";
           };
@@ -178,7 +198,9 @@
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
             CCTL_CONFIG = "${cctlConfig.config}";
             CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
+            KAIROS_SERVER_MIGRATIONS = kairosServerMigrations;
             inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
+            packages = [ pkgs.diesel-cli ];
           };
 
           packages = {

@@ -5,5 +5,5 @@ edition.workspace = true
 license.workspace = true
 
 [build-dependencies]
-risc0-binfmt = "=1.0.1"
+risc0-binfmt = "=1.0.2"
 kairos-verifier-risc0-lib = { path = "../kairos-verifier-risc0-lib", default-features = false }

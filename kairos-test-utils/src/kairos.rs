@@ -30,6 +30,7 @@ impl Kairos {
         casper_sse: &Url,
         proving_server_batch_config: Option<BatchConfig>,
         kairos_demo_contract_hash: Option<ContractHash>,
+        #[cfg(feature = "database")] db_addr: &Url,
     ) -> Result<Kairos, io::Error> {
         let socket_addr = TcpListener::bind("0.0.0.0:0")?.local_addr()?;
         let port = socket_addr.port().to_string();
@@ -52,6 +53,8 @@ impl Kairos {
             casper_sync_interval: Duration::from_secs(5),
             kairos_demo_contract_hash: kairos_demo_contract_hash.unwrap_or_default(),
             batch_config,
+            #[cfg(feature = "database")]
+            db_addr: db_addr.to_string(),
         };
 
         let kairos_prover_server = match proving_server_batch_config {
@@ -123,8 +126,18 @@ mod tests {
     async fn test_kairos_starts_and_terminates() {
         let dummy_rpc = Url::parse("http://127.0.0.1:11101/rpc").unwrap();
         let dummy_sse = Url::parse("http://127.0.0.1:18101/events/main").unwrap();
-        let _kairos = Kairos::run(&dummy_rpc, &dummy_sse, None, None)
-            .await
-            .unwrap();
+        #[cfg(feature = "database")]
+        let dummy_postgres = Url::parse("postgres://kairos:kairos@localhost/kairos").unwrap();
+
+        let _kairos = Kairos::run(
+            &dummy_rpc,
+            &dummy_sse,
+            None,
+            None,
+            #[cfg(feature = "database")]
+            &dummy_postgres,
+        )
+        .await
+        .unwrap();
     }
 }

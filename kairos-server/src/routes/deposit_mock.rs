@@ -4,6 +4,9 @@ use tracing::*;
 
 use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
 
+#[cfg(feature = "database")]
+use kairos_data::transaction as db;
+
 use crate::{state::ServerState, AppErr};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
@@ -18,8 +21,8 @@ pub async fn deposit_mock_handler(
 ) -> Result<(), AppErr> {
     tracing::info!("parsing transaction data");
 
-    state
-        .batch_state_manager
-        .enqueue_transaction(KairosTransaction::Deposit(deposit))
-        .await
+    let deposit = KairosTransaction::Deposit(deposit);
+    #[cfg(feature = "database")]
+    db::insert(&state.pool, deposit.clone()).await?;
+    state.batch_state_manager.enqueue_transaction(deposit).await
 }

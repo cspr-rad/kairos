@@ -17,13 +17,17 @@ use crate::{config::ServerConfig, state::submit_batch::submit_proof_to_contract,
 use kairos_circuit_logic::transactions::KairosTransaction;
 use kairos_trie::{stored::memory_db::MemoryDb, NodeHash, TrieRoot};
 
+#[cfg(feature = "database")]
+use kairos_data::Pool;
+
 pub type ServerState = Arc<ServerStateInner>;
 
-#[derive(Debug)]
 pub struct ServerStateInner {
     pub batch_state_manager: BatchStateManager,
     pub server_config: ServerConfig,
     pub known_deposit_deploys: RwLock<HashSet<DeployHash>>,
+    #[cfg(feature = "database")]
+    pub pool: Pool,
 }
 
 /// The `BatchStateManager` is a piece of Axum state.
