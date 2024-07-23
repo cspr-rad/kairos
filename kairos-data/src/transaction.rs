@@ -35,8 +35,8 @@ pub struct TransactionFilter {
     pub sender: Option<String>,
     pub min_timestamp: Option<NaiveDateTime>,
     pub max_timestamp: Option<NaiveDateTime>,
-    pub min_amount: Option<i64>,
-    pub max_amount: Option<i64>,
+    pub min_amount: Option<u64>,
+    pub max_amount: Option<u64>,
     pub recipient: Option<String>,
 }
 
