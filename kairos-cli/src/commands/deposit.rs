@@ -1,5 +1,7 @@
 use crate::client;
-use crate::common::args::{AmountArg, ChainNameArg, ContractHashArg, PrivateKeyPathArg, RecipientArg};
+use crate::common::args::{
+    AmountArg, ChainNameArg, ContractHashArg, PrivateKeyPathArg, RecipientArg,
+};
 use crate::error::CliError;
 
 use casper_client_types::{crypto::SecretKey, ContractHash};

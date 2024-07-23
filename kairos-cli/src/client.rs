@@ -72,16 +72,12 @@ pub fn deposit(
           "recipient" => recipient
         },
     );
-    let deploy = DeployBuilder::new(
-        chain_name,
-        deposit_session,
-        depositor_secret_key,
-    )
-    .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT) // max amount allowed to be used on gas fees
-    .with_timestamp(Timestamp::now())
-    .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
-    .build()
-    .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
+    let deploy = DeployBuilder::new(chain_name, deposit_session, depositor_secret_key)
+        .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT) // max amount allowed to be used on gas fees
+        .with_timestamp(Timestamp::now())
+        .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
+        .build()
+        .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
 
     let response = reqwest::blocking::Client::new()
         .post(base_url.join(DepositPath::PATH).unwrap())
