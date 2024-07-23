@@ -42,6 +42,7 @@ pub fn app_router(state: ServerState) -> Router {
         .typed_post(routes::withdraw_handler)
         .typed_post(routes::transfer_handler)
         .typed_post(routes::deposit_mock_handler)
+        .typed_get(routes::get_chain_name_handler)
         .typed_post(routes::get_nonce_handler)
         .typed_get(routes::contract_hash_handler)
         .with_state(state)
