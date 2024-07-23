@@ -12,6 +12,9 @@ use reqwest::Url;
 
 use kairos_crypto::error::CryptoError;
 
+const DEFAULT_DEPOSIT_SESSION_WASM: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/deposit-session-optimized.wasm"));
+
 #[derive(Parser, Debug)]
 pub struct Args {
     #[clap(flatten)]
@@ -52,7 +55,7 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
                 )
             })
         }
-        None => panic!("No deposit session available!"),
+        None => DEFAULT_DEPOSIT_SESSION_WASM.to_vec(),
     };
 
     client::deposit(
