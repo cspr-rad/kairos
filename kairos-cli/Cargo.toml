@@ -18,7 +18,7 @@ default = ["demo", "database"]
 all-tests = ["cctl-tests", "database"]
 cctl-tests = []
 demo = ["dep:kairos-test-utils", "dep:tokio", "dep:dotenvy"]
-database = ["kairos-server/database", "kairos-test-utils/database"]
+database = ["dep:kairos-data", "dep:chrono", "kairos-server/database", "kairos-test-utils/database"]
 
 [dependencies]
 dotenvy = { version = "0.15", optional = true }
@@ -27,9 +27,11 @@ tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 casper-client.workspace = true
 casper-client-types = { workspace = true, features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
 clap = { version = "4", features = ["derive", "deprecated"] }
+chrono = { version = "0.4", optional = true }
 hex = "0.4"
 thiserror = "1"
 kairos-crypto = { path = "../kairos-crypto", features = [ "std", "fs" ] }
+kairos-data = { path = "../kairos-data", optional = true }
 kairos-tx = { path = "../kairos-tx" }
 kairos-server = { path = "../kairos-server" }
 axum-extra = { version = "0.9", features = [ "typed-routing" ] }

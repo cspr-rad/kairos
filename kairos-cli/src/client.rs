@@ -11,6 +11,11 @@ use std::fmt;
 use std::fs;
 use std::path::Path;
 
+#[cfg(feature = "database")]
+use kairos_data::transaction::{TransactionFilter, Transactions};
+#[cfg(feature = "database")]
+use kairos_server::routes::fetch::QueryTransactionsPath;
+
 // max amount allowed to be used on gas fees
 pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
 
@@ -129,5 +134,26 @@ pub fn contract_hash(base_url: &Url) -> Result<ContractHash, KairosClientError> 
         response
             .json::<ContractHash>()
             .map_err(KairosClientError::from)
+    }
+}
+
+#[cfg(feature = "database")]
+pub fn fetch(
+    base_url: &Url,
+    transaction_filter: &TransactionFilter,
+) -> Result<Vec<Transactions>, KairosClientError> {
+    let response = reqwest::blocking::Client::new()
+        .post(base_url.join(QueryTransactionsPath::PATH).unwrap())
+        .header("Content-Type", "application/json")
+        .json(&transaction_filter)
+        .send()
+        .map_err(KairosClientError::from)?
+        .error_for_status();
+
+    match response {
+        Err(err) => Err(KairosClientError::from(err)),
+        Ok(response) => response
+            .json::<Vec<Transactions>>()
+            .map_err(KairosClientError::from),
     }
 }
