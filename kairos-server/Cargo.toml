@@ -12,7 +12,7 @@ name = "kairos-server"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["cctl-tests", "deposit-mock"]
+default = ["cctl-tests", "deposit-mock", "database"]
 all-tests = ["cctl-tests", "deposit-mock", "database"]
 cctl-tests = []
 deposit-mock = []

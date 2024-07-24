@@ -1,4 +1,4 @@
-{ lib, pkgs, config, ... }:
+{ lib, config, ... }:
 let
   inherit (lib)
     types
@@ -121,7 +121,6 @@ in
       };
     };
 
-
     logLevel = mkOption {
       type = types.enum [
         "error"
@@ -135,6 +134,44 @@ in
         The log-level that should be used.
       '';
     };
+
+    database =
+      {
+        host = mkOption {
+          type = types.str;
+          default = "/run/postgresql";
+          example = "/run/postgresql";
+          description = ''
+            Host of the PostgreSQL server
+          '';
+        };
+
+        port = mkOption {
+          type = types.port;
+          default = config.services.postgresql.settings.port;
+          description = ''
+            Port of the PostgreSQL server
+          '';
+        };
+
+        databaseName = mkOption {
+          type = types.str;
+          default = "kairos";
+          example = "kairos";
+          description = ''
+            Name of the PostgreSQL database
+          '';
+        };
+
+        userName = mkOption {
+          type = types.str;
+          default = "kairos";
+          example = "kairos";
+          description = ''
+            Username for the PostgreSQL connection
+          '';
+        };
+      };
   };
 
   config = mkIf cfg.enable {
@@ -144,8 +181,8 @@ in
         description = "kairos";
         documentation = [ "" ];
         wantedBy = [ "multi-user.target" ];
-        after = [ "network-online.target" "kairos-prover.service" ];
-        requires = [ "network-online.target" "kairos-prover.service" ];
+        after = [ "network-online.target" "kairos-prover.service" "postgresql.service" ];
+        requires = [ "network-online.target" "kairos-prover.service" "postgresql.service" ];
         environment = {
           RUST_LOG = cfg.logLevel;
           KAIROS_SERVER_SOCKET_ADDR = "${cfg.bindAddress}:${builtins.toString cfg.port}";
@@ -154,6 +191,7 @@ in
           KAIROS_SERVER_CASPER_SYNC_INTERVAL = builtins.toString cfg.casperSyncInterval;
           KAIROS_SERVER_DEMO_CONTRACT_HASH = cfg.demoContractHash;
           KAIROS_PROVER_SERVER_URL = "${cfg.prover.protocol}://${cfg.prover.bindAddress}:${builtins.toString cfg.prover.port}";
+          KAIROS_SERVER_DB_ADDR = "postgresql://${cfg.database.userName}@localhost:${builtins.toString cfg.database.port}/${cfg.database.databaseName}?host=${cfg.database.host}";
         } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchSize) {
           KAIROS_SERVER_MAX_BATCH_SIZE = cfg.maxBatchSize;
         } // optionalAttrs (!builtins.isNull cfg.prover.maxBatchDuration) {
@@ -171,6 +209,17 @@ in
     services.kairos-prover = {
       enable = true;
       inherit (cfg.prover) bindAddress port;
+    };
+
+    services.postgresql = {
+      enable = true;
+      ensureDatabases = [ cfg.database.databaseName ];
+      ensureUsers = [
+        {
+          name = cfg.database.userName;
+          ensureDBOwnership = true;
+        }
+      ];
     };
   };
 }
