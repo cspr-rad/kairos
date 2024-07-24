@@ -1,7 +1,6 @@
 { nixosTest
 , mkKairosHostConfig
 , kairos
-, testResources ? ../../kairos-cli/tests/fixtures
 , kairos-contracts
 , cctlModule
 , fetchurl
@@ -156,17 +155,9 @@ nixosTest {
     withdraw_output = client.succeed("kairos-cli --kairos-server-address http://kairos withdraw --amount 800 --private-key {}".format(withdrawer_private_key))
     assert "Withdrawal successfully sent to L2\n" in withdraw_output, "The withdraw command was not successful: {}".format(withdraw_output)
 
-    # TODO cctl does not provide any secp256k1 keys
-    # CLI with secp256k1
-    # cli_output = client.succeed("kairos-cli --kairos-server-address http://kairos deposit --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
-    # assert "ok\n" in cli_output
     wait_for_transaction(withdrawer, "withdrawal", 800)
 
-    # cli_output = client.succeed("kairos-cli transfer --recipient '01a26419a7d82b2263deaedea32d35eee8ae1c850bd477f62a82939f06e80df356' --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
-    # assert "ok\n" in cli_output
-
-    # cli_output = client.succeed("kairos-cli withdraw --amount 1000 --private-key ${testResources}/secp256k1/secret_key.pem")
-    # assert "ok\n" in cli_output
+    # TODO cctl does not provide any secp256k1 keys, once support is added it should be tested here
   '';
 }
 
