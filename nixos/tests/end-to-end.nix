@@ -104,11 +104,11 @@ nixosTest {
         raise Exception("Success key not found in JSON")
 
     @backoff.on_exception(backoff.expo, Exception, max_tries=5, jitter=backoff.full_jitter)
-    def wait_for_deposit(depositor, amount):
-      transactions_result = client.succeed("kairos-cli --kairos-server-address http://kairos fetch --sender {}".format(depositor))
+    def wait_for_transaction(sender, transaction_type, amount):
+      transactions_result = client.succeed("kairos-cli --kairos-server-address http://kairos fetch --sender {} --transaction-type {}".format(sender, transaction_type))
       transactions = json.loads(transactions_result)
-      if not any(transaction.get("public_key") == depositor and transaction.get("amount") == str(amount) for transaction in transactions):
-        raise Exception("Couldn't find deposit for depositor {} with amount {} in transactions\n:{}".format(depositor, amount, transactions))
+      if not any(transaction.get("public_key") == sender and transaction.get("amount") == str(amount) for transaction in transactions):
+        raise Exception("Couldn't find {} for sender {} with amount {} in transactions\n:{}".format(transaction_type, sender, amount, transactions))
 
     # Test
     start_all()
@@ -138,7 +138,7 @@ nixosTest {
 
     wait_for_successful_deploy(deposit_deploy_hash)
 
-    wait_for_deposit(depositor, 3000000000)
+    wait_for_transaction(depositor, "deposit", 3000000000)
 
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
