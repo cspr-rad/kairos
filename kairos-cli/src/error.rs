@@ -6,6 +6,12 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum CliError {
+    /// Failed to serialize to JSON string.
+    #[error("failed to parse hex string: {error}")]
+    SerializationError {
+        #[from]
+        error: serde_json::Error,
+    },
     /// Cryptography error.
     #[error("cryptography error: {error}")]
     CryptoError {
