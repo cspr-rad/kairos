@@ -38,6 +38,7 @@ pub struct TransactionFilter {
     pub min_amount: Option<u64>,
     pub max_amount: Option<u64>,
     pub recipient: Option<String>,
+    pub transaction_type: Option<Transaction>,
 }
 
 pub async fn get(
@@ -66,6 +67,9 @@ pub async fn get(
             }
             if let Some(recipient) = filter.recipient {
                 query = query.filter(transactions::recipient.eq(recipient));
+            }
+            if let Some(transaction_type) = filter.transaction_type {
+                query = query.filter(transactions::trx.eq(transaction_type));
             }
 
             query
