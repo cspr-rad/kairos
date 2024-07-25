@@ -49,3 +49,14 @@ impl TryFrom<RecipientArg> for casper_client_types::PublicKey {
         Ok(pk)
     }
 }
+
+#[derive(Args, Debug)]
+pub struct ChainNameArg {
+    #[arg(
+        id = "chain-name",
+        long,
+        value_name = "NAME",
+        help = "Name of the chain, to avoid the deploy from being accidentally included in a different chain"
+    )]
+    pub field: Option<String>,
+}
