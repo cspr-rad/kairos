@@ -2,7 +2,9 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::client;
-use crate::common::args::{AmountArg, ContractHashArg, PrivateKeyPathArg, RecipientArg};
+use crate::common::args::{
+    AmountArg, ChainNameArg, ContractHashArg, PrivateKeyPathArg, RecipientArg,
+};
 use crate::error::CliError;
 
 use casper_client_types::{crypto::SecretKey, ContractHash};
@@ -27,6 +29,8 @@ pub struct Args {
     recipient: RecipientArg,
     #[clap(flatten)]
     session_path: SessionPathArg,
+    #[clap(flatten)]
+    chain_name: ChainNameArg,
 }
 
 pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
@@ -45,6 +49,10 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
         }
         None => client::contract_hash(&kairos_server_address)?,
     };
+    let chain_name = match args.chain_name.field {
+        None => client::get_chain_name(&kairos_server_address)?,
+        Some(name) => name,
+    };
 
     let deposit_session_wasm: Vec<u8> = match args.session_path.field {
         Some(deposit_session_wasm_path) => {
@@ -62,6 +70,7 @@ pub fn run(args: Args, kairos_server_address: Url) -> Result<String, CliError> {
         &kairos_server_address,
         &deposit_session_wasm,
         &depositor_secret_key,
+        &chain_name,
         &contract_hash,
         amount,
         args.recipient.try_into()?,
