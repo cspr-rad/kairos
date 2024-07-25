@@ -8,13 +8,16 @@ use crate::{state::ServerState, AppErr};
 #[typed_path("/api/v1/chain_name")]
 pub struct GetChainNamePath;
 
-#[instrument(level = "trace", skip(_state), ret)]
+#[instrument(level = "trace", skip(state), ret)]
 pub async fn get_chain_name_handler(
     _: GetChainNamePath,
-    _state: State<ServerState>,
+    state: State<ServerState>,
 ) -> Result<Json<String>, AppErr> {
-    let chain_name = env!("CASPER_CHAIN_NAME"); // NOTE: This should be obtained from RPC, rather than from hardcoded value.
-    Ok(Json(String::from(chain_name)))
+    // Call RPC to get chain name.
+    let rpc_url = state.server_config.casper_rpc.as_str();
+    let chain_name = get_chain_name_from_rpc(rpc_url).await.expect("RPC request failed");
+
+    Ok(Json(chain_name))
 }
 
 pub async fn get_chain_name_from_rpc(rpc_url: &str) -> Result<String, ()> {
