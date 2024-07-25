@@ -11,6 +11,6 @@ disable-dev-mode = [ "risc0-zkvm/disable-dev-mode" ]
 
 
 [dependencies]
-risc0-zkvm = { version = "=1.0.2", default-features = false, optional = true }
+risc0-zkvm = { version = "=1.0.3", default-features = false, optional = true }
 kairos-circuit-logic = { path = "../kairos-circuit-logic", features = ["serde", "borsh"], default-features = false, optional = true }
 borsh = { version = "1", default-features = false, optional = true }
