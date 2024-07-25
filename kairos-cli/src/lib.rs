@@ -27,6 +27,8 @@ pub enum Command {
     Transfer(commands::transfer::Args),
     #[command(about = "Withdraws funds from your account")]
     Withdraw(commands::withdraw::Args),
+    #[cfg(feature = "database")]
+    Fetch(commands::fetch::Args),
 
     #[cfg(feature = "demo")]
     RunDemoCctl,
@@ -42,6 +44,8 @@ pub fn run(
         Command::Deposit(args) => commands::deposit::run(args, kairos_server_address),
         Command::Transfer(args) => commands::transfer::run(args, kairos_server_address),
         Command::Withdraw(args) => commands::withdraw::run(args, kairos_server_address),
+        #[cfg(feature = "database")]
+        Command::Fetch(args) => commands::fetch::run(args, kairos_server_address),
 
         #[cfg(feature = "demo")]
         Command::RunDemoCctl => commands::run_cctl::run(),
