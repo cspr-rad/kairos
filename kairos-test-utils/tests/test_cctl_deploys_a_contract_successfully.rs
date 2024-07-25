@@ -2,7 +2,6 @@ use casper_types::ContractHash;
 use hex::FromHex;
 use kairos_test_utils::cctl::CCTLNetwork;
 use std::fs;
-use std::path::Path;
 use std::path::PathBuf;
 
 use casper_client_types::{runtime_args, RuntimeArgs};
