@@ -7,6 +7,8 @@ use casper_event_toolkit::rpc::client::CasperClient;
 
 use crate::state::ServerStateInner;
 use kairos_circuit_logic::transactions::{KairosTransaction, L1Deposit};
+#[cfg(feature = "database")]
+use kairos_data::transaction as db;
 
 use super::error::L1SyncError;
 
@@ -68,6 +70,16 @@ impl EventManager {
                     let amount = deposit.amount;
                     let recipient: Vec<u8> = deposit.recipient;
                     let txn = KairosTransaction::Deposit(L1Deposit { amount, recipient });
+
+                    #[cfg(feature = "database")]
+                    db::insert(&self.server_state.pool, txn.clone())
+                        .await
+                        .map_err(|e| {
+                            L1SyncError::UnexpectedError(format!(
+                                "Failed to add to database: {}",
+                                e
+                            ))
+                        })?;
 
                     // Push deposit to trie.
                     self.server_state

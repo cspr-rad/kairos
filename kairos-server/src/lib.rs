@@ -26,26 +26,23 @@ use kairos_data::new as new_pool;
 pub type PublicKey = Vec<u8>;
 type Signature = Vec<u8>;
 
-#[cfg(not(feature = "deposit-mock"))]
 pub fn app_router(state: ServerState) -> Router {
-    Router::new()
+    let mut router = Router::new()
         .typed_post(routes::deposit_handler)
         .typed_post(routes::withdraw_handler)
         .typed_post(routes::transfer_handler)
-        .with_state(state)
-}
-
-#[cfg(feature = "deposit-mock")]
-pub fn app_router(state: ServerState) -> Router {
-    Router::new()
-        .typed_post(routes::deposit_handler)
-        .typed_post(routes::withdraw_handler)
-        .typed_post(routes::transfer_handler)
-        .typed_post(routes::deposit_mock_handler)
         .typed_get(routes::get_chain_name_handler)
         .typed_post(routes::get_nonce_handler)
-        .typed_get(routes::contract_hash_handler)
-        .with_state(state)
+        .typed_get(routes::contract_hash_handler);
+    #[cfg(feature = "deposit-mock")]
+    {
+        router = router.typed_post(routes::deposit_mock_handler)
+    }
+    #[cfg(feature = "database")]
+    {
+        router = router.typed_post(routes::query_transactions_handler);
+    }
+    router.with_state(state)
 }
 
 pub async fn run_l1_sync(server_state: Arc<ServerStateInner>) {

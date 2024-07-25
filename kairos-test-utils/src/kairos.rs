@@ -122,12 +122,14 @@ impl Drop for Kairos {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "database")]
+    use crate::postgres::PostgresDB;
     #[tokio::test]
     async fn test_kairos_starts_and_terminates() {
         let dummy_rpc = Url::parse("http://127.0.0.1:11101/rpc").unwrap();
         let dummy_sse = Url::parse("http://127.0.0.1:18101/events/main").unwrap();
         #[cfg(feature = "database")]
-        let dummy_postgres = Url::parse("postgres://kairos:kairos@localhost/kairos").unwrap();
+        let postgres = PostgresDB::run(None).unwrap();
 
         let _kairos = Kairos::run(
             &dummy_rpc,
@@ -135,7 +137,7 @@ mod tests {
             None,
             None,
             #[cfg(feature = "database")]
-            &dummy_postgres,
+            &postgres.connection.clone().into(),
         )
         .await
         .unwrap();
