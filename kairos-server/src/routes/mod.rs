@@ -12,6 +12,8 @@ pub use contract_hash::contract_hash_handler;
 pub use deposit::deposit_handler;
 #[cfg(feature = "deposit-mock")]
 pub use deposit_mock::deposit_mock_handler;
+#[cfg(feature = "database")]
+pub use fetch::query_transactions_handler;
 pub use get_nonce::get_nonce_handler;
 pub use transfer::transfer_handler;
 pub use withdraw::withdraw_handler;

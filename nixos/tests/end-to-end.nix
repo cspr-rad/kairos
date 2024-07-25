@@ -83,7 +83,6 @@ nixosTest {
   testScript = ''
     import json
     import backoff
-    import time
 
     # Utils
     def verify_deploy_success(json_data):
@@ -103,6 +102,14 @@ nixosTest {
       get_deploy_result = json.loads(client_output)
       if not verify_deploy_success(get_deploy_result):
         raise Exception("Success key not found in JSON")
+
+    @backoff.on_exception(backoff.expo, Exception, max_tries=5, jitter=backoff.full_jitter)
+    def wait_for_deposit(depositor, amount):
+      transactions_query = { "sender": depositor }
+      transactions_result = client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transactions -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transactions_query)))
+      transactions = json.loads(transactions_result)
+      if not any(transaction.get("public_key") == depositor and transaction.get("amount") == str(amount) for transaction in transactions):
+        raise Exception("Couldn't find deposit for depositor {} with amount {} in transactions\n:{}".format(depositor, amount, transactions))
 
     # Test
     start_all()
@@ -132,13 +139,18 @@ nixosTest {
 
     wait_for_successful_deploy(deposit_deploy_hash)
 
-    # wait for l2 to sync with l1 every 5 seconds
-    time.sleep(${builtins.toString (casperSyncInterval * 2)})
+    wait_for_deposit(depositor, 3000000000)
 
     # transfer
     beneficiary = client.succeed("cat ${clientUsersDirectory}/user-3/public_key_hex")
     transfer_output = client.succeed("kairos-cli --kairos-server-address http://kairos transfer --amount 1000 --recipient {} --private-key {}".format(beneficiary, depositor_private_key))
     assert "Transfer successfully sent to L2\n" in transfer_output, "The transfer command was not successful: {}".format(transfer_output)
+
+    # data availability
+    transactions_query = { "recipient": beneficiary }
+    transactions_result = client.succeed("curl --fail-with-body -X POST http://kairos/api/v1/transactions -H 'Content-Type: application/json' -d '{}'".format(json.dumps(transactions_query)))
+    transactions = json.loads(transactions_result)
+    assert any(transaction.get("recipient") == beneficiary and transaction.get("amount") == str(1000) for transaction in transactions), "Couldn't find the transfer in the L2's DA: {}".format(transactions)
 
     # TODO test withdraw
 

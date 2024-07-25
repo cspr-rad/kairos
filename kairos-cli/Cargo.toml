@@ -14,7 +14,7 @@ license.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["demo"]
+default = ["demo", "database"]
 all-tests = ["cctl-tests", "database"]
 cctl-tests = []
 demo = ["dep:kairos-test-utils", "dep:tokio", "dep:dotenvy"]
