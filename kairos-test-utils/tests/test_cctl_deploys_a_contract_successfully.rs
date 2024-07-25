@@ -30,14 +30,14 @@ async fn test_cctl_deploys_a_contract_successfully() {
         path: contract_wasm_path,
     };
 
-    let chainspec = Path::new(env!("CCTL_CHAINSPEC"));
-    let config = Path::new(env!("CCTL_CONFIG"));
+    let chainspec = PathBuf::from(std::env::var("CCTL_CHAINSPEC").unwrap());
+    let config = PathBuf::from(std::env::var("CCTL_CONFIG").unwrap());
 
     let network = CCTLNetwork::run(
         None,
         Some(contract_to_deploy),
-        Some(chainspec),
-        Some(config),
+        Some(chainspec.as_path()),
+        Some(config.as_path()),
     )
     .await
     .unwrap();

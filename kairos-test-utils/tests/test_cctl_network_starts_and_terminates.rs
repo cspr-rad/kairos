@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::PathBuf;
 
 use casper_client::{get_node_status, rpcs::results::ReactorState, JsonRpcId, Verbosity};
 use kairos_test_utils::cctl::{CCTLNetwork, NodeState};
@@ -16,12 +16,17 @@ fn tracing_init() {
 async fn test_cctl_network_starts_and_terminates() {
     tracing_init();
 
-    let chainspec = Path::new(env!("CCTL_CHAINSPEC"));
-    let config = Path::new(env!("CCTL_CONFIG"));
+    let chainspec = PathBuf::from(std::env::var("CCTL_CHAINSPEC").unwrap());
+    let config = PathBuf::from(std::env::var("CCTL_CONFIG").unwrap());
 
-    let network = CCTLNetwork::run(None, None, Some(chainspec), Some(config))
-        .await
-        .unwrap();
+    let network = CCTLNetwork::run(
+        None,
+        None,
+        Some(chainspec.as_path()),
+        Some(config.as_path()),
+    )
+    .await
+    .unwrap();
 
     for node in &network.nodes {
         if node.state == NodeState::Running {
