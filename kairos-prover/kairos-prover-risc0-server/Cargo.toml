@@ -6,7 +6,7 @@ license.workspace = true
 
 
 [features]
-default = [ "prove" ]
+default = []
 write-test-proofs = [ "disable-dev-mode" ]
 disable-dev-mode = [ "risc0-zkvm/disable-dev-mode", "kairos-verifier-risc0-lib/disable-dev-mode" ]
 cuda = [ "risc0-zkvm/cuda",  "disable-dev-mode" ]
