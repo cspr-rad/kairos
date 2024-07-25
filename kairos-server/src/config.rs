@@ -46,7 +46,7 @@ impl ServerConfig {
                 }
             }
             None => {
-                tracing::warn!("No secret key file provided. This server will not be able to sign or send depolys.");
+                tracing::warn!("No secret key file provided. This server will not be able to sign batch deploys.");
             }
         }
         let kairos_demo_contract_hash = parse_env_as::<String>("KAIROS_SERVER_DEMO_CONTRACT_HASH")

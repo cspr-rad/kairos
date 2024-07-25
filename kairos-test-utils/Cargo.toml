@@ -14,6 +14,7 @@ bench = false
 [features]
 # FIXME enable cctl-tests once this crate is factored out in a separate repository
 #all-tests = ["cctl-tests"]
+default = ["database"]
 all-tests = ["database"]
 cctl-tests = []
 database = ["kairos-server/database"]
