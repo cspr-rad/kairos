@@ -3,6 +3,7 @@ use casper_client::types::{DeployBuilder, DeployHash, ExecutableDeployItem, Time
 use casper_client_types::{crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs, U512};
 use kairos_server::routes::contract_hash::ContractHashPath;
 use kairos_server::routes::deposit::DepositPath;
+use kairos_server::routes::get_chain_name::GetChainNamePath;
 use kairos_server::routes::get_nonce::GetNoncePath;
 use kairos_server::PublicKey;
 use reqwest::Url;
@@ -55,6 +56,7 @@ impl From<reqwest::Error> for KairosClientError {
 pub fn deposit(
     base_url: &Url,
     depositor_secret_key: &SecretKey,
+    chain_name: &str,
     contract_hash: &ContractHash,
     amount: impl Into<U512>,
     recipient: casper_client_types::PublicKey,
@@ -75,16 +77,12 @@ pub fn deposit(
           "recipient" => recipient
         },
     );
-    let deploy = DeployBuilder::new(
-        env!("CASPER_CHAIN_NAME"),
-        deposit_session,
-        depositor_secret_key,
-    )
-    .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT) // max amount allowed to be used on gas fees
-    .with_timestamp(Timestamp::now())
-    .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
-    .build()
-    .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
+    let deploy = DeployBuilder::new(chain_name, deposit_session, depositor_secret_key)
+        .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT) // max amount allowed to be used on gas fees
+        .with_timestamp(Timestamp::now())
+        .with_ttl(TimeDiff::from_millis(60_000)) // 1 min
+        .build()
+        .map_err(|err| KairosClientError::CasperClientError(err.to_string()))?;
 
     let response = reqwest::blocking::Client::new()
         .post(base_url.join(DepositPath::PATH).unwrap())
@@ -155,5 +153,18 @@ pub fn fetch(
         Ok(response) => response
             .json::<Vec<Transactions>>()
             .map_err(KairosClientError::from),
+    }
+}
+
+pub fn get_chain_name(base_url: &Url) -> Result<String, KairosClientError> {
+    let response = reqwest::blocking::Client::new()
+        .get(base_url.join(GetChainNamePath::PATH).unwrap())
+        .send()
+        .map_err(KairosClientError::from)?
+        .error_for_status();
+
+    match response {
+        Err(err) => Err(KairosClientError::from(err)),
+        Ok(response) => response.json::<String>().map_err(KairosClientError::from),
     }
 }
