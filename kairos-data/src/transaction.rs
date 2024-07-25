@@ -17,7 +17,7 @@ pub enum Transaction {
     Withdrawal,
 }
 
-#[derive(Queryable, Debug, Identifiable, Insertable, Serialize, Selectable)]
+#[derive(Queryable, Debug, Identifiable, Insertable, Serialize, Selectable, Deserialize)]
 #[diesel(primary_key(timestamp, amount, public_key))]
 #[diesel(table_name = transactions)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -30,14 +30,15 @@ pub struct Transactions {
     pub recipient: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Serialize)]
 pub struct TransactionFilter {
     pub sender: Option<String>,
     pub min_timestamp: Option<NaiveDateTime>,
     pub max_timestamp: Option<NaiveDateTime>,
-    pub min_amount: Option<i64>,
-    pub max_amount: Option<i64>,
+    pub min_amount: Option<u64>,
+    pub max_amount: Option<u64>,
     pub recipient: Option<String>,
+    pub transaction_type: Option<Transaction>,
 }
 
 pub async fn get(
@@ -66,6 +67,9 @@ pub async fn get(
             }
             if let Some(recipient) = filter.recipient {
                 query = query.filter(transactions::recipient.eq(recipient));
+            }
+            if let Some(transaction_type) = filter.transaction_type {
+                query = query.filter(transactions::trx.eq(transaction_type));
             }
 
             query
