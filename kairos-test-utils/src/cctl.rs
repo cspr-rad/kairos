@@ -9,7 +9,6 @@ use casper_client::{
 };
 use casper_client_types::{ContractHash, ExecutionResult, Key, PublicKey, RuntimeArgs, SecretKey};
 use hex::FromHex;
-use rand::Rng;
 use std::io::{self, Write};
 use std::path::Path;
 use std::path::PathBuf;
@@ -49,6 +48,16 @@ pub struct DeployableContract {
     pub hash_name: String,
     pub runtime_args: RuntimeArgs,
     pub path: PathBuf,
+}
+
+pub fn casper_client_verbosity() -> Verbosity {
+    if tracing::enabled!(tracing::Level::TRACE) {
+        Verbosity::High
+    } else if tracing::enabled!(tracing::Level::DEBUG) {
+        Verbosity::Medium
+    } else {
+        Verbosity::Low
+    }
 }
 
 // max amount allowed to be used on gas fees
@@ -137,34 +146,36 @@ impl CCTLNetwork {
         tracing::info!("Waiting for network to pass genesis");
         retry(ExponentialBackoff::default(), || async {
             // This prevents retrying forever even after ctrl-c
-            let timed_out = start_time.elapsed().as_secs() > 60;
+            let timed_out = start_time.elapsed().as_secs() > 90;
 
-            get_node_status(JsonRpcId::Number(1), &casper_node_rpc_url, Verbosity::Low)
-                .await
-                .map_err(|err| {
-                    let elapsed = start_time.elapsed().as_secs();
-                    tracing::info!("Running for {elapsed}s, Error: {err:?}");
-                    err
-                })
-                .map_err(|err| match &err {
-                    err if timed_out => {
-                        backoff::Error::permanent(anyhow!("Timeout on error: {err:?}"))
-                    }
-                    Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
-                        backoff::Error::transient(anyhow!(err))
-                    }
-                    _ => backoff::Error::permanent(anyhow!(err)),
-                })
-                .map(|success| match success.result.reactor_state {
-                    ReactorState::Validate => Ok(()),
-                    // _ if timed_out => Ok(()),
-                    rs if timed_out => Err(backoff::Error::permanent(anyhow!(
-                        "Node didn't reach the VALIDATE state before timeout: {rs:?}"
-                    ))),
-                    _ => Err(backoff::Error::transient(anyhow!(
-                        "Node didn't reach the VALIDATE state yet"
-                    ))),
-                })?
+            get_node_status(
+                JsonRpcId::Number(1),
+                &casper_node_rpc_url,
+                casper_client_verbosity(),
+            )
+            .await
+            .map_err(|err| {
+                let elapsed = start_time.elapsed().as_secs();
+                tracing::info!("Running for {elapsed}s, Error: {err:?}");
+                err
+            })
+            .map_err(|err| match &err {
+                err if timed_out => backoff::Error::permanent(anyhow!("Timeout on error: {err:?}")),
+                Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
+                    backoff::Error::transient(anyhow!(err))
+                }
+                _ => backoff::Error::permanent(anyhow!(err)),
+            })
+            .map(|success| match success.result.reactor_state {
+                ReactorState::Validate => Ok(()),
+                // _ if timed_out => Ok(()),
+                rs if timed_out => Err(backoff::Error::permanent(anyhow!(
+                    "Node didn't reach the VALIDATE state before timeout: {rs:?}"
+                ))),
+                _ => Err(backoff::Error::transient(anyhow!(
+                    "Node didn't reach the VALIDATE state yet"
+                ))),
+            })?
         })
         .await
         .expect("Waiting for network to pass genesis failed");
@@ -243,6 +254,8 @@ async fn deploy_contract(
         path.to_str().unwrap()
     );
 
+    let casper_client_verbosity = casper_client_verbosity();
+
     let contract_bytes = fs::read(path)?;
     let contract =
         ExecutableDeployItem::new_module_bytes(contract_bytes.into(), runtime_args.clone());
@@ -258,33 +271,25 @@ async fn deploy_contract(
     .build()?;
 
     tracing::info!("Submitting contract deploy");
-    let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
     let deploy_hash = put_deploy(
-        expected_rpc_id.clone(),
+        JsonRpcId::Number(1),
         casper_node_rpc_url,
-        Verbosity::High,
+        casper_client_verbosity,
         deploy,
     )
     .await
     .map_err(Into::<anyhow::Error>::into)
-    .and_then(|response| {
-        if response.id == expected_rpc_id {
-            Ok(response.result.deploy_hash)
-        } else {
-            Err(anyhow!("JSON RPC Id missmatch"))
-        }
-    })?;
+    .map(|response| response.result.deploy_hash)?;
 
     tracing::info!("Waiting for successful contract initialization");
     let start = Instant::now();
     retry(ExponentialBackoff::default(), || async {
         let timed_out = start.elapsed().as_secs() > 60;
 
-        let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
         let response = get_deploy(
-            expected_rpc_id.clone(),
+            JsonRpcId::Number(1),
             casper_node_rpc_url,
-            Verbosity::High,
+            casper_client_verbosity,
             deploy_hash,
             false,
         )
@@ -302,23 +307,19 @@ async fn deploy_contract(
             _ => backoff::Error::permanent(anyhow!(err)),
         })?;
 
-        if response.id == expected_rpc_id {
-            match response.result.execution_results.first() {
-                Some(result) => match &result.result {
-                    ExecutionResult::Failure { error_message, .. } => {
-                        Err(backoff::Error::permanent(anyhow!(error_message.clone())))
-                    }
-                    ExecutionResult::Success { .. } => Ok(()),
-                },
-                None if timed_out => Err(backoff::Error::permanent(anyhow!(
-                    "Timeout on error: No execution results"
-                ))),
-                None => Err(backoff::Error::transient(anyhow!(
-                    "No execution results there yet"
-                ))),
-            }
-        } else {
-            Err(backoff::Error::permanent(anyhow!("JSON RPC Id missmatch")))
+        match response.result.execution_results.first() {
+            Some(result) => match &result.result {
+                ExecutionResult::Failure { error_message, .. } => {
+                    Err(backoff::Error::permanent(anyhow!(error_message.clone())))
+                }
+                ExecutionResult::Success { .. } => Ok(()),
+            },
+            None if timed_out => Err(backoff::Error::permanent(anyhow!(
+                "Timeout on error: No execution results"
+            ))),
+            None => Err(backoff::Error::transient(anyhow!(
+                "No execution results there yet"
+            ))),
         }
     })
     .await?;
@@ -326,72 +327,53 @@ async fn deploy_contract(
 
     tracing::info!("Fetching deployed contract hash");
     // Query global state
-    let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
     let state_root_hash = get_state_root_hash(
-        expected_rpc_id.clone(),
+        JsonRpcId::Number(1),
         casper_node_rpc_url,
-        Verbosity::High,
+        casper_client_verbosity,
         Option::None,
     )
     .await
     .map_err(Into::<anyhow::Error>::into)
     .and_then(|response| {
-        if response.id == expected_rpc_id {
-            response
-                .result
-                .state_root_hash
-                .ok_or(anyhow!("No state root hash present in response"))
-        } else {
-            Err(anyhow!("JSON RPC Id missmatch"))
-        }
+        response
+            .result
+            .state_root_hash
+            .ok_or(anyhow!("No state root hash present in response"))
     })?;
 
-    let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
     let account = get_account(
-        expected_rpc_id.clone(),
+        JsonRpcId::Number(1),
         casper_node_rpc_url,
-        Verbosity::High,
+        casper_client_verbosity,
         Option::None,
         contract_deployer_pkey.clone(),
     )
     .await
     .map_err(Into::<anyhow::Error>::into)
-    .and_then(|response| {
-        if response.id == expected_rpc_id {
-            Ok(response.result.account)
-        } else {
-            Err(anyhow!("JSON RPC Id missmatch"))
-        }
-    })?;
+    .map(|response| response.result.account)?;
 
-    let expected_rpc_id = JsonRpcId::Number(rand::thread_rng().gen::<i64>());
     let account_key = Key::Account(*account.account_hash());
     let contract_hash: casper_client_types::ContractHash = query_global_state(
-        expected_rpc_id.clone(),
+        JsonRpcId::Number(1),
         casper_node_rpc_url,
-        Verbosity::High,
+        casper_client_verbosity,
         casper_client::rpcs::GlobalStateIdentifier::StateRootHash(state_root_hash), // fetches recent blocks state root hash
         account_key,
         vec![hash_name.clone()],
     )
     .await
     .map_err(Into::<anyhow::Error>::into)
-    .and_then(|response| {
-        if response.id == expected_rpc_id {
-            match response.result.stored_value {
-                StoredValue::ContractPackage(contract_package) => Ok(*contract_package
-                    .versions()
-                    .next()
-                    .expect("Expected at least one contract version")
-                    .contract_hash()),
-                other => Err(anyhow!(
-                    "Unexpected result type, type is not a CLValue: {:?}",
-                    other
-                )),
-            }
-        } else {
-            Err(anyhow!("JSON RPC Id missmatch"))
-        }
+    .and_then(|response| match response.result.stored_value {
+        StoredValue::ContractPackage(contract_package) => Ok(*contract_package
+            .versions()
+            .next()
+            .expect("Expected at least one contract version")
+            .contract_hash()),
+        other => Err(anyhow!(
+            "Unexpected result type, type is not a CLValue: {:?}",
+            other
+        )),
     })?;
     tracing::info!(
         "Successfully fetched the contract hash for {}: {}",
