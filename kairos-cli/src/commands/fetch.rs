@@ -11,17 +11,17 @@ use chrono::NaiveDateTime;
 pub struct Args {
     #[arg(long, short, value_name = "PUBLIC_KEY_HEX")]
     sender: Option<String>,
-    #[arg(long, short, value_name = "ISO8601_TIMESTAMP")]
+    #[arg(long, short = 't', value_name = "ISO8601_TIMESTAMP")]
     min_timestamp: Option<NaiveDateTime>,
-    #[arg(long, short, value_name = "ISO8601_TIMESTAMP")]
+    #[arg(long, short = 'T', value_name = "ISO8601_TIMESTAMP")]
     max_timestamp: Option<NaiveDateTime>,
-    #[arg(long, short, value_name = "NUM_MOTES")]
+    #[arg(long, short = 'm', value_name = "NUM_MOTES")]
     min_amount: Option<u64>,
-    #[arg(long, short, value_name = "NUM_MOTES")]
+    #[arg(long, short = 'M', value_name = "NUM_MOTES")]
     max_amount: Option<u64>,
     #[arg(long, short, value_name = "PUBLIC_KEY_HEX")]
     recipient: Option<String>,
-    #[arg(long, short, value_name = "TRANSACTION_TYPE", value_enum)]
+    #[arg(long, short = 'x', value_name = "TRANSACTION_TYPE", value_enum)]
     transaction_type: Option<TransactionType>,
 }
 
