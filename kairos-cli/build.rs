@@ -15,7 +15,7 @@ fn main() {
     fs::copy(&source_path, dest_path).expect("Failed to copy WASM file");
 
     // Print out a message to re-run this script if the source file changes.
-    println!("cargo:rerun-if-changed={}", source_path.display());
+    println!("cargo:rerun-if-changed={}", session_binaries_dir.display());
 }
 
 pub fn get_wasm_directory() -> PathBuf {
