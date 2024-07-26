@@ -51,7 +51,7 @@ pub async fn get(
             let mut query = transactions::table.into_boxed::<diesel::pg::Pg>();
 
             if let Some(sender) = filter.sender {
-                query = query.filter(transactions::public_key.eq(sender));
+                query = query.filter(transactions::public_key.eq(sender.to_lowercase()));
             }
             if let Some(min_timestamp) = filter.min_timestamp {
                 query = query.filter(transactions::timestamp.ge(min_timestamp));
@@ -66,7 +66,7 @@ pub async fn get(
                 query = query.filter(transactions::amount.le(BigDecimal::from(max_amount)));
             }
             if let Some(recipient) = filter.recipient {
-                query = query.filter(transactions::recipient.eq(recipient));
+                query = query.filter(transactions::recipient.eq(recipient.to_lowercase()));
             }
             if let Some(transaction_type) = filter.transaction_type {
                 query = query.filter(transactions::trx.eq(transaction_type));

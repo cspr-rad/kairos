@@ -2843,9 +2843,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-binfmt"
-version = "1.0.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7388047ead80fcb19fe4d3f289d0eeb70b5c4d77c37534002273361ef47c8ba7"
+checksum = "b3432b33880fd2bb3fcff4f7f4764f782852e839a849f72f1b36ba021e6f15d0"
 dependencies = [
  "anyhow",
  "elf",
@@ -2910,9 +2910,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-circuit-rv32im"
-version = "1.0.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64a8cca9ebcd1aac8373904e798ec8b8c076cd75a25fc391c120d7ee37121170"
+checksum = "8fce940ee68935e3fbe224033fb8dc8447d23dcc7558aaa8bb8c21bc1de73bdf"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -2962,9 +2962,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-groth16"
-version = "1.0.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d28893ca55db739e90656c1a1625f69634cdc204be46c3c52b73d64221c6e129"
+checksum = "7fa298da93c2a8ea3c92bde5b2e12cbad3c4291bc4a5a70af5f1fd64a12353a5"
 dependencies = [
  "anyhow",
  "ark-bn254",
@@ -3029,9 +3029,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm"
-version = "1.0.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee208f125812335658abaa87243502b7066a3dfcbd646bdc5d2820c0cd8a797b"
+checksum = "6ca4ee3b38d873affc146e48c741e5a70533f5ccb1e3b186d8d671459c51d1ba"
 dependencies = [
  "addr2line",
  "anyhow",

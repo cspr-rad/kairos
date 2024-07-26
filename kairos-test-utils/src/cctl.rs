@@ -76,8 +76,12 @@ impl CCTLNetwork {
         chainspec_path: Option<&Path>,
         config_path: Option<&Path>,
     ) -> anyhow::Result<CCTLNetwork> {
-        let chainspec_path = chainspec_path.unwrap_or_else(|| Path::new(env!("CCTL_CHAINSPEC")));
-        let config_path = config_path.unwrap_or_else(|| Path::new(env!("CCTL_CONFIG")));
+        let chainspec_path: String = chainspec_path
+            .map(|p| p.to_str().unwrap().to_owned())
+            .unwrap_or_else(|| std::env::var("CCTL_CHAINSPEC").unwrap());
+        let config_path: String = config_path
+            .map(|p| p.to_str().unwrap().to_owned())
+            .unwrap_or_else(|| std::env::var("CCTL_CONFIG").unwrap());
 
         let working_dir = working_dir
             .map(|dir| {
@@ -92,9 +96,9 @@ impl CCTLNetwork {
         let mut setup_command = Command::new("cctl-infra-net-setup");
         setup_command.env("CCTL_ASSETS", &assets_dir);
 
-        setup_command.arg(format!("chainspec={}", chainspec_path.to_str().unwrap()));
+        setup_command.arg(format!("chainspec={}", chainspec_path));
 
-        setup_command.arg(format!("config={}", config_path.to_str().unwrap()));
+        setup_command.arg(format!("config={}", config_path));
 
         tracing::info!("Setting up network configuration");
         let output = setup_command

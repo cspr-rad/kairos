@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use casper_client_types::{runtime_args, RuntimeArgs};
 use kairos_test_utils::cctl::{CCTLNetwork, DeployableContract};
@@ -16,10 +16,10 @@ pub fn run() -> Result<String, CliError> {
             path: contract_wasm_path,
         };
         println!("Deploying contract...");
-        let chainspec_path = Path::new(env!("CCTL_CHAINSPEC"));
-        let config_path = Path::new(env!("CCTL_CONFIG"));
+        let chainspec_path = PathBuf::from(std::env::var("CCTL_CHAINSPEC").unwrap());
+        let config_path = PathBuf::from(std::env::var("CCTL_CONFIG").unwrap());
 
-        let network = CCTLNetwork::run(None, Some(contract_to_deploy), Some(chainspec_path), Some(config_path))
+        let network = CCTLNetwork::run(None, Some(contract_to_deploy), Some(chainspec_path.as_path()), Some(config_path.as_path()))
             .await
             .unwrap();
 
