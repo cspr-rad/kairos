@@ -78,12 +78,10 @@ impl CCTLNetwork {
     ) -> anyhow::Result<CCTLNetwork> {
         let chainspec_path: String = chainspec_path
             .map(|p| p.to_str().unwrap().to_owned())
-            .ok_or_else(|| std::env::var("CCTL_CHAINSPEC"))
-            .unwrap();
+            .unwrap_or_else(|| std::env::var("CCTL_CHAINSPEC").unwrap());
         let config_path: String = config_path
             .map(|p| p.to_str().unwrap().to_owned())
-            .ok_or_else(|| std::env::var("CCTL_CONFIG"))
-            .unwrap();
+            .unwrap_or_else(|| std::env::var("CCTL_CONFIG").unwrap());
 
         let working_dir = working_dir
             .map(|dir| {
