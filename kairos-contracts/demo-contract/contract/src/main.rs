@@ -1,5 +1,6 @@
 #![no_std]
 #![no_main]
+#![allow(unreachable_code)]
 extern crate alloc;
 use alloc::vec;
 use alloc::{string::ToString, vec::Vec};
@@ -97,6 +98,7 @@ pub extern "C" fn deposit() {
 
 #[no_mangle]
 pub extern "C" fn submit_batch() {
+    runtime::revert(ApiError::User(0u16));
     let receipt_serialized: Bytes = runtime::get_named_arg(RUNTIME_ARG_RECEIPT);
     let Ok(receipt): Result<Receipt, _> = serde_json_wasm::from_slice(&receipt_serialized) else {
         runtime::revert(ApiError::User(0u16));
