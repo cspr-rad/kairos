@@ -1,0 +1,319 @@
+= Kairos L2 - Demo
+
+This document describes how to run **Kairos**: layer 2 scaling solution based on **Zero Knowledge**, with off-chain data availability. This validum-type project is currently prepared for running in the **Casper blockchain**.
+
+The demo showcases a full system setup and includes an end-to-end test of the deposit-transfer-withdraw flow.
+
+You can follow all the steps on your local machine, as long as you have *Rust* and *Docker* available.
+
+== External Components - Setup
+
+In order to run Kairos, three external components are required:
+
+- **Casper** - Layer 1 blockchain that will be scaled.
+- **Postgres** - SQL database used as simple Data Availability layer.
+- **RISC Zero zkVM** - Prover used for Kairos state-transition.
+
+=== Layer 1 - Casper
+
+To avoid extra costs, we will run local blockchain with **NCTL**, where users have septillions of CSPR.
+
+IMPORTANT: Truth to be told, we also need to run local network with custom config, as official chain's limits are to contstrained to allow passing ZK proofs to smart contracts. We are working on workaround 🔨.
+
+We will use Docker to spin up ready-to-use Casper network:
+
+```sh
+docker run \
+  --name l1-casper \
+  --rm -d \
+  --env PREDEFINED_ACCOUNTS=true \
+  --env MAXIMUM_ROUND_EXPONENT=14 \
+  -p 11101:11101 \
+  koxu1996/casper-nctl:v156-kairos
+```
+
+NOTE: Above image is customized version of https://github.com/make-software/casper-nctl-docker[make-software/casper-nctl-docker] that runs v1.5.6 network with minor adjustments - you can see those changes https://github.com/koxu1996/casper-nctl-docker[here].
+
+Before we interact with the blockchain, we want to make sure that everything is ready (container will become healthy):
+
+```sh
+while [ "`docker inspect -f {{.State.Health.Status}} l1-casper`" != "healthy" ]; do sleep 1; echo -n "."; done
+```
+
+Once command finishes, we can copy prefunded account keys to host machine:
+
+```sh
+docker cp l1-casper:/home/casper/casper-node/utils/nctl/assets/net-1/users /tmp/casper-users
+```
+
+Now you are able to interact with the blockchain via RPC running at http://127.0.0.1:11101/rpc, using one of 10 keys at `/tmp/casper-users/user-[NUM]/secret_key.pem`.
+
+=== Data Availability - Postgres
+
+Postgres database is used as a simple data availability layer, where transactions data is stored.
+
+Once again let's use docker to spin it up:
+
+```sh
+docker run \
+  --name da-postgres \
+  --rm -d \
+  --env POSTGRES_USER=dbuser \
+  --env POSTGRES_PASSWORD=secretpassword \
+  --env POSTGRES_HOST_AUTH_METHOD=trust \
+  --env POSTGRES_DB=demo \
+  -p 5432:5432 \
+  postgres:16.3-alpine3.20
+```
+
+Database will be available at `postgresql://dbuser@127.0.0.1:5432/demo`.
+
+=== RISC Zero - ZK Prover
+
+Since we want to run proving locally, we have to make Risc0 prover **available on the host**.
+
+Installation of Risc0 is simple with `cargo` extension:
+
+```sh
+cargo install cargo-binstall
+cargo binstall cargo-risczero
+cargo risczero install --version 1.0.3
+```
+
+Then verify it works:
+
+```sh
+r0vm --version
+```
+
+== Kairos Components - Setup
+
+In this long section, we will go through setup of each Kairos' components: L1 contract, node, prover and CLI.
+
+=== Getting Kairos Source
+
+Full Kairos source code is https://github.com/cspr-rad/kairos[available in GitHub].
+
+=== Kairos Prover
+
+REST server that is responsible for handling Risc0 proving requests.
+
+Building prover subproject:
+
+```sh
+cd ./kairos-prover
+cargo build -p kairos-prover-risc0-server
+```
+
+Running:
+
+```sh
+./target/debug/kairos-prover-risc0-server
+```
+
+Server will be handling requests coming to `http://127.0.0.1:7894`.
+
+=== Kairos Contracts
+
+One escrow contract for Casper L1, responsible for locking funds that will become available in L2.
+
+==== Step 1. Building .wasm
+
+Compile smart contract, using release mode:
+
+```sh
+cd ./kairos-contracts
+cargo build -p contract --release
+```
+
+We also need to run additional WASM optimization:
+
+```sh
+wasm-opt -Oz --strip-debug --signext-lowering \
+  ./target/wasm32-unknown-unknown/release/demo-contract.wasm \
+  -o ./target/wasm32-unknown-unknown/release/demo-contract-optimized.wasm
+```
+
+IMPORTANT: Above command not only reduces WASM size, but https://github.com/casper-network/casper-node/issues/4367[fixes `Opcode 192` issue] too.
+
+==== Step 2. Deploying contract
+
+Time to deploy contract in our L1. We will use `casper-client` tool:
+
+```sh
+casper-client put-deploy \
+  --node-address http://127.0.0.1:11101/rpc \
+  --chain-name casper-net-1 \
+  --payment-amount 1300000000000 \
+  --secret-key /tmp/casper-users/user-10/secret_key.pem \
+  --session-path ./target/wasm32-unknown-unknown/release/demo-contract-optimized.wasm \
+  --session-arg "initial_trie_root:opt_byte_array_32=null"
+```
+
+NOTE: Deployment cost is around 1230 CSPR.
+
+Now you want to copy `deploy_hash` from the output. Wait few seconds, then use it to query **contract hash**:
+
+```sh
+casper-client get-deploy \
+  --node-address http://127.0.0.1:11101/rpc 2c9c21fe2f013424f1767e5a3c97b9e7477a6c4eda5423807dbbf3b21d424289 \
+  | grep -B1 \"WriteContract\" | head -n1 \
+  | sed -n 's/.*hash-\([a-f0-9]*\).*/\1/p'
+```
+
+You will get hash like `879c99c7a41ee035091afc8f3918b85255e5bb85267883c2b5ccc4dd0e301b52` - write it down, as it will be required soon for Kairos Server configuration.
+
+=== Kairos Server
+
+Central point of Kairos infrastructure, REST server for handling transactions: deposit, transfer or withdrawal.
+
+==== Step 1. Building 
+
+To build Kairos server binary execute:
+
+```sh
+cargo build -p kairos-server --release
+```
+
+CAUTION: Debug build will not work due to https://github.com/cspr-rad/kairos/issues/161[bug #161].
+
+==== Step 2. Configuration
+
+Firstly, correct contract hash from previous steps must be provided:
+
+```sh
+export KAIROS_SERVER_DEMO_CONTRACT_HASH="879c99c7a41ee035091afc8f3918b85255e5bb85267883c2b5ccc4dd0e301b52"
+```
+
+The rest of configuration can be copied from below:
+
+```sh
+export KAIROS_SERVER_CASPER_RPC="http://127.0.0.1:11101/rpc"
+export KAIROS_SERVER_SECRET_KEY_FILE="/tmp/casper-users/user-10/secret_key.pem"
+export KAIROS_SERVER_DB_ADDR="postgresql://dbuser@127.0.0.1:5432/demo"
+export KAIROS_SERVER_MAX_BATCH_SIZE=3
+export KAIROS_SERVER_MAX_BATCH_SECONDS=1800
+```
+
+==== Step 3. Running
+
+As Kairos Server is place where the most coordination happens, we will enable detailed logging:
+
+```sh
+export RUST_LOG=debug
+```
+
+Now we can run server:
+
+```sh
+./target/release/kairos-server
+```
+
+Server will be handling requests coming to `http://127.0.0.1:9999`.
+
+=== Kairos Client
+
+This is CLI for Kairos, that allows making deposits, transfers and withdrawal.
+
+==== Building
+
+To build Kairos CLI execute:
+
+```sh
+cargo build -p kairos-cli --no-default-features --features database
+```
+
+NOTE: Default features contain code related to Nix demo, CCTL testing, that are not necessary here.
+
+It will take a little while, as additional session code needs to be compiled and included in CLI.
+
+==== Usage 
+
+For full CLI usage reference please check help:
+
+```sh
+./target/debug/kairos-cli --help
+```
+
+== Kairos - E2E Test
+
+Once we have full infrastructure up and running, it is time to try using Kairos!
+
+We will go through the full flow of making deposit, transferring tokens in L2, then withdrawing them back to L1.
+
+=== Deposit
+
+Deposit happens directly on L1, though it can be initiated in Kairos, which will proxy deposit deployment to Casper.
+
+Firstly we locate the depositor public key - __user-1__ - as we want to deposit token to his own account:
+
+```sh
+cat /tmp/casper-users/user-1/public_key_hex
+```
+
+To make deposit we execute the following command:
+
+```sh
+./target/debug/kairos-cli deposit \
+  --amount 1000 \
+  --private-key /tmp/casper-users/user-1/secret_key.pem \
+  --recipient 0184f6d260F4EE6869DDB36affe15456dE6aE045278FA2f467bb677561cE0daD55
+```
+
+We have to wait few seconds until deploy is processed by L1, and correpsonding event picked up by Kairos server. Then we can query Data Availibility for it:
+
+```sh
+./target/debug/kairos-cli fetch
+```
+
+=== Transfer
+
+Transfer is simple operation and it happens directly between L2 users.
+
+Firstly we locate the recipient public key - __user-2__:
+
+```sh
+cat /tmp/casper-users/user-2/public_key_hex
+```
+
+Command for making transfer:
+
+```sh
+./target/debug/kairos-cli transfer \
+  --recipient 01a5A5B7328118681638BE3e06c8749609280Dba4c9DAF9AeB3D3464b8839B018a \
+  --amount 1000 \
+  --private-key /tmp/casper-users/user-1/secret_key.pem
+```
+
+Transaction will be processed immediately, and funds are availalable for the recipient.
+
+=== Withdrawal
+
+Withdrawal is about moving funds from L2 back to L1.
+
+Before withdrawing money, let's check current account balance of __user-2__. This requires getting account hash first:
+
+```sh
+casper-client account-address \
+  --public-key /tmp/casper-users/user-2/public_key_hex
+```
+
+Once we get `account-hash-...` we can query user balance:
+
+```sh
+casper-client query-balance \
+  --node-address http://127.0.0.1:11101 \
+  --purse-identifier account-hash-9fa1fc0808d3a5b9ea9f3af4ca7c8c3655568fdf378d8afdf8a7e56e58abbfd4
+```
+
+Balance will be `1000000000000000000000000000000000` mCSPR.
+
+Let's finally make withdrawal:
+
+```sh
+./target/debug/kairos-cli withdraw \
+  --amount 1000 \
+  --private-key /tmp/casper-users/user-2/secret_key.pem
+```
+
+Query account balance again, and you should notice it increased by 1000 CSPR.
