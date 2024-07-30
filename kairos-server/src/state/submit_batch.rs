@@ -11,6 +11,7 @@ use casper_client_types::{
 };
 use rand::random;
 use reqwest::Url;
+use risc0_zkvm::Receipt;
 
 use crate::routes::get_chain_name::get_chain_name_from_rpc;
 
@@ -21,13 +22,16 @@ pub async fn submit_proof_to_contract(
     signer: &SecretKey,
     contract_hash: ContractHash,
     casper_rpc: Url,
-    proof_serialized: Vec<u8>,
+    receipt: &Receipt,
 ) {
+    let proof_serialized = Bytes::from(serde_json::to_vec(receipt).expect("could not serialize"));
+
+    tracing::info!("Submitting proof to contract: {:?}", contract_hash);
     let submit_batch = ExecutableDeployItem::StoredContractByHash {
         hash: contract_hash,
         entry_point: "submit_batch".into(),
         args: runtime_args! {
-            "risc0_receipt" => Bytes::from(proof_serialized),
+            "risc0_receipt" => proof_serialized,
         },
     };
 

@@ -2,7 +2,7 @@ use casper_client_types::{ContractHash, SecretKey};
 use hex::FromHex;
 use reqwest::Url;
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use std::{fmt, str::FromStr};
 
@@ -36,19 +36,19 @@ impl ServerConfig {
 
         let batch_config = BatchConfig::from_env()?;
 
-        let secret_key_file =
-            parse_env_as_opt::<String>("KAIROS_SERVER_SECRET_KEY_FILE")?.map(PathBuf::from);
-
-        match &secret_key_file {
-            Some(secret_key_file) => {
-                if SecretKey::from_file(secret_key_file).is_err() {
-                    return Err("Invalid secret key".to_string());
+        let secret_key_file = parse_env_as_opt::<String>("KAIROS_SERVER_SECRET_KEY_FILE")?
+            .map(PathBuf::from)
+            .map(|p| find_relative_path_up(&p, 2))
+            .transpose()?
+            .map(|p| {
+                if SecretKey::from_file(&p).is_ok() {
+                    Ok(p)
+                } else {
+                    Err(format!("Failed to read secret key file: {:?}", p))
                 }
-            }
-            None => {
-                tracing::warn!("No secret key file provided. This server will not be able to sign batch deploys.");
-            }
-        }
+            })
+            .transpose()?;
+
         let kairos_demo_contract_hash = parse_env_as::<String>("KAIROS_SERVER_DEMO_CONTRACT_HASH")
             .and_then(|contract_hash_string| {
                 <[u8; 32]>::from_hex(&contract_hash_string).map_err(|err| {
@@ -127,4 +127,25 @@ where
             .map_err(|e| format!("Failed to parse {}: {}", env, e)),
         Err(_) => Ok(None),
     }
+}
+
+fn find_relative_path_up(path: &Path, max_levels: usize) -> Result<PathBuf, String> {
+    if path.exists() {
+        return Ok(path.to_path_buf());
+    } else if path.is_absolute() {
+        return Err(format!("File not found: {:?}", path));
+    };
+
+    let mut current_path;
+    for _ in 1..max_levels {
+        current_path = PathBuf::from("../").join(path);
+        if current_path.exists() {
+            return Ok(current_path);
+        }
+    }
+
+    Err(format!(
+        "File not found: {:?}\n Checked up to {} levels",
+        path, max_levels
+    ))
 }
