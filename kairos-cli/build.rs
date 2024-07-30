@@ -8,8 +8,8 @@ fn main() {
     println!("cargo:rerun-if-env-changed=PATH_TO_SESSION_BINARIES");
 
     // Determine the session binaries directory.
-    let session_binaries_dir = if let Ok(session_code_dir) = env::var("PATH_TO_SESSION_BINARIES") {
-        PathBuf::from(session_code_dir)
+    let (is_automatic_path, session_binaries_dir) = if let Ok(session_code_dir) = env::var("PATH_TO_SESSION_BINARIES") {
+        (false, PathBuf::from(session_code_dir))
     } else {
         // Run `cargo build --release` if the environment variable is not set.
         println!("cargo:warning=Building session code dependency.");
@@ -25,14 +25,17 @@ fn main() {
             panic!("cargo build --release failed");
         }
 
-        get_default_wasm_directory(&project_root)
+        (true, get_default_wasm_directory(&project_root))
     };
 
     // Rerun the build script if the session binaries directory changes.
     println!("cargo:rerun-if-changed={}", session_binaries_dir.display());
 
     // Ensure all WASM files are optimized.
-    optimize_files(&session_binaries_dir).expect("Unable to optimize WASM files");
+    // NOTE: We skip it for Nix (it relies on env variable), as files are already optimized and read-only.
+    if is_automatic_path {
+        optimize_files(&session_binaries_dir).expect("Unable to optimize WASM files");
+    }
 
     // Get the output directory set by Cargo.
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
