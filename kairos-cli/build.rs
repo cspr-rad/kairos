@@ -1,10 +1,38 @@
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 fn main() {
-    // Path
-    let session_binaries_dir = get_wasm_directory();
+    // Rerun the build script if the environment variable changes.
+    println!("cargo:rerun-if-env-changed=PATH_TO_SESSION_BINARIES");
+
+    // Determine the session binaries directory.
+    let session_binaries_dir = if let Ok(session_code_dir) = env::var("PATH_TO_SESSION_BINARIES") {
+        PathBuf::from(session_code_dir)
+    } else {
+        // Run `cargo build --release` if the environment variable is not set.
+        println!("cargo:warning=Building session code dependency.");
+        let project_root = env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+        let status = Command::new("cargo")
+            .arg("build")
+            .arg("--release")
+            .current_dir(Path::new(&project_root).join("../kairos-session-code"))
+            .status()
+            .expect("Failed to execute cargo build --release");
+
+        if !status.success() {
+            panic!("cargo build --release failed");
+        }
+
+        get_default_wasm_directory(&project_root)
+    };
+
+    // Rerun the build script if the session binaries directory changes.
+    println!("cargo:rerun-if-changed={}", session_binaries_dir.display());
+
+    // Ensure all WASM files are optimized.
+    optimize_files(&session_binaries_dir).expect("Unable to optimize WASM files");
 
     // Get the output directory set by Cargo.
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
@@ -13,27 +41,15 @@ fn main() {
 
     // Copy the file from the source to the destination
     fs::copy(source_path, dest_path).expect("Failed to copy WASM file");
-
-    // Print out a message to re-run this script if the source file changes.
-    println!("cargo:rerun-if-changed={}", session_binaries_dir.display());
 }
 
-pub fn get_wasm_directory() -> PathBuf {
-    // Environment variable, or default path based on the project structure.
-    let base_path_session = if let Ok(custom_path) = env::var("PATH_TO_SESSION_BINARIES") {
-        PathBuf::from(custom_path)
-    } else {
-        let project_root = env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-        PathBuf::from(project_root)
-            .join("../kairos-session-code/target/wasm32-unknown-unknown/release/")
-    };
+fn get_default_wasm_directory(project_root: &str) -> PathBuf {
+    let base_path_session = PathBuf::from(project_root)
+        .join("../kairos-session-code/target/wasm32-unknown-unknown/release/");
 
     if !base_path_session.exists() {
         panic!("WASM directory does not exist: {}. Please build session code at `./kairos-session-code` with `cargo build --release`; or set `PATH_TO_SESSION_BINARIES` env variable.", base_path_session.display());
     }
-
-    // Ensure all WASM files are optimized.
-    optimize_files(&base_path_session).expect("Unable to optimize WASM files");
 
     base_path_session
 }
