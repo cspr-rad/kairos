@@ -5,6 +5,8 @@ mod trie;
 use std::collections::HashSet;
 use std::{sync::Arc, thread};
 
+use kairos_circuit_logic::ProofOutputs;
+use risc0_zkvm::Receipt;
 use tokio::{
     sync::{mpsc, RwLock},
     task,
@@ -94,17 +96,18 @@ impl BatchStateManager {
 
                 if res.status().is_success() {
                     tracing::info!("Proving server returned success");
-                    let proof_serialized = res.bytes().await.unwrap_or_else(|e| {
-                        tracing::error!("Could not read response from proving server: {}", e);
-                        panic!("Could not read response from proving server: {}", e);
-                    });
+                    let (_proof_outputs, receipt): (ProofOutputs, Receipt) =
+                        res.json().await.unwrap_or_else(|e| {
+                            tracing::error!("Could not parse response from proving server: {}", e);
+                            panic!("Could not parse response from proving server: {}", e);
+                        });
 
                     if let Some(secret_key) = secret_key.as_ref() {
                         submit_proof_to_contract(
                             secret_key,
                             contract_hash,
                             casper_rpc.clone(),
-                            proof_serialized.to_vec(),
+                            serde_json::to_vec(&receipt).expect("Could not serialize receipt"),
                         )
                         .await
                     } else {
