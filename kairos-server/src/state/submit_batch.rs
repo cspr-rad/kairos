@@ -12,6 +12,8 @@ use casper_client_types::{
 use rand::random;
 use reqwest::Url;
 
+use crate::routes::get_chain_name::get_chain_name_from_rpc;
+
 pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 10_000_000_000_000;
 
 // TODO: retry request on failure, improve error handling
@@ -29,7 +31,10 @@ pub async fn submit_proof_to_contract(
         },
     };
 
-    let deploy = DeployBuilder::new(env!("CASPER_CHAIN_NAME"), submit_batch, signer)
+    let chain_name = get_chain_name_from_rpc(&casper_rpc)
+        .await
+        .expect("RPC request failed");
+    let deploy = DeployBuilder::new(chain_name, submit_batch, signer)
         .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT)
         .with_timestamp(Timestamp::now())
         .with_ttl(TimeDiff::from_millis(60_000))
