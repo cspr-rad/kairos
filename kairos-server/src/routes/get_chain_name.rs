@@ -15,7 +15,9 @@ pub async fn get_chain_name_handler(
 ) -> Result<Json<String>, AppErr> {
     // Call RPC to get chain name.
     let rpc_url = state.server_config.casper_rpc.as_str();
-    let chain_name = get_chain_name_from_rpc(rpc_url).await.expect("RPC request failed");
+    let chain_name = get_chain_name_from_rpc(rpc_url)
+        .await
+        .expect("RPC request failed");
 
     Ok(Json(chain_name))
 }
@@ -23,7 +25,9 @@ pub async fn get_chain_name_handler(
 pub async fn get_chain_name_from_rpc(rpc_url: &str) -> Result<String, ()> {
     let request_id = casper_client::JsonRpcId::Number(1);
     let verbosity = casper_client::Verbosity::Low;
-    let response = casper_client::get_node_status(request_id, rpc_url, verbosity).await.expect("RPC request failed");
+    let response = casper_client::get_node_status(request_id, rpc_url, verbosity)
+        .await
+        .expect("RPC request failed");
     let chain_name = response.result.chainspec_name;
 
     Ok(chain_name)

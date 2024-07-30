@@ -22,7 +22,9 @@ pub async fn submit_proof_to_contract(
         },
     };
 
-    let chain_name = get_chain_name_from_rpc(casper_rpc.as_str()).await.expect("RPC request failed");
+    let chain_name = get_chain_name_from_rpc(casper_rpc.as_str())
+        .await
+        .expect("RPC request failed");
     let deploy = DeployBuilder::new(chain_name, submit_batch, signer)
         .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT)
         .with_timestamp(Timestamp::now())
