@@ -12,7 +12,8 @@ name = "kairos-server"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["cctl-tests", "deposit-mock", "database"]
+# TODO readd database to default features once we have a nix module for postgres
+default = ["cctl-tests", "deposit-mock"]
 all-tests = ["cctl-tests", "deposit-mock", "database"]
 cctl-tests = []
 deposit-mock = []
