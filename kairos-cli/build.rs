@@ -70,14 +70,15 @@ fn optimize_files(dir: &Path) -> Result<(), String> {
                 continue;
             }
 
-            // Skip if optimized file already exists.
+            // Warn about file that will be overwritten.
             let optimized_file_name = format!(
                 "{}-optimized.wasm",
                 file_name.strip_suffix(".wasm").unwrap()
             );
             let optimized_file_path = dir.join(&optimized_file_name);
             if optimized_file_path.exists() {
-                continue;
+                println!("cargo:warning=Overwriting {}", optimized_file_name);
+                //continue; // NOTE: Uncomment to disable overwrite.
             }
 
             // Optimize and save as new file.
