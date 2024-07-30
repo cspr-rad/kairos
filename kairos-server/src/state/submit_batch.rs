@@ -31,7 +31,7 @@ pub async fn submit_proof_to_contract(
         },
     };
 
-    let chain_name = get_chain_name_from_rpc(casper_rpc.as_str())
+    let chain_name = get_chain_name_from_rpc(&casper_rpc)
         .await
         .expect("RPC request failed");
     let deploy = DeployBuilder::new(chain_name, submit_batch, signer)
