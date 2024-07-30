@@ -1,5 +1,14 @@
-use casper_client::types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp};
-use casper_client_types::{bytesrepr::Bytes, runtime_args, ContractHash, RuntimeArgs, SecretKey};
+use std::time::Instant;
+
+use anyhow::anyhow;
+use backoff::{future::retry, ExponentialBackoff};
+use casper_client::{
+    types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp},
+    Error, JsonRpcId,
+};
+use casper_client_types::{
+    bytesrepr::Bytes, runtime_args, ContractHash, ExecutionResult, RuntimeArgs, SecretKey,
+};
 use rand::random;
 use reqwest::Url;
 
@@ -27,6 +36,8 @@ pub async fn submit_proof_to_contract(
         .build()
         .expect("could not build deploy");
 
+    let deploy_hash = *deploy.id();
+
     let r = casper_client::put_deploy(
         casper_client::JsonRpcId::Number(random()),
         casper_rpc.as_str(),
@@ -35,6 +46,50 @@ pub async fn submit_proof_to_contract(
     )
     .await
     .expect("could not put deploy");
+
+    let start = Instant::now();
+    let timed_out = start.elapsed().as_secs() > 60;
+
+    retry(ExponentialBackoff::default(), || async {
+        let response = casper_client::get_deploy(
+            JsonRpcId::Number(1),
+            casper_rpc.as_str(),
+            casper_client::Verbosity::Low,
+            deploy_hash,
+            false,
+        )
+        .await
+        .map_err(|err| {
+            let elapsed = start.elapsed().as_secs();
+            tracing::info!("Running for {elapsed}s, Error: {err:?}");
+            err
+        })
+        .map_err(|err| match &err {
+            e if timed_out => backoff::Error::permanent(anyhow!("Timeout on error: {e:?}")),
+            Error::ResponseIsHttpError { .. } | Error::FailedToGetResponse { .. } => {
+                backoff::Error::transient(anyhow!(err))
+            }
+            _ => backoff::Error::permanent(anyhow!(err)),
+        })
+        .expect("could not get deploy");
+
+        match response.result.execution_results.first() {
+            Some(result) => match &result.result {
+                ExecutionResult::Failure { error_message, .. } => {
+                    Err(backoff::Error::permanent(anyhow!(error_message.clone())))
+                }
+                ExecutionResult::Success { .. } => Ok(()),
+            },
+            None if timed_out => Err(backoff::Error::permanent(anyhow!(
+                "Timeout on error: No execution results"
+            ))),
+            None => Err(backoff::Error::transient(anyhow!(
+                "No execution results there yet"
+            ))),
+        }
+    })
+    .await
+    .expect("could not get deploy");
 
     tracing::info!("Deploy successful: {:?}", r);
 }
