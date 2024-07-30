@@ -26,6 +26,9 @@ pub async fn submit_proof_to_contract(
 ) {
     let proof_serialized = Bytes::from(serde_json::to_vec(receipt).expect("could not serialize"));
 
+    let proof_json_file = std::fs::File::create("proof.json").expect("could not create proof.json");
+    serde_json::to_writer(proof_json_file, receipt).expect("could not write proof.json");
+
     tracing::info!("Submitting proof to contract: {:?}", contract_hash);
     let submit_batch = ExecutableDeployItem::StoredContractByHash {
         hash: contract_hash,

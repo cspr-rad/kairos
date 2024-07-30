@@ -77,6 +77,37 @@ mod tests {
         fixture.transfer_from_contract_purse_by_uref_to_user_fails(fixture.admin, amount)
     }
 
+    /// Delete this test when proof-from-server.json goes out of date.
+    #[test]
+    fn submit_batch_to_contract_proof_from_server() {
+        let receipt = include_bytes!("testdata/proof-from-server.json");
+
+        // precheck proofs before contract tests that are hard to debug
+        let proof_outputs =
+            verify_execution(&serde_json_wasm::from_slice(receipt).unwrap()).unwrap();
+        assert_eq!(proof_outputs.pre_batch_trie_root, None);
+
+        let mut fixture = TestContext::new(None);
+
+        // must match the key in the receipt simple_batches_0
+        let user_1_secret_key =
+            SecretKey::from_pem(include_str!("../../testdata/users/user-1/secret_key.pem"))
+                .unwrap();
+
+        let user_1_public_key = fixture.create_funded_account_for_secret_key(user_1_secret_key);
+        let user_1_account_hash = user_1_public_key.to_account_hash();
+
+        let user_1_pre_deposit_bal = fixture.get_user_balance(user_1_account_hash);
+        fixture.deposit_succeeds(user_1_public_key.clone(), U512::from(500u64));
+        fixture.deposit_succeeds(user_1_public_key, U512::from(500u64));
+        let user_1_post_deposit_bal = fixture.get_user_balance(user_1_account_hash);
+
+        // submit proof to contract
+        fixture.submit_proof_to_contract_expect_success(fixture.admin, receipt.to_vec());
+
+        assert!(user_1_post_deposit_bal <= user_1_pre_deposit_bal - U512::from(5u64));
+    }
+
     #[test]
     fn submit_batch_to_contract_simple() {
         let receipt0 = include_bytes!("testdata/test_prove_simple_batches_0.json");
