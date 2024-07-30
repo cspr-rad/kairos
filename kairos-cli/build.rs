@@ -94,7 +94,7 @@ fn optimize_files(dir: &Path) -> Result<(), String> {
     }
 
     if !found_wasm {
-        return Err("No WASM files found in the directory. You should change directory to `./kairos-session-code` and build with `cargo build --release`.".to_string());
+        return Err("No WASM files found.".to_string());
     }
 
     Ok(())
