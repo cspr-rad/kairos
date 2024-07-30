@@ -8,25 +8,26 @@ fn main() {
     println!("cargo:rerun-if-env-changed=PATH_TO_SESSION_BINARIES");
 
     // Determine the session binaries directory.
-    let (is_automatic_path, session_binaries_dir) = if let Ok(session_code_dir) = env::var("PATH_TO_SESSION_BINARIES") {
-        (false, PathBuf::from(session_code_dir))
-    } else {
-        // Run `cargo build --release` if the environment variable is not set.
-        println!("cargo:warning=Building session code dependency.");
-        let project_root = env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-        let status = Command::new("cargo")
-            .arg("build")
-            .arg("--release")
-            .current_dir(Path::new(&project_root).join("../kairos-session-code"))
-            .status()
-            .expect("Failed to execute cargo build --release");
+    let (is_automatic_path, session_binaries_dir) =
+        if let Ok(session_code_dir) = env::var("PATH_TO_SESSION_BINARIES") {
+            (false, PathBuf::from(session_code_dir))
+        } else {
+            // Run `cargo build --release` if the environment variable is not set.
+            println!("cargo:warning=Building session code dependency.");
+            let project_root = env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+            let status = Command::new("cargo")
+                .arg("build")
+                .arg("--release")
+                .current_dir(Path::new(&project_root).join("../kairos-session-code"))
+                .status()
+                .expect("Failed to execute cargo build --release");
 
-        if !status.success() {
-            panic!("cargo build --release failed");
-        }
+            if !status.success() {
+                panic!("cargo build --release failed");
+            }
 
-        (true, get_default_wasm_directory(&project_root))
-    };
+            (true, get_default_wasm_directory(&project_root))
+        };
 
     // Rerun the build script if the session binaries directory changes.
     println!("cargo:rerun-if-changed={}", session_binaries_dir.display());
