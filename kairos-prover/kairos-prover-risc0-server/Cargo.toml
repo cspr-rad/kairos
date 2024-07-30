@@ -6,12 +6,12 @@ license.workspace = true
 
 
 [features]
-default = []
+default = [ "client" ]
 write-test-proofs = [ "disable-dev-mode" ]
 disable-dev-mode = [ "risc0-zkvm/disable-dev-mode", "kairos-verifier-risc0-lib/disable-dev-mode" ]
 cuda = [ "risc0-zkvm/cuda",  "disable-dev-mode" ]
 metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
-prove = [ "risc0-zkvm/prove" ]
+client = [ "risc0-zkvm/client" ]
 
 [dependencies]
 methods = { path = "../methods" }
