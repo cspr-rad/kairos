@@ -81,7 +81,6 @@ pub async fn submit_proof_to_contract(
         })
         .expect("could not get deploy");
 
-        dbg!(&response.result.execution_results);
         match response.result.execution_results.first() {
             Some(result) => match &result.result {
                 ExecutionResult::Failure { error_message, .. } => {

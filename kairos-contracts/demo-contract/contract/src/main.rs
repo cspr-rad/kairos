@@ -102,17 +102,6 @@ pub extern "C" fn submit_batch() {
         runtime::revert(ApiError::User(0u16));
     };
 
-    // In CCTL we hit error_message: "Interpreter error: trap: Code(Unreachable)",
-    // In the test execution we finish verification successfully, and hit revert 9999.
-    let _ = receipt
-        .verify([
-            2249819926, 1807275128, 879420467, 753150136, 3885109892, 1252737579, 1362575552,
-            43533945,
-        ])
-        .map_err(|_| runtime::revert(ApiError::User(1u16)));
-
-    runtime::revert(ApiError::User(9999u16));
-
     let ProofOutputs {
         pre_batch_trie_root,
         post_batch_trie_root,
@@ -218,7 +207,7 @@ fn check_batch_deposits_against_unprocessed(batch_deposits: &[L1Deposit]) -> u32
     batch_deposits.iter().zip(unprocessed_deposits.iter()).fold(
         unprocessed_deposits_idx,
         |unprocessed_deposits_idx, (batch_deposit, (event_idx, unprocessed_deposit))| {
-            if unprocessed_deposits_idx <= *event_idx {
+            if unprocessed_deposits_idx > *event_idx {
                 runtime::revert(ApiError::User(202u16));
             }
 
