@@ -50,8 +50,8 @@
           # TODO reuse in nixos tests
           cctlConfig = {
             chainspec = pkgs.fetchurl {
-              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/chainspec.toml.in";
-              hash = "sha256-b/6c5o3JXFlaTgTHxs8JepaHzjMG75knzlKKqRd/7pc=";
+              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/a8ba82edc949959ea3240f06cc9d64db50d42d64/resources/production/chainspec.toml";
+              hash = "sha256-tStzzhCa/NtmmvMcPjkpB23RN8qhDjAYkMOjo2Tvess=";
             };
             config = pkgs.fetchurl {
               url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/config.toml";
