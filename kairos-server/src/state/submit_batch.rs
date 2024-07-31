@@ -16,7 +16,6 @@ use risc0_zkvm::Receipt;
 use crate::routes::get_chain_name::get_chain_name_from_rpc;
 
 pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 10_000_000_000_000;
-
 // TODO: retry request on failure, improve error handling
 pub async fn submit_proof_to_contract(
     signer: &SecretKey,
@@ -25,9 +24,6 @@ pub async fn submit_proof_to_contract(
     receipt: &Receipt,
 ) {
     let proof_serialized = Bytes::from(serde_json::to_vec(receipt).expect("could not serialize"));
-
-    let proof_json_file = std::fs::File::create("proof.json").expect("could not create proof.json");
-    serde_json::to_writer(proof_json_file, receipt).expect("could not write proof.json");
 
     tracing::info!("Submitting proof to contract: {:?}", contract_hash);
     let submit_batch = ExecutableDeployItem::StoredContractByHash {
@@ -85,6 +81,7 @@ pub async fn submit_proof_to_contract(
         })
         .expect("could not get deploy");
 
+        dbg!(&response.result.execution_results);
         match response.result.execution_results.first() {
             Some(result) => match &result.result {
                 ExecutionResult::Failure { error_message, .. } => {
@@ -101,7 +98,7 @@ pub async fn submit_proof_to_contract(
         }
     })
     .await
-    .expect("could not get deploy");
+    .expect("could not get deploy or deploy failed");
 
     tracing::info!("Deploy successful: {:?}", r);
 }

@@ -23,7 +23,7 @@ use contract_utils::constants::{
 mod entry_points;
 mod utils;
 use kairos_circuit_logic::transactions::{Signed, Withdraw};
-use kairos_verifier_risc0_lib::verifier::Receipt;
+use kairos_verifier_risc0_lib::verifier::{Receipt, VerifyError};
 use utils::errors::DepositError;
 use utils::get_immediate_caller;
 
@@ -102,14 +102,28 @@ pub extern "C" fn submit_batch() {
         runtime::revert(ApiError::User(0u16));
     };
 
-    let Ok(ProofOutputs {
+    // In CCTL we hit error_message: "Interpreter error: trap: Code(Unreachable)",
+    // In the test execution we finish verification successfully, and hit revert 9999.
+    let _ = receipt
+        .verify([
+            2249819926, 1807275128, 879420467, 753150136, 3885109892, 1252737579, 1362575552,
+            43533945,
+        ])
+        .map_err(|_| runtime::revert(ApiError::User(1u16)));
+
+    runtime::revert(ApiError::User(9999u16));
+
+    let ProofOutputs {
         pre_batch_trie_root,
         post_batch_trie_root,
         deposits,
         withdrawals,
-    }) = kairos_verifier_risc0_lib::verifier::verify_execution(&receipt)
-    else {
-        runtime::revert(ApiError::User(1u16));
+    } = match kairos_verifier_risc0_lib::verifier::verify_execution(&receipt) {
+        Ok(proof_outputs) => proof_outputs,
+        Err(VerifyError::Ris0ZkvmVerifcationError(_)) => runtime::revert(ApiError::User(1000u16)),
+        Err(VerifyError::TooFewBytesInJournal { .. }) => runtime::revert(ApiError::User(1001u16)),
+        Err(VerifyError::InvalidLengthInJournal { .. }) => runtime::revert(ApiError::User(1001u16)),
+        Err(VerifyError::BorshDeserializationError(_)) => runtime::revert(ApiError::User(1001u16)),
     };
 
     // get the current root from contract storage
@@ -118,12 +132,12 @@ pub extern "C" fn submit_batch() {
         .into_uref()
         .unwrap_or_revert_with(ApiError::User(2u16));
     let trie_root: Option<[u8; 32]> = storage::read(trie_root_uref)
-        .unwrap_or_revert()
-        .unwrap_or_revert_with(ApiError::User(3u16));
+        .unwrap_or_revert_with(ApiError::User(3u16))
+        .unwrap_or_revert_with(ApiError::User(4u16));
 
     // revert if the previous root of the proof doesn't match the current root
     if trie_root != pre_batch_trie_root {
-        runtime::revert(ApiError::User(4u16))
+        runtime::revert(ApiError::User(5u16))
     };
 
     check_batch_deposits_against_unprocessed(&deposits);
@@ -204,10 +218,12 @@ fn check_batch_deposits_against_unprocessed(batch_deposits: &[L1Deposit]) -> u32
     batch_deposits.iter().zip(unprocessed_deposits.iter()).fold(
         unprocessed_deposits_idx,
         |unprocessed_deposits_idx, (batch_deposit, (event_idx, unprocessed_deposit))| {
-            assert!(unprocessed_deposits_idx <= *event_idx);
+            if unprocessed_deposits_idx <= *event_idx {
+                runtime::revert(ApiError::User(202u16));
+            }
 
             if batch_deposit != unprocessed_deposit {
-                runtime::revert(ApiError::User(202u16));
+                runtime::revert(ApiError::User(203u16));
             }
             *event_idx
         },
@@ -240,7 +256,7 @@ fn execute_withdrawals(withdrawals: &[Signed<Withdraw>]) {
             amount,
             None,
         )
-        .unwrap_or_revert();
+        .unwrap_or_revert_with(ApiError::User(305u16));
     }
 }
 
