@@ -9,7 +9,7 @@ license.workspace = true
 default = []
 write-test-proofs = [ "disable-dev-mode" ]
 disable-dev-mode = [ "risc0-zkvm/disable-dev-mode", "kairos-verifier-risc0-lib/disable-dev-mode" ]
-cuda = [ "risc0-zkvm/cuda",  "disable-dev-mode" ]
+cuda = [ "risc0-zkvm/cuda", "disable-dev-mode", "dep:cust" ]
 metal = [ "risc0-zkvm/metal", "disable-dev-mode" ]
 
 [dependencies]
@@ -30,7 +30,7 @@ axum-extra = { version = "0.9", features = [
     "typed-header",
     "json-deserializer",
 ] }
-
+cust = { version = "0.3", optional = true }
 dotenvy = "0.15"
 
 serde = { version = "1", features = ["derive"] }

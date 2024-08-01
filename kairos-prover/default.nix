@@ -36,6 +36,7 @@
           pkg-config
           cargo-risczero
         ];
+        cargoExtraArgs = "--features cuda";
         buildInputs = with pkgs; [
           openssl.dev
         ] ++ lib.optionals stdenv.isDarwin [
@@ -75,10 +76,31 @@
     in
     {
       devShells.risczero = pkgs.mkShell {
+        DEP_SPPARK_ROOT = pkgs.fetchFromGitHub {
+          owner = "supranational";
+          repo = "sppark";
+          rev = "v0.1.6";
+          sha256 = "sha256-9WyRma3qGhxcPvyoJZm0WwwRmvuFXvotiBnAih4LYNs=";
+        };
         RISC0_RUST_SRC = "${rustToolchain}/lib/rustlib/src/rust";
         RISC0_DEV_MODE = 0;
         RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
+        CUDA_PATH = pkgs.cudaPackages.cudatoolkit;
+        CUDA_LIBRARY_PATH = let p = pkgs.runCommand "hack" {} ''
+          mkdir -p $out/lib
+          ln -s ${pkgs.cudaPackages.cudatoolkit}/lib $out/lib/lib64
+          ln -s ${pkgs.cudaPackages.cudatoolkit}/include $out/include
+        '';
+        in "${p}/include:${p}/lib";
+        CUDA_ROOT = pkgs.cudaPackages.cudatoolkit;
+        CUDA_TOOLKIT_ROOT_DIR = pkgs.cudaPackages.cudatoolkit;
         inputsFrom = [ self.packages.${system}.kairos-prover ];
+        shellHook = ''
+          export PATH="${pkgs.cudaPackages.cudatoolkit}/nvvm/bin:${pkgs.cudaPackages.cudatoolkit}/lib:$PATH"
+          export EXTRA_LDFLAGS="-lcuda"
+        '';
+        packages = [pkgs.cudaPackages.cudatoolkit pkgs.gcc12]; # for nvcc
+
       };
       packages = {
         kairos-prover-deps = craneLib.buildDepsOnly (kairosProverAttrs // {

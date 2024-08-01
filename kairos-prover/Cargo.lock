@@ -1812,6 +1812,7 @@ dependencies = [
  "axum",
  "axum-extra",
  "casper-types",
+ "cust",
  "dotenvy",
  "kairos-circuit-logic",
  "kairos-trie",
