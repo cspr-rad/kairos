@@ -47,3 +47,6 @@ assert_cmd = "2"
 predicates = "3"
 kairos-test-utils = { path = "../kairos-test-utils" }
 casper-client-hashing.workspace = true
+
+[build-dependencies]
+wasm-opt = "0.116"
