@@ -107,7 +107,7 @@ impl BatchStateManager {
                             secret_key,
                             contract_hash,
                             casper_rpc.clone(),
-                            serde_json::to_vec(&receipt).expect("Could not serialize receipt"),
+                            &receipt,
                         )
                         .await
                     } else {
