@@ -49,18 +49,6 @@
 
           cctl = inputs'.cctl.packages.cctl.override { casper-node = inputs'.csprpkgs.packages.casper-node; };
 
-          # TODO reuse in nixos tests
-          cctlConfig = {
-            chainspec = pkgs.fetchurl {
-              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/a8ba82edc949959ea3240f06cc9d64db50d42d64/resources/production/chainspec.toml";
-              hash = "sha256-tStzzhCa/NtmmvMcPjkpB23RN8qhDjAYkMOjo2Tvess=";
-            };
-            config = pkgs.fetchurl {
-              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/config.toml";
-              hash = "sha256-ZuNbxw0nBjuONEZRK8Ru96zZQak4MEQ/eM1fA6esyCM=";
-            };
-          };
-
           kairosContractsAttrs = {
             src = lib.cleanSourceWith {
               src = lib.fileset.toSource {
@@ -182,8 +170,8 @@
 
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
-            CCTL_CONFIG = "${cctlConfig.config}";
-            CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
+            CCTL_CONFIG = self'.packages.casper-node-config;
+            CCTL_CHAINSPEC = self'.packages.casper-chainspec;
             KAIROS_SERVER_MIGRATIONS = kairosServerMigrations;
 
             meta.mainProgram = "kairos-server";
@@ -196,8 +184,8 @@
             CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
-            CCTL_CONFIG = "${cctlConfig.config}";
-            CCTL_CHAINSPEC = "${cctlConfig.chainspec}";
+            CCTL_CONFIG = self'.packages.casper-node-config;
+            CCTL_CHAINSPEC = self'.packages.casper-chainspec;
             KAIROS_SERVER_MIGRATIONS = kairosServerMigrations;
             inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
             packages = [ pkgs.diesel-cli ];
@@ -254,6 +242,15 @@
             kairos-session-code = craneLib.buildPackage (kairosSessionCodeAttrs // {
               pname = "kairos-session-code";
             });
+
+            casper-chainspec = pkgs.fetchurl {
+              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/a8ba82edc949959ea3240f06cc9d64db50d42d64/resources/production/chainspec.toml";
+              hash = "sha256-tStzzhCa/NtmmvMcPjkpB23RN8qhDjAYkMOjo2Tvess=";
+            };
+            casper-node-config = pkgs.fetchurl {
+              url = "https://raw.githubusercontent.com/cspr-rad/casper-node/53136ac5f004f2ae70a75b4eeb2ff7d907aff6aa/resources/local/config.toml";
+              hash = "sha256-ZuNbxw0nBjuONEZRK8Ru96zZQak4MEQ/eM1fA6esyCM=";
+            };
           };
 
           checks = {
