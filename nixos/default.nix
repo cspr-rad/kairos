@@ -48,7 +48,7 @@ in
             ./tests/end-to-end.nix
             {
               inherit mkKairosHostConfig;
-              inherit (self.packages.${pkgs.system}) kairos kairos-contracts casper-client-rs;
+              inherit (self.packages.${pkgs.system}) kairos kairos-contracts casper-client-rs casper-node-config casper-chainspec;
               cctlModule = self.nixosModules.cctl;
             };
       };
