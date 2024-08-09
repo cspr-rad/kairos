@@ -28,7 +28,7 @@
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
     cctl.url = "github:casper-network/cctl/947c34b991e37476db82ccfa2bd7c0312c1a91d7";
-    csprpkgs.follows = "cctl/csprpkgs";
+    csprpkgs.url = "github:cspr-rad/csprpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
@@ -46,6 +46,7 @@
             targets.wasm32-unknown-unknown.stable.rust-std
           ];
           craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
+
           cctl = inputs'.cctl.packages.cctl.override { casper-node = inputs'.csprpkgs.packages.casper-node; };
 
           kairosContractsAttrs = {
@@ -163,7 +164,7 @@
               darwin.apple_sdk.frameworks.SystemConfiguration
             ];
             checkInputs = [
-              inputs'.cctl.packages.cctl
+              cctl
               pkgs.postgresql
             ];
 
@@ -217,7 +218,7 @@
               ''
                 mkdir -p $out/bin
                 makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
-                  --set PATH ${pkgs.lib.makeBinPath [inputs'.cctl.packages.cctl ]}
+                  --set PATH ${pkgs.lib.makeBinPath [ cctl ]}
               '';
 
             default = self'.packages.kairos;
