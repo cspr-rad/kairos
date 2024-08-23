@@ -31,7 +31,7 @@
     csprpkgs.url = "github:cspr-rad/csprpkgs";
   };
 
-  outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
+  outputs = inputs@{ flake-parts, treefmt-nix, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
       imports = [
@@ -39,7 +39,7 @@
         ./kairos-prover
         ./nixos
       ];
-      perSystem = { config, self', inputs', system, pkgs, lib, ... }:
+      perSystem = { self', inputs', system, pkgs, lib, ... }:
         let
           rustToolchain = with inputs'.fenix.packages; combine [
             stable.toolchain
