@@ -193,10 +193,11 @@
 
           packages = {
             kairos-deps = craneLib.buildDepsOnly (kairosNodeAttrs // {
-              pname = "kairos";
+              pname = "kairos-deps";
             });
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
+              pname = "kairos";
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
@@ -228,9 +229,11 @@
             });
 
             kairos-contracts-deps = craneLib.buildDepsOnly (kairosContractsAttrs // {
+              pname = "kairos-contracts-deps";
             });
 
             kairos-contracts = craneLib.buildPackage (kairosContractsAttrs // {
+              pname = "kairos-contracts";
               cargoArtifacts = self'.packages.kairos-contracts-deps;
             });
 
