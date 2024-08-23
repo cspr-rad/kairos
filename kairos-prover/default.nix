@@ -67,10 +67,11 @@
       };
       packages = {
         kairos-prover-deps = craneLib.buildDepsOnly (kairosProverAttrs // {
-          pname = "kairos";
+          pname = "kairos-prover-deps";
         });
 
         kairos-prover = craneLib.buildPackage (kairosProverAttrs // {
+          pname = "kairos-prover";
           cargoArtifacts = self'.packages.kairos-prover-deps;
           meta.mainProgram = "kairos-prover-risc0-server";
         });
