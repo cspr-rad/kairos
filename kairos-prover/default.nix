@@ -1,4 +1,4 @@
-{ self, inputs, ... }:
+{ inputs, ... }:
 {
   perSystem = { self', inputs', system, pkgs, lib, ... }:
     let
@@ -63,7 +63,7 @@
         RISC0_RUST_SRC = "${rustToolchain}/lib/rustlib/src/rust";
         RISC0_DEV_MODE = 0;
         RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
-        inputsFrom = [ self.packages.${system}.kairos-prover ];
+        inputsFrom = [ self'.packages.kairos-prover ];
       };
       packages = {
         kairos-prover-deps = craneLib.buildDepsOnly (kairosProverAttrs // {
