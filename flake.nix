@@ -227,20 +227,20 @@
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
-            kairos-contracts-deps = craneLib.buildPackage (kairosContractsAttrs // {
-              pname = "kairos-contracts";
+            kairos-contracts-deps = craneLib.buildDepsOnly (kairosContractsAttrs // {
             });
 
             kairos-contracts = craneLib.buildPackage (kairosContractsAttrs // {
               cargoArtifacts = self'.packages.kairos-contracts-deps;
             });
 
-            kairos-session-code-deps = craneLib.buildPackage (kairosSessionCodeAttrs // {
+            kairos-session-code-deps = craneLib.buildDepsOnly (kairosSessionCodeAttrs // {
               pname = "kairos-session-code-deps";
             });
 
             kairos-session-code = craneLib.buildPackage (kairosSessionCodeAttrs // {
               pname = "kairos-session-code";
+              cargoArtifacts = self'.packages.kairos-session-code-deps;
             });
 
             casper-chainspec = pkgs.fetchurl {
