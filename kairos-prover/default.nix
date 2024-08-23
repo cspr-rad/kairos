@@ -5,21 +5,6 @@
       rustToolchain = inputs'.fenix.packages.latest.toolchain;
       craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
 
-      rustup-mock = pkgs.writeShellApplication {
-        name = "rustup";
-        text = ''
-          # the buildscript uses rustup toolchain to check
-          # whether the risc0 toolchain was installed
-          if [[ "$1" = "toolchain" ]]
-          then
-            printf "risc0\n"
-          elif [[ "$1" = "+risc0" ]]
-          then
-            printf "${rustToolchain}/bin/rustc"
-          fi
-        '';
-      };
-
       kairosProverAttrs = rec {
         src = lib.fileset.toSource {
           root = ../.;
