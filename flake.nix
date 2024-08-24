@@ -31,7 +31,7 @@
     csprpkgs.url = "github:cspr-rad/csprpkgs";
   };
 
-  outputs = inputs@{ self, flake-parts, treefmt-nix, ... }:
+  outputs = inputs@{ flake-parts, treefmt-nix, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [ "x86_64-linux" "x86_64-darwin" "aarch64-darwin" ];
       imports = [
@@ -39,7 +39,7 @@
         ./kairos-prover
         ./nixos
       ];
-      perSystem = { config, self', inputs', system, pkgs, lib, ... }:
+      perSystem = { self', inputs', system, pkgs, lib, ... }:
         let
           rustToolchain = with inputs'.fenix.packages; combine [
             stable.toolchain
@@ -193,10 +193,11 @@
 
           packages = {
             kairos-deps = craneLib.buildDepsOnly (kairosNodeAttrs // {
-              pname = "kairos";
+              pname = "kairos-deps";
             });
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
+              pname = "kairos";
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
@@ -227,20 +228,22 @@
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
-            kairos-contracts-deps = craneLib.buildPackage (kairosContractsAttrs // {
-              pname = "kairos-contracts";
+            kairos-contracts-deps = craneLib.buildDepsOnly (kairosContractsAttrs // {
+              pname = "kairos-contracts-deps";
             });
 
             kairos-contracts = craneLib.buildPackage (kairosContractsAttrs // {
+              pname = "kairos-contracts";
               cargoArtifacts = self'.packages.kairos-contracts-deps;
             });
 
-            kairos-session-code-deps = craneLib.buildPackage (kairosSessionCodeAttrs // {
+            kairos-session-code-deps = craneLib.buildDepsOnly (kairosSessionCodeAttrs // {
               pname = "kairos-session-code-deps";
             });
 
             kairos-session-code = craneLib.buildPackage (kairosSessionCodeAttrs // {
               pname = "kairos-session-code";
+              cargoArtifacts = self'.packages.kairos-session-code-deps;
             });
 
             casper-chainspec = pkgs.fetchurl {

@@ -1,24 +1,9 @@
-{ self, inputs, ... }:
+{ inputs, ... }:
 {
   perSystem = { self', inputs', system, pkgs, lib, ... }:
     let
       rustToolchain = inputs'.fenix.packages.latest.toolchain;
       craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
-
-      rustup-mock = pkgs.writeShellApplication {
-        name = "rustup";
-        text = ''
-          # the buildscript uses rustup toolchain to check
-          # whether the risc0 toolchain was installed
-          if [[ "$1" = "toolchain" ]]
-          then
-            printf "risc0\n"
-          elif [[ "$1" = "+risc0" ]]
-          then
-            printf "${rustToolchain}/bin/rustc"
-          fi
-        '';
-      };
 
       kairosProverAttrs = rec {
         src = lib.fileset.toSource {
@@ -78,14 +63,15 @@
         RISC0_RUST_SRC = "${rustToolchain}/lib/rustlib/src/rust";
         RISC0_DEV_MODE = 0;
         RISC0_R0VM_PATH = lib.getExe pkgs.r0vm;
-        inputsFrom = [ self.packages.${system}.kairos-prover ];
+        inputsFrom = [ self'.packages.kairos-prover ];
       };
       packages = {
         kairos-prover-deps = craneLib.buildDepsOnly (kairosProverAttrs // {
-          pname = "kairos";
+          pname = "kairos-prover-deps";
         });
 
         kairos-prover = craneLib.buildPackage (kairosProverAttrs // {
+          pname = "kairos-prover";
           cargoArtifacts = self'.packages.kairos-prover-deps;
           meta.mainProgram = "kairos-prover-risc0-server";
         });
