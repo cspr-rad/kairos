@@ -1,9 +1,9 @@
 { inputs, ... }:
 {
-  perSystem = { self', inputs', system, pkgs, lib, ... }:
+  perSystem = { self', inputs', pkgs, lib, ... }:
     let
       rustToolchain = inputs'.fenix.packages.latest.toolchain;
-      craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
+      craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
 
       kairosProverAttrs = rec {
         src = lib.fileset.toSource {
@@ -28,7 +28,7 @@
           darwin.apple_sdk.frameworks.SystemConfiguration
           darwin.apple_sdk.frameworks.Metal
         ];
-        cargoVendorDir = inputs.crane.lib.${system}.vendorMultipleCargoDeps {
+        cargoVendorDir = craneLib.vendorMultipleCargoDeps {
           inherit (craneLib.findCargoFiles src) cargoConfigs;
           cargoLockList = [
             ./Cargo.lock

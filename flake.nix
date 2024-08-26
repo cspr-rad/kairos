@@ -41,13 +41,13 @@
         ./kairos-prover
         ./nixos
       ];
-      perSystem = { self', inputs', system, pkgs, lib, ... }:
+      perSystem = { self', inputs', pkgs, lib, ... }:
         let
           rustToolchain = with inputs'.fenix.packages; combine [
             stable.toolchain
             targets.wasm32-unknown-unknown.stable.rust-std
           ];
-          craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
+          craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
 
           cctl = inputs'.cctl.packages.cctl.override { casper-node = inputs'.csprpkgs.packages.casper-node; };
 
@@ -182,7 +182,6 @@
         {
           devShells.default = pkgs.mkShell {
             # Rust Analyzer needs to be able to find the path to default crate
-            RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
             CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
             PATH_TO_WASM_BINARIES = "${self'.packages.kairos-contracts}/bin";
             PATH_TO_SESSION_BINARIES = "${self'.packages.kairos-session-code}/bin";
