@@ -2799,20 +2799,11 @@ dependencies = [
 name = "kairos-test-utils"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "backoff",
- "casper-client",
  "casper-types 3.0.0",
- "casper-types 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clap",
- "dotenvy",
- "hex",
  "kairos-server",
- "nom",
  "percent-encoding",
- "rand 0.8.5",
  "reqwest 0.12.4",
- "sd-notify",
  "tempfile",
  "tokio",
  "tracing",
@@ -4215,12 +4206,6 @@ name = "scratch"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3cf7c11c38cb994f3d40e8a8cde3bbd1f72a435e4c49e85d6553d8312306152"
-
-[[package]]
-name = "sd-notify"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4646d6f919800cd25c50edb49438a1381e2cd4833c027e75e8897981c50b8b5e"
 
 [[package]]
 name = "sec1"

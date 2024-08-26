@@ -4,40 +4,21 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
-[[bin]]
-name = "cctld"
-path = "bin/cctld.rs"
-version.workspace = true
-test = false
-bench = false
-
 [features]
-# FIXME enable cctl-tests once this crate is factored out in a separate repository
-#all-tests = ["cctl-tests"]
 default = ["database"]
 all-tests = ["database"]
-cctl-tests = []
 database = ["kairos-server/database"]
 
 [lib]
 
 [dependencies]
 
-anyhow = "1"
 backoff = { version = "0.4", features = ["tokio", "futures"]}
-clap = { version = "4", features = ["derive"] }
-casper-client.workspace = true
-casper-types.workspace = true
 casper-client-types.workspace = true
-nom = "7"
-hex = "0.4"
 percent-encoding = "2.3"
-rand = "0.8"
-sd-notify = "0.4"
 tokio = { version = "1", features = [ "full", "tracing", "macros" ] }
 tempfile = "3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 reqwest = { version = "0.12", features = ["json"] }
 kairos-server = { path = "../kairos-server" }
-dotenvy = "0.15"
