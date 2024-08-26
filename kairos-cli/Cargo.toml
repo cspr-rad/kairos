@@ -26,6 +26,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
 casper-client.workspace = true
 casper-client-types = { workspace = true, features = ["std"] } # TODO: Change `std` -> `std-fs-io` in the future version.
+cctl-rs.workspace = true
 clap = { version = "4", features = ["derive", "deprecated"] }
 chrono = { version = "0.4", optional = true }
 hex = "0.4"

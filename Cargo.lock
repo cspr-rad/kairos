@@ -1133,6 +1133,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "cctl-rs"
+version = "0.1.0"
+source = "git+https://github.com/cspr-rad/cctl-rs#da4400558ead366af9c075b5c02d16f30ddadcea"
+dependencies = [
+ "anyhow",
+ "backoff",
+ "casper-client",
+ "casper-types 3.0.0",
+ "clap",
+ "hex",
+ "nom",
+ "sd-notify",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2710,6 +2729,7 @@ dependencies = [
  "casper-client",
  "casper-hashing 2.0.0",
  "casper-types 3.0.0",
+ "cctl-rs",
  "chrono",
  "clap",
  "dotenvy",
@@ -2773,6 +2793,7 @@ dependencies = [
  "casper-event-toolkit",
  "casper-types 3.0.0",
  "casper-types 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cctl-rs",
  "chrono",
  "contract-utils",
  "dotenvy",
@@ -2799,20 +2820,11 @@ dependencies = [
 name = "kairos-test-utils"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "backoff",
- "casper-client",
  "casper-types 3.0.0",
- "casper-types 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "clap",
- "dotenvy",
- "hex",
  "kairos-server",
- "nom",
  "percent-encoding",
- "rand 0.8.5",
  "reqwest 0.12.4",
- "sd-notify",
  "tempfile",
  "tokio",
  "tracing",

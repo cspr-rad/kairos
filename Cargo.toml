@@ -26,6 +26,7 @@ license = "MIT OR Apache-2.0"
 opt-level = 3
 
 [workspace.dependencies]
+cctl-rs = { git = "https://github.com/cspr-rad/cctl-rs" }
 casper-client = "2.0"
 casper-types = "4.0"
 casper-client-types = { package = "casper-types", version = "3.0" }

@@ -15,6 +15,7 @@ use casper_client_types::{
     crypto::{PublicKey, SecretKey},
     AsymmetricType, ContractHash,
 };
+use cctl::CCTLNetwork;
 #[cfg(feature = "database")]
 use kairos_data::new as new_pool;
 use kairos_server::{
@@ -22,7 +23,6 @@ use kairos_server::{
     routes::deposit::DepositPath,
     state::{BatchStateManager, ServerStateInner},
 };
-use kairos_test_utils::cctl::CCTLNetwork;
 #[cfg(feature = "database")]
 use kairos_test_utils::postgres::PostgresDB;
 
