@@ -49,7 +49,7 @@ in
             {
               inherit mkKairosHostConfig;
               inherit (self.packages.${pkgs.system}) kairos kairos-contracts casper-client-rs casper-node-config casper-chainspec;
-              cctlModule = self.nixosModules.cctl;
+              cctlModule = inputs.cctl-rs.nixosModules.cctl;
             };
       };
     nixosModules = {
@@ -64,12 +64,6 @@ in
         {
           imports = [ ./modules/kairos-prover.nix ];
           services.kairos-prover.package = self.packages.${pkgs.system}.kairos-prover;
-        };
-      cctl =
-        { pkgs, lib, ... }:
-        {
-          imports = [ ./modules/cctl.nix ];
-          services.cctl.package = self.packages.${pkgs.system}.cctld;
         };
     };
   };

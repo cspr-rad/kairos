@@ -29,6 +29,8 @@
     advisory-db.flake = false;
     cctl.url = "github:casper-network/cctl/947c34b991e37476db82ccfa2bd7c0312c1a91d7";
     csprpkgs.url = "github:cspr-rad/csprpkgs";
+    cctl-rs.url = "github:cspr-rad/cctl-rs";
+    cctl-rs.inputs.cctl.follows = "cctl";
   };
 
   outputs = inputs@{ flake-parts, treefmt-nix, ... }:
@@ -210,17 +212,6 @@
               cargoArtifacts = self'.packages.kairos-deps;
               cargoExtraArgs = "-p kairos-crypto --no-default-features --features crypto-casper,tx";
             });
-
-            cctld = pkgs.runCommand "cctld-wrapped"
-              {
-                buildInputs = [ pkgs.makeWrapper ];
-                meta.mainProgram = "cctld";
-              }
-              ''
-                mkdir -p $out/bin
-                makeWrapper ${self'.packages.kairos}/bin/cctld $out/bin/cctld \
-                  --set PATH ${pkgs.lib.makeBinPath [ cctl ]}
-              '';
 
             default = self'.packages.kairos;
 
