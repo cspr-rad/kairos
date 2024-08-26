@@ -5,12 +5,10 @@ use std::path::PathBuf;
 
 use casper_client::types::DeployHash;
 use casper_client_hashing::Digest;
+use cctl::{CCTLNetwork, DeployableContract};
+use kairos_test_utils::kairos::Kairos;
 #[cfg(feature = "database")]
 use kairos_test_utils::postgres::PostgresDB;
-use kairos_test_utils::{
-    cctl::{CCTLNetwork, DeployableContract},
-    kairos::Kairos,
-};
 
 // Helper function to get the path to a fixture file
 fn fixture_path(relative_path: &str) -> PathBuf {

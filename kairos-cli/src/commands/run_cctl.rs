@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use casper_client_types::{runtime_args, RuntimeArgs};
-use kairos_test_utils::cctl::{CCTLNetwork, DeployableContract};
+use cctl::{CCTLNetwork, DeployableContract};
 
 use crate::error::CliError;
 
@@ -19,7 +19,7 @@ pub fn run() -> Result<String, CliError> {
         let chainspec_path = PathBuf::from(std::env::var("CCTL_CHAINSPEC").unwrap());
         let config_path = PathBuf::from(std::env::var("CCTL_CONFIG").unwrap());
 
-        let network = CCTLNetwork::run(None, Some(contract_to_deploy), Some(chainspec_path.as_path()), Some(config_path.as_path()))
+        let network = CCTLNetwork::run(None, Some(contract_to_deploy), Some(chainspec_path), Some(config_path))
             .await
             .unwrap();
 
