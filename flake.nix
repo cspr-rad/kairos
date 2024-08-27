@@ -52,6 +52,7 @@
           cctl = inputs'.cctl.packages.cctl.override { casper-node = inputs'.csprpkgs.packages.casper-node; };
 
           kairosContractsAttrs = {
+            pname = "kairos-contracts";
             src = lib.cleanSourceWith {
               src = lib.fileset.toSource {
                 root = ./.;
@@ -87,6 +88,7 @@
           };
 
           kairosSessionCodeAttrs = {
+            pname = "kairos-session-code";
             src = lib.cleanSourceWith {
               src = lib.fileset.toSource {
                 root = ./.;
@@ -136,6 +138,7 @@
           '';
 
           kairosNodeAttrs = {
+            pname = "kairos";
             src = lib.fileset.toSource {
               root = ./.;
               fileset = lib.fileset.unions [
@@ -193,21 +196,20 @@
           };
 
           packages = {
-            kairos-deps = craneLib.buildDepsOnly (kairosNodeAttrs // {
-              pname = "kairos-deps";
-            });
+            kairos-deps = craneLib.buildDepsOnly kairosNodeAttrs;
 
             kairos = craneLib.buildPackage (kairosNodeAttrs // {
-              pname = "kairos";
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
             kairos-tx-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              pname = "kairos-tx-no-std";
               cargoArtifacts = self'.packages.kairos-deps;
               cargoExtraArgs = "-p kairos-tx --no-default-features";
             });
 
             kairos-crypto-no-std = craneLib.buildPackage (kairosNodeAttrs // {
+              pname = "kairos-crypto-no-std";
               cargoArtifacts = self'.packages.kairos-deps;
               cargoExtraArgs = "-p kairos-crypto --no-default-features --features crypto-casper,tx";
             });
@@ -215,24 +217,19 @@
             default = self'.packages.kairos;
 
             kairos-docs = craneLib.cargoDoc (kairosNodeAttrs // {
+              pname = "kairos-docs";
               cargoArtifacts = self'.packages.kairos-deps;
             });
 
-            kairos-contracts-deps = craneLib.buildDepsOnly (kairosContractsAttrs // {
-              pname = "kairos-contracts-deps";
-            });
+            kairos-contracts-deps = craneLib.buildDepsOnly kairosContractsAttrs;
 
             kairos-contracts = craneLib.buildPackage (kairosContractsAttrs // {
-              pname = "kairos-contracts";
               cargoArtifacts = self'.packages.kairos-contracts-deps;
             });
 
-            kairos-session-code-deps = craneLib.buildDepsOnly (kairosSessionCodeAttrs // {
-              pname = "kairos-session-code-deps";
-            });
+            kairos-session-code-deps = craneLib.buildDepsOnly kairosSessionCodeAttrs;
 
             kairos-session-code = craneLib.buildPackage (kairosSessionCodeAttrs // {
-              pname = "kairos-session-code";
               cargoArtifacts = self'.packages.kairos-session-code-deps;
             });
 
@@ -248,6 +245,7 @@
 
           checks = {
             lint = craneLib.cargoClippy (kairosNodeAttrs // {
+              pname = "kairos-lint";
               cargoArtifacts = self'.packages.kairos-deps;
               cargoClippyExtraArgs = "--features=all-tests --all-targets -- --deny warnings";
             });
@@ -276,11 +274,13 @@
             # };
 
             kairos-contracts-lint = craneLib.cargoClippy (kairosContractsAttrs // {
+              pname = "kairos-contracts-lint";
               cargoArtifacts = self'.packages.kairos-contracts-deps;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });
 
             kairos-session-code-lint = craneLib.cargoClippy (kairosSessionCodeAttrs // {
+              pname = "kairos-session-code-lint";
               cargoArtifacts = self'.packages.kairos-session-code-deps;
               cargoClippyExtraArgs = "--all-targets -- --deny warnings";
             });

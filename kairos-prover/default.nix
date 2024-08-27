@@ -6,6 +6,7 @@
       craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
 
       kairosProverAttrs = rec {
+        pname = "kairos-prover";
         src = lib.fileset.toSource {
           root = ../.;
           fileset = lib.fileset.unions [
@@ -66,12 +67,9 @@
         inputsFrom = [ self'.packages.kairos-prover ];
       };
       packages = {
-        kairos-prover-deps = craneLib.buildDepsOnly (kairosProverAttrs // {
-          pname = "kairos-prover-deps";
-        });
+        kairos-prover-deps = craneLib.buildDepsOnly kairosProverAttrs;
 
         kairos-prover = craneLib.buildPackage (kairosProverAttrs // {
-          pname = "kairos-prover";
           cargoArtifacts = self'.packages.kairos-prover-deps;
           meta.mainProgram = "kairos-prover-risc0-server";
         });
