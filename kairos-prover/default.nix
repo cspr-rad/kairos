@@ -20,7 +20,6 @@
         sourceRoot = "source/kairos-prover";
         nativeBuildInputs = with pkgs; [
           pkg-config
-          cargo-risczero
         ];
         buildInputs = with pkgs; [
           openssl.dev
