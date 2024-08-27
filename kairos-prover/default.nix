@@ -1,11 +1,12 @@
 { inputs, ... }:
 {
-  perSystem = { self', inputs', system, pkgs, lib, ... }:
+  perSystem = { self', inputs', pkgs, lib, ... }:
     let
       rustToolchain = inputs'.fenix.packages.latest.toolchain;
-      craneLib = inputs.crane.lib.${system}.overrideToolchain rustToolchain;
+      craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
 
       kairosProverAttrs = rec {
+        pname = "kairos-prover";
         src = lib.fileset.toSource {
           root = ../.;
           fileset = lib.fileset.unions [
@@ -19,7 +20,6 @@
         sourceRoot = "source/kairos-prover";
         nativeBuildInputs = with pkgs; [
           pkg-config
-          cargo-risczero
         ];
         buildInputs = with pkgs; [
           openssl.dev
@@ -28,7 +28,7 @@
           darwin.apple_sdk.frameworks.SystemConfiguration
           darwin.apple_sdk.frameworks.Metal
         ];
-        cargoVendorDir = inputs.crane.lib.${system}.vendorMultipleCargoDeps {
+        cargoVendorDir = craneLib.vendorMultipleCargoDeps {
           inherit (craneLib.findCargoFiles src) cargoConfigs;
           cargoLockList = [
             ./Cargo.lock
@@ -66,12 +66,9 @@
         inputsFrom = [ self'.packages.kairos-prover ];
       };
       packages = {
-        kairos-prover-deps = craneLib.buildDepsOnly (kairosProverAttrs // {
-          pname = "kairos-prover-deps";
-        });
+        kairos-prover-deps = craneLib.buildDepsOnly kairosProverAttrs;
 
         kairos-prover = craneLib.buildPackage (kairosProverAttrs // {
-          pname = "kairos-prover";
           cargoArtifacts = self'.packages.kairos-prover-deps;
           meta.mainProgram = "kairos-prover-risc0-server";
         });

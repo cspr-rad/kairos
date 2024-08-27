@@ -64,7 +64,7 @@ nixosTest {
   extraPythonPackages = p: [ p.backoff ];
   testScript = { nodes }:
     let
-      casperNodeAddress = "http://localhost:${builtins.toString nodes.server.config.services.cctl.port}";
+      casperNodeAddress = "http://localhost:${builtins.toString nodes.server.services.cctl.port}";
       # This is the directory wget will copy to, see script below
       clientUsersDirectory = "kairos/cctl/users";
     in
