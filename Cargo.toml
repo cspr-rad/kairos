@@ -26,9 +26,12 @@ opt-level = 3
 
 [workspace.dependencies]
 cctl-rs = { git = "https://github.com/cspr-rad/cctl-rs" }
-casper-client = "2.0"
-casper-types = "4.0"
-casper-client-types = { package = "casper-types", version = "3.0" }
-casper-client-hashing = { package = "casper-hashing", version = "2.0" }
-casper-contract = { version = "4.0", default-features = false }
-casper-event-standard = "0.5"
+casper-client = { git = "https://github.com/casper-ecosystem/casper-client-rs", branch = "feat-track-node-2.0"}
+casper-types= { git = "https://github.com/casper-network/casper-node", branch = "release-2.0.0-rc4" }
+casper-contract = { git = "https://github.com/casper-network/casper-node", branch = "release-2.0.0-rc4", default-features = false }
+casper-event-standard = { git = "https://github.com/cspr-rad/casper-event-standard", branch = "release-2.0.0-rc4" }
+casper-event-toolkit = { git = "https://github.com/cspr-rad/casper-event-toolkit.git", branch = "node-2.0.0-rc4" }
+
+# needed because of casper-client-rs still requiring an older casper-types version
+[patch.crates-io]
+casper-types = { git = "https://github.com/casper-network/casper-node", branch = "release-2.0.0-rc4" }

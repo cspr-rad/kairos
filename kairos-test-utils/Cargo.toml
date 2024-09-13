@@ -14,7 +14,7 @@ database = ["kairos-server/database"]
 [dependencies]
 
 backoff = { version = "0.4", features = ["tokio", "futures"]}
-casper-client-types.workspace = true
+casper-types.workspace = true
 percent-encoding = "2.3"
 tokio = { version = "1", features = [ "full", "tracing", "macros" ] }
 tempfile = "3"
