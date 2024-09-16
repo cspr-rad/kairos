@@ -12,10 +12,10 @@ use kairos_trie::{
 };
 
 /// The state of the batch transaction against the trie.
-pub struct AccountTrie<S: Store<Account>> {
+pub struct AccountTrie<S: Store<Value = Account>> {
     pub txn: AccountTrieTxn<S>,
 }
-pub type AccountTrieTxn<S> = kairos_trie::Transaction<S, Account>;
+pub type AccountTrieTxn<S> = kairos_trie::Transaction<S>;
 
 /// TODO panic on error should be behind a feature flag
 type TxnErr = String;
@@ -25,7 +25,7 @@ impl<'s> TryFrom<&'s Snapshot<Account>> for AccountTrie<&'s Snapshot<Account>> {
 
     fn try_from(snapshot: &'s Snapshot<Account>) -> Result<Self, Self::Error> {
         Ok(Self {
-            txn: kairos_trie::Transaction::from_snapshot(snapshot)?,
+            txn: kairos_trie::Transaction::from_unverified_snapshot_ref(snapshot)?,
         })
     }
 }
@@ -44,7 +44,7 @@ impl<Db: 'static + DatabaseGet<Account>> TryFrom<SnapshotBuilder<Db, Account>>
 impl<'s> AccountTrie<&'s Snapshot<Account>> {
     pub fn new_try_from_snapshot(snapshot: &'s Snapshot<Account>) -> Result<Self, TxnErr> {
         Ok(Self {
-            txn: kairos_trie::Transaction::from_snapshot(snapshot)?,
+            txn: kairos_trie::Transaction::from_unverified_snapshot_ref(snapshot)?,
         })
     }
 }
@@ -59,7 +59,7 @@ impl<Db: 'static + DatabaseGet<Account>> AccountTrie<SnapshotBuilder<Db, Account
     }
 }
 
-impl<S: Store<Account>> AccountTrie<S> {
+impl<S: Store<Value = Account>> AccountTrie<S> {
     #[allow(clippy::type_complexity)]
     pub fn apply_batch(
         &mut self,
