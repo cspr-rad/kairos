@@ -1,3 +1,4 @@
+use casper_types::execution::ExecutionResult;
 use serde::{Deserialize, Serialize};
 
 /// Casper does not expose SSE types directly, so we have to reimplement them.
@@ -21,5 +22,5 @@ pub enum SseData {
 pub struct DeployProcessed {
     pub deploy_hash: Box<casper_types::DeployHash>,
     pub account: Box<casper_types::PublicKey>,
-    pub execution_result: Box<casper_types::ExecutionResult>,
+    pub execution_result: Box<ExecutionResult>,
 }
