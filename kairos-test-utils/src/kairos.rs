@@ -1,6 +1,6 @@
 use backoff::future::retry;
 use backoff::ExponentialBackoff;
-use casper_client_types::ContractHash;
+use casper_types::contracts::ContractHash;
 use reqwest::Url;
 use std::io;
 use std::net::{SocketAddr, TcpListener};
