@@ -10,16 +10,18 @@ license.workspace = true
 name = "echo_demo"
 
 [dependencies]
-futures = "0.3.30"
+futures = "0.3"
 reqwest = { version = "0.12", features = ["stream"] }
 tokio = { version = "1", features = ["full"] }
 serde = "1.0"
 serde_json = "1.0"
 casper-types.workspace = true
-eventsource-stream = "0.2.3"
+eventsource-stream = "0.2"
 thiserror = "1.0"
-base16 = "0.2.1"
+base16 = "0.2"
+tracing = "0.1"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
 mockito = "1"
+tracing-subscriber = "0.3"

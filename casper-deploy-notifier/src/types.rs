@@ -1,9 +1,8 @@
 use casper_types::{
     execution::{ExecutionResult, ExecutionResultV1},
-    AsymmetricType,
 };
 
-use crate::sse_types::DeployProcessed;
+use crate::sse_types::TransactionProcessed;
 
 #[derive(Debug)]
 pub struct Notification {
@@ -12,8 +11,8 @@ pub struct Notification {
     pub success: bool,
 }
 
-impl From<DeployProcessed> for Notification {
-    fn from(event_details: DeployProcessed) -> Self {
+impl From<TransactionProcessed> for Notification {
+    fn from(event_details: TransactionProcessed) -> Self {
         let success = match *event_details.execution_result {
             ExecutionResult::V1(execution_result_v1) => match execution_result_v1 {
                 ExecutionResultV1::Failure { .. } => false,
@@ -21,8 +20,8 @@ impl From<DeployProcessed> for Notification {
             },
             ExecutionResult::V2(execution_result_v2) => execution_result_v2.error_message.is_none(),
         };
-        let deploy_hash = base16::encode_lower(event_details.deploy_hash.inner());
-        let public_key = event_details.account.to_hex();
+        let deploy_hash = base16::encode_lower(&event_details.transaction_hash.digest());
+        let public_key = event_details.initiator_addr.account_hash().to_string();
 
         Notification {
             deploy_hash,

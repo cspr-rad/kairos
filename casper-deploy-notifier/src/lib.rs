@@ -71,28 +71,28 @@ impl DeployNotifier {
     // Before running this function again, make sure you established new connection.
     pub async fn run(&mut self, tx: mpsc::Sender<Notification>) -> Result<(), SseError> {
         // Take stream out of state.
-        let mut event_stream = match self.event_stream.take() {
-            Some(s) => Ok(s),
-            None => Err(SseError::NotConnected),
-        }?;
+        let mut event_stream = self.event_stream.take().ok_or(SseError::NotConnected)?;
 
         while let Some(event) = event_stream.try_next().await? {
             let data: SseData = serde_json::from_str(&event.data)?;
             match data {
+                // FIXME This is never going to return a UndexpectedHandshake error
                 SseData::ApiVersion(_) => Err(SseError::UnexpectedHandshake)?,
-                SseData::Other(_) => {}
-                SseData::DeployProcessed(event_details) => {
+                SseData::Other(other) => tracing::debug!("Received SSE event other than TransactionProcessed: {other}"),
+                SseData::TransactionProcessed(event_details) => {
                     let notification = event_details.into();
-                    if let Err(_e) = tx.send(notification).await {
+                    if let Err(err) = tx.send(notification).await {
+                        tracing::error!("Failed to a send notification on TransactionProcessed event: {err}");
                         // Receiver probably dropeed.
                         break;
                     }
                 }
+                // FIXME This is never going to return a NodeShutdown error
                 SseData::Shutdown => Err(SseError::NodeShutdown)?,
             }
         }
 
         // Stream was exhausted.
-        Err(SseError::StreamExhausted)?
+        Err(SseError::StreamExhausted)
     }
 }
