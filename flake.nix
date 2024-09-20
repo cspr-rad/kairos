@@ -5,14 +5,10 @@
     extra-substituters = [
       "https://crane.cachix.org"
       "https://nix-community.cachix.org"
-      "https://kairos.cachix.org"
-      "https://casper-cache.marijan.pro"
     ];
     extra-trusted-public-keys = [
       "crane.cachix.org-1:8Scfpmn9w+hGdXH/Q9tTLiYAE/2dnJYRJP7kl80GuRk="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "kairos.cachix.org-1:1EqnyWXEbd4Dn1jCbiWOF1NLOc/bELx+wuqk0ZpbeqQ="
-      "casper-cache.marijan.pro:XIDjpzFQTEuWbnRu47IqSOy6IqyZlunVGvukNROL850="
     ];
   };
 
