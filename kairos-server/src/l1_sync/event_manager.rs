@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use casper_event_toolkit::casper_types::bytesrepr::FromBytes;
+use casper_event_standard::casper_types::bytesrepr::FromBytes;
 use casper_event_toolkit::fetcher::{Fetcher, Schemas};
 use casper_event_toolkit::metadata::CesMetadataRef;
 use casper_event_toolkit::rpc::client::CasperClient;

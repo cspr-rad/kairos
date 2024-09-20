@@ -1,18 +1,18 @@
 #![no_std]
 #![no_main]
 extern crate alloc;
-use alloc::vec;
-use alloc::{string::ToString, vec::Vec};
+use alloc::{collections::BTreeMap, string::ToString, vec, vec::Vec};
 use casper_contract::{
     contract_api::{runtime, storage, system},
     unwrap_or_revert::UnwrapOrRevert,
 };
 use casper_event_standard::Schemas;
 use casper_types::bytesrepr::{Bytes, FromBytes, ToBytes};
+use casper_types::EntityAddr;
 use casper_types::PublicKey;
 use casper_types::{
-    contracts::NamedKeys, runtime_args, AccessRights, ApiError, CLValue, EntryPoints, Key,
-    RuntimeArgs, URef, U512,
+    addressable_entity::NamedKeys, runtime_args, AccessRights, ApiError, CLValue, EntryPoints, Key,
+    URef, U512,
 };
 use contract_utils::constants::{
     KAIROS_CONTRACT_HASH, KAIROS_CONTRACT_PACKAGE_HASH, KAIROS_CONTRACT_UREF, KAIROS_DEPOSIT_PURSE,
@@ -21,11 +21,11 @@ use contract_utils::constants::{
     RUNTIME_ARG_TEMP_PURSE,
 };
 mod entry_points;
-mod utils;
 use kairos_circuit_logic::transactions::{Signed, Withdraw};
 use kairos_verifier_risc0_lib::verifier::{Receipt, VerifyError};
-use utils::errors::DepositError;
-use utils::get_immediate_caller;
+
+mod errors;
+use errors::DepositError;
 
 #[allow(clippy::single_component_path_imports)]
 #[allow(unused)]
@@ -87,7 +87,7 @@ pub extern "C" fn deposit() {
     // FIXME: verify that the caller's account hash matches a depositor public key argument.
     // We have to ensure we know who the depositor is for regulatory reasons.
     // We could check that the recipient of the funds is the caller or off chain get another signature from the public key.
-    let _account_hash = get_immediate_caller().unwrap_or_revert();
+    let _account_hash = runtime::get_immediate_caller().unwrap_or_revert();
 
     let recipient = recipient.into_bytes().unwrap_or_revert();
     let new_deposit_record: L1Deposit = L1Deposit { recipient, amount };
@@ -264,22 +264,23 @@ pub extern "C" fn call() {
     let initial_trie_root: Option<[u8; 32]> = runtime::get_named_arg(RUNTIME_ARG_INITIAL_TRIE_ROOT);
 
     let trie_root_uref: URef = storage::new_uref(initial_trie_root);
-    let named_keys = NamedKeys::from([
+    let named_keys = NamedKeys::from(BTreeMap::from([
         (
             KAIROS_UNPROCESSED_DEPOSIT_INDEX.to_string(),
             last_processed_deposit_counter_uref.into(),
         ),
         (KAIROS_TRIE_ROOT.to_string(), trie_root_uref.into()),
-    ]);
+    ]));
 
     let (contract_hash, _) = storage::new_locked_contract(
         entry_points,
         Some(named_keys),
         Some(KAIROS_CONTRACT_PACKAGE_HASH.to_string()),
         Some(KAIROS_CONTRACT_UREF.to_string()),
+        None, //TODO
     );
 
-    let contract_hash_key = Key::from(contract_hash);
+    let contract_hash_key = Key::AddressableEntity(EntityAddr::Account(contract_hash.value()));
     runtime::put_key(KAIROS_CONTRACT_HASH, contract_hash_key);
 
     // Call the init entry point of the newly installed contract

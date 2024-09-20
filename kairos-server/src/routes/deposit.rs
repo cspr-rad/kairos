@@ -5,11 +5,8 @@ use rand::Rng;
 use tracing::*;
 
 use crate::{state::ServerState, AppErr};
-use casper_client::{
-    put_deploy,
-    types::{Deploy, DeployHash},
-    JsonRpcId,
-};
+use casper_client::{put_deploy, JsonRpcId};
+use casper_types::{Deploy, DeployHash};
 
 #[derive(TypedPath, Debug, Clone, Copy)]
 #[typed_path("/api/v1/deposit")]

@@ -12,7 +12,7 @@ use tokio::{
     task,
 };
 
-use casper_client::types::DeployHash;
+use casper_types::{DeployHash, SecretKey};
 
 pub use self::trie::TrieStateThreadMsg;
 use crate::{config::ServerConfig, state::submit_batch::submit_proof_to_contract, PublicKey};
@@ -59,7 +59,7 @@ impl BatchStateManager {
             .as_ref()
             // We already checked that we can read the secret key in at startup.
             // SecretKey does not implement Clone, so we need to clone the path and read it again.
-            .map(|f| casper_client_types::SecretKey::from_file(f).expect("Invalid secret key"));
+            .map(|f| SecretKey::from_file(f).expect("Invalid secret key"));
 
         let (queued_transactions, txn_receiver) = mpsc::channel(1000);
         // This queue provides back pressure to the trie thread.

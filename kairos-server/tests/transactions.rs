@@ -7,15 +7,14 @@ use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing_subscriber::{prelude::*, EnvFilter};
 
-use casper_client::{
-    types::{DeployBuilder, Timestamp},
-    TransferTarget,
-};
-use casper_client_types::{
+use casper_types::{
+    contracts::ContractHash,
     crypto::{PublicKey, SecretKey},
-    AsymmetricType, ContractHash,
+    AsymmetricType, DeployBuilder, Timestamp, TransferTarget,
 };
+
 use cctl::CCTLNetwork;
+
 #[cfg(feature = "database")]
 use kairos_data::new as new_pool;
 use kairos_server::{
@@ -98,15 +97,22 @@ async fn new_test_app_with_casper_node(
 #[cfg_attr(not(feature = "cctl-tests"), ignore)]
 async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
     let network = CCTLNetwork::run(None, None, None, None).await.unwrap();
-    let node = network
-        .nodes
+    let casper_node = network
+        .casper_nodes
         .first()
         .expect("Expected at least one node after successful network run");
-    let casper_rpc_url =
-        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+    let casper_sidecar = network
+        .casper_sidecars
+        .first()
+        .expect("Expected at least one node after successful network run");
+    let casper_rpc_url = Url::parse(&format!(
+        "http://localhost:{}/rpc",
+        casper_sidecar.port.rpc_port
+    ))
+    .unwrap();
     let casper_sse_url = Url::parse(&format!(
         "http://localhost:{}/events/main",
-        node.port.sse_port
+        casper_node.port.sse_port
     ))
     .unwrap();
 
@@ -142,8 +148,8 @@ async fn test_signed_deploy_is_forwarded_if_sender_in_approvals() {
         Option::None,
         TransferTarget::PublicKey(recipient),
         Option::None,
-        &sender_secret_key,
     )
+    .with_secret_key(&sender_secret_key)
     .with_timestamp(Timestamp::now())
     .with_standard_payment(2_500_000_000u64)
     .build()

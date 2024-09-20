@@ -11,12 +11,12 @@ use kairos_circuit_logic::{
 use kairos_trie::stored::{merkle::SnapshotBuilder, Store};
 
 /// The state of the batch transaction against the trie.
-pub struct BatchState<S: Store<Account>> {
+pub struct BatchState<S: Store<Value = Account>> {
     pub batched_txns: Vec<KairosTransaction>,
     pub account_trie: AccountTrie<S>,
 }
 
-impl<S: Store<Account>> BatchState<S> {
+impl<S: Store<Value = Account>> BatchState<S> {
     pub fn new(account_trie: AccountTrie<S>) -> Self {
         Self {
             batched_txns: Vec::new(),

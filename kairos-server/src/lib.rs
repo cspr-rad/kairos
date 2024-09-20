@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use casper_client_types::ContractHash;
+use casper_types::contracts::ContractHash;
 
 use crate::config::ServerConfig;
 use crate::l1_sync::service::L1SyncService;

@@ -7,15 +7,17 @@ use crate::common::args::{
 };
 use crate::error::CliError;
 
-use casper_client_types::{crypto::SecretKey, ContractHash};
+use casper_types::{contracts::ContractHash, crypto::SecretKey};
 use clap::{Args as ClapArgs, Parser};
 use hex::FromHex;
 use reqwest::Url;
 
 use kairos_crypto::error::CryptoError;
 
-const DEFAULT_DEPOSIT_SESSION_WASM: &[u8] =
-    include_bytes!(concat!(env!("OUT_DIR"), "/deposit-session-optimized.wasm"));
+const DEFAULT_DEPOSIT_SESSION_WASM: &[u8] = include_bytes!(concat!(
+    env!("PATH_TO_SESSION_BINARIES"),
+    "/deposit-session-optimized.wasm"
+));
 
 #[derive(Parser, Debug)]
 pub struct Args {

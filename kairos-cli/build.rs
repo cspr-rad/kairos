@@ -44,7 +44,7 @@ fn main() {
     let dest_path = Path::new(&out_dir).join("deposit-session-optimized.wasm");
 
     // Copy the file from the source to the destination
-    fs::copy(source_path, dest_path).expect("Failed to copy WASM file");
+    //fs::copy(source_path, dest_path).expect("Failed to copy WASM file");
 }
 
 fn get_default_wasm_directory(project_root: &str) -> PathBuf {

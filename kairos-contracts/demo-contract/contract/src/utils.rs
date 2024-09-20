@@ -1,14 +1,17 @@
 // Utilities copied from cep-78 and cep-18 implementation.
 
 use casper_contract::contract_api::runtime;
-use casper_types::{system::CallStackElement, Key};
+use casper_types::{
+    system::{CallStackElement, Caller},
+    Key,
+};
 
 pub mod errors;
 use errors::DepositError;
 
 /// Wrap the immediate caller as a Key and return it
-fn call_stack_element_to_key(call_stack_element: CallStackElement) -> Key {
-    match call_stack_element {
+fn call_stack_element_to_key(call_stack_element: Caller) -> Key {
+    match call_stack_element.tag() {
         CallStackElement::Session { account_hash } => Key::from(account_hash),
         CallStackElement::StoredSession { account_hash, .. } => {
             // Stored session code acts in account's context, so if stored session wants to interact

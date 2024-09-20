@@ -27,10 +27,9 @@
     crane.inputs.nixpkgs.follows = "nixpkgs";
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
-    cctl.url = "github:casper-network/cctl/947c34b991e37476db82ccfa2bd7c0312c1a91d7";
-    csprpkgs.url = "github:cspr-rad/csprpkgs";
     cctl-rs.url = "github:cspr-rad/cctl-rs";
-    cctl-rs.inputs.cctl.follows = "cctl";
+    cctl.follows = "cctl-rs/cctl";
+    csprpkgs.follows = "cctl/csprpkgs";
   };
 
   outputs = inputs@{ flake-parts, treefmt-nix, ... }:
@@ -49,7 +48,7 @@
           ];
           craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
 
-          cctl = inputs'.cctl.packages.cctl.override { casper-node = inputs'.csprpkgs.packages.casper-node; };
+          cctl = inputs'.cctl.packages.cctl;
 
           kairosContractsAttrs = {
             pname = "kairos-contracts";
@@ -159,7 +158,7 @@
               ];
             };
 
-            nativeBuildInputs = [ pkgs.binaryen pkgs.lld pkgs.llvmPackages.bintools pkgs.pkg-config ];
+            nativeBuildInputs = with pkgs;[ binaryen lld llvmPackages.bintools pkg-config cmake ];
             buildInputs = with pkgs; [
               openssl.dev
               postgresql.lib
@@ -192,7 +191,11 @@
             CCTL_CHAINSPEC = self'.packages.casper-chainspec;
             KAIROS_SERVER_MIGRATIONS = kairosServerMigrations;
             inputsFrom = [ self'.packages.kairos self'.packages.kairos-contracts ];
-            packages = [ pkgs.diesel-cli ];
+            packages = [
+              pkgs.diesel-cli
+              inputs'.csprpkgs.packages.casper-node_2
+              inputs'.csprpkgs.packages.casper-client-rs_2
+            ];
           };
 
           packages = {

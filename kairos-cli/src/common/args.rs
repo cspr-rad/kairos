@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use casper_client_types::bytesrepr::FromBytes;
+use casper_types::bytesrepr::FromBytes;
 use clap::Args;
 use kairos_crypto::error::CryptoError;
 
@@ -31,16 +31,16 @@ pub struct ContractHashArg {
 }
 
 #[derive(Args, Debug)]
-pub struct RecipientArg {
+pub struct PublicKeyArg {
     #[arg(long, short, value_name = "PUBLIC_KEY", value_parser = parse_hex_string)]
     pub recipient: ::std::vec::Vec<u8>, // Absolute path is required here - see https://github.com/clap-rs/clap/issues/4626#issue-1528622454.
 }
 
-impl TryFrom<RecipientArg> for casper_client_types::PublicKey {
+impl TryFrom<PublicKeyArg> for casper_types::PublicKey {
     type Error = CryptoError;
 
-    fn try_from(arg: RecipientArg) -> Result<Self, CryptoError> {
-        let (pk, _) = casper_client_types::PublicKey::from_bytes(&arg.recipient).map_err(|_| {
+    fn try_from(arg: PublicKeyArg) -> Result<Self, CryptoError> {
+        let (pk, _) = casper_types::PublicKey::from_bytes(&arg.recipient).map_err(|_| {
             CryptoError::FailedToParseKey {
                 error: format!("invalid public key: {}", hex::encode(&arg.recipient)),
             }

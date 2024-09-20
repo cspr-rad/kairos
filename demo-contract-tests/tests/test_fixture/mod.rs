@@ -1,34 +1,27 @@
 mod wasm_helper;
 
 use casper_engine_test_support::{
-    DeployItemBuilder, ExecuteRequestBuilder, WasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR,
-    DEFAULT_ACCOUNT_INITIAL_BALANCE,
+    DeployItemBuilder, ExecuteRequestBuilder, LmdbWasmTestBuilder, ARG_AMOUNT,
+    DEFAULT_ACCOUNT_INITIAL_BALANCE, LOCAL_GENESIS_REQUEST, DEFAULT_ACCOUNT_SECRET_KEY
 };
-use casper_execution_engine::{
-    core::{engine_state, execution},
-    storage::global_state::in_memory::InMemoryGlobalState,
-};
+use casper_execution_engine::{engine_state, execution};
 use casper_types::{
+    DeployBuilder,
     account::AccountHash,
     bytesrepr::Bytes,
+    contracts::ContractHash,
     crypto::{PublicKey, SecretKey},
-    runtime_args,
-    system::{handle_payment::ARG_TARGET, mint::ARG_ID},
-    ApiError, RuntimeArgs, U512,
+    runtime_args, ApiError, EntityAddr, RuntimeArgs, Transaction, TransactionV1Builder, URef, U512,
 };
 use rand::Rng;
 use std::path::Path;
-
-use casper_engine_test_support::{InMemoryWasmTestBuilder, PRODUCTION_RUN_GENESIS_REQUEST};
-use casper_types::{ContractHash, URef};
 
 use self::wasm_helper::get_wasm_directory;
 
 pub const ADMIN_SECRET_KEY: [u8; 32] = [1u8; 32];
 
-#[derive(Default)]
 pub struct TestContext {
-    builder: InMemoryWasmTestBuilder,
+    builder: LmdbWasmTestBuilder,
     pub admin: AccountHash,
     contract_hash: ContractHash,
     contract_purse: URef,
@@ -36,8 +29,8 @@ pub struct TestContext {
 
 impl TestContext {
     pub fn new(initial_trie_root: Option<[u8; 32]>) -> TestContext {
-        let mut builder = InMemoryWasmTestBuilder::default();
-        builder.run_genesis(&PRODUCTION_RUN_GENESIS_REQUEST);
+        let mut builder = LmdbWasmTestBuilder::default();
+        builder.run_genesis(LOCAL_GENESIS_REQUEST.clone());
 
         let admin_secret_key = SecretKey::ed25519_from_bytes(ADMIN_SECRET_KEY).unwrap();
         let admin = create_funded_account_for_secret_key_bytes(&mut builder, admin_secret_key)
@@ -51,16 +44,15 @@ impl TestContext {
         );
 
         let contract_hash = builder
-            .get_expected_account(admin)
-            .named_keys()
+            .get_named_keys(EntityAddr::Account(admin.0))
             .get("kairos_contract_hash")
             .expect("must have contract hash key as part of contract creation")
-            .into_hash()
+            .into_hash_addr()
             .map(ContractHash::new)
             .expect("must get contract hash");
 
         let contract = builder
-            .get_contract(contract_hash)
+            .get_legacy_contract(contract_hash)
             .expect("should have contract");
         let contract_purse = *contract
             .named_keys()
@@ -94,7 +86,11 @@ impl TestContext {
     }
 
     pub fn get_user_balance(&mut self, user: AccountHash) -> U512 {
-        let user_uref = self.builder.get_expected_account(user).main_purse();
+        let user_uref = self
+            .builder
+            .get_entity_by_account_hash(user)
+            .unwrap()
+            .main_purse();
         self.builder.get_purse_balance(user_uref)
     }
 
@@ -196,18 +192,13 @@ impl TestContext {
     ) -> ApiError {
         self.submit_proof_to_contract_commit(sender, proof_serialized);
 
-        let exec_results = self
+        let exec_result = self
             .builder
-            .get_last_exec_results()
-            .expect("Expected to be called after run()");
+            .get_last_exec_result()
+            .expect("Failed to get the deploy result");
 
-        // not sure about first here it's what the upstream code does
-        let exec_result = exec_results
-            .first()
-            .expect("Unable to get first deploy result");
-
-        match exec_result.as_error() {
-            Some(engine_state::Error::Exec(execution::Error::Revert(err))) => *err,
+        match exec_result.error() {
+            Some(engine_state::Error::Exec(execution::ExecError::Revert(err))) => *err,
             Some(err) => panic!("Expected revert ApiError, got {:?}", err),
             None => panic!("Expected error"),
         }
@@ -215,7 +206,7 @@ impl TestContext {
 }
 
 pub fn run_session_with_args(
-    builder: &mut WasmTestBuilder<InMemoryGlobalState>,
+    builder: &mut LmdbWasmTestBuilder,
     session_wasm_path: &Path,
     user: AccountHash,
     runtime_args: RuntimeArgs,
@@ -226,23 +217,30 @@ pub fn run_session_with_args(
     builder.exec(session_request).commit();
 }
 
+// max amount allowed to be used on gas fees
+pub const MAX_GAS_FEE_PAYMENT_AMOUNT: u64 = 1_000_000_000_000;
+
 /// Creates a funded account for the given ed25519 secret key in bytes
 /// It panics if the passed secret key bytes cannot be read
 pub fn create_funded_account_for_secret_key_bytes(
-    builder: &mut WasmTestBuilder<InMemoryGlobalState>,
+    builder: &mut LmdbWasmTestBuilder,
     account_secret_key: SecretKey,
 ) -> PublicKey {
     let account_public_key = PublicKey::from(&account_secret_key);
     let account_hash = account_public_key.to_account_hash();
-    let transfer = ExecuteRequestBuilder::transfer(
-        *DEFAULT_ACCOUNT_ADDR,
-        runtime_args! {
-            ARG_AMOUNT => DEFAULT_ACCOUNT_INITIAL_BALANCE / 10_u64,
-            ARG_TARGET => account_hash,
-            ARG_ID => Option::<u64>::None,
-        },
+    let amount = DEFAULT_ACCOUNT_INITIAL_BALANCE / 10_u64;
+    let deploy = DeployBuilder::new_transfer(
+        "can-be-random",
+        amount,
+        None,
+        account_hash,
+        None
     )
-    .build();
+        .with_secret_key(&DEFAULT_ACCOUNT_SECRET_KEY)
+        .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT)
+        .build().unwrap();
+    let transfer = ExecuteRequestBuilder::from_transaction(&Transaction::Deploy(deploy))
+        .build();
     builder.exec(transfer).expect_success().commit();
     account_public_key
 }
@@ -262,11 +260,11 @@ pub fn contract_call_by_hash(
 
     let deploy = DeployItemBuilder::new()
         .with_address(sender)
-        .with_stored_session_hash(contract_hash, entry_point, args)
-        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => payment, })
+        .with_stored_session_hash(contract_hash.into(), entry_point, args)
+        .with_payment_bytes(vec![], runtime_args! { ARG_AMOUNT => payment, })
         .with_authorization_keys(&[sender])
         .with_deploy_hash(deploy_hash)
         .build();
 
-    ExecuteRequestBuilder::new().push_deploy(deploy)
+    ExecuteRequestBuilder::from_deploy_item(&deploy)
 }

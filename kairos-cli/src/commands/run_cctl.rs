@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use casper_client_types::{runtime_args, RuntimeArgs};
+use casper_types::runtime_args;
 use cctl::{CCTLNetwork, DeployableContract};
 
 use crate::error::CliError;
@@ -10,16 +10,16 @@ pub fn run() -> Result<String, CliError> {
         let contract_wasm_path =
             PathBuf::from(env!("PATH_TO_WASM_BINARIES")).join("demo-contract-optimized.wasm");
         let hash_name = "kairos_contract_package_hash";
-        let contract_to_deploy = DeployableContract {
+        let contracts_to_deploy = vec![ DeployableContract {
             hash_name: hash_name.to_string(),
-            runtime_args: runtime_args! { "initial_trie_root" => Option::<[u8; 32]>::None },
+            runtime_args: Some(runtime_args! { "initial_trie_root" => Option::<[u8; 32]>::None }),
             path: contract_wasm_path,
-        };
+        }];
         println!("Deploying contract...");
         let chainspec_path = PathBuf::from(std::env::var("CCTL_CHAINSPEC").unwrap());
         let config_path = PathBuf::from(std::env::var("CCTL_CONFIG").unwrap());
 
-        let network = CCTLNetwork::run(None, Some(contract_to_deploy), Some(chainspec_path), Some(config_path))
+        let network = CCTLNetwork::run(None, Some(contracts_to_deploy), Some(chainspec_path), Some(config_path))
             .await
             .unwrap();
 
@@ -27,7 +27,7 @@ pub fn run() -> Result<String, CliError> {
         let contract_hash = network.get_contract_hash_for(hash_name);
 
         let node = network
-            .nodes
+            .casper_sidecars
             .first()
             .expect("Expected at least one node after successful network run");
         let casper_rpc_url = format!("http://localhost:{}/rpc", node.port.rpc_port);

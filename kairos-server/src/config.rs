@@ -1,4 +1,4 @@
-use casper_client_types::{ContractHash, SecretKey};
+use casper_types::{contracts::ContractHash, SecretKey};
 use hex::FromHex;
 use reqwest::Url;
 use std::net::SocketAddr;

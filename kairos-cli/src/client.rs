@@ -1,11 +1,12 @@
 use axum_extra::routing::TypedPath;
-use casper_client::types::{DeployBuilder, DeployHash, ExecutableDeployItem, TimeDiff, Timestamp};
-use casper_client_types::{crypto::SecretKey, runtime_args, ContractHash, RuntimeArgs, U512};
+use casper_types::{
+    contracts::ContractHash, crypto::SecretKey, runtime_args, DeployBuilder, DeployHash,
+    ExecutableDeployItem, PublicKey, TimeDiff, Timestamp, U512,
+};
 use kairos_server::routes::contract_hash::ContractHashPath;
 use kairos_server::routes::deposit::DepositPath;
 use kairos_server::routes::get_chain_name::GetChainNamePath;
 use kairos_server::routes::get_nonce::GetNoncePath;
-use kairos_server::PublicKey;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -58,7 +59,7 @@ pub fn deposit(
     chain_name: &str,
     contract_hash: &ContractHash,
     amount: impl Into<U512>,
-    recipient: casper_client_types::PublicKey,
+    recipient: PublicKey,
 ) -> Result<DeployHash, KairosClientError> {
     let deposit_session = ExecutableDeployItem::new_module_bytes(
         deposit_session_wasm_bytes.into(),
@@ -68,7 +69,8 @@ pub fn deposit(
           "recipient" => recipient
         },
     );
-    let deploy = DeployBuilder::new(chain_name, deposit_session, depositor_secret_key)
+    let deploy = DeployBuilder::new(chain_name, deposit_session)
+        .with_secret_key(depositor_secret_key)
         .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT) // max amount allowed to be used on gas fees
         .with_timestamp(Timestamp::now())
         .with_ttl(TimeDiff::from_millis(60_000)) // 1 min

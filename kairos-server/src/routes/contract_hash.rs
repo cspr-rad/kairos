@@ -3,7 +3,7 @@ use axum_extra::routing::TypedPath;
 use tracing::*;
 
 use crate::{state::ServerState, AppErr};
-use casper_client_types::ContractHash;
+use casper_types::contracts::ContractHash;
 
 #[derive(TypedPath, Debug, Clone, Copy)]
 #[typed_path("/api/v1/contract-hash")]

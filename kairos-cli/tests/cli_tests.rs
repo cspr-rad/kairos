@@ -1,10 +1,9 @@
 use assert_cmd::Command;
-use casper_client_types::{runtime_args, RuntimeArgs};
+use casper_types::runtime_args;
 use reqwest::Url;
 use std::path::PathBuf;
 
-use casper_client::types::DeployHash;
-use casper_client_hashing::Digest;
+use casper_types::{DeployHash, Digest};
 use cctl::{CCTLNetwork, DeployableContract};
 use kairos_test_utils::kairos::Kairos;
 #[cfg(feature = "database")]
@@ -29,10 +28,10 @@ async fn deposit_successful_with_ed25519() {
     let hash_name = "kairos_contract_package_hash";
     let contract_to_deploy = DeployableContract {
         hash_name: hash_name.to_string(),
-        runtime_args: runtime_args! { "initial_trie_root" => Option::<[u8; 32]>::None },
+        runtime_args: Some(runtime_args! { "initial_trie_root" => Option::<[u8; 32]>::None }),
         path: contract_wasm_path,
     };
-    let network = CCTLNetwork::run(None, Some(contract_to_deploy), None, None)
+    let network = CCTLNetwork::run(None, Some(vec![contract_to_deploy]), None, None)
         .await
         .unwrap();
 
@@ -41,12 +40,16 @@ async fn deposit_successful_with_ed25519() {
     #[cfg(feature = "database")]
     let postgres = PostgresDB::run(None).unwrap();
 
-    let node = network
-        .nodes
+    let sidecar = network
+        .casper_sidecars
         .first()
-        .expect("Expected at least one node after successful network run");
+        .expect("Expected at least one sidecar after successful network run");
     let casper_rpc_url =
-        Url::parse(&format!("http://localhost:{}/rpc", node.port.rpc_port)).unwrap();
+        Url::parse(&format!("http://localhost:{}/rpc", sidecar.port.rpc_port)).unwrap();
+    let node = network
+        .casper_nodes
+        .first()
+        .expect("Expected at least one sidecar after successful network run");
     let casper_sse_url = Url::parse(&format!(
         "http://localhost:{}/events/main",
         node.port.sse_port

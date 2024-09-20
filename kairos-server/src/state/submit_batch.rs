@@ -2,12 +2,12 @@ use std::time::Instant;
 
 use anyhow::anyhow;
 use backoff::{future::retry, ExponentialBackoff};
-use casper_client::{
-    types::{DeployBuilder, ExecutableDeployItem, TimeDiff, Timestamp},
-    Error, JsonRpcId,
-};
-use casper_client_types::{
-    bytesrepr::Bytes, runtime_args, ContractHash, ExecutionResult, RuntimeArgs, SecretKey,
+use casper_client::{Error, JsonRpcId};
+use casper_types::{
+    bytesrepr::Bytes,
+    contracts::ContractHash,
+    execution::{execution_result_v1::ExecutionResultV1, ExecutionResult},
+    runtime_args, DeployBuilder, ExecutableDeployItem, SecretKey, TimeDiff, Timestamp,
 };
 use rand::random;
 use reqwest::Url;
@@ -27,7 +27,7 @@ pub async fn submit_proof_to_contract(
 
     tracing::info!("Submitting proof to contract: {:?}", contract_hash);
     let submit_batch = ExecutableDeployItem::StoredContractByHash {
-        hash: contract_hash,
+        hash: contract_hash.into(),
         entry_point: "submit_batch".into(),
         args: runtime_args! {
             "risc0_receipt" => proof_serialized,
@@ -37,14 +37,15 @@ pub async fn submit_proof_to_contract(
     let chain_name = get_chain_name_from_rpc(&casper_rpc)
         .await
         .expect("RPC request failed");
-    let deploy = DeployBuilder::new(chain_name, submit_batch, signer)
+    let deploy = DeployBuilder::new(chain_name, submit_batch)
+        .with_secret_key(signer)
         .with_standard_payment(MAX_GAS_FEE_PAYMENT_AMOUNT)
         .with_timestamp(Timestamp::now())
         .with_ttl(TimeDiff::from_millis(60_000))
         .build()
         .expect("could not build deploy");
 
-    let deploy_hash = *deploy.id();
+    let deploy_hash = *deploy.hash();
 
     let r = casper_client::put_deploy(
         casper_client::JsonRpcId::Number(random()),
@@ -81,15 +82,33 @@ pub async fn submit_proof_to_contract(
         })
         .expect("could not get deploy");
 
-        match response.result.execution_results.first() {
-            Some(result) => match &result.result {
-                ExecutionResult::Failure { error_message, .. } => {
-                    Err(backoff::Error::permanent(anyhow!(error_message.clone())))
-                }
-                ExecutionResult::Success { .. } => Ok(()),
+        match response.result.execution_info {
+            Some(execution_info) => match execution_info.execution_result {
+                Some(execution_result) => match &execution_result {
+                    ExecutionResult::V1(execution_result_v1) => match execution_result_v1 {
+                        ExecutionResultV1::Failure { error_message, .. } => {
+                            Err(backoff::Error::permanent(anyhow!(error_message.clone())))
+                        }
+                        ExecutionResultV1::Success { .. } => Ok(()),
+                    },
+                    ExecutionResult::V2(execution_result_v2) => {
+                        match &execution_result_v2.error_message {
+                            None => Ok(()),
+                            Some(error_message) => {
+                                Err(backoff::Error::permanent(anyhow!(error_message.clone())))
+                            }
+                        }
+                    }
+                },
+                None if timed_out => Err(backoff::Error::permanent(anyhow!(
+                    "Timeout on error: No execution result"
+                ))),
+                None => Err(backoff::Error::transient(anyhow!(
+                    "No execution results there yet"
+                ))),
             },
             None if timed_out => Err(backoff::Error::permanent(anyhow!(
-                "Timeout on error: No execution results"
+                "Timeout on error: No execution info"
             ))),
             None => Err(backoff::Error::transient(anyhow!(
                 "No execution results there yet"
