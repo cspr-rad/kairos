@@ -1,12 +1,13 @@
 #![no_std]
 
+#[allow(clippy::too_long_first_doc_paragraph)]
 /// The risc0 image_id of the batch update circuit program.
 /// To update this you must rebuild the circuit with `cargo risczero build`, which will use docker
 /// to reproducibly build the circuit.
 /// Then you must copy the output ELF to `kairos-prover/methods/prove_batch_bin`
 /// and run `cargo build` which will output the new hash.
 pub const BATCH_CIRCUIT_PROGRAM_HASH: [u32; 8] = [
-    2249819926, 1807275128, 879420467, 753150136, 3885109892, 1252737579, 1362575552, 43533945,
+    162636669, 3420136214, 482235019, 1624934074, 1024623463, 972941903, 3671681564, 1824242109,
 ];
 
 #[cfg(feature = "verifier")]

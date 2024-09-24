@@ -59,8 +59,9 @@ impl ProofInputs {
 
         let hasher = &mut DigestHasher::<Sha256>::default();
 
-        let mut trie = AccountTrie::new_try_from_snapshot(&trie_snapshot)?;
-        let pre_batch_trie_root = trie.txn.calc_root_hash(hasher)?.into();
+        let verified_snapshot = trie_snapshot.verify(hasher)?;
+        let pre_batch_trie_root = verified_snapshot.trie_root_hash().into();
+        let mut trie = AccountTrie::from(verified_snapshot);
 
         let (deposits, withdrawals) = trie.apply_batch(
             // TODO Replace with Box<[T]>: IntoIterator once Rust 2024 is stable
