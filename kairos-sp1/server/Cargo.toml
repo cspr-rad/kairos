@@ -1,0 +1,37 @@
+[package]
+name = "kairos-sp1-server"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+cuda = ["sp1-sdk/cuda"]
+
+[dependencies]
+sp1-sdk = "2.0.0"
+
+kairos-circuit-logic = { path = "../../kairos-prover/kairos-circuit-logic", features = ["serde", "borsh"], default-features = false }
+
+serde_json = { version = "1" }
+serde = { version = "1", default-features = false, features = ["derive"] }
+
+tokio = { version = "1", features = ["rt-multi-thread", "tracing", "macros"] }
+axum = { version = "0.7", features = ["tracing"] }
+axum-extra = { version = "0.9", features = [
+    "typed-routing",
+    "typed-header",
+    "json-deserializer",
+] }
+
+dotenvy = "0.15"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[build-dependencies]
+sp1-helper = "2.0.0"
+
+[dev-dependencies]
+kairos-trie = { git = "https://github.com/cspr-rad/kairos-trie", features = ["serde"] }
+kairos-circuit-logic = { path = "../../kairos-prover/kairos-circuit-logic", features = ["serde", "test-logic", "arbitrary" ], default-features = false }
+test-strategy = { version = "0.3" }
+proptest = { version = "1" }
+casper-types = "4.0"

@@ -1,0 +1,9 @@
+[package]
+version = "0.1.0"
+name = "kairos-batch-logic-sp1"
+edition = "2021"
+
+[dependencies]
+kairos-circuit-logic = { path = "../../kairos-prover/kairos-circuit-logic", features = ["serde", "borsh"], default-features = false }
+
+sp1-zkvm = "2.0.0"
